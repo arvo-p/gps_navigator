@@ -1,0 +1,1045 @@
+ARM GAS  /tmp/cc6z6x1V.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.arch armv7e-m
+   3              		.fpu fpv4-sp-d16
+   4              		.eabi_attribute 27, 1
+   5              		.eabi_attribute 28, 1
+   6              		.eabi_attribute 20, 1
+   7              		.eabi_attribute 21, 1
+   8              		.eabi_attribute 23, 3
+   9              		.eabi_attribute 24, 1
+  10              		.eabi_attribute 25, 1
+  11              		.eabi_attribute 26, 1
+  12              		.eabi_attribute 30, 1
+  13              		.eabi_attribute 34, 1
+  14              		.eabi_attribute 18, 4
+  15              		.file	"lcd.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.file 1 "Core/Src/lcd.c"
+  20              		.section	.rodata.LCD_SetHint.str1.4,"aMS",%progbits,1
+  21              		.align	2
+  22              	.LC2:
+  23 0000 4C434400 		.ascii	"LCD\000"
+  24              		.align	2
+  25              	.LC3:
+  26 0004 54686973 		.ascii	"This example shows the different\000"
+  26      20657861 
+  26      6D706C65 
+  26      2073686F 
+  26      77732074 
+  27 0025 000000   		.align	2
+  28              	.LC4:
+  29 0028 4C434420 		.ascii	"LCD Features, use BUTTON\000"
+  29      46656174 
+  29      75726573 
+  29      2C207573 
+  29      65204255 
+  30 0041 000000   		.align	2
+  31              	.LC5:
+  32 0044 746F2064 		.ascii	"to display next page\000"
+  32      6973706C 
+  32      6179206E 
+  32      65787420 
+  32      70616765 
+  33              		.section	.text.LCD_SetHint,"ax",%progbits
+  34              		.align	1
+  35              		.syntax unified
+  36              		.thumb
+  37              		.thumb_func
+  39              	LCD_SetHint:
+  40              	.LFB138:
+   1:Core/Src/lcd.c **** /**
+   2:Core/Src/lcd.c ****   ******************************************************************************
+   3:Core/Src/lcd.c ****   * @file    BSP/Src/lcd.c 
+   4:Core/Src/lcd.c ****   * @author  MCD Application Team
+   5:Core/Src/lcd.c ****   * @brief   This example code shows how to use LCD drawing features.
+   6:Core/Src/lcd.c ****   ******************************************************************************
+ARM GAS  /tmp/cc6z6x1V.s 			page 2
+
+
+   7:Core/Src/lcd.c ****   * @attention
+   8:Core/Src/lcd.c ****   *
+   9:Core/Src/lcd.c ****   * Copyright (c) 2017 STMicroelectronics.
+  10:Core/Src/lcd.c ****   * All rights reserved.
+  11:Core/Src/lcd.c ****   *
+  12:Core/Src/lcd.c ****   * This software is licensed under terms that can be found in the LICENSE file
+  13:Core/Src/lcd.c ****   * in the root directory of this software component.
+  14:Core/Src/lcd.c ****   * If no LICENSE file comes with this software, it is provided AS-IS.
+  15:Core/Src/lcd.c ****   *
+  16:Core/Src/lcd.c ****   ******************************************************************************
+  17:Core/Src/lcd.c ****   */
+  18:Core/Src/lcd.c **** 
+  19:Core/Src/lcd.c **** /* Includes ------------------------------------------------------------------*/
+  20:Core/Src/lcd.c **** #include "main.h"
+  21:Core/Src/lcd.c **** 
+  22:Core/Src/lcd.c **** /** @addtogroup STM32F4xx_HAL_Examples
+  23:Core/Src/lcd.c ****   * @{
+  24:Core/Src/lcd.c ****   */
+  25:Core/Src/lcd.c **** 
+  26:Core/Src/lcd.c **** /** @addtogroup BSP
+  27:Core/Src/lcd.c ****   * @{
+  28:Core/Src/lcd.c ****   */ 
+  29:Core/Src/lcd.c **** 
+  30:Core/Src/lcd.c **** /* Private typedef -----------------------------------------------------------*/
+  31:Core/Src/lcd.c **** /* Private define ------------------------------------------------------------*/
+  32:Core/Src/lcd.c **** #define LCD_FEATURES_NUM                3
+  33:Core/Src/lcd.c **** 
+  34:Core/Src/lcd.c **** /* Private macro -------------------------------------------------------------*/
+  35:Core/Src/lcd.c **** /* Private variables ---------------------------------------------------------*/
+  36:Core/Src/lcd.c **** static uint8_t LCD_Feature = 0;
+  37:Core/Src/lcd.c **** 
+  38:Core/Src/lcd.c **** /* Private function prototypes -----------------------------------------------*/
+  39:Core/Src/lcd.c **** static void LCD_SetHint(void);
+  40:Core/Src/lcd.c **** static void LCD_Show_Feature(uint8_t feature);
+  41:Core/Src/lcd.c **** 
+  42:Core/Src/lcd.c **** /* Private functions ---------------------------------------------------------*/
+  43:Core/Src/lcd.c **** 
+  44:Core/Src/lcd.c **** /**
+  45:Core/Src/lcd.c ****   * @brief  LCD demo
+  46:Core/Src/lcd.c ****   * @param  None
+  47:Core/Src/lcd.c ****   * @retval None
+  48:Core/Src/lcd.c ****   */
+  49:Core/Src/lcd.c **** void LCD_demo(void)
+  50:Core/Src/lcd.c **** { 
+  51:Core/Src/lcd.c ****   LCD_SetHint();
+  52:Core/Src/lcd.c ****   LCD_Feature = 0;
+  53:Core/Src/lcd.c ****   LCD_Show_Feature (LCD_Feature); 
+  54:Core/Src/lcd.c ****   
+  55:Core/Src/lcd.c ****   while (1)
+  56:Core/Src/lcd.c ****   { 
+  57:Core/Src/lcd.c ****     if(CheckForUserInput() > 0)
+  58:Core/Src/lcd.c ****     {
+  59:Core/Src/lcd.c ****       if(++LCD_Feature < LCD_FEATURES_NUM)
+  60:Core/Src/lcd.c ****       {
+  61:Core/Src/lcd.c ****         LCD_Show_Feature (LCD_Feature); 
+  62:Core/Src/lcd.c ****       }
+  63:Core/Src/lcd.c ****       else
+ARM GAS  /tmp/cc6z6x1V.s 			page 3
+
+
+  64:Core/Src/lcd.c ****       {
+  65:Core/Src/lcd.c ****         return;
+  66:Core/Src/lcd.c ****       }
+  67:Core/Src/lcd.c ****     }
+  68:Core/Src/lcd.c ****     HAL_Delay(100);
+  69:Core/Src/lcd.c ****   }
+  70:Core/Src/lcd.c **** }
+  71:Core/Src/lcd.c **** 
+  72:Core/Src/lcd.c **** /**
+  73:Core/Src/lcd.c ****   * @brief  Display LCD demo hint
+  74:Core/Src/lcd.c ****   * @param  None
+  75:Core/Src/lcd.c ****   * @retval None
+  76:Core/Src/lcd.c ****   */
+  77:Core/Src/lcd.c **** static void LCD_SetHint(void)
+  78:Core/Src/lcd.c **** {
+  41              		.loc 1 78 1 view -0
+  42              		.cfi_startproc
+  43              		@ args = 0, pretend = 0, frame = 0
+  44              		@ frame_needed = 0, uses_anonymous_args = 0
+  45 0000 10B5     		push	{r4, lr}
+  46              	.LCFI0:
+  47              		.cfi_def_cfa_offset 8
+  48              		.cfi_offset 4, -8
+  49              		.cfi_offset 14, -4
+  79:Core/Src/lcd.c ****   /* Clear the LCD */ 
+  80:Core/Src/lcd.c ****   BSP_LCD_Clear(LCD_COLOR_WHITE);
+  50              		.loc 1 80 3 view .LVU1
+  51 0002 4FF0FF30 		mov	r0, #-1
+  52 0006 FFF7FEFF 		bl	BSP_LCD_Clear
+  53              	.LVL0:
+  81:Core/Src/lcd.c ****   
+  82:Core/Src/lcd.c ****   /* Set LCD Demo description */
+  83:Core/Src/lcd.c ****   BSP_LCD_SetTextColor(LCD_COLOR_BLUE);
+  54              		.loc 1 83 3 view .LVU2
+  55 000a 294C     		ldr	r4, .L3
+  56 000c 2046     		mov	r0, r4
+  57 000e FFF7FEFF 		bl	BSP_LCD_SetTextColor
+  58              	.LVL1:
+  84:Core/Src/lcd.c ****   BSP_LCD_FillRect(0, 0, BSP_LCD_GetXSize(), 80);
+  59              		.loc 1 84 3 view .LVU3
+  60              		.loc 1 84 26 is_stmt 0 view .LVU4
+  61 0012 FFF7FEFF 		bl	BSP_LCD_GetXSize
+  62              	.LVL2:
+  63              		.loc 1 84 3 discriminator 1 view .LVU5
+  64 0016 5023     		movs	r3, #80
+  65 0018 82B2     		uxth	r2, r0
+  66 001a 0021     		movs	r1, #0
+  67 001c 0846     		mov	r0, r1
+  68 001e FFF7FEFF 		bl	BSP_LCD_FillRect
+  69              	.LVL3:
+  85:Core/Src/lcd.c ****   BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
+  70              		.loc 1 85 3 is_stmt 1 view .LVU6
+  71 0022 4FF0FF30 		mov	r0, #-1
+  72 0026 FFF7FEFF 		bl	BSP_LCD_SetTextColor
+  73              	.LVL4:
+  86:Core/Src/lcd.c ****   BSP_LCD_SetBackColor(LCD_COLOR_BLUE); 
+  74              		.loc 1 86 3 view .LVU7
+ARM GAS  /tmp/cc6z6x1V.s 			page 4
+
+
+  75 002a 2046     		mov	r0, r4
+  76 002c FFF7FEFF 		bl	BSP_LCD_SetBackColor
+  77              	.LVL5:
+  87:Core/Src/lcd.c ****   BSP_LCD_SetFont(&Font24);
+  78              		.loc 1 87 3 view .LVU8
+  79 0030 2048     		ldr	r0, .L3+4
+  80 0032 FFF7FEFF 		bl	BSP_LCD_SetFont
+  81              	.LVL6:
+  88:Core/Src/lcd.c ****   BSP_LCD_DisplayStringAt(0, 0, (uint8_t*)"LCD", CENTER_MODE);
+  82              		.loc 1 88 3 view .LVU9
+  83 0036 0123     		movs	r3, #1
+  84 0038 1F4A     		ldr	r2, .L3+8
+  85 003a 0021     		movs	r1, #0
+  86 003c 0846     		mov	r0, r1
+  87 003e FFF7FEFF 		bl	BSP_LCD_DisplayStringAt
+  88              	.LVL7:
+  89:Core/Src/lcd.c ****   BSP_LCD_SetFont(&Font12);
+  89              		.loc 1 89 3 view .LVU10
+  90 0042 1E48     		ldr	r0, .L3+12
+  91 0044 FFF7FEFF 		bl	BSP_LCD_SetFont
+  92              	.LVL8:
+  90:Core/Src/lcd.c ****   BSP_LCD_DisplayStringAt(0, 30, (uint8_t*)"This example shows the different", CENTER_MODE);
+  93              		.loc 1 90 3 view .LVU11
+  94 0048 0123     		movs	r3, #1
+  95 004a 1D4A     		ldr	r2, .L3+16
+  96 004c 1E21     		movs	r1, #30
+  97 004e 0020     		movs	r0, #0
+  98 0050 FFF7FEFF 		bl	BSP_LCD_DisplayStringAt
+  99              	.LVL9:
+  91:Core/Src/lcd.c ****   BSP_LCD_DisplayStringAt(0, 45, (uint8_t*)"LCD Features, use BUTTON", CENTER_MODE);
+ 100              		.loc 1 91 3 view .LVU12
+ 101 0054 0123     		movs	r3, #1
+ 102 0056 1B4A     		ldr	r2, .L3+20
+ 103 0058 2D21     		movs	r1, #45
+ 104 005a 0020     		movs	r0, #0
+ 105 005c FFF7FEFF 		bl	BSP_LCD_DisplayStringAt
+ 106              	.LVL10:
+  92:Core/Src/lcd.c ****   BSP_LCD_DisplayStringAt(0, 60, (uint8_t*)"to display next page", CENTER_MODE);
+ 107              		.loc 1 92 3 view .LVU13
+ 108 0060 0123     		movs	r3, #1
+ 109 0062 194A     		ldr	r2, .L3+24
+ 110 0064 3C21     		movs	r1, #60
+ 111 0066 0020     		movs	r0, #0
+ 112 0068 FFF7FEFF 		bl	BSP_LCD_DisplayStringAt
+ 113              	.LVL11:
+  93:Core/Src/lcd.c ****   
+  94:Core/Src/lcd.c ****   /* Set the LCD Text Color */
+  95:Core/Src/lcd.c ****   BSP_LCD_SetTextColor(LCD_COLOR_BLUE);  
+ 114              		.loc 1 95 3 view .LVU14
+ 115 006c 2046     		mov	r0, r4
+ 116 006e FFF7FEFF 		bl	BSP_LCD_SetTextColor
+ 117              	.LVL12:
+  96:Core/Src/lcd.c ****   BSP_LCD_DrawRect(10, 90, BSP_LCD_GetXSize() - 20, BSP_LCD_GetYSize()- 100);
+ 118              		.loc 1 96 3 view .LVU15
+ 119              		.loc 1 96 28 is_stmt 0 view .LVU16
+ 120 0072 FFF7FEFF 		bl	BSP_LCD_GetXSize
+ 121              	.LVL13:
+ARM GAS  /tmp/cc6z6x1V.s 			page 5
+
+
+ 122 0076 0446     		mov	r4, r0
+ 123              		.loc 1 96 53 discriminator 1 view .LVU17
+ 124 0078 FFF7FEFF 		bl	BSP_LCD_GetYSize
+ 125              	.LVL14:
+ 126              		.loc 1 96 3 discriminator 2 view .LVU18
+ 127 007c A0F16403 		sub	r3, r0, #100
+ 128              		.loc 1 96 3 discriminator 1 view .LVU19
+ 129 0080 A4F11402 		sub	r2, r4, #20
+ 130              		.loc 1 96 3 discriminator 2 view .LVU20
+ 131 0084 9BB2     		uxth	r3, r3
+ 132 0086 92B2     		uxth	r2, r2
+ 133 0088 5A21     		movs	r1, #90
+ 134 008a 0A20     		movs	r0, #10
+ 135 008c FFF7FEFF 		bl	BSP_LCD_DrawRect
+ 136              	.LVL15:
+  97:Core/Src/lcd.c ****   BSP_LCD_DrawRect(11, 91, BSP_LCD_GetXSize() - 22, BSP_LCD_GetYSize()- 102);
+ 137              		.loc 1 97 3 is_stmt 1 view .LVU21
+ 138              		.loc 1 97 28 is_stmt 0 view .LVU22
+ 139 0090 FFF7FEFF 		bl	BSP_LCD_GetXSize
+ 140              	.LVL16:
+ 141 0094 0446     		mov	r4, r0
+ 142              		.loc 1 97 53 discriminator 1 view .LVU23
+ 143 0096 FFF7FEFF 		bl	BSP_LCD_GetYSize
+ 144              	.LVL17:
+ 145              		.loc 1 97 3 discriminator 2 view .LVU24
+ 146 009a A0F16603 		sub	r3, r0, #102
+ 147              		.loc 1 97 3 discriminator 1 view .LVU25
+ 148 009e A4F11602 		sub	r2, r4, #22
+ 149              		.loc 1 97 3 discriminator 2 view .LVU26
+ 150 00a2 9BB2     		uxth	r3, r3
+ 151 00a4 92B2     		uxth	r2, r2
+ 152 00a6 5B21     		movs	r1, #91
+ 153 00a8 0B20     		movs	r0, #11
+ 154 00aa FFF7FEFF 		bl	BSP_LCD_DrawRect
+ 155              	.LVL18:
+  98:Core/Src/lcd.c **** }
+ 156              		.loc 1 98 1 view .LVU27
+ 157 00ae 10BD     		pop	{r4, pc}
+ 158              	.L4:
+ 159              		.align	2
+ 160              	.L3:
+ 161 00b0 FF0000FF 		.word	-16776961
+ 162 00b4 00000000 		.word	Font24
+ 163 00b8 00000000 		.word	.LC2
+ 164 00bc 00000000 		.word	Font12
+ 165 00c0 04000000 		.word	.LC3
+ 166 00c4 28000000 		.word	.LC4
+ 167 00c8 44000000 		.word	.LC5
+ 168              		.cfi_endproc
+ 169              	.LFE138:
+ 171              		.section	.rodata.LCD_Show_Feature.str1.4,"aMS",%progbits,1
+ 172              		.align	2
+ 173              	.LC6:
+ 174 0000 4C656674 		.ascii	"Left aligned Text\000"
+ 174      20616C69 
+ 174      676E6564 
+ 174      20546578 
+ARM GAS  /tmp/cc6z6x1V.s 			page 6
+
+
+ 174      7400
+ 175 0012 0000     		.align	2
+ 176              	.LC7:
+ 177 0014 43656E74 		.ascii	"Center aligned Text\000"
+ 177      65722061 
+ 177      6C69676E 
+ 177      65642054 
+ 177      65787400 
+ 178              		.align	2
+ 179              	.LC8:
+ 180 0028 52696768 		.ascii	"Right aligned Text\000"
+ 180      7420616C 
+ 180      69676E65 
+ 180      64205465 
+ 180      787400
+ 181 003b 00       		.align	2
+ 182              	.LC9:
+ 183 003c 466F6E74 		.ascii	"Font24\000"
+ 183      323400
+ 184 0043 00       		.align	2
+ 185              	.LC10:
+ 186 0044 466F6E74 		.ascii	"Font20\000"
+ 186      323000
+ 187 004b 00       		.align	2
+ 188              	.LC11:
+ 189 004c 466F6E74 		.ascii	"Font16\000"
+ 189      313600
+ 190              		.section	.text.LCD_Show_Feature,"ax",%progbits
+ 191              		.align	1
+ 192              		.syntax unified
+ 193              		.thumb
+ 194              		.thumb_func
+ 196              	LCD_Show_Feature:
+ 197              	.LVL19:
+ 198              	.LFB139:
+  99:Core/Src/lcd.c **** 
+ 100:Core/Src/lcd.c **** /**
+ 101:Core/Src/lcd.c ****   * @brief  Show LCD Features
+ 102:Core/Src/lcd.c ****   * @param  feature: feature index
+ 103:Core/Src/lcd.c ****   * @retval None
+ 104:Core/Src/lcd.c ****   */
+ 105:Core/Src/lcd.c **** static void LCD_Show_Feature(uint8_t feature)
+ 106:Core/Src/lcd.c **** {
+ 199              		.loc 1 106 1 is_stmt 1 view -0
+ 200              		.cfi_startproc
+ 201              		@ args = 0, pretend = 0, frame = 24
+ 202              		@ frame_needed = 0, uses_anonymous_args = 0
+ 203              		.loc 1 106 1 is_stmt 0 view .LVU29
+ 204 0000 70B5     		push	{r4, r5, r6, lr}
+ 205              	.LCFI1:
+ 206              		.cfi_def_cfa_offset 16
+ 207              		.cfi_offset 4, -16
+ 208              		.cfi_offset 5, -12
+ 209              		.cfi_offset 6, -8
+ 210              		.cfi_offset 14, -4
+ 211 0002 86B0     		sub	sp, sp, #24
+ 212              	.LCFI2:
+ARM GAS  /tmp/cc6z6x1V.s 			page 7
+
+
+ 213              		.cfi_def_cfa_offset 40
+ 214 0004 0446     		mov	r4, r0
+ 107:Core/Src/lcd.c ****   Point Points[]= {{100, 100}, {160, 100}, {160, 140}};
+ 215              		.loc 1 107 3 is_stmt 1 view .LVU30
+ 216              		.loc 1 107 9 is_stmt 0 view .LVU31
+ 217 0006 A14B     		ldr	r3, .L10
+ 218 0008 93E80700 		ldm	r3, {r0, r1, r2}
+ 219              	.LVL20:
+ 220              		.loc 1 107 9 view .LVU32
+ 221 000c 06AD     		add	r5, sp, #24
+ 222 000e 05E90700 		stmdb	r5, {r0, r1, r2}
+ 108:Core/Src/lcd.c ****   Point Points2[]= {{100, 150}, {160, 150}, {160, 200}};
+ 223              		.loc 1 108 3 is_stmt 1 view .LVU33
+ 224              		.loc 1 108 9 is_stmt 0 view .LVU34
+ 225 0012 0C33     		adds	r3, r3, #12
+ 226 0014 93E80700 		ldm	r3, {r0, r1, r2}
+ 227 0018 8DE80700 		stm	sp, {r0, r1, r2}
+ 109:Core/Src/lcd.c ****   
+ 110:Core/Src/lcd.c ****   BSP_LCD_SetBackColor(LCD_COLOR_WHITE);  
+ 228              		.loc 1 110 3 is_stmt 1 view .LVU35
+ 229 001c 4FF0FF30 		mov	r0, #-1
+ 230 0020 FFF7FEFF 		bl	BSP_LCD_SetBackColor
+ 231              	.LVL21:
+ 111:Core/Src/lcd.c ****   BSP_LCD_SetTextColor(LCD_COLOR_WHITE);    
+ 232              		.loc 1 111 3 view .LVU36
+ 233 0024 4FF0FF30 		mov	r0, #-1
+ 234 0028 FFF7FEFF 		bl	BSP_LCD_SetTextColor
+ 235              	.LVL22:
+ 112:Core/Src/lcd.c ****   BSP_LCD_FillRect(12, 92, BSP_LCD_GetXSize() - 24, BSP_LCD_GetYSize()- 104);
+ 236              		.loc 1 112 3 view .LVU37
+ 237              		.loc 1 112 28 is_stmt 0 view .LVU38
+ 238 002c FFF7FEFF 		bl	BSP_LCD_GetXSize
+ 239              	.LVL23:
+ 240 0030 0546     		mov	r5, r0
+ 241              		.loc 1 112 53 discriminator 1 view .LVU39
+ 242 0032 FFF7FEFF 		bl	BSP_LCD_GetYSize
+ 243              	.LVL24:
+ 244              		.loc 1 112 3 discriminator 2 view .LVU40
+ 245 0036 A0F16803 		sub	r3, r0, #104
+ 246              		.loc 1 112 3 discriminator 1 view .LVU41
+ 247 003a A5F11802 		sub	r2, r5, #24
+ 248              		.loc 1 112 3 discriminator 2 view .LVU42
+ 249 003e 9BB2     		uxth	r3, r3
+ 250 0040 92B2     		uxth	r2, r2
+ 251 0042 5C21     		movs	r1, #92
+ 252 0044 0C20     		movs	r0, #12
+ 253 0046 FFF7FEFF 		bl	BSP_LCD_FillRect
+ 254              	.LVL25:
+ 113:Core/Src/lcd.c ****   BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
+ 255              		.loc 1 113 3 is_stmt 1 view .LVU43
+ 256 004a 4FF07F40 		mov	r0, #-16777216
+ 257 004e FFF7FEFF 		bl	BSP_LCD_SetTextColor
+ 258              	.LVL26:
+ 114:Core/Src/lcd.c ****   
+ 115:Core/Src/lcd.c ****   switch (feature)
+ 259              		.loc 1 115 3 view .LVU44
+ 260 0052 012C     		cmp	r4, #1
+ARM GAS  /tmp/cc6z6x1V.s 			page 8
+
+
+ 261 0054 44D0     		beq	.L6
+ 262 0056 022C     		cmp	r4, #2
+ 263 0058 00F0C380 		beq	.L7
+ 264 005c 002C     		cmp	r4, #0
+ 265 005e 40F01281 		bne	.L5
+ 116:Core/Src/lcd.c ****   {
+ 117:Core/Src/lcd.c ****   case 0:
+ 118:Core/Src/lcd.c ****     /* Text Feature */
+ 119:Core/Src/lcd.c ****     BSP_LCD_DisplayStringAt(14, 100, (uint8_t*)"Left aligned Text", LEFT_MODE);
+ 266              		.loc 1 119 5 view .LVU45
+ 267 0062 0323     		movs	r3, #3
+ 268 0064 8A4A     		ldr	r2, .L10+4
+ 269 0066 6421     		movs	r1, #100
+ 270 0068 0E20     		movs	r0, #14
+ 271 006a FFF7FEFF 		bl	BSP_LCD_DisplayStringAt
+ 272              	.LVL27:
+ 120:Core/Src/lcd.c ****     BSP_LCD_DisplayStringAt(0, 115, (uint8_t*)"Center aligned Text", CENTER_MODE);
+ 273              		.loc 1 120 5 view .LVU46
+ 274 006e 0123     		movs	r3, #1
+ 275 0070 884A     		ldr	r2, .L10+8
+ 276 0072 7321     		movs	r1, #115
+ 277 0074 2046     		mov	r0, r4
+ 278 0076 FFF7FEFF 		bl	BSP_LCD_DisplayStringAt
+ 279              	.LVL28:
+ 121:Core/Src/lcd.c ****     BSP_LCD_DisplayStringAt((uint16_t)(-14), 130, (uint8_t*)"Right aligned Text", RIGHT_MODE);
+ 280              		.loc 1 121 5 view .LVU47
+ 281 007a 0223     		movs	r3, #2
+ 282 007c 864A     		ldr	r2, .L10+12
+ 283 007e 8221     		movs	r1, #130
+ 284 0080 4FF6F270 		movw	r0, #65522
+ 285 0084 FFF7FEFF 		bl	BSP_LCD_DisplayStringAt
+ 286              	.LVL29:
+ 122:Core/Src/lcd.c ****     BSP_LCD_SetFont(&Font24);
+ 287              		.loc 1 122 5 view .LVU48
+ 288 0088 8448     		ldr	r0, .L10+16
+ 289 008a FFF7FEFF 		bl	BSP_LCD_SetFont
+ 290              	.LVL30:
+ 123:Core/Src/lcd.c ****     BSP_LCD_DisplayStringAt(14, 180, (uint8_t*)"Font24", LEFT_MODE);
+ 291              		.loc 1 123 5 view .LVU49
+ 292 008e 0323     		movs	r3, #3
+ 293 0090 834A     		ldr	r2, .L10+20
+ 294 0092 B421     		movs	r1, #180
+ 295 0094 0E20     		movs	r0, #14
+ 296 0096 FFF7FEFF 		bl	BSP_LCD_DisplayStringAt
+ 297              	.LVL31:
+ 124:Core/Src/lcd.c ****     BSP_LCD_SetFont(&Font20);
+ 298              		.loc 1 124 5 view .LVU50
+ 299 009a 824C     		ldr	r4, .L10+24
+ 300              	.LVL32:
+ 301              		.loc 1 124 5 is_stmt 0 view .LVU51
+ 302 009c 2046     		mov	r0, r4
+ 303 009e FFF7FEFF 		bl	BSP_LCD_SetFont
+ 304              	.LVL33:
+ 125:Core/Src/lcd.c ****     BSP_LCD_DisplayStringAt(BSP_LCD_GetXSize()/2 -20, 180 + Font20.Height, (uint8_t*)"Font20", LEFT
+ 305              		.loc 1 125 5 is_stmt 1 view .LVU52
+ 306              		.loc 1 125 29 is_stmt 0 view .LVU53
+ 307 00a2 FFF7FEFF 		bl	BSP_LCD_GetXSize
+ARM GAS  /tmp/cc6z6x1V.s 			page 9
+
+
+ 308              	.LVL34:
+ 309              		.loc 1 125 47 discriminator 1 view .LVU54
+ 310 00a6 4008     		lsrs	r0, r0, #1
+ 311              		.loc 1 125 67 discriminator 1 view .LVU55
+ 312 00a8 E188     		ldrh	r1, [r4, #6]
+ 313              		.loc 1 125 5 discriminator 1 view .LVU56
+ 314 00aa B431     		adds	r1, r1, #180
+ 315 00ac 1438     		subs	r0, r0, #20
+ 316 00ae 0323     		movs	r3, #3
+ 317 00b0 7D4A     		ldr	r2, .L10+28
+ 318 00b2 89B2     		uxth	r1, r1
+ 319 00b4 80B2     		uxth	r0, r0
+ 320 00b6 FFF7FEFF 		bl	BSP_LCD_DisplayStringAt
+ 321              	.LVL35:
+ 126:Core/Src/lcd.c ****     BSP_LCD_SetFont(&Font16);
+ 322              		.loc 1 126 5 is_stmt 1 view .LVU57
+ 323 00ba 7C48     		ldr	r0, .L10+32
+ 324 00bc FFF7FEFF 		bl	BSP_LCD_SetFont
+ 325              	.LVL36:
+ 127:Core/Src/lcd.c ****     BSP_LCD_DisplayStringAt(BSP_LCD_GetXSize() - 80, 180 + Font20.Height + Font16.Height, (uint8_t*
+ 326              		.loc 1 127 5 view .LVU58
+ 327              		.loc 1 127 29 is_stmt 0 view .LVU59
+ 328 00c0 FFF7FEFF 		bl	BSP_LCD_GetXSize
+ 329              	.LVL37:
+ 330              		.loc 1 127 66 discriminator 1 view .LVU60
+ 331 00c4 E188     		ldrh	r1, [r4, #6]
+ 332              		.loc 1 127 82 discriminator 1 view .LVU61
+ 333 00c6 794B     		ldr	r3, .L10+32
+ 334 00c8 DB88     		ldrh	r3, [r3, #6]
+ 335              		.loc 1 127 74 discriminator 1 view .LVU62
+ 336 00ca 1944     		add	r1, r1, r3
+ 337 00cc 89B2     		uxth	r1, r1
+ 338              		.loc 1 127 5 discriminator 1 view .LVU63
+ 339 00ce B431     		adds	r1, r1, #180
+ 340 00d0 5038     		subs	r0, r0, #80
+ 341 00d2 0323     		movs	r3, #3
+ 342 00d4 764A     		ldr	r2, .L10+36
+ 343 00d6 89B2     		uxth	r1, r1
+ 344 00d8 80B2     		uxth	r0, r0
+ 345 00da FFF7FEFF 		bl	BSP_LCD_DisplayStringAt
+ 346              	.LVL38:
+ 128:Core/Src/lcd.c ****     break;
+ 347              		.loc 1 128 5 is_stmt 1 view .LVU64
+ 348 00de D2E0     		b	.L5
+ 349              	.L6:
+ 129:Core/Src/lcd.c ****     
+ 130:Core/Src/lcd.c ****   case 1:
+ 131:Core/Src/lcd.c ****     /* Draw misc. Shapes */
+ 132:Core/Src/lcd.c ****     BSP_LCD_SetTextColor(LCD_COLOR_BLACK); 
+ 350              		.loc 1 132 5 view .LVU65
+ 351 00e0 4FF07F40 		mov	r0, #-16777216
+ 352 00e4 FFF7FEFF 		bl	BSP_LCD_SetTextColor
+ 353              	.LVL39:
+ 133:Core/Src/lcd.c ****     BSP_LCD_DrawRect(20, 100, 60 , 40);
+ 354              		.loc 1 133 5 view .LVU66
+ 355 00e8 2823     		movs	r3, #40
+ 356 00ea 3C22     		movs	r2, #60
+ARM GAS  /tmp/cc6z6x1V.s 			page 10
+
+
+ 357 00ec 6421     		movs	r1, #100
+ 358 00ee 1420     		movs	r0, #20
+ 359 00f0 FFF7FEFF 		bl	BSP_LCD_DrawRect
+ 360              	.LVL40:
+ 134:Core/Src/lcd.c ****     BSP_LCD_FillRect(20, 150, 60 , 40); 
+ 361              		.loc 1 134 5 view .LVU67
+ 362 00f4 2823     		movs	r3, #40
+ 363 00f6 3C22     		movs	r2, #60
+ 364 00f8 9621     		movs	r1, #150
+ 365 00fa 1420     		movs	r0, #20
+ 366 00fc FFF7FEFF 		bl	BSP_LCD_FillRect
+ 367              	.LVL41:
+ 135:Core/Src/lcd.c ****     
+ 136:Core/Src/lcd.c ****     BSP_LCD_SetTextColor(LCD_COLOR_GRAY); 
+ 368              		.loc 1 136 5 view .LVU68
+ 369 0100 6C48     		ldr	r0, .L10+40
+ 370 0102 FFF7FEFF 		bl	BSP_LCD_SetTextColor
+ 371              	.LVL42:
+ 137:Core/Src/lcd.c ****     BSP_LCD_DrawCircle(50, 220, 20);
+ 372              		.loc 1 137 5 view .LVU69
+ 373 0106 1422     		movs	r2, #20
+ 374 0108 DC21     		movs	r1, #220
+ 375 010a 3220     		movs	r0, #50
+ 376 010c FFF7FEFF 		bl	BSP_LCD_DrawCircle
+ 377              	.LVL43:
+ 138:Core/Src/lcd.c ****     BSP_LCD_FillCircle(120, 220, 20);
+ 378              		.loc 1 138 5 view .LVU70
+ 379 0110 1422     		movs	r2, #20
+ 380 0112 DC21     		movs	r1, #220
+ 381 0114 7820     		movs	r0, #120
+ 382 0116 FFF7FEFF 		bl	BSP_LCD_FillCircle
+ 383              	.LVL44:
+ 139:Core/Src/lcd.c ****     
+ 140:Core/Src/lcd.c ****     BSP_LCD_SetTextColor(LCD_COLOR_GREEN); 
+ 384              		.loc 1 140 5 view .LVU71
+ 385 011a 4FF0FF20 		mov	r0, #-16711936
+ 386 011e FFF7FEFF 		bl	BSP_LCD_SetTextColor
+ 387              	.LVL45:
+ 141:Core/Src/lcd.c ****     BSP_LCD_DrawPolygon(Points, 3);
+ 388              		.loc 1 141 5 view .LVU72
+ 389 0122 0321     		movs	r1, #3
+ 390 0124 03A8     		add	r0, sp, #12
+ 391 0126 FFF7FEFF 		bl	BSP_LCD_DrawPolygon
+ 392              	.LVL46:
+ 142:Core/Src/lcd.c ****     BSP_LCD_FillPolygon(Points2, 3);
+ 393              		.loc 1 142 5 view .LVU73
+ 394 012a 0321     		movs	r1, #3
+ 395 012c 6846     		mov	r0, sp
+ 396 012e FFF7FEFF 		bl	BSP_LCD_FillPolygon
+ 397              	.LVL47:
+ 143:Core/Src/lcd.c ****     
+ 144:Core/Src/lcd.c ****     BSP_LCD_SetTextColor(LCD_COLOR_RED); 
+ 398              		.loc 1 144 5 view .LVU74
+ 399 0132 6148     		ldr	r0, .L10+44
+ 400 0134 FFF7FEFF 		bl	BSP_LCD_SetTextColor
+ 401              	.LVL48:
+ 145:Core/Src/lcd.c ****     BSP_LCD_DrawEllipse(BSP_LCD_GetXSize() - 45, 120, 30, 20);
+ARM GAS  /tmp/cc6z6x1V.s 			page 11
+
+
+ 402              		.loc 1 145 5 view .LVU75
+ 403              		.loc 1 145 25 is_stmt 0 view .LVU76
+ 404 0138 FFF7FEFF 		bl	BSP_LCD_GetXSize
+ 405              	.LVL49:
+ 406              		.loc 1 145 5 discriminator 1 view .LVU77
+ 407 013c 1423     		movs	r3, #20
+ 408 013e 1E22     		movs	r2, #30
+ 409 0140 7821     		movs	r1, #120
+ 410 0142 2D38     		subs	r0, r0, #45
+ 411 0144 FFF7FEFF 		bl	BSP_LCD_DrawEllipse
+ 412              	.LVL50:
+ 146:Core/Src/lcd.c ****     BSP_LCD_FillEllipse(BSP_LCD_GetXSize() - 45, 170, 30, 20);
+ 413              		.loc 1 146 5 is_stmt 1 view .LVU78
+ 414              		.loc 1 146 25 is_stmt 0 view .LVU79
+ 415 0148 FFF7FEFF 		bl	BSP_LCD_GetXSize
+ 416              	.LVL51:
+ 417              		.loc 1 146 5 discriminator 1 view .LVU80
+ 418 014c 1423     		movs	r3, #20
+ 419 014e 1E22     		movs	r2, #30
+ 420 0150 AA21     		movs	r1, #170
+ 421 0152 2D38     		subs	r0, r0, #45
+ 422 0154 FFF7FEFF 		bl	BSP_LCD_FillEllipse
+ 423              	.LVL52:
+ 147:Core/Src/lcd.c ****     
+ 148:Core/Src/lcd.c ****     BSP_LCD_SetTextColor(LCD_COLOR_BLACK); 
+ 424              		.loc 1 148 5 is_stmt 1 view .LVU81
+ 425 0158 4FF07F40 		mov	r0, #-16777216
+ 426 015c FFF7FEFF 		bl	BSP_LCD_SetTextColor
+ 427              	.LVL53:
+ 149:Core/Src/lcd.c ****     BSP_LCD_DrawHLine(20, BSP_LCD_GetYSize() - 30, BSP_LCD_GetXSize() / 5);
+ 428              		.loc 1 149 5 view .LVU82
+ 429              		.loc 1 149 27 is_stmt 0 view .LVU83
+ 430 0160 FFF7FEFF 		bl	BSP_LCD_GetYSize
+ 431              	.LVL54:
+ 432 0164 0446     		mov	r4, r0
+ 433              		.loc 1 149 52 discriminator 1 view .LVU84
+ 434 0166 FFF7FEFF 		bl	BSP_LCD_GetXSize
+ 435              	.LVL55:
+ 436              		.loc 1 149 71 discriminator 2 view .LVU85
+ 437 016a 544B     		ldr	r3, .L10+48
+ 438 016c A3FB0032 		umull	r3, r2, r3, r0
+ 439              		.loc 1 149 5 discriminator 1 view .LVU86
+ 440 0170 A4F11E01 		sub	r1, r4, #30
+ 441              		.loc 1 149 5 discriminator 2 view .LVU87
+ 442 0174 C2F38F02 		ubfx	r2, r2, #2, #16
+ 443 0178 89B2     		uxth	r1, r1
+ 444 017a 1420     		movs	r0, #20
+ 445 017c FFF7FEFF 		bl	BSP_LCD_DrawHLine
+ 446              	.LVL56:
+ 150:Core/Src/lcd.c ****     BSP_LCD_DrawLine (BSP_LCD_GetXSize() - 150, BSP_LCD_GetYSize()- 20, BSP_LCD_GetXSize()- 20, BSP
+ 447              		.loc 1 150 5 is_stmt 1 view .LVU88
+ 448              		.loc 1 150 23 is_stmt 0 view .LVU89
+ 449 0180 FFF7FEFF 		bl	BSP_LCD_GetXSize
+ 450              	.LVL57:
+ 451 0184 0446     		mov	r4, r0
+ 452              		.loc 1 150 49 discriminator 1 view .LVU90
+ 453 0186 FFF7FEFF 		bl	BSP_LCD_GetYSize
+ARM GAS  /tmp/cc6z6x1V.s 			page 12
+
+
+ 454              	.LVL58:
+ 455 018a 0646     		mov	r6, r0
+ 456              		.loc 1 150 73 discriminator 2 view .LVU91
+ 457 018c FFF7FEFF 		bl	BSP_LCD_GetXSize
+ 458              	.LVL59:
+ 459 0190 0546     		mov	r5, r0
+ 460              		.loc 1 150 97 discriminator 3 view .LVU92
+ 461 0192 FFF7FEFF 		bl	BSP_LCD_GetYSize
+ 462              	.LVL60:
+ 463              		.loc 1 150 5 discriminator 4 view .LVU93
+ 464 0196 A0F13203 		sub	r3, r0, #50
+ 465              		.loc 1 150 5 discriminator 3 view .LVU94
+ 466 019a A5F11402 		sub	r2, r5, #20
+ 467              		.loc 1 150 5 discriminator 2 view .LVU95
+ 468 019e A6F11401 		sub	r1, r6, #20
+ 469              		.loc 1 150 5 discriminator 1 view .LVU96
+ 470 01a2 963C     		subs	r4, r4, #150
+ 471              		.loc 1 150 5 discriminator 4 view .LVU97
+ 472 01a4 9BB2     		uxth	r3, r3
+ 473 01a6 92B2     		uxth	r2, r2
+ 474 01a8 89B2     		uxth	r1, r1
+ 475 01aa A0B2     		uxth	r0, r4
+ 476 01ac FFF7FEFF 		bl	BSP_LCD_DrawLine
+ 477              	.LVL61:
+ 151:Core/Src/lcd.c ****     BSP_LCD_DrawLine (BSP_LCD_GetXSize() - 150, BSP_LCD_GetYSize()- 50, BSP_LCD_GetXSize()- 20, BSP
+ 478              		.loc 1 151 5 is_stmt 1 view .LVU98
+ 479              		.loc 1 151 23 is_stmt 0 view .LVU99
+ 480 01b0 FFF7FEFF 		bl	BSP_LCD_GetXSize
+ 481              	.LVL62:
+ 482 01b4 0446     		mov	r4, r0
+ 483              		.loc 1 151 49 discriminator 1 view .LVU100
+ 484 01b6 FFF7FEFF 		bl	BSP_LCD_GetYSize
+ 485              	.LVL63:
+ 486 01ba 0646     		mov	r6, r0
+ 487              		.loc 1 151 73 discriminator 2 view .LVU101
+ 488 01bc FFF7FEFF 		bl	BSP_LCD_GetXSize
+ 489              	.LVL64:
+ 490 01c0 0546     		mov	r5, r0
+ 491              		.loc 1 151 97 discriminator 3 view .LVU102
+ 492 01c2 FFF7FEFF 		bl	BSP_LCD_GetYSize
+ 493              	.LVL65:
+ 494              		.loc 1 151 5 discriminator 4 view .LVU103
+ 495 01c6 A0F11403 		sub	r3, r0, #20
+ 496              		.loc 1 151 5 discriminator 3 view .LVU104
+ 497 01ca A5F11402 		sub	r2, r5, #20
+ 498              		.loc 1 151 5 discriminator 2 view .LVU105
+ 499 01ce A6F13201 		sub	r1, r6, #50
+ 500              		.loc 1 151 5 discriminator 1 view .LVU106
+ 501 01d2 963C     		subs	r4, r4, #150
+ 502              		.loc 1 151 5 discriminator 4 view .LVU107
+ 503 01d4 9BB2     		uxth	r3, r3
+ 504 01d6 92B2     		uxth	r2, r2
+ 505 01d8 89B2     		uxth	r1, r1
+ 506 01da A0B2     		uxth	r0, r4
+ 507 01dc FFF7FEFF 		bl	BSP_LCD_DrawLine
+ 508              	.LVL66:
+ 152:Core/Src/lcd.c ****     break;
+ARM GAS  /tmp/cc6z6x1V.s 			page 13
+
+
+ 509              		.loc 1 152 5 is_stmt 1 view .LVU108
+ 510 01e0 51E0     		b	.L5
+ 511              	.L7:
+ 153:Core/Src/lcd.c ****     
+ 154:Core/Src/lcd.c ****   case 2:
+ 155:Core/Src/lcd.c ****     /* Draw Bitmap */
+ 156:Core/Src/lcd.c ****     BSP_LCD_DrawBitmap(20, 100, (uint8_t *)stlogo);
+ 512              		.loc 1 156 5 view .LVU109
+ 513 01e2 374C     		ldr	r4, .L10+52
+ 514 01e4 2246     		mov	r2, r4
+ 515 01e6 6421     		movs	r1, #100
+ 516 01e8 1420     		movs	r0, #20
+ 517 01ea FFF7FEFF 		bl	BSP_LCD_DrawBitmap
+ 518              	.LVL67:
+ 157:Core/Src/lcd.c ****     HAL_Delay(500);
+ 519              		.loc 1 157 5 view .LVU110
+ 520 01ee 4FF4FA70 		mov	r0, #500
+ 521 01f2 FFF7FEFF 		bl	HAL_Delay
+ 522              	.LVL68:
+ 158:Core/Src/lcd.c ****     
+ 159:Core/Src/lcd.c ****     BSP_LCD_DrawBitmap(BSP_LCD_GetXSize()-100, 100, (uint8_t *)stlogo);
+ 523              		.loc 1 159 5 view .LVU111
+ 524              		.loc 1 159 24 is_stmt 0 view .LVU112
+ 525 01f6 FFF7FEFF 		bl	BSP_LCD_GetXSize
+ 526              	.LVL69:
+ 527              		.loc 1 159 5 discriminator 1 view .LVU113
+ 528 01fa 2246     		mov	r2, r4
+ 529 01fc 6421     		movs	r1, #100
+ 530 01fe 6438     		subs	r0, r0, #100
+ 531 0200 FFF7FEFF 		bl	BSP_LCD_DrawBitmap
+ 532              	.LVL70:
+ 160:Core/Src/lcd.c ****     HAL_Delay(500);
+ 533              		.loc 1 160 5 is_stmt 1 view .LVU114
+ 534 0204 4FF4FA70 		mov	r0, #500
+ 535 0208 FFF7FEFF 		bl	HAL_Delay
+ 536              	.LVL71:
+ 161:Core/Src/lcd.c ****     
+ 162:Core/Src/lcd.c ****     BSP_LCD_DrawBitmap(20, (BSP_LCD_GetYSize()-104-92)/2+100, (uint8_t *)stlogo);
+ 537              		.loc 1 162 5 view .LVU115
+ 538              		.loc 1 162 29 is_stmt 0 view .LVU116
+ 539 020c FFF7FEFF 		bl	BSP_LCD_GetYSize
+ 540              	.LVL72:
+ 541              		.loc 1 162 51 discriminator 1 view .LVU117
+ 542 0210 A0F1C401 		sub	r1, r0, #196
+ 543              		.loc 1 162 55 discriminator 1 view .LVU118
+ 544 0214 4908     		lsrs	r1, r1, #1
+ 545              		.loc 1 162 5 discriminator 1 view .LVU119
+ 546 0216 2246     		mov	r2, r4
+ 547 0218 6431     		adds	r1, r1, #100
+ 548 021a 1420     		movs	r0, #20
+ 549 021c FFF7FEFF 		bl	BSP_LCD_DrawBitmap
+ 550              	.LVL73:
+ 163:Core/Src/lcd.c ****     HAL_Delay(500);    
+ 551              		.loc 1 163 5 is_stmt 1 view .LVU120
+ 552 0220 4FF4FA70 		mov	r0, #500
+ 553 0224 FFF7FEFF 		bl	HAL_Delay
+ 554              	.LVL74:
+ARM GAS  /tmp/cc6z6x1V.s 			page 14
+
+
+ 164:Core/Src/lcd.c ****     
+ 165:Core/Src/lcd.c ****     BSP_LCD_DrawBitmap(BSP_LCD_GetXSize()-100, (BSP_LCD_GetYSize()-104-92)/2+100, (uint8_t *)stlogo
+ 555              		.loc 1 165 5 view .LVU121
+ 556              		.loc 1 165 24 is_stmt 0 view .LVU122
+ 557 0228 FFF7FEFF 		bl	BSP_LCD_GetXSize
+ 558              	.LVL75:
+ 559              		.loc 1 165 42 discriminator 1 view .LVU123
+ 560 022c A0F16405 		sub	r5, r0, #100
+ 561              		.loc 1 165 49 discriminator 1 view .LVU124
+ 562 0230 FFF7FEFF 		bl	BSP_LCD_GetYSize
+ 563              	.LVL76:
+ 564              		.loc 1 165 71 discriminator 2 view .LVU125
+ 565 0234 A0F1C401 		sub	r1, r0, #196
+ 566              		.loc 1 165 75 discriminator 2 view .LVU126
+ 567 0238 4908     		lsrs	r1, r1, #1
+ 568              		.loc 1 165 5 discriminator 2 view .LVU127
+ 569 023a 2246     		mov	r2, r4
+ 570 023c 6431     		adds	r1, r1, #100
+ 571 023e 2846     		mov	r0, r5
+ 572 0240 FFF7FEFF 		bl	BSP_LCD_DrawBitmap
+ 573              	.LVL77:
+ 166:Core/Src/lcd.c ****     HAL_Delay(500);     
+ 574              		.loc 1 166 5 is_stmt 1 view .LVU128
+ 575 0244 4FF4FA70 		mov	r0, #500
+ 576 0248 FFF7FEFF 		bl	HAL_Delay
+ 577              	.LVL78:
+ 167:Core/Src/lcd.c ****     
+ 168:Core/Src/lcd.c ****     BSP_LCD_DrawBitmap(20, BSP_LCD_GetYSize()- 80, (uint8_t *)stlogo);
+ 578              		.loc 1 168 5 view .LVU129
+ 579              		.loc 1 168 28 is_stmt 0 view .LVU130
+ 580 024c FFF7FEFF 		bl	BSP_LCD_GetYSize
+ 581              	.LVL79:
+ 582              		.loc 1 168 5 discriminator 1 view .LVU131
+ 583 0250 2246     		mov	r2, r4
+ 584 0252 A0F15001 		sub	r1, r0, #80
+ 585 0256 1420     		movs	r0, #20
+ 586 0258 FFF7FEFF 		bl	BSP_LCD_DrawBitmap
+ 587              	.LVL80:
+ 169:Core/Src/lcd.c ****     HAL_Delay(500);
+ 588              		.loc 1 169 5 is_stmt 1 view .LVU132
+ 589 025c 4FF4FA70 		mov	r0, #500
+ 590 0260 FFF7FEFF 		bl	HAL_Delay
+ 591              	.LVL81:
+ 170:Core/Src/lcd.c ****     
+ 171:Core/Src/lcd.c ****     BSP_LCD_DrawBitmap(BSP_LCD_GetXSize()-100, BSP_LCD_GetYSize()- 80, (uint8_t *)stlogo);
+ 592              		.loc 1 171 5 view .LVU133
+ 593              		.loc 1 171 24 is_stmt 0 view .LVU134
+ 594 0264 FFF7FEFF 		bl	BSP_LCD_GetXSize
+ 595              	.LVL82:
+ 596              		.loc 1 171 42 discriminator 1 view .LVU135
+ 597 0268 A0F16403 		sub	r3, r0, #100
+ 598 026c 1D46     		mov	r5, r3
+ 599              		.loc 1 171 48 discriminator 1 view .LVU136
+ 600 026e FFF7FEFF 		bl	BSP_LCD_GetYSize
+ 601              	.LVL83:
+ 602              		.loc 1 171 5 discriminator 2 view .LVU137
+ 603 0272 2246     		mov	r2, r4
+ARM GAS  /tmp/cc6z6x1V.s 			page 15
+
+
+ 604 0274 A0F15001 		sub	r1, r0, #80
+ 605 0278 2846     		mov	r0, r5
+ 606 027a FFF7FEFF 		bl	BSP_LCD_DrawBitmap
+ 607              	.LVL84:
+ 172:Core/Src/lcd.c ****     HAL_Delay(500);    
+ 608              		.loc 1 172 5 is_stmt 1 view .LVU138
+ 609 027e 4FF4FA70 		mov	r0, #500
+ 610 0282 FFF7FEFF 		bl	HAL_Delay
+ 611              	.LVL85:
+ 173:Core/Src/lcd.c ****     break;
+ 612              		.loc 1 173 5 view .LVU139
+ 613              	.L5:
+ 174:Core/Src/lcd.c ****   }
+ 175:Core/Src/lcd.c **** }
+ 614              		.loc 1 175 1 is_stmt 0 view .LVU140
+ 615 0286 06B0     		add	sp, sp, #24
+ 616              	.LCFI3:
+ 617              		.cfi_def_cfa_offset 16
+ 618              		@ sp needed
+ 619 0288 70BD     		pop	{r4, r5, r6, pc}
+ 620              	.L11:
+ 621 028a 00BF     		.align	2
+ 622              	.L10:
+ 623 028c 00000000 		.word	.LANCHOR0
+ 624 0290 00000000 		.word	.LC6
+ 625 0294 14000000 		.word	.LC7
+ 626 0298 28000000 		.word	.LC8
+ 627 029c 00000000 		.word	Font24
+ 628 02a0 3C000000 		.word	.LC9
+ 629 02a4 00000000 		.word	Font20
+ 630 02a8 44000000 		.word	.LC10
+ 631 02ac 00000000 		.word	Font16
+ 632 02b0 4C000000 		.word	.LC11
+ 633 02b4 808080FF 		.word	-8355712
+ 634 02b8 0000FFFF 		.word	-65536
+ 635 02bc CDCCCCCC 		.word	-858993459
+ 636 02c0 00000000 		.word	stlogo
+ 637              		.cfi_endproc
+ 638              	.LFE139:
+ 640              		.section	.text.LCD_demo,"ax",%progbits
+ 641              		.align	1
+ 642              		.global	LCD_demo
+ 643              		.syntax unified
+ 644              		.thumb
+ 645              		.thumb_func
+ 647              	LCD_demo:
+ 648              	.LFB137:
+  50:Core/Src/lcd.c ****   LCD_SetHint();
+ 649              		.loc 1 50 1 is_stmt 1 view -0
+ 650              		.cfi_startproc
+ 651              		@ args = 0, pretend = 0, frame = 0
+ 652              		@ frame_needed = 0, uses_anonymous_args = 0
+ 653 0000 08B5     		push	{r3, lr}
+ 654              	.LCFI4:
+ 655              		.cfi_def_cfa_offset 8
+ 656              		.cfi_offset 3, -8
+ 657              		.cfi_offset 14, -4
+ARM GAS  /tmp/cc6z6x1V.s 			page 16
+
+
+  51:Core/Src/lcd.c ****   LCD_Feature = 0;
+ 658              		.loc 1 51 3 view .LVU142
+ 659 0002 FFF7FEFF 		bl	LCD_SetHint
+ 660              	.LVL86:
+  52:Core/Src/lcd.c ****   LCD_Show_Feature (LCD_Feature); 
+ 661              		.loc 1 52 3 view .LVU143
+  52:Core/Src/lcd.c ****   LCD_Show_Feature (LCD_Feature); 
+ 662              		.loc 1 52 15 is_stmt 0 view .LVU144
+ 663 0006 0020     		movs	r0, #0
+ 664 0008 0B4B     		ldr	r3, .L17
+ 665 000a 1870     		strb	r0, [r3]
+  53:Core/Src/lcd.c ****   
+ 666              		.loc 1 53 3 is_stmt 1 view .LVU145
+ 667 000c FFF7FEFF 		bl	LCD_Show_Feature
+ 668              	.LVL87:
+ 669 0010 02E0     		b	.L15
+ 670              	.L13:
+  68:Core/Src/lcd.c ****   }
+ 671              		.loc 1 68 5 view .LVU146
+ 672 0012 6420     		movs	r0, #100
+ 673 0014 FFF7FEFF 		bl	HAL_Delay
+ 674              	.LVL88:
+  55:Core/Src/lcd.c ****   { 
+ 675              		.loc 1 55 9 discriminator 1 view .LVU147
+ 676              	.L15:
+  55:Core/Src/lcd.c ****   { 
+ 677              		.loc 1 55 3 view .LVU148
+  57:Core/Src/lcd.c ****     {
+ 678              		.loc 1 57 5 view .LVU149
+  57:Core/Src/lcd.c ****     {
+ 679              		.loc 1 57 8 is_stmt 0 view .LVU150
+ 680 0018 FFF7FEFF 		bl	CheckForUserInput
+ 681              	.LVL89:
+  57:Core/Src/lcd.c ****     {
+ 682              		.loc 1 57 7 discriminator 1 view .LVU151
+ 683 001c 0028     		cmp	r0, #0
+ 684 001e F8D0     		beq	.L13
+  59:Core/Src/lcd.c ****       {
+ 685              		.loc 1 59 7 is_stmt 1 view .LVU152
+  59:Core/Src/lcd.c ****       {
+ 686              		.loc 1 59 10 is_stmt 0 view .LVU153
+ 687 0020 054B     		ldr	r3, .L17
+ 688 0022 1878     		ldrb	r0, [r3]	@ zero_extendqisi2
+ 689 0024 0130     		adds	r0, r0, #1
+ 690 0026 C0B2     		uxtb	r0, r0
+  59:Core/Src/lcd.c ****       {
+ 691              		.loc 1 59 9 view .LVU154
+ 692 0028 1870     		strb	r0, [r3]
+ 693 002a 0228     		cmp	r0, #2
+ 694 002c 02D8     		bhi	.L12
+  61:Core/Src/lcd.c ****       }
+ 695              		.loc 1 61 9 is_stmt 1 view .LVU155
+ 696 002e FFF7FEFF 		bl	LCD_Show_Feature
+ 697              	.LVL90:
+ 698 0032 EEE7     		b	.L13
+ 699              	.L12:
+  70:Core/Src/lcd.c **** 
+ARM GAS  /tmp/cc6z6x1V.s 			page 17
+
+
+ 700              		.loc 1 70 1 is_stmt 0 view .LVU156
+ 701 0034 08BD     		pop	{r3, pc}
+ 702              	.L18:
+ 703 0036 00BF     		.align	2
+ 704              	.L17:
+ 705 0038 00000000 		.word	LCD_Feature
+ 706              		.cfi_endproc
+ 707              	.LFE137:
+ 709              		.section	.bss.LCD_Feature,"aw",%nobits
+ 712              	LCD_Feature:
+ 713 0000 00       		.space	1
+ 714              		.section	.rodata
+ 715              		.align	2
+ 716              		.set	.LANCHOR0,. + 0
+ 717              	.LC0:
+ 718 0000 6400     		.short	100
+ 719 0002 6400     		.short	100
+ 720 0004 A000     		.short	160
+ 721 0006 6400     		.short	100
+ 722 0008 A000     		.short	160
+ 723 000a 8C00     		.short	140
+ 724              	.LC1:
+ 725 000c 6400     		.short	100
+ 726 000e 9600     		.short	150
+ 727 0010 A000     		.short	160
+ 728 0012 9600     		.short	150
+ 729 0014 A000     		.short	160
+ 730 0016 C800     		.short	200
+ 731              		.text
+ 732              	.Letext0:
+ 733              		.file 2 "/usr/arm-none-eabi/include/machine/_default_types.h"
+ 734              		.file 3 "/usr/arm-none-eabi/include/sys/_stdint.h"
+ 735              		.file 4 "Drivers/BSP/STM32F429I-Discovery/../../../Utilities/Fonts/fonts.h"
+ 736              		.file 5 "Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_lcd.h"
+ 737              		.file 6 "Core/Inc/main.h"
+ 738              		.file 7 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h"
+ARM GAS  /tmp/cc6z6x1V.s 			page 18
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 lcd.c
+     /tmp/cc6z6x1V.s:21     .rodata.LCD_SetHint.str1.4:00000000 $d
+     /tmp/cc6z6x1V.s:34     .text.LCD_SetHint:00000000 $t
+     /tmp/cc6z6x1V.s:39     .text.LCD_SetHint:00000000 LCD_SetHint
+     /tmp/cc6z6x1V.s:161    .text.LCD_SetHint:000000b0 $d
+     /tmp/cc6z6x1V.s:172    .rodata.LCD_Show_Feature.str1.4:00000000 $d
+     /tmp/cc6z6x1V.s:191    .text.LCD_Show_Feature:00000000 $t
+     /tmp/cc6z6x1V.s:196    .text.LCD_Show_Feature:00000000 LCD_Show_Feature
+     /tmp/cc6z6x1V.s:623    .text.LCD_Show_Feature:0000028c $d
+     /tmp/cc6z6x1V.s:641    .text.LCD_demo:00000000 $t
+     /tmp/cc6z6x1V.s:647    .text.LCD_demo:00000000 LCD_demo
+     /tmp/cc6z6x1V.s:705    .text.LCD_demo:00000038 $d
+     /tmp/cc6z6x1V.s:712    .bss.LCD_Feature:00000000 LCD_Feature
+     /tmp/cc6z6x1V.s:713    .bss.LCD_Feature:00000000 $d
+     /tmp/cc6z6x1V.s:715    .rodata:00000000 $d
+
+UNDEFINED SYMBOLS
+BSP_LCD_Clear
+BSP_LCD_SetTextColor
+BSP_LCD_GetXSize
+BSP_LCD_FillRect
+BSP_LCD_SetBackColor
+BSP_LCD_SetFont
+BSP_LCD_DisplayStringAt
+BSP_LCD_GetYSize
+BSP_LCD_DrawRect
+Font24
+Font12
+BSP_LCD_DrawCircle
+BSP_LCD_FillCircle
+BSP_LCD_DrawPolygon
+BSP_LCD_FillPolygon
+BSP_LCD_DrawEllipse
+BSP_LCD_FillEllipse
+BSP_LCD_DrawHLine
+BSP_LCD_DrawLine
+BSP_LCD_DrawBitmap
+HAL_Delay
+Font20
+Font16
+stlogo
+CheckForUserInput

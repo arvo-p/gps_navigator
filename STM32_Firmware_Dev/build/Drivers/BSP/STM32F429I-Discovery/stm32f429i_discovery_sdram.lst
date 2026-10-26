@@ -1,0 +1,1643 @@
+ARM GAS  /tmp/ccSi6H2i.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.arch armv7e-m
+   3              		.fpu fpv4-sp-d16
+   4              		.eabi_attribute 27, 1
+   5              		.eabi_attribute 28, 1
+   6              		.eabi_attribute 20, 1
+   7              		.eabi_attribute 21, 1
+   8              		.eabi_attribute 23, 3
+   9              		.eabi_attribute 24, 1
+  10              		.eabi_attribute 25, 1
+  11              		.eabi_attribute 26, 1
+  12              		.eabi_attribute 30, 1
+  13              		.eabi_attribute 34, 1
+  14              		.eabi_attribute 18, 4
+  15              		.file	"stm32f429i_discovery_sdram.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.file 1 "Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c"
+  20              		.section	.text.BSP_SDRAM_Initialization_sequence,"ax",%progbits
+  21              		.align	1
+  22              		.global	BSP_SDRAM_Initialization_sequence
+  23              		.syntax unified
+  24              		.thumb
+  25              		.thumb_func
+  27              	BSP_SDRAM_Initialization_sequence:
+  28              	.LVL0:
+  29              	.LFB135:
+   1:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** /**
+   2:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   ******************************************************************************
+   3:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   * @file    stm32f429i_discovery_sdram.c
+   4:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   * @author  MCD Application Team
+   5:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   * @brief   This file provides a set of functions needed to drive the
+   6:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   *          IS42S16400J SDRAM memory mounted on STM32F429I-Discovery Kit.
+   7:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   ******************************************************************************
+   8:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   * @attention
+   9:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   *
+  10:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   * Copyright (c) 2017 STMicroelectronics.
+  11:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   * All rights reserved.
+  12:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   *
+  13:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   * This software is licensed under terms that can be found in the LICENSE file
+  14:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   * in the root directory of this software component.
+  15:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   * If no LICENSE file comes with this software, it is provided AS-IS.
+  16:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   *
+  17:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   ******************************************************************************
+  18:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   */
+  19:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** 
+  20:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** /* Includes ------------------------------------------------------------------*/
+  21:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** #include "stm32f429i_discovery_sdram.h"
+  22:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** 
+  23:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** /** @addtogroup BSP
+  24:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   * @{
+  25:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   */
+  26:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** 
+  27:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** /** @addtogroup STM32F429I_DISCOVERY
+  28:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   * @{
+  29:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   */
+ARM GAS  /tmp/ccSi6H2i.s 			page 2
+
+
+  30:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** 
+  31:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** /** @defgroup STM32F429I_DISCOVERY_SDRAM STM32F429I DISCOVERY SDRAM
+  32:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   * @{
+  33:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   */
+  34:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** 
+  35:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** /** @defgroup STM32F429I_DISCOVERY_SDRAM_Private_Types_Definitions STM32F429I DISCOVERY SDRAM Priva
+  36:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   * @{
+  37:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   */
+  38:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** /**
+  39:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   * @}
+  40:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   */
+  41:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** 
+  42:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** /** @defgroup STM32F429I_DISCOVERY_SDRAM_Private_Defines STM32F429I DISCOVERY SDRAM Private Defines
+  43:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   * @{
+  44:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   */
+  45:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** /**
+  46:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   * @}
+  47:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   */
+  48:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** 
+  49:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** /** @defgroup STM32F429I_DISCOVERY_SDRAM_Private_Macros STM32F429I DISCOVERY SDRAM Private Macros
+  50:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   * @{
+  51:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   */
+  52:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** /**
+  53:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   * @}
+  54:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   */
+  55:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** 
+  56:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** /** @defgroup STM32F429I_DISCOVERY_SDRAM_Private_Variables STM32F429I DISCOVERY SDRAM Private Varia
+  57:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   * @{
+  58:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   */
+  59:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** static SDRAM_HandleTypeDef SdramHandle;
+  60:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** static FMC_SDRAM_TimingTypeDef Timing;
+  61:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** static FMC_SDRAM_CommandTypeDef Command;
+  62:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** /**
+  63:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   * @}
+  64:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   */
+  65:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** 
+  66:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** /** @defgroup STM32F429I_DISCOVERY_SDRAM_Private_Function_Prototypes STM32F429I DISCOVERY SDRAM Pri
+  67:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   * @{
+  68:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   */
+  69:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** /**
+  70:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   * @}
+  71:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   */
+  72:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** 
+  73:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** /** @defgroup STM32F429I_DISCOVERY_SDRAM_Private_Functions STM32F429I DISCOVERY SDRAM Private Funct
+  74:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   * @{
+  75:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   */
+  76:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** 
+  77:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** /**
+  78:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   * @brief  Initializes the SDRAM device.
+  79:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   */
+  80:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** uint8_t BSP_SDRAM_Init(void)
+  81:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** {
+  82:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   static uint8_t sdramstatus = SDRAM_ERROR;
+  83:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** 
+  84:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   /* SDRAM device configuration */
+  85:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   SdramHandle.Instance = FMC_SDRAM_DEVICE;
+  86:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** 
+ARM GAS  /tmp/ccSi6H2i.s 			page 3
+
+
+  87:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   /* FMC Configuration -------------------------------------------------------*/
+  88:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   /* FMC SDRAM Bank configuration */
+  89:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   /* Timing configuration for 90 Mhz of SD clock frequency (180Mhz/2) */
+  90:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   /* TMRD: 2 Clock cycles */
+  91:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   Timing.LoadToActiveDelay    = 2;
+  92:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   /* TXSR: min=70ns (7x11.11ns) */
+  93:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   Timing.ExitSelfRefreshDelay = 7;
+  94:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   /* TRAS: min=42ns (4x11.11ns) max=120k (ns) */
+  95:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   Timing.SelfRefreshTime      = 4;
+  96:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   /* TRC:  min=70 (7x11.11ns) */
+  97:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   Timing.RowCycleDelay        = 7;
+  98:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   /* TWR:  min=1+ 7ns (1+1x11.11ns) */
+  99:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   Timing.WriteRecoveryTime    = 2;
+ 100:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   /* TRP:  20ns => 2x11.11ns*/
+ 101:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   Timing.RPDelay              = 2;
+ 102:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   /* TRCD: 20ns => 2x11.11ns */
+ 103:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   Timing.RCDDelay             = 2;
+ 104:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** 
+ 105:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   /* FMC SDRAM control configuration */
+ 106:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   SdramHandle.Init.SDBank             = FMC_SDRAM_BANK2;
+ 107:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   /* Row addressing: [7:0] */
+ 108:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   SdramHandle.Init.ColumnBitsNumber   = FMC_SDRAM_COLUMN_BITS_NUM_8;
+ 109:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   /* Column addressing: [11:0] */
+ 110:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   SdramHandle.Init.RowBitsNumber      = FMC_SDRAM_ROW_BITS_NUM_12;
+ 111:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   SdramHandle.Init.MemoryDataWidth    = SDRAM_MEMORY_WIDTH;
+ 112:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   SdramHandle.Init.InternalBankNumber = FMC_SDRAM_INTERN_BANKS_NUM_4;
+ 113:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   SdramHandle.Init.CASLatency         = SDRAM_CAS_LATENCY;
+ 114:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   SdramHandle.Init.WriteProtection    = FMC_SDRAM_WRITE_PROTECTION_DISABLE;
+ 115:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   SdramHandle.Init.SDClockPeriod      = SDCLOCK_PERIOD;
+ 116:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   SdramHandle.Init.ReadBurst          = SDRAM_READBURST;
+ 117:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   SdramHandle.Init.ReadPipeDelay      = FMC_SDRAM_RPIPE_DELAY_1;
+ 118:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** 
+ 119:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   /* SDRAM controller initialization */
+ 120:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   /* __weak function can be surcharged by the application code */
+ 121:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   BSP_SDRAM_MspInit(&SdramHandle, (void *)NULL);
+ 122:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   if (HAL_SDRAM_Init(&SdramHandle, &Timing) != HAL_OK)
+ 123:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   {
+ 124:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****     sdramstatus = SDRAM_ERROR;
+ 125:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   }
+ 126:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   else
+ 127:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   {
+ 128:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****     sdramstatus = SDRAM_OK;
+ 129:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   }
+ 130:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** 
+ 131:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   /* SDRAM initialization sequence */
+ 132:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   BSP_SDRAM_Initialization_sequence(REFRESH_COUNT);
+ 133:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** 
+ 134:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   return sdramstatus;
+ 135:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** }
+ 136:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** 
+ 137:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** /**
+ 138:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   * @brief  Programs the SDRAM device.
+ 139:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   * @param  RefreshCount: SDRAM refresh counter value
+ 140:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   */
+ 141:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** void BSP_SDRAM_Initialization_sequence(uint32_t RefreshCount)
+ 142:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** {
+  30              		.loc 1 142 1 view -0
+ARM GAS  /tmp/ccSi6H2i.s 			page 4
+
+
+  31              		.cfi_startproc
+  32              		@ args = 0, pretend = 0, frame = 8
+  33              		@ frame_needed = 0, uses_anonymous_args = 0
+  34              		.loc 1 142 1 is_stmt 0 view .LVU1
+  35 0000 2DE9F047 		push	{r4, r5, r6, r7, r8, r9, r10, lr}
+  36              	.LCFI0:
+  37              		.cfi_def_cfa_offset 32
+  38              		.cfi_offset 4, -32
+  39              		.cfi_offset 5, -28
+  40              		.cfi_offset 6, -24
+  41              		.cfi_offset 7, -20
+  42              		.cfi_offset 8, -16
+  43              		.cfi_offset 9, -12
+  44              		.cfi_offset 10, -8
+  45              		.cfi_offset 14, -4
+  46 0004 82B0     		sub	sp, sp, #8
+  47              	.LCFI1:
+  48              		.cfi_def_cfa_offset 40
+  49 0006 8246     		mov	r10, r0
+ 143:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   __IO uint32_t tmpmrd = 0;
+  50              		.loc 1 143 3 is_stmt 1 view .LVU2
+  51              		.loc 1 143 17 is_stmt 0 view .LVU3
+  52 0008 4FF00008 		mov	r8, #0
+  53 000c CDF80480 		str	r8, [sp, #4]
+ 144:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** 
+ 145:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   /* Step 1:  Configure a clock configuration enable command */
+ 146:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   Command.CommandMode             = FMC_SDRAM_CMD_CLK_ENABLE;
+  54              		.loc 1 146 3 is_stmt 1 view .LVU4
+  55              		.loc 1 146 35 is_stmt 0 view .LVU5
+  56 0010 214C     		ldr	r4, .L3
+  57 0012 0126     		movs	r6, #1
+  58 0014 2660     		str	r6, [r4]
+ 147:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   Command.CommandTarget           = FMC_SDRAM_CMD_TARGET_BANK2;
+  59              		.loc 1 147 3 is_stmt 1 view .LVU6
+  60              		.loc 1 147 35 is_stmt 0 view .LVU7
+  61 0016 0827     		movs	r7, #8
+  62 0018 6760     		str	r7, [r4, #4]
+ 148:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   Command.AutoRefreshNumber       = 1;
+  63              		.loc 1 148 3 is_stmt 1 view .LVU8
+  64              		.loc 1 148 35 is_stmt 0 view .LVU9
+  65 001a A660     		str	r6, [r4, #8]
+ 149:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   Command.ModeRegisterDefinition  = 0;
+  66              		.loc 1 149 3 is_stmt 1 view .LVU10
+  67              		.loc 1 149 35 is_stmt 0 view .LVU11
+  68 001c C4F80C80 		str	r8, [r4, #12]
+ 150:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** 
+ 151:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   /* Send the command */
+ 152:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   HAL_SDRAM_SendCommand(&SdramHandle, &Command, SDRAM_TIMEOUT);
+  69              		.loc 1 152 3 is_stmt 1 view .LVU12
+  70 0020 1E4D     		ldr	r5, .L3+4
+  71 0022 4FF6FF72 		movw	r2, #65535
+  72 0026 2146     		mov	r1, r4
+  73 0028 2846     		mov	r0, r5
+  74              	.LVL1:
+  75              		.loc 1 152 3 is_stmt 0 view .LVU13
+  76 002a FFF7FEFF 		bl	HAL_SDRAM_SendCommand
+  77              	.LVL2:
+ARM GAS  /tmp/ccSi6H2i.s 			page 5
+
+
+ 153:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** 
+ 154:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   /* Step 2: Insert 100 us minimum delay */
+ 155:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   /* Inserted delay is equal to 1 ms due to systick time base unit (ms) */
+ 156:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   HAL_Delay(1);
+  78              		.loc 1 156 3 is_stmt 1 view .LVU14
+  79 002e 3046     		mov	r0, r6
+  80 0030 FFF7FEFF 		bl	HAL_Delay
+  81              	.LVL3:
+ 157:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** 
+ 158:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   /* Step 3: Configure a PALL (precharge all) command */
+ 159:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   Command.CommandMode             = FMC_SDRAM_CMD_PALL;
+  82              		.loc 1 159 3 view .LVU15
+  83              		.loc 1 159 35 is_stmt 0 view .LVU16
+  84 0034 0223     		movs	r3, #2
+  85 0036 2360     		str	r3, [r4]
+ 160:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   Command.CommandTarget           = FMC_SDRAM_CMD_TARGET_BANK2;
+  86              		.loc 1 160 3 is_stmt 1 view .LVU17
+  87              		.loc 1 160 35 is_stmt 0 view .LVU18
+  88 0038 6760     		str	r7, [r4, #4]
+ 161:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   Command.AutoRefreshNumber       = 1;
+  89              		.loc 1 161 3 is_stmt 1 view .LVU19
+  90              		.loc 1 161 35 is_stmt 0 view .LVU20
+  91 003a A660     		str	r6, [r4, #8]
+ 162:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   Command.ModeRegisterDefinition  = 0;
+  92              		.loc 1 162 3 is_stmt 1 view .LVU21
+  93              		.loc 1 162 35 is_stmt 0 view .LVU22
+  94 003c C4F80C80 		str	r8, [r4, #12]
+ 163:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** 
+ 164:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   /* Send the command */
+ 165:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   HAL_SDRAM_SendCommand(&SdramHandle, &Command, SDRAM_TIMEOUT);
+  95              		.loc 1 165 3 is_stmt 1 view .LVU23
+  96 0040 4FF6FF72 		movw	r2, #65535
+  97 0044 2146     		mov	r1, r4
+  98 0046 2846     		mov	r0, r5
+  99 0048 FFF7FEFF 		bl	HAL_SDRAM_SendCommand
+ 100              	.LVL4:
+ 166:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** 
+ 167:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   /* Step 4: Configure an Auto Refresh command */
+ 168:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   Command.CommandMode             = FMC_SDRAM_CMD_AUTOREFRESH_MODE;
+ 101              		.loc 1 168 3 view .LVU24
+ 102              		.loc 1 168 35 is_stmt 0 view .LVU25
+ 103 004c 0323     		movs	r3, #3
+ 104 004e 2360     		str	r3, [r4]
+ 169:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   Command.CommandTarget           = FMC_SDRAM_CMD_TARGET_BANK2;
+ 105              		.loc 1 169 3 is_stmt 1 view .LVU26
+ 106              		.loc 1 169 35 is_stmt 0 view .LVU27
+ 107 0050 6760     		str	r7, [r4, #4]
+ 170:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   Command.AutoRefreshNumber       = 4;
+ 108              		.loc 1 170 3 is_stmt 1 view .LVU28
+ 109              		.loc 1 170 35 is_stmt 0 view .LVU29
+ 110 0052 4FF00409 		mov	r9, #4
+ 111 0056 C4F80890 		str	r9, [r4, #8]
+ 171:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   Command.ModeRegisterDefinition  = 0;
+ 112              		.loc 1 171 3 is_stmt 1 view .LVU30
+ 113              		.loc 1 171 35 is_stmt 0 view .LVU31
+ 114 005a C4F80C80 		str	r8, [r4, #12]
+ 172:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** 
+ARM GAS  /tmp/ccSi6H2i.s 			page 6
+
+
+ 173:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   /* Send the command */
+ 174:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   HAL_SDRAM_SendCommand(&SdramHandle, &Command, SDRAM_TIMEOUT);
+ 115              		.loc 1 174 3 is_stmt 1 view .LVU32
+ 116 005e 4FF6FF72 		movw	r2, #65535
+ 117 0062 2146     		mov	r1, r4
+ 118 0064 2846     		mov	r0, r5
+ 119 0066 FFF7FEFF 		bl	HAL_SDRAM_SendCommand
+ 120              	.LVL5:
+ 175:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** 
+ 176:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   /* Step 5: Program the external memory mode register */
+ 177:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   tmpmrd = (uint32_t)SDRAM_MODEREG_BURST_LENGTH_1          |
+ 121              		.loc 1 177 3 view .LVU33
+ 122              		.loc 1 177 10 is_stmt 0 view .LVU34
+ 123 006a 4FF40C73 		mov	r3, #560
+ 124 006e 0193     		str	r3, [sp, #4]
+ 178:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****            SDRAM_MODEREG_BURST_TYPE_SEQUENTIAL   |
+ 179:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****            SDRAM_MODEREG_CAS_LATENCY_3           |
+ 180:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****            SDRAM_MODEREG_OPERATING_MODE_STANDARD |
+ 181:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****            SDRAM_MODEREG_WRITEBURST_MODE_SINGLE;
+ 182:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** 
+ 183:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   Command.CommandMode             = FMC_SDRAM_CMD_LOAD_MODE;
+ 125              		.loc 1 183 3 is_stmt 1 view .LVU35
+ 126              		.loc 1 183 35 is_stmt 0 view .LVU36
+ 127 0070 C4F80090 		str	r9, [r4]
+ 184:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   Command.CommandTarget           = FMC_SDRAM_CMD_TARGET_BANK2;
+ 128              		.loc 1 184 3 is_stmt 1 view .LVU37
+ 129              		.loc 1 184 35 is_stmt 0 view .LVU38
+ 130 0074 6760     		str	r7, [r4, #4]
+ 185:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   Command.AutoRefreshNumber       = 1;
+ 131              		.loc 1 185 3 is_stmt 1 view .LVU39
+ 132              		.loc 1 185 35 is_stmt 0 view .LVU40
+ 133 0076 A660     		str	r6, [r4, #8]
+ 186:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   Command.ModeRegisterDefinition  = tmpmrd;
+ 134              		.loc 1 186 3 is_stmt 1 view .LVU41
+ 135              		.loc 1 186 35 is_stmt 0 view .LVU42
+ 136 0078 019B     		ldr	r3, [sp, #4]
+ 137 007a E360     		str	r3, [r4, #12]
+ 187:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** 
+ 188:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   /* Send the command */
+ 189:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   HAL_SDRAM_SendCommand(&SdramHandle, &Command, SDRAM_TIMEOUT);
+ 138              		.loc 1 189 3 is_stmt 1 view .LVU43
+ 139 007c 4FF6FF72 		movw	r2, #65535
+ 140 0080 2146     		mov	r1, r4
+ 141 0082 2846     		mov	r0, r5
+ 142 0084 FFF7FEFF 		bl	HAL_SDRAM_SendCommand
+ 143              	.LVL6:
+ 190:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** 
+ 191:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   /* Step 6: Set the refresh rate counter */
+ 192:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   /* Set the device refresh rate */
+ 193:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   HAL_SDRAM_ProgramRefreshRate(&SdramHandle, RefreshCount);
+ 144              		.loc 1 193 3 view .LVU44
+ 145 0088 5146     		mov	r1, r10
+ 146 008a 2846     		mov	r0, r5
+ 147 008c FFF7FEFF 		bl	HAL_SDRAM_ProgramRefreshRate
+ 148              	.LVL7:
+ 194:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** }
+ 149              		.loc 1 194 1 is_stmt 0 view .LVU45
+ARM GAS  /tmp/ccSi6H2i.s 			page 7
+
+
+ 150 0090 02B0     		add	sp, sp, #8
+ 151              	.LCFI2:
+ 152              		.cfi_def_cfa_offset 32
+ 153              		@ sp needed
+ 154 0092 BDE8F087 		pop	{r4, r5, r6, r7, r8, r9, r10, pc}
+ 155              	.LVL8:
+ 156              	.L4:
+ 157              		.loc 1 194 1 view .LVU46
+ 158 0096 00BF     		.align	2
+ 159              	.L3:
+ 160 0098 00000000 		.word	Command
+ 161 009c 00000000 		.word	SdramHandle
+ 162              		.cfi_endproc
+ 163              	.LFE135:
+ 165              		.section	.text.BSP_SDRAM_ReadData,"ax",%progbits
+ 166              		.align	1
+ 167              		.global	BSP_SDRAM_ReadData
+ 168              		.syntax unified
+ 169              		.thumb
+ 170              		.thumb_func
+ 172              	BSP_SDRAM_ReadData:
+ 173              	.LVL9:
+ 174              	.LFB136:
+ 195:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** 
+ 196:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** /**
+ 197:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   * @brief  Reads an mount of data from the SDRAM memory in polling mode.
+ 198:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   * @param  uwStartAddress : Read start address
+ 199:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   * @param  pData : Pointer to data to be read
+ 200:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   * @param  uwDataSize: Size of read data from the memory
+ 201:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   */
+ 202:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** uint8_t BSP_SDRAM_ReadData(uint32_t uwStartAddress, uint32_t *pData, uint32_t uwDataSize)
+ 203:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** {
+ 175              		.loc 1 203 1 is_stmt 1 view -0
+ 176              		.cfi_startproc
+ 177              		@ args = 0, pretend = 0, frame = 0
+ 178              		@ frame_needed = 0, uses_anonymous_args = 0
+ 179              		.loc 1 203 1 is_stmt 0 view .LVU48
+ 180 0000 08B5     		push	{r3, lr}
+ 181              	.LCFI3:
+ 182              		.cfi_def_cfa_offset 8
+ 183              		.cfi_offset 3, -8
+ 184              		.cfi_offset 14, -4
+ 185 0002 1346     		mov	r3, r2
+ 204:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   if (HAL_SDRAM_Read_32b(&SdramHandle, (uint32_t *)uwStartAddress, pData, uwDataSize) != HAL_OK)
+ 186              		.loc 1 204 3 is_stmt 1 view .LVU49
+ 187              		.loc 1 204 7 is_stmt 0 view .LVU50
+ 188 0004 0A46     		mov	r2, r1
+ 189              	.LVL10:
+ 190              		.loc 1 204 7 view .LVU51
+ 191 0006 0146     		mov	r1, r0
+ 192              	.LVL11:
+ 193              		.loc 1 204 7 view .LVU52
+ 194 0008 0248     		ldr	r0, .L8
+ 195              	.LVL12:
+ 196              		.loc 1 204 7 view .LVU53
+ 197 000a FFF7FEFF 		bl	HAL_SDRAM_Read_32b
+ 198              	.LVL13:
+ARM GAS  /tmp/ccSi6H2i.s 			page 8
+
+
+ 199              		.loc 1 204 6 discriminator 1 view .LVU54
+ 200 000e 00B1     		cbz	r0, .L6
+ 205:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   {
+ 206:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****     return SDRAM_ERROR;
+ 201              		.loc 1 206 12 view .LVU55
+ 202 0010 0120     		movs	r0, #1
+ 203              	.L6:
+ 207:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   }
+ 208:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   else
+ 209:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   {
+ 210:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****     return SDRAM_OK;
+ 211:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   }
+ 212:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** }
+ 204              		.loc 1 212 1 view .LVU56
+ 205 0012 08BD     		pop	{r3, pc}
+ 206              	.L9:
+ 207              		.align	2
+ 208              	.L8:
+ 209 0014 00000000 		.word	SdramHandle
+ 210              		.cfi_endproc
+ 211              	.LFE136:
+ 213              		.section	.text.BSP_SDRAM_ReadData_DMA,"ax",%progbits
+ 214              		.align	1
+ 215              		.global	BSP_SDRAM_ReadData_DMA
+ 216              		.syntax unified
+ 217              		.thumb
+ 218              		.thumb_func
+ 220              	BSP_SDRAM_ReadData_DMA:
+ 221              	.LVL14:
+ 222              	.LFB137:
+ 213:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** 
+ 214:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** /**
+ 215:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   * @brief  Reads an mount of data from the SDRAM memory in DMA mode.
+ 216:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   * @param  uwStartAddress : Read start address
+ 217:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   * @param  pData : Pointer to data to be read
+ 218:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   * @param  uwDataSize: Size of read data from the memory
+ 219:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   */
+ 220:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** uint8_t BSP_SDRAM_ReadData_DMA(uint32_t uwStartAddress, uint32_t *pData, uint32_t uwDataSize)
+ 221:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** {
+ 223              		.loc 1 221 1 is_stmt 1 view -0
+ 224              		.cfi_startproc
+ 225              		@ args = 0, pretend = 0, frame = 0
+ 226              		@ frame_needed = 0, uses_anonymous_args = 0
+ 227              		.loc 1 221 1 is_stmt 0 view .LVU58
+ 228 0000 08B5     		push	{r3, lr}
+ 229              	.LCFI4:
+ 230              		.cfi_def_cfa_offset 8
+ 231              		.cfi_offset 3, -8
+ 232              		.cfi_offset 14, -4
+ 233 0002 1346     		mov	r3, r2
+ 222:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   if (HAL_SDRAM_Read_DMA(&SdramHandle, (uint32_t *)uwStartAddress, pData, uwDataSize) != HAL_OK)
+ 234              		.loc 1 222 3 is_stmt 1 view .LVU59
+ 235              		.loc 1 222 7 is_stmt 0 view .LVU60
+ 236 0004 0A46     		mov	r2, r1
+ 237              	.LVL15:
+ 238              		.loc 1 222 7 view .LVU61
+ 239 0006 0146     		mov	r1, r0
+ARM GAS  /tmp/ccSi6H2i.s 			page 9
+
+
+ 240              	.LVL16:
+ 241              		.loc 1 222 7 view .LVU62
+ 242 0008 0248     		ldr	r0, .L13
+ 243              	.LVL17:
+ 244              		.loc 1 222 7 view .LVU63
+ 245 000a FFF7FEFF 		bl	HAL_SDRAM_Read_DMA
+ 246              	.LVL18:
+ 247              		.loc 1 222 6 discriminator 1 view .LVU64
+ 248 000e 00B1     		cbz	r0, .L11
+ 223:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   {
+ 224:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****     return SDRAM_ERROR;
+ 249              		.loc 1 224 12 view .LVU65
+ 250 0010 0120     		movs	r0, #1
+ 251              	.L11:
+ 225:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   }
+ 226:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   else
+ 227:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   {
+ 228:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****     return SDRAM_OK;
+ 229:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   }
+ 230:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** }
+ 252              		.loc 1 230 1 view .LVU66
+ 253 0012 08BD     		pop	{r3, pc}
+ 254              	.L14:
+ 255              		.align	2
+ 256              	.L13:
+ 257 0014 00000000 		.word	SdramHandle
+ 258              		.cfi_endproc
+ 259              	.LFE137:
+ 261              		.section	.text.BSP_SDRAM_WriteData,"ax",%progbits
+ 262              		.align	1
+ 263              		.global	BSP_SDRAM_WriteData
+ 264              		.syntax unified
+ 265              		.thumb
+ 266              		.thumb_func
+ 268              	BSP_SDRAM_WriteData:
+ 269              	.LVL19:
+ 270              	.LFB138:
+ 231:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** 
+ 232:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** /**
+ 233:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   * @brief  Writes an mount of data to the SDRAM memory in polling mode.
+ 234:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   * @param  uwStartAddress : Write start address
+ 235:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   * @param  pData : Pointer to data to be written
+ 236:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   * @param  uwDataSize: Size of written data from the memory
+ 237:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   */
+ 238:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** uint8_t BSP_SDRAM_WriteData(uint32_t uwStartAddress, uint32_t *pData, uint32_t uwDataSize)
+ 239:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** {
+ 271              		.loc 1 239 1 is_stmt 1 view -0
+ 272              		.cfi_startproc
+ 273              		@ args = 0, pretend = 0, frame = 0
+ 274              		@ frame_needed = 0, uses_anonymous_args = 0
+ 275              		.loc 1 239 1 is_stmt 0 view .LVU68
+ 276 0000 F8B5     		push	{r3, r4, r5, r6, r7, lr}
+ 277              	.LCFI5:
+ 278              		.cfi_def_cfa_offset 24
+ 279              		.cfi_offset 3, -24
+ 280              		.cfi_offset 4, -20
+ 281              		.cfi_offset 5, -16
+ARM GAS  /tmp/ccSi6H2i.s 			page 10
+
+
+ 282              		.cfi_offset 6, -12
+ 283              		.cfi_offset 7, -8
+ 284              		.cfi_offset 14, -4
+ 285 0002 0746     		mov	r7, r0
+ 286 0004 0E46     		mov	r6, r1
+ 287 0006 1546     		mov	r5, r2
+ 240:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   /* Disable write protection */
+ 241:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   HAL_SDRAM_WriteProtection_Disable(&SdramHandle);
+ 288              		.loc 1 241 3 is_stmt 1 view .LVU69
+ 289 0008 064C     		ldr	r4, .L18
+ 290 000a 2046     		mov	r0, r4
+ 291              	.LVL20:
+ 292              		.loc 1 241 3 is_stmt 0 view .LVU70
+ 293 000c FFF7FEFF 		bl	HAL_SDRAM_WriteProtection_Disable
+ 294              	.LVL21:
+ 242:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** 
+ 243:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   /*Write 32-bit data buffer to SDRAM memory*/
+ 244:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   if (HAL_SDRAM_Write_32b(&SdramHandle, (uint32_t *)uwStartAddress, pData, uwDataSize) != HAL_OK)
+ 295              		.loc 1 244 3 is_stmt 1 view .LVU71
+ 296              		.loc 1 244 7 is_stmt 0 view .LVU72
+ 297 0010 2B46     		mov	r3, r5
+ 298 0012 3246     		mov	r2, r6
+ 299 0014 3946     		mov	r1, r7
+ 300 0016 2046     		mov	r0, r4
+ 301 0018 FFF7FEFF 		bl	HAL_SDRAM_Write_32b
+ 302              	.LVL22:
+ 303              		.loc 1 244 6 discriminator 1 view .LVU73
+ 304 001c 00B1     		cbz	r0, .L16
+ 245:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   {
+ 246:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****     return SDRAM_ERROR;
+ 305              		.loc 1 246 12 view .LVU74
+ 306 001e 0120     		movs	r0, #1
+ 307              	.L16:
+ 247:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   }
+ 248:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   else
+ 249:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   {
+ 250:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****     return SDRAM_OK;
+ 251:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   }
+ 252:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** }
+ 308              		.loc 1 252 1 view .LVU75
+ 309 0020 F8BD     		pop	{r3, r4, r5, r6, r7, pc}
+ 310              	.LVL23:
+ 311              	.L19:
+ 312              		.loc 1 252 1 view .LVU76
+ 313 0022 00BF     		.align	2
+ 314              	.L18:
+ 315 0024 00000000 		.word	SdramHandle
+ 316              		.cfi_endproc
+ 317              	.LFE138:
+ 319              		.section	.text.BSP_SDRAM_WriteData_DMA,"ax",%progbits
+ 320              		.align	1
+ 321              		.global	BSP_SDRAM_WriteData_DMA
+ 322              		.syntax unified
+ 323              		.thumb
+ 324              		.thumb_func
+ 326              	BSP_SDRAM_WriteData_DMA:
+ 327              	.LVL24:
+ARM GAS  /tmp/ccSi6H2i.s 			page 11
+
+
+ 328              	.LFB139:
+ 253:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** 
+ 254:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** /**
+ 255:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   * @brief  Writes an mount of data to the SDRAM memory in DMA mode.
+ 256:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   * @param  uwStartAddress : Write start address
+ 257:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   * @param  pData : Pointer to data to be written
+ 258:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   * @param  uwDataSize: Size of written data from the memory
+ 259:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   */
+ 260:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** uint8_t BSP_SDRAM_WriteData_DMA(uint32_t uwStartAddress, uint32_t *pData, uint32_t uwDataSize)
+ 261:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** {
+ 329              		.loc 1 261 1 is_stmt 1 view -0
+ 330              		.cfi_startproc
+ 331              		@ args = 0, pretend = 0, frame = 0
+ 332              		@ frame_needed = 0, uses_anonymous_args = 0
+ 333              		.loc 1 261 1 is_stmt 0 view .LVU78
+ 334 0000 08B5     		push	{r3, lr}
+ 335              	.LCFI6:
+ 336              		.cfi_def_cfa_offset 8
+ 337              		.cfi_offset 3, -8
+ 338              		.cfi_offset 14, -4
+ 339 0002 1346     		mov	r3, r2
+ 262:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   if (HAL_SDRAM_Write_DMA(&SdramHandle, (uint32_t *)uwStartAddress, pData, uwDataSize) != HAL_OK)
+ 340              		.loc 1 262 3 is_stmt 1 view .LVU79
+ 341              		.loc 1 262 7 is_stmt 0 view .LVU80
+ 342 0004 0A46     		mov	r2, r1
+ 343              	.LVL25:
+ 344              		.loc 1 262 7 view .LVU81
+ 345 0006 0146     		mov	r1, r0
+ 346              	.LVL26:
+ 347              		.loc 1 262 7 view .LVU82
+ 348 0008 0248     		ldr	r0, .L23
+ 349              	.LVL27:
+ 350              		.loc 1 262 7 view .LVU83
+ 351 000a FFF7FEFF 		bl	HAL_SDRAM_Write_DMA
+ 352              	.LVL28:
+ 353              		.loc 1 262 6 discriminator 1 view .LVU84
+ 354 000e 00B1     		cbz	r0, .L21
+ 263:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   {
+ 264:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****     return SDRAM_ERROR;
+ 355              		.loc 1 264 12 view .LVU85
+ 356 0010 0120     		movs	r0, #1
+ 357              	.L21:
+ 265:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   }
+ 266:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   else
+ 267:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   {
+ 268:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****     return SDRAM_OK;
+ 269:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   }
+ 270:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** }
+ 358              		.loc 1 270 1 view .LVU86
+ 359 0012 08BD     		pop	{r3, pc}
+ 360              	.L24:
+ 361              		.align	2
+ 362              	.L23:
+ 363 0014 00000000 		.word	SdramHandle
+ 364              		.cfi_endproc
+ 365              	.LFE139:
+ 367              		.section	.text.BSP_SDRAM_Sendcmd,"ax",%progbits
+ARM GAS  /tmp/ccSi6H2i.s 			page 12
+
+
+ 368              		.align	1
+ 369              		.global	BSP_SDRAM_Sendcmd
+ 370              		.syntax unified
+ 371              		.thumb
+ 372              		.thumb_func
+ 374              	BSP_SDRAM_Sendcmd:
+ 375              	.LVL29:
+ 376              	.LFB140:
+ 271:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** 
+ 272:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** /**
+ 273:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   * @brief  Sends command to the SDRAM bank.
+ 274:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   * @param  SdramCmd: Pointer to SDRAM command structure
+ 275:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   * @retval HAL status
+ 276:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   */
+ 277:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** uint8_t BSP_SDRAM_Sendcmd(FMC_SDRAM_CommandTypeDef *SdramCmd)
+ 278:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** {
+ 377              		.loc 1 278 1 is_stmt 1 view -0
+ 378              		.cfi_startproc
+ 379              		@ args = 0, pretend = 0, frame = 0
+ 380              		@ frame_needed = 0, uses_anonymous_args = 0
+ 381              		.loc 1 278 1 is_stmt 0 view .LVU88
+ 382 0000 08B5     		push	{r3, lr}
+ 383              	.LCFI7:
+ 384              		.cfi_def_cfa_offset 8
+ 385              		.cfi_offset 3, -8
+ 386              		.cfi_offset 14, -4
+ 387 0002 0146     		mov	r1, r0
+ 279:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   if (HAL_SDRAM_SendCommand(&SdramHandle, SdramCmd, SDRAM_TIMEOUT) != HAL_OK)
+ 388              		.loc 1 279 3 is_stmt 1 view .LVU89
+ 389              		.loc 1 279 7 is_stmt 0 view .LVU90
+ 390 0004 4FF6FF72 		movw	r2, #65535
+ 391 0008 0248     		ldr	r0, .L28
+ 392              	.LVL30:
+ 393              		.loc 1 279 7 view .LVU91
+ 394 000a FFF7FEFF 		bl	HAL_SDRAM_SendCommand
+ 395              	.LVL31:
+ 396              		.loc 1 279 6 discriminator 1 view .LVU92
+ 397 000e 00B1     		cbz	r0, .L26
+ 280:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   {
+ 281:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****     return SDRAM_ERROR;
+ 398              		.loc 1 281 12 view .LVU93
+ 399 0010 0120     		movs	r0, #1
+ 400              	.L26:
+ 282:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   }
+ 283:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   else
+ 284:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   {
+ 285:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****     return SDRAM_OK;
+ 286:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   }
+ 287:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** }
+ 401              		.loc 1 287 1 view .LVU94
+ 402 0012 08BD     		pop	{r3, pc}
+ 403              	.L29:
+ 404              		.align	2
+ 405              	.L28:
+ 406 0014 00000000 		.word	SdramHandle
+ 407              		.cfi_endproc
+ 408              	.LFE140:
+ARM GAS  /tmp/ccSi6H2i.s 			page 13
+
+
+ 410              		.section	.text.BSP_SDRAM_DMA_IRQHandler,"ax",%progbits
+ 411              		.align	1
+ 412              		.global	BSP_SDRAM_DMA_IRQHandler
+ 413              		.syntax unified
+ 414              		.thumb
+ 415              		.thumb_func
+ 417              	BSP_SDRAM_DMA_IRQHandler:
+ 418              	.LFB141:
+ 288:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** 
+ 289:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** /**
+ 290:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   * @brief  Handles SDRAM DMA transfer interrupt request.
+ 291:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   */
+ 292:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** void BSP_SDRAM_DMA_IRQHandler(void)
+ 293:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** {
+ 419              		.loc 1 293 1 is_stmt 1 view -0
+ 420              		.cfi_startproc
+ 421              		@ args = 0, pretend = 0, frame = 0
+ 422              		@ frame_needed = 0, uses_anonymous_args = 0
+ 423 0000 08B5     		push	{r3, lr}
+ 424              	.LCFI8:
+ 425              		.cfi_def_cfa_offset 8
+ 426              		.cfi_offset 3, -8
+ 427              		.cfi_offset 14, -4
+ 294:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   HAL_DMA_IRQHandler(SdramHandle.hdma);
+ 428              		.loc 1 294 3 view .LVU96
+ 429 0002 024B     		ldr	r3, .L32
+ 430 0004 186B     		ldr	r0, [r3, #48]
+ 431 0006 FFF7FEFF 		bl	HAL_DMA_IRQHandler
+ 432              	.LVL32:
+ 295:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** }
+ 433              		.loc 1 295 1 is_stmt 0 view .LVU97
+ 434 000a 08BD     		pop	{r3, pc}
+ 435              	.L33:
+ 436              		.align	2
+ 437              	.L32:
+ 438 000c 00000000 		.word	SdramHandle
+ 439              		.cfi_endproc
+ 440              	.LFE141:
+ 442              		.section	.text.BSP_SDRAM_MspInit,"ax",%progbits
+ 443              		.align	1
+ 444              		.weak	BSP_SDRAM_MspInit
+ 445              		.syntax unified
+ 446              		.thumb
+ 447              		.thumb_func
+ 449              	BSP_SDRAM_MspInit:
+ 450              	.LVL33:
+ 451              	.LFB142:
+ 296:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** 
+ 297:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** /**
+ 298:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   * @brief  Initializes SDRAM MSP.
+ 299:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   * @note   This function can be surcharged by application code.
+ 300:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   * @param  hsdram: pointer on SDRAM handle
+ 301:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   * @param  Params: pointer on additional configuration parameters, can be NULL.
+ 302:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   */
+ 303:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** __weak void BSP_SDRAM_MspInit(SDRAM_HandleTypeDef  *hsdram, void *Params)
+ 304:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** {
+ 452              		.loc 1 304 1 is_stmt 1 view -0
+ARM GAS  /tmp/ccSi6H2i.s 			page 14
+
+
+ 453              		.cfi_startproc
+ 454              		@ args = 0, pretend = 0, frame = 56
+ 455              		@ frame_needed = 0, uses_anonymous_args = 0
+ 305:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   static DMA_HandleTypeDef dmaHandle;
+ 456              		.loc 1 305 3 view .LVU99
+ 306:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   GPIO_InitTypeDef GPIO_InitStructure;
+ 457              		.loc 1 306 3 view .LVU100
+ 307:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** 
+ 308:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   if (hsdram != (SDRAM_HandleTypeDef *)NULL)
+ 458              		.loc 1 308 3 view .LVU101
+ 459              		.loc 1 308 6 is_stmt 0 view .LVU102
+ 460 0000 0028     		cmp	r0, #0
+ 461 0002 00F0B180 		beq	.L37
+ 304:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   static DMA_HandleTypeDef dmaHandle;
+ 462              		.loc 1 304 1 view .LVU103
+ 463 0006 70B5     		push	{r4, r5, r6, lr}
+ 464              	.LCFI9:
+ 465              		.cfi_def_cfa_offset 16
+ 466              		.cfi_offset 4, -16
+ 467              		.cfi_offset 5, -12
+ 468              		.cfi_offset 6, -8
+ 469              		.cfi_offset 14, -4
+ 470 0008 8EB0     		sub	sp, sp, #56
+ 471              	.LCFI10:
+ 472              		.cfi_def_cfa_offset 72
+ 473 000a 0646     		mov	r6, r0
+ 309:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   {
+ 310:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****     /* Enable FMC clock */
+ 311:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****     __HAL_RCC_FMC_CLK_ENABLE();
+ 474              		.loc 1 311 5 is_stmt 1 view .LVU104
+ 475              	.LBB2:
+ 476              		.loc 1 311 5 view .LVU105
+ 477 000c 0025     		movs	r5, #0
+ 478 000e 0195     		str	r5, [sp, #4]
+ 479              		.loc 1 311 5 view .LVU106
+ 480 0010 564B     		ldr	r3, .L40
+ 481 0012 9A6B     		ldr	r2, [r3, #56]
+ 482 0014 42F00102 		orr	r2, r2, #1
+ 483 0018 9A63     		str	r2, [r3, #56]
+ 484              		.loc 1 311 5 view .LVU107
+ 485 001a 9A6B     		ldr	r2, [r3, #56]
+ 486 001c 02F00102 		and	r2, r2, #1
+ 487 0020 0192     		str	r2, [sp, #4]
+ 488              		.loc 1 311 5 view .LVU108
+ 489 0022 019A     		ldr	r2, [sp, #4]
+ 490              	.LBE2:
+ 491              		.loc 1 311 5 view .LVU109
+ 312:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** 
+ 313:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****     /* Enable chosen DMAx clock */
+ 314:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****     __DMAx_CLK_ENABLE();
+ 492              		.loc 1 314 5 view .LVU110
+ 493              	.LBB3:
+ 494              		.loc 1 314 5 view .LVU111
+ 495 0024 0295     		str	r5, [sp, #8]
+ 496              		.loc 1 314 5 view .LVU112
+ 497 0026 1A6B     		ldr	r2, [r3, #48]
+ 498 0028 42F48002 		orr	r2, r2, #4194304
+ARM GAS  /tmp/ccSi6H2i.s 			page 15
+
+
+ 499 002c 1A63     		str	r2, [r3, #48]
+ 500              		.loc 1 314 5 view .LVU113
+ 501 002e 1A6B     		ldr	r2, [r3, #48]
+ 502 0030 02F48002 		and	r2, r2, #4194304
+ 503 0034 0292     		str	r2, [sp, #8]
+ 504              		.loc 1 314 5 view .LVU114
+ 505 0036 029A     		ldr	r2, [sp, #8]
+ 506              	.LBE3:
+ 507              		.loc 1 314 5 view .LVU115
+ 315:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** 
+ 316:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****     /* Enable GPIOs clock */
+ 317:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****     __HAL_RCC_GPIOB_CLK_ENABLE();
+ 508              		.loc 1 317 5 view .LVU116
+ 509              	.LBB4:
+ 510              		.loc 1 317 5 view .LVU117
+ 511 0038 0395     		str	r5, [sp, #12]
+ 512              		.loc 1 317 5 view .LVU118
+ 513 003a 1A6B     		ldr	r2, [r3, #48]
+ 514 003c 42F00202 		orr	r2, r2, #2
+ 515 0040 1A63     		str	r2, [r3, #48]
+ 516              		.loc 1 317 5 view .LVU119
+ 517 0042 1A6B     		ldr	r2, [r3, #48]
+ 518 0044 02F00202 		and	r2, r2, #2
+ 519 0048 0392     		str	r2, [sp, #12]
+ 520              		.loc 1 317 5 view .LVU120
+ 521 004a 039A     		ldr	r2, [sp, #12]
+ 522              	.LBE4:
+ 523              		.loc 1 317 5 view .LVU121
+ 318:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****     __HAL_RCC_GPIOC_CLK_ENABLE();
+ 524              		.loc 1 318 5 view .LVU122
+ 525              	.LBB5:
+ 526              		.loc 1 318 5 view .LVU123
+ 527 004c 0495     		str	r5, [sp, #16]
+ 528              		.loc 1 318 5 view .LVU124
+ 529 004e 1A6B     		ldr	r2, [r3, #48]
+ 530 0050 42F00402 		orr	r2, r2, #4
+ 531 0054 1A63     		str	r2, [r3, #48]
+ 532              		.loc 1 318 5 view .LVU125
+ 533 0056 1A6B     		ldr	r2, [r3, #48]
+ 534 0058 02F00402 		and	r2, r2, #4
+ 535 005c 0492     		str	r2, [sp, #16]
+ 536              		.loc 1 318 5 view .LVU126
+ 537 005e 049A     		ldr	r2, [sp, #16]
+ 538              	.LBE5:
+ 539              		.loc 1 318 5 view .LVU127
+ 319:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****     __HAL_RCC_GPIOD_CLK_ENABLE();
+ 540              		.loc 1 319 5 view .LVU128
+ 541              	.LBB6:
+ 542              		.loc 1 319 5 view .LVU129
+ 543 0060 0595     		str	r5, [sp, #20]
+ 544              		.loc 1 319 5 view .LVU130
+ 545 0062 1A6B     		ldr	r2, [r3, #48]
+ 546 0064 42F00802 		orr	r2, r2, #8
+ 547 0068 1A63     		str	r2, [r3, #48]
+ 548              		.loc 1 319 5 view .LVU131
+ 549 006a 1A6B     		ldr	r2, [r3, #48]
+ 550 006c 02F00802 		and	r2, r2, #8
+ARM GAS  /tmp/ccSi6H2i.s 			page 16
+
+
+ 551 0070 0592     		str	r2, [sp, #20]
+ 552              		.loc 1 319 5 view .LVU132
+ 553 0072 059A     		ldr	r2, [sp, #20]
+ 554              	.LBE6:
+ 555              		.loc 1 319 5 view .LVU133
+ 320:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****     __HAL_RCC_GPIOE_CLK_ENABLE();
+ 556              		.loc 1 320 5 view .LVU134
+ 557              	.LBB7:
+ 558              		.loc 1 320 5 view .LVU135
+ 559 0074 0695     		str	r5, [sp, #24]
+ 560              		.loc 1 320 5 view .LVU136
+ 561 0076 1A6B     		ldr	r2, [r3, #48]
+ 562 0078 42F01002 		orr	r2, r2, #16
+ 563 007c 1A63     		str	r2, [r3, #48]
+ 564              		.loc 1 320 5 view .LVU137
+ 565 007e 1A6B     		ldr	r2, [r3, #48]
+ 566 0080 02F01002 		and	r2, r2, #16
+ 567 0084 0692     		str	r2, [sp, #24]
+ 568              		.loc 1 320 5 view .LVU138
+ 569 0086 069A     		ldr	r2, [sp, #24]
+ 570              	.LBE7:
+ 571              		.loc 1 320 5 view .LVU139
+ 321:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****     __HAL_RCC_GPIOF_CLK_ENABLE();
+ 572              		.loc 1 321 5 view .LVU140
+ 573              	.LBB8:
+ 574              		.loc 1 321 5 view .LVU141
+ 575 0088 0795     		str	r5, [sp, #28]
+ 576              		.loc 1 321 5 view .LVU142
+ 577 008a 1A6B     		ldr	r2, [r3, #48]
+ 578 008c 42F02002 		orr	r2, r2, #32
+ 579 0090 1A63     		str	r2, [r3, #48]
+ 580              		.loc 1 321 5 view .LVU143
+ 581 0092 1A6B     		ldr	r2, [r3, #48]
+ 582 0094 02F02002 		and	r2, r2, #32
+ 583 0098 0792     		str	r2, [sp, #28]
+ 584              		.loc 1 321 5 view .LVU144
+ 585 009a 079A     		ldr	r2, [sp, #28]
+ 586              	.LBE8:
+ 587              		.loc 1 321 5 view .LVU145
+ 322:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****     __HAL_RCC_GPIOG_CLK_ENABLE();
+ 588              		.loc 1 322 5 view .LVU146
+ 589              	.LBB9:
+ 590              		.loc 1 322 5 view .LVU147
+ 591 009c 0895     		str	r5, [sp, #32]
+ 592              		.loc 1 322 5 view .LVU148
+ 593 009e 1A6B     		ldr	r2, [r3, #48]
+ 594 00a0 42F04002 		orr	r2, r2, #64
+ 595 00a4 1A63     		str	r2, [r3, #48]
+ 596              		.loc 1 322 5 view .LVU149
+ 597 00a6 1B6B     		ldr	r3, [r3, #48]
+ 598 00a8 03F04003 		and	r3, r3, #64
+ 599 00ac 0893     		str	r3, [sp, #32]
+ 600              		.loc 1 322 5 view .LVU150
+ 601 00ae 089B     		ldr	r3, [sp, #32]
+ 602              	.LBE9:
+ 603              		.loc 1 322 5 view .LVU151
+ 323:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** 
+ARM GAS  /tmp/ccSi6H2i.s 			page 17
+
+
+ 324:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****     /*-- GPIOs Configuration -----------------------------------------------------*/
+ 325:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****     /*
+ 326:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****      +-------------------+--------------------+--------------------+--------------------+
+ 327:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****      +                       SDRAM pins assignment                                      +
+ 328:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****      +-------------------+--------------------+--------------------+--------------------+
+ 329:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****      | PD0  <-> FMC_D2   | PE0  <-> FMC_NBL0  | PF0  <-> FMC_A0    | PG0  <-> FMC_A10   |
+ 330:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****      | PD1  <-> FMC_D3   | PE1  <-> FMC_NBL1  | PF1  <-> FMC_A1    | PG1  <-> FMC_A11   |
+ 331:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****      | PD8  <-> FMC_D13  | PE7  <-> FMC_D4    | PF2  <-> FMC_A2    | PG8  <-> FMC_SDCLK |
+ 332:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****      | PD9  <-> FMC_D14  | PE8  <-> FMC_D5    | PF3  <-> FMC_A3    | PG15 <-> FMC_NCAS  |
+ 333:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****      | PD10 <-> FMC_D15  | PE9  <-> FMC_D6    | PF4  <-> FMC_A4    |--------------------+
+ 334:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****      | PD14 <-> FMC_D0   | PE10 <-> FMC_D7    | PF5  <-> FMC_A5    |
+ 335:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****      | PD15 <-> FMC_D1   | PE11 <-> FMC_D8    | PF11 <-> FMC_NRAS  |
+ 336:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****      +-------------------| PE12 <-> FMC_D9    | PF12 <-> FMC_A6    |
+ 337:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****                          | PE13 <-> FMC_D10   | PF13 <-> FMC_A7    |
+ 338:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****                          | PE14 <-> FMC_D11   | PF14 <-> FMC_A8    |
+ 339:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****                          | PE15 <-> FMC_D12   | PF15 <-> FMC_A9    |
+ 340:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****      +-------------------+--------------------+--------------------+
+ 341:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****      | PB5 <-> FMC_SDCKE1|
+ 342:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****      | PB6 <-> FMC_SDNE1 |
+ 343:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****      | PC0 <-> FMC_SDNWE |
+ 344:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****      +-------------------+
+ 345:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** 
+ 346:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****     */
+ 347:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** 
+ 348:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****     /* Common GPIO configuration */
+ 349:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****     GPIO_InitStructure.Mode  = GPIO_MODE_AF_PP;
+ 604              		.loc 1 349 5 view .LVU152
+ 605              		.loc 1 349 30 is_stmt 0 view .LVU153
+ 606 00b0 0223     		movs	r3, #2
+ 607 00b2 0A93     		str	r3, [sp, #40]
+ 350:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****     GPIO_InitStructure.Speed = GPIO_SPEED_FAST;
+ 608              		.loc 1 350 5 is_stmt 1 view .LVU154
+ 609              		.loc 1 350 30 is_stmt 0 view .LVU155
+ 610 00b4 0C93     		str	r3, [sp, #48]
+ 351:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****     GPIO_InitStructure.Pull  = GPIO_NOPULL;
+ 611              		.loc 1 351 5 is_stmt 1 view .LVU156
+ 612              		.loc 1 351 30 is_stmt 0 view .LVU157
+ 613 00b6 0B95     		str	r5, [sp, #44]
+ 352:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****     GPIO_InitStructure.Alternate = GPIO_AF12_FMC;
+ 614              		.loc 1 352 5 is_stmt 1 view .LVU158
+ 615              		.loc 1 352 34 is_stmt 0 view .LVU159
+ 616 00b8 0C23     		movs	r3, #12
+ 617 00ba 0D93     		str	r3, [sp, #52]
+ 353:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** 
+ 354:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****     /* GPIOB configuration */
+ 355:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****     GPIO_InitStructure.Pin = GPIO_PIN_5 | GPIO_PIN_6;
+ 618              		.loc 1 355 5 is_stmt 1 view .LVU160
+ 619              		.loc 1 355 28 is_stmt 0 view .LVU161
+ 620 00bc 6023     		movs	r3, #96
+ 621 00be 0993     		str	r3, [sp, #36]
+ 356:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****     HAL_GPIO_Init(GPIOB, &GPIO_InitStructure);
+ 622              		.loc 1 356 5 is_stmt 1 view .LVU162
+ 623 00c0 09AC     		add	r4, sp, #36
+ 624 00c2 2146     		mov	r1, r4
+ 625              	.LVL34:
+ 626              		.loc 1 356 5 is_stmt 0 view .LVU163
+ 627 00c4 2A48     		ldr	r0, .L40+4
+ARM GAS  /tmp/ccSi6H2i.s 			page 18
+
+
+ 628              	.LVL35:
+ 629              		.loc 1 356 5 view .LVU164
+ 630 00c6 FFF7FEFF 		bl	HAL_GPIO_Init
+ 631              	.LVL36:
+ 357:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** 
+ 358:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****     /* GPIOC configuration */
+ 359:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****     GPIO_InitStructure.Pin = GPIO_PIN_0;
+ 632              		.loc 1 359 5 is_stmt 1 view .LVU165
+ 633              		.loc 1 359 28 is_stmt 0 view .LVU166
+ 634 00ca 0123     		movs	r3, #1
+ 635 00cc 0993     		str	r3, [sp, #36]
+ 360:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****     HAL_GPIO_Init(GPIOC, &GPIO_InitStructure);
+ 636              		.loc 1 360 5 is_stmt 1 view .LVU167
+ 637 00ce 2146     		mov	r1, r4
+ 638 00d0 2848     		ldr	r0, .L40+8
+ 639 00d2 FFF7FEFF 		bl	HAL_GPIO_Init
+ 640              	.LVL37:
+ 361:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** 
+ 362:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****     /* GPIOD configuration */
+ 363:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****     GPIO_InitStructure.Pin = GPIO_PIN_0 | GPIO_PIN_1  | GPIO_PIN_8 |
+ 641              		.loc 1 363 5 view .LVU168
+ 642              		.loc 1 363 28 is_stmt 0 view .LVU169
+ 643 00d6 4CF20373 		movw	r3, #50947
+ 644 00da 0993     		str	r3, [sp, #36]
+ 364:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****                              GPIO_PIN_9 | GPIO_PIN_10 | GPIO_PIN_14 |
+ 365:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****                              GPIO_PIN_15;
+ 366:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****     HAL_GPIO_Init(GPIOD, &GPIO_InitStructure);
+ 645              		.loc 1 366 5 is_stmt 1 view .LVU170
+ 646 00dc 2146     		mov	r1, r4
+ 647 00de 2648     		ldr	r0, .L40+12
+ 648 00e0 FFF7FEFF 		bl	HAL_GPIO_Init
+ 649              	.LVL38:
+ 367:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** 
+ 368:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****     /* GPIOE configuration */
+ 369:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****     GPIO_InitStructure.Pin = GPIO_PIN_0  | GPIO_PIN_1  | GPIO_PIN_7 |
+ 650              		.loc 1 369 5 view .LVU171
+ 651              		.loc 1 369 28 is_stmt 0 view .LVU172
+ 652 00e4 4FF68373 		movw	r3, #65411
+ 653 00e8 0993     		str	r3, [sp, #36]
+ 370:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****                              GPIO_PIN_8  | GPIO_PIN_9  | GPIO_PIN_10 |
+ 371:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****                              GPIO_PIN_11 | GPIO_PIN_12 | GPIO_PIN_13 |
+ 372:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****                              GPIO_PIN_14 | GPIO_PIN_15;
+ 373:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****     HAL_GPIO_Init(GPIOE, &GPIO_InitStructure);
+ 654              		.loc 1 373 5 is_stmt 1 view .LVU173
+ 655 00ea 2146     		mov	r1, r4
+ 656 00ec 2348     		ldr	r0, .L40+16
+ 657 00ee FFF7FEFF 		bl	HAL_GPIO_Init
+ 658              	.LVL39:
+ 374:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** 
+ 375:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****     /* GPIOF configuration */
+ 376:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****     GPIO_InitStructure.Pin = GPIO_PIN_0  | GPIO_PIN_1 | GPIO_PIN_2 |
+ 659              		.loc 1 376 5 view .LVU174
+ 660              		.loc 1 376 28 is_stmt 0 view .LVU175
+ 661 00f2 4FF63F03 		movw	r3, #63551
+ 662 00f6 0993     		str	r3, [sp, #36]
+ 377:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****                              GPIO_PIN_3  | GPIO_PIN_4 | GPIO_PIN_5 |
+ 378:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****                              GPIO_PIN_11 | GPIO_PIN_12 | GPIO_PIN_13 |
+ARM GAS  /tmp/ccSi6H2i.s 			page 19
+
+
+ 379:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****                              GPIO_PIN_14 | GPIO_PIN_15;
+ 380:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****     HAL_GPIO_Init(GPIOF, &GPIO_InitStructure);
+ 663              		.loc 1 380 5 is_stmt 1 view .LVU176
+ 664 00f8 2146     		mov	r1, r4
+ 665 00fa 2148     		ldr	r0, .L40+20
+ 666 00fc FFF7FEFF 		bl	HAL_GPIO_Init
+ 667              	.LVL40:
+ 381:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** 
+ 382:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****     /* GPIOG configuration */
+ 383:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****     GPIO_InitStructure.Pin = GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_4 |
+ 668              		.loc 1 383 5 view .LVU177
+ 669              		.loc 1 383 28 is_stmt 0 view .LVU178
+ 670 0100 48F23313 		movw	r3, #33075
+ 671 0104 0993     		str	r3, [sp, #36]
+ 384:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****                              GPIO_PIN_5 | GPIO_PIN_8 | GPIO_PIN_15;
+ 385:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****     HAL_GPIO_Init(GPIOG, &GPIO_InitStructure);
+ 672              		.loc 1 385 5 is_stmt 1 view .LVU179
+ 673 0106 2146     		mov	r1, r4
+ 674 0108 1E48     		ldr	r0, .L40+24
+ 675 010a FFF7FEFF 		bl	HAL_GPIO_Init
+ 676              	.LVL41:
+ 386:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** 
+ 387:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****     /* Configure common DMA parameters */
+ 388:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****     dmaHandle.Init.Channel             = SDRAM_DMAx_CHANNEL;
+ 677              		.loc 1 388 5 view .LVU180
+ 678              		.loc 1 388 40 is_stmt 0 view .LVU181
+ 679 010e 1E4C     		ldr	r4, .L40+28
+ 680 0110 6560     		str	r5, [r4, #4]
+ 389:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****     dmaHandle.Init.Direction           = DMA_MEMORY_TO_MEMORY;
+ 681              		.loc 1 389 5 is_stmt 1 view .LVU182
+ 682              		.loc 1 389 40 is_stmt 0 view .LVU183
+ 683 0112 8023     		movs	r3, #128
+ 684 0114 A360     		str	r3, [r4, #8]
+ 390:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****     dmaHandle.Init.PeriphInc           = DMA_PINC_ENABLE;
+ 685              		.loc 1 390 5 is_stmt 1 view .LVU184
+ 686              		.loc 1 390 40 is_stmt 0 view .LVU185
+ 687 0116 4FF40073 		mov	r3, #512
+ 688 011a E360     		str	r3, [r4, #12]
+ 391:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****     dmaHandle.Init.MemInc              = DMA_MINC_ENABLE;
+ 689              		.loc 1 391 5 is_stmt 1 view .LVU186
+ 690              		.loc 1 391 40 is_stmt 0 view .LVU187
+ 691 011c 4FF48063 		mov	r3, #1024
+ 692 0120 2361     		str	r3, [r4, #16]
+ 392:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****     dmaHandle.Init.PeriphDataAlignment = DMA_PDATAALIGN_WORD;
+ 693              		.loc 1 392 5 is_stmt 1 view .LVU188
+ 694              		.loc 1 392 40 is_stmt 0 view .LVU189
+ 695 0122 4FF48053 		mov	r3, #4096
+ 696 0126 6361     		str	r3, [r4, #20]
+ 393:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****     dmaHandle.Init.MemDataAlignment    = DMA_MDATAALIGN_WORD;
+ 697              		.loc 1 393 5 is_stmt 1 view .LVU190
+ 698              		.loc 1 393 40 is_stmt 0 view .LVU191
+ 699 0128 4FF48043 		mov	r3, #16384
+ 700 012c A361     		str	r3, [r4, #24]
+ 394:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****     dmaHandle.Init.Mode                = DMA_NORMAL;
+ 701              		.loc 1 394 5 is_stmt 1 view .LVU192
+ 702              		.loc 1 394 40 is_stmt 0 view .LVU193
+ 703 012e E561     		str	r5, [r4, #28]
+ARM GAS  /tmp/ccSi6H2i.s 			page 20
+
+
+ 395:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****     dmaHandle.Init.Priority            = DMA_PRIORITY_HIGH;
+ 704              		.loc 1 395 5 is_stmt 1 view .LVU194
+ 705              		.loc 1 395 40 is_stmt 0 view .LVU195
+ 706 0130 4FF40033 		mov	r3, #131072
+ 707 0134 2362     		str	r3, [r4, #32]
+ 396:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****     dmaHandle.Init.FIFOMode            = DMA_FIFOMODE_DISABLE;
+ 708              		.loc 1 396 5 is_stmt 1 view .LVU196
+ 709              		.loc 1 396 40 is_stmt 0 view .LVU197
+ 710 0136 6562     		str	r5, [r4, #36]
+ 397:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****     dmaHandle.Init.FIFOThreshold       = DMA_FIFO_THRESHOLD_FULL;
+ 711              		.loc 1 397 5 is_stmt 1 view .LVU198
+ 712              		.loc 1 397 40 is_stmt 0 view .LVU199
+ 713 0138 0323     		movs	r3, #3
+ 714 013a A362     		str	r3, [r4, #40]
+ 398:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****     dmaHandle.Init.MemBurst            = DMA_MBURST_SINGLE;
+ 715              		.loc 1 398 5 is_stmt 1 view .LVU200
+ 716              		.loc 1 398 40 is_stmt 0 view .LVU201
+ 717 013c E562     		str	r5, [r4, #44]
+ 399:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****     dmaHandle.Init.PeriphBurst         = DMA_PBURST_SINGLE;
+ 718              		.loc 1 399 5 is_stmt 1 view .LVU202
+ 719              		.loc 1 399 40 is_stmt 0 view .LVU203
+ 720 013e 2563     		str	r5, [r4, #48]
+ 400:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** 
+ 401:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****     dmaHandle.Instance = SDRAM_DMAx_STREAM;
+ 721              		.loc 1 401 5 is_stmt 1 view .LVU204
+ 722              		.loc 1 401 24 is_stmt 0 view .LVU205
+ 723 0140 124B     		ldr	r3, .L40+32
+ 724 0142 2360     		str	r3, [r4]
+ 402:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** 
+ 403:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****     /* Associate the DMA handle */
+ 404:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****     __HAL_LINKDMA(hsdram, hdma, dmaHandle);
+ 725              		.loc 1 404 5 is_stmt 1 view .LVU206
+ 726              		.loc 1 404 5 view .LVU207
+ 727 0144 3463     		str	r4, [r6, #48]
+ 728              		.loc 1 404 5 view .LVU208
+ 729 0146 A663     		str	r6, [r4, #56]
+ 730              		.loc 1 404 5 view .LVU209
+ 405:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** 
+ 406:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****     /* Deinitialize the stream for new transfer */
+ 407:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****     HAL_DMA_DeInit(&dmaHandle);
+ 731              		.loc 1 407 5 view .LVU210
+ 732 0148 2046     		mov	r0, r4
+ 733 014a FFF7FEFF 		bl	HAL_DMA_DeInit
+ 734              	.LVL42:
+ 408:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** 
+ 409:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****     /* Configure the DMA stream */
+ 410:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****     HAL_DMA_Init(&dmaHandle);
+ 735              		.loc 1 410 5 view .LVU211
+ 736 014e 2046     		mov	r0, r4
+ 737 0150 FFF7FEFF 		bl	HAL_DMA_Init
+ 738              	.LVL43:
+ 411:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** 
+ 412:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****     /* NVIC configuration for DMA transfer complete interrupt */
+ 413:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****     HAL_NVIC_SetPriority(SDRAM_DMAx_IRQn, 0x0F, 0);
+ 739              		.loc 1 413 5 view .LVU212
+ 740 0154 2A46     		mov	r2, r5
+ 741 0156 0F21     		movs	r1, #15
+ARM GAS  /tmp/ccSi6H2i.s 			page 21
+
+
+ 742 0158 3820     		movs	r0, #56
+ 743 015a FFF7FEFF 		bl	HAL_NVIC_SetPriority
+ 744              	.LVL44:
+ 414:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****     HAL_NVIC_EnableIRQ(SDRAM_DMAx_IRQn);
+ 745              		.loc 1 414 5 view .LVU213
+ 746 015e 3820     		movs	r0, #56
+ 747 0160 FFF7FEFF 		bl	HAL_NVIC_EnableIRQ
+ 748              	.LVL45:
+ 415:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   } /* of if(hsdram != (SDRAM_HandleTypeDef  *)NULL) */
+ 416:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** }
+ 749              		.loc 1 416 1 is_stmt 0 view .LVU214
+ 750 0164 0EB0     		add	sp, sp, #56
+ 751              	.LCFI11:
+ 752              		.cfi_def_cfa_offset 16
+ 753              		@ sp needed
+ 754 0166 70BD     		pop	{r4, r5, r6, pc}
+ 755              	.LVL46:
+ 756              	.L37:
+ 757              	.LCFI12:
+ 758              		.cfi_def_cfa_offset 0
+ 759              		.cfi_restore 4
+ 760              		.cfi_restore 5
+ 761              		.cfi_restore 6
+ 762              		.cfi_restore 14
+ 763              		.loc 1 416 1 view .LVU215
+ 764 0168 7047     		bx	lr
+ 765              	.L41:
+ 766 016a 00BF     		.align	2
+ 767              	.L40:
+ 768 016c 00380240 		.word	1073887232
+ 769 0170 00040240 		.word	1073873920
+ 770 0174 00080240 		.word	1073874944
+ 771 0178 000C0240 		.word	1073875968
+ 772 017c 00100240 		.word	1073876992
+ 773 0180 00140240 		.word	1073878016
+ 774 0184 00180240 		.word	1073879040
+ 775 0188 00000000 		.word	dmaHandle.1
+ 776 018c 10640240 		.word	1073898512
+ 777              		.cfi_endproc
+ 778              	.LFE142:
+ 780              		.section	.text.BSP_SDRAM_Init,"ax",%progbits
+ 781              		.align	1
+ 782              		.global	BSP_SDRAM_Init
+ 783              		.syntax unified
+ 784              		.thumb
+ 785              		.thumb_func
+ 787              	BSP_SDRAM_Init:
+ 788              	.LFB134:
+  81:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   static uint8_t sdramstatus = SDRAM_ERROR;
+ 789              		.loc 1 81 1 is_stmt 1 view -0
+ 790              		.cfi_startproc
+ 791              		@ args = 0, pretend = 0, frame = 0
+ 792              		@ frame_needed = 0, uses_anonymous_args = 0
+ 793 0000 38B5     		push	{r3, r4, r5, lr}
+ 794              	.LCFI13:
+ 795              		.cfi_def_cfa_offset 16
+ 796              		.cfi_offset 3, -16
+ARM GAS  /tmp/ccSi6H2i.s 			page 22
+
+
+ 797              		.cfi_offset 4, -12
+ 798              		.cfi_offset 5, -8
+ 799              		.cfi_offset 14, -4
+  82:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** 
+ 800              		.loc 1 82 3 view .LVU217
+  85:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** 
+ 801              		.loc 1 85 3 view .LVU218
+  85:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** 
+ 802              		.loc 1 85 24 is_stmt 0 view .LVU219
+ 803 0002 1B4C     		ldr	r4, .L46
+ 804 0004 1B4B     		ldr	r3, .L46+4
+ 805 0006 2360     		str	r3, [r4]
+  91:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   /* TXSR: min=70ns (7x11.11ns) */
+ 806              		.loc 1 91 3 is_stmt 1 view .LVU220
+  91:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   /* TXSR: min=70ns (7x11.11ns) */
+ 807              		.loc 1 91 31 is_stmt 0 view .LVU221
+ 808 0008 1B4D     		ldr	r5, .L46+8
+ 809 000a 0223     		movs	r3, #2
+ 810 000c 2B60     		str	r3, [r5]
+  93:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   /* TRAS: min=42ns (4x11.11ns) max=120k (ns) */
+ 811              		.loc 1 93 3 is_stmt 1 view .LVU222
+  93:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   /* TRAS: min=42ns (4x11.11ns) max=120k (ns) */
+ 812              		.loc 1 93 31 is_stmt 0 view .LVU223
+ 813 000e 0721     		movs	r1, #7
+ 814 0010 6960     		str	r1, [r5, #4]
+  95:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   /* TRC:  min=70 (7x11.11ns) */
+ 815              		.loc 1 95 3 is_stmt 1 view .LVU224
+  95:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   /* TRC:  min=70 (7x11.11ns) */
+ 816              		.loc 1 95 31 is_stmt 0 view .LVU225
+ 817 0012 0422     		movs	r2, #4
+ 818 0014 AA60     		str	r2, [r5, #8]
+  97:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   /* TWR:  min=1+ 7ns (1+1x11.11ns) */
+ 819              		.loc 1 97 3 is_stmt 1 view .LVU226
+  97:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   /* TWR:  min=1+ 7ns (1+1x11.11ns) */
+ 820              		.loc 1 97 31 is_stmt 0 view .LVU227
+ 821 0016 E960     		str	r1, [r5, #12]
+  99:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   /* TRP:  20ns => 2x11.11ns*/
+ 822              		.loc 1 99 3 is_stmt 1 view .LVU228
+  99:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   /* TRP:  20ns => 2x11.11ns*/
+ 823              		.loc 1 99 31 is_stmt 0 view .LVU229
+ 824 0018 2B61     		str	r3, [r5, #16]
+ 101:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   /* TRCD: 20ns => 2x11.11ns */
+ 825              		.loc 1 101 3 is_stmt 1 view .LVU230
+ 101:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   /* TRCD: 20ns => 2x11.11ns */
+ 826              		.loc 1 101 31 is_stmt 0 view .LVU231
+ 827 001a 6B61     		str	r3, [r5, #20]
+ 103:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** 
+ 828              		.loc 1 103 3 is_stmt 1 view .LVU232
+ 103:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** 
+ 829              		.loc 1 103 31 is_stmt 0 view .LVU233
+ 830 001c AB61     		str	r3, [r5, #24]
+ 106:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   /* Row addressing: [7:0] */
+ 831              		.loc 1 106 3 is_stmt 1 view .LVU234
+ 106:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   /* Row addressing: [7:0] */
+ 832              		.loc 1 106 39 is_stmt 0 view .LVU235
+ 833 001e 0123     		movs	r3, #1
+ 834 0020 6360     		str	r3, [r4, #4]
+ARM GAS  /tmp/ccSi6H2i.s 			page 23
+
+
+ 108:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   /* Column addressing: [11:0] */
+ 835              		.loc 1 108 3 is_stmt 1 view .LVU236
+ 108:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   /* Column addressing: [11:0] */
+ 836              		.loc 1 108 39 is_stmt 0 view .LVU237
+ 837 0022 0021     		movs	r1, #0
+ 838 0024 A160     		str	r1, [r4, #8]
+ 110:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   SdramHandle.Init.MemoryDataWidth    = SDRAM_MEMORY_WIDTH;
+ 839              		.loc 1 110 3 is_stmt 1 view .LVU238
+ 110:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   SdramHandle.Init.MemoryDataWidth    = SDRAM_MEMORY_WIDTH;
+ 840              		.loc 1 110 39 is_stmt 0 view .LVU239
+ 841 0026 E260     		str	r2, [r4, #12]
+ 111:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   SdramHandle.Init.InternalBankNumber = FMC_SDRAM_INTERN_BANKS_NUM_4;
+ 842              		.loc 1 111 3 is_stmt 1 view .LVU240
+ 111:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   SdramHandle.Init.InternalBankNumber = FMC_SDRAM_INTERN_BANKS_NUM_4;
+ 843              		.loc 1 111 39 is_stmt 0 view .LVU241
+ 844 0028 1023     		movs	r3, #16
+ 845 002a 2361     		str	r3, [r4, #16]
+ 112:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   SdramHandle.Init.CASLatency         = SDRAM_CAS_LATENCY;
+ 846              		.loc 1 112 3 is_stmt 1 view .LVU242
+ 112:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   SdramHandle.Init.CASLatency         = SDRAM_CAS_LATENCY;
+ 847              		.loc 1 112 39 is_stmt 0 view .LVU243
+ 848 002c 4023     		movs	r3, #64
+ 849 002e 6361     		str	r3, [r4, #20]
+ 113:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   SdramHandle.Init.WriteProtection    = FMC_SDRAM_WRITE_PROTECTION_DISABLE;
+ 850              		.loc 1 113 3 is_stmt 1 view .LVU244
+ 113:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   SdramHandle.Init.WriteProtection    = FMC_SDRAM_WRITE_PROTECTION_DISABLE;
+ 851              		.loc 1 113 39 is_stmt 0 view .LVU245
+ 852 0030 4FF4C073 		mov	r3, #384
+ 853 0034 A361     		str	r3, [r4, #24]
+ 114:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   SdramHandle.Init.SDClockPeriod      = SDCLOCK_PERIOD;
+ 854              		.loc 1 114 3 is_stmt 1 view .LVU246
+ 114:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   SdramHandle.Init.SDClockPeriod      = SDCLOCK_PERIOD;
+ 855              		.loc 1 114 39 is_stmt 0 view .LVU247
+ 856 0036 E161     		str	r1, [r4, #28]
+ 115:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   SdramHandle.Init.ReadBurst          = SDRAM_READBURST;
+ 857              		.loc 1 115 3 is_stmt 1 view .LVU248
+ 115:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   SdramHandle.Init.ReadBurst          = SDRAM_READBURST;
+ 858              		.loc 1 115 39 is_stmt 0 view .LVU249
+ 859 0038 4FF40063 		mov	r3, #2048
+ 860 003c 2362     		str	r3, [r4, #32]
+ 116:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   SdramHandle.Init.ReadPipeDelay      = FMC_SDRAM_RPIPE_DELAY_1;
+ 861              		.loc 1 116 3 is_stmt 1 view .LVU250
+ 116:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   SdramHandle.Init.ReadPipeDelay      = FMC_SDRAM_RPIPE_DELAY_1;
+ 862              		.loc 1 116 39 is_stmt 0 view .LVU251
+ 863 003e 6162     		str	r1, [r4, #36]
+ 117:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** 
+ 864              		.loc 1 117 3 is_stmt 1 view .LVU252
+ 117:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** 
+ 865              		.loc 1 117 39 is_stmt 0 view .LVU253
+ 866 0040 4FF40053 		mov	r3, #8192
+ 867 0044 A362     		str	r3, [r4, #40]
+ 121:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   if (HAL_SDRAM_Init(&SdramHandle, &Timing) != HAL_OK)
+ 868              		.loc 1 121 3 is_stmt 1 view .LVU254
+ 869 0046 2046     		mov	r0, r4
+ 870 0048 FFF7FEFF 		bl	BSP_SDRAM_MspInit
+ 871              	.LVL47:
+ 122:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   {
+ARM GAS  /tmp/ccSi6H2i.s 			page 24
+
+
+ 872              		.loc 1 122 3 view .LVU255
+ 122:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   {
+ 873              		.loc 1 122 7 is_stmt 0 view .LVU256
+ 874 004c 2946     		mov	r1, r5
+ 875 004e 2046     		mov	r0, r4
+ 876 0050 FFF7FEFF 		bl	HAL_SDRAM_Init
+ 877              	.LVL48:
+ 122:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   {
+ 878              		.loc 1 122 6 discriminator 1 view .LVU257
+ 879 0054 48B1     		cbz	r0, .L43
+ 124:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   }
+ 880              		.loc 1 124 5 is_stmt 1 view .LVU258
+ 124:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   }
+ 881              		.loc 1 124 17 is_stmt 0 view .LVU259
+ 882 0056 094B     		ldr	r3, .L46+12
+ 883 0058 0122     		movs	r2, #1
+ 884 005a 1A70     		strb	r2, [r3]
+ 885              	.L44:
+ 132:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** 
+ 886              		.loc 1 132 3 is_stmt 1 view .LVU260
+ 887 005c 40F26A50 		movw	r0, #1386
+ 888 0060 FFF7FEFF 		bl	BSP_SDRAM_Initialization_sequence
+ 889              	.LVL49:
+ 134:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** }
+ 890              		.loc 1 134 3 view .LVU261
+ 135:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** 
+ 891              		.loc 1 135 1 is_stmt 0 view .LVU262
+ 892 0064 054B     		ldr	r3, .L46+12
+ 893 0066 1878     		ldrb	r0, [r3]	@ zero_extendqisi2
+ 894 0068 38BD     		pop	{r3, r4, r5, pc}
+ 895              	.L43:
+ 128:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   }
+ 896              		.loc 1 128 5 is_stmt 1 view .LVU263
+ 128:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   }
+ 897              		.loc 1 128 17 is_stmt 0 view .LVU264
+ 898 006a 044B     		ldr	r3, .L46+12
+ 899 006c 1870     		strb	r0, [r3]
+ 900 006e F5E7     		b	.L44
+ 901              	.L47:
+ 902              		.align	2
+ 903              	.L46:
+ 904 0070 00000000 		.word	SdramHandle
+ 905 0074 400100A0 		.word	-1610612416
+ 906 0078 00000000 		.word	Timing
+ 907 007c 00000000 		.word	sdramstatus.2
+ 908              		.cfi_endproc
+ 909              	.LFE134:
+ 911              		.section	.text.BSP_SDRAM_MspDeInit,"ax",%progbits
+ 912              		.align	1
+ 913              		.weak	BSP_SDRAM_MspDeInit
+ 914              		.syntax unified
+ 915              		.thumb
+ 916              		.thumb_func
+ 918              	BSP_SDRAM_MspDeInit:
+ 919              	.LVL50:
+ 920              	.LFB143:
+ 417:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** 
+ARM GAS  /tmp/ccSi6H2i.s 			page 25
+
+
+ 418:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** /**
+ 419:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   * @brief  DeInitializes SDRAM MSP.
+ 420:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   * @note   This function can be surcharged by application code.
+ 421:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   * @param  hsdram: pointer on SDRAM handle
+ 422:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   * @param  Params: pointer on additional configuration parameters, can be NULL.
+ 423:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   */
+ 424:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** __weak void BSP_SDRAM_MspDeInit(SDRAM_HandleTypeDef  *hsdram, void *Params)
+ 425:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** {
+ 921              		.loc 1 425 1 is_stmt 1 view -0
+ 922              		.cfi_startproc
+ 923              		@ args = 0, pretend = 0, frame = 0
+ 924              		@ frame_needed = 0, uses_anonymous_args = 0
+ 426:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   static DMA_HandleTypeDef dma_handle;
+ 925              		.loc 1 426 3 view .LVU266
+ 427:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** 
+ 428:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   if (hsdram != (SDRAM_HandleTypeDef *)NULL)
+ 926              		.loc 1 428 3 view .LVU267
+ 927              		.loc 1 428 6 is_stmt 0 view .LVU268
+ 928 0000 48B1     		cbz	r0, .L51
+ 425:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   static DMA_HandleTypeDef dma_handle;
+ 929              		.loc 1 425 1 view .LVU269
+ 930 0002 08B5     		push	{r3, lr}
+ 931              	.LCFI14:
+ 932              		.cfi_def_cfa_offset 8
+ 933              		.cfi_offset 3, -8
+ 934              		.cfi_offset 14, -4
+ 429:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   {
+ 430:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****     /* Disable NVIC configuration for DMA interrupt */
+ 431:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****     HAL_NVIC_DisableIRQ(SDRAM_DMAx_IRQn);
+ 935              		.loc 1 431 5 is_stmt 1 view .LVU270
+ 936 0004 3820     		movs	r0, #56
+ 937              	.LVL51:
+ 938              		.loc 1 431 5 is_stmt 0 view .LVU271
+ 939 0006 FFF7FEFF 		bl	HAL_NVIC_DisableIRQ
+ 940              	.LVL52:
+ 432:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** 
+ 433:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****     /* Deinitialize the stream for new transfer */
+ 434:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****     dma_handle.Instance = SDRAM_DMAx_STREAM;
+ 941              		.loc 1 434 5 is_stmt 1 view .LVU272
+ 942              		.loc 1 434 25 is_stmt 0 view .LVU273
+ 943 000a 0348     		ldr	r0, .L54
+ 944 000c 034B     		ldr	r3, .L54+4
+ 945 000e 0360     		str	r3, [r0]
+ 435:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****     HAL_DMA_DeInit(&dma_handle);
+ 946              		.loc 1 435 5 is_stmt 1 view .LVU274
+ 947 0010 FFF7FEFF 		bl	HAL_DMA_DeInit
+ 948              	.LVL53:
+ 436:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** 
+ 437:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****     /* DeInit GPIO pins can be done in the application
+ 438:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****      (by surcharging this __weak function) */
+ 439:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** 
+ 440:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****     /* GPIO pins clock, FMC clock and DMA clock can be shut down in the application
+ 441:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****      by surcharging this __weak function */
+ 442:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** 
+ 443:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c ****   } /* of if(hsdram != (SDRAM_HandleTypeDef  *)NULL) */
+ 444:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.c **** }
+ 949              		.loc 1 444 1 is_stmt 0 view .LVU275
+ARM GAS  /tmp/ccSi6H2i.s 			page 26
+
+
+ 950 0014 08BD     		pop	{r3, pc}
+ 951              	.LVL54:
+ 952              	.L51:
+ 953              	.LCFI15:
+ 954              		.cfi_def_cfa_offset 0
+ 955              		.cfi_restore 3
+ 956              		.cfi_restore 14
+ 957              		.loc 1 444 1 view .LVU276
+ 958 0016 7047     		bx	lr
+ 959              	.L55:
+ 960              		.align	2
+ 961              	.L54:
+ 962 0018 00000000 		.word	dma_handle.0
+ 963 001c 10640240 		.word	1073898512
+ 964              		.cfi_endproc
+ 965              	.LFE143:
+ 967              		.section	.bss.dma_handle.0,"aw",%nobits
+ 968              		.align	2
+ 971              	dma_handle.0:
+ 972 0000 00000000 		.space	96
+ 972      00000000 
+ 972      00000000 
+ 972      00000000 
+ 972      00000000 
+ 973              		.section	.bss.dmaHandle.1,"aw",%nobits
+ 974              		.align	2
+ 977              	dmaHandle.1:
+ 978 0000 00000000 		.space	96
+ 978      00000000 
+ 978      00000000 
+ 978      00000000 
+ 978      00000000 
+ 979              		.section	.data.sdramstatus.2,"aw"
+ 982              	sdramstatus.2:
+ 983 0000 01       		.byte	1
+ 984              		.section	.bss.Command,"aw",%nobits
+ 985              		.align	2
+ 988              	Command:
+ 989 0000 00000000 		.space	16
+ 989      00000000 
+ 989      00000000 
+ 989      00000000 
+ 990              		.section	.bss.Timing,"aw",%nobits
+ 991              		.align	2
+ 994              	Timing:
+ 995 0000 00000000 		.space	28
+ 995      00000000 
+ 995      00000000 
+ 995      00000000 
+ 995      00000000 
+ 996              		.section	.bss.SdramHandle,"aw",%nobits
+ 997              		.align	2
+ 1000              	SdramHandle:
+ 1001 0000 00000000 		.space	52
+ 1001      00000000 
+ 1001      00000000 
+ 1001      00000000 
+ARM GAS  /tmp/ccSi6H2i.s 			page 27
+
+
+ 1001      00000000 
+ 1002              		.text
+ 1003              	.Letext0:
+ 1004              		.file 2 "Drivers/CMSIS/Device/ST/STM32F4xx/Include/stm32f429xx.h"
+ 1005              		.file 3 "/usr/arm-none-eabi/include/machine/_default_types.h"
+ 1006              		.file 4 "/usr/arm-none-eabi/include/sys/_stdint.h"
+ 1007              		.file 5 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_def.h"
+ 1008              		.file 6 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_gpio.h"
+ 1009              		.file 7 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_dma.h"
+ 1010              		.file 8 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_ll_fmc.h"
+ 1011              		.file 9 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_sdram.h"
+ 1012              		.file 10 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_cortex.h"
+ 1013              		.file 11 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h"
+ARM GAS  /tmp/ccSi6H2i.s 			page 28
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 stm32f429i_discovery_sdram.c
+     /tmp/ccSi6H2i.s:21     .text.BSP_SDRAM_Initialization_sequence:00000000 $t
+     /tmp/ccSi6H2i.s:27     .text.BSP_SDRAM_Initialization_sequence:00000000 BSP_SDRAM_Initialization_sequence
+     /tmp/ccSi6H2i.s:160    .text.BSP_SDRAM_Initialization_sequence:00000098 $d
+     /tmp/ccSi6H2i.s:988    .bss.Command:00000000 Command
+     /tmp/ccSi6H2i.s:1000   .bss.SdramHandle:00000000 SdramHandle
+     /tmp/ccSi6H2i.s:166    .text.BSP_SDRAM_ReadData:00000000 $t
+     /tmp/ccSi6H2i.s:172    .text.BSP_SDRAM_ReadData:00000000 BSP_SDRAM_ReadData
+     /tmp/ccSi6H2i.s:209    .text.BSP_SDRAM_ReadData:00000014 $d
+     /tmp/ccSi6H2i.s:214    .text.BSP_SDRAM_ReadData_DMA:00000000 $t
+     /tmp/ccSi6H2i.s:220    .text.BSP_SDRAM_ReadData_DMA:00000000 BSP_SDRAM_ReadData_DMA
+     /tmp/ccSi6H2i.s:257    .text.BSP_SDRAM_ReadData_DMA:00000014 $d
+     /tmp/ccSi6H2i.s:262    .text.BSP_SDRAM_WriteData:00000000 $t
+     /tmp/ccSi6H2i.s:268    .text.BSP_SDRAM_WriteData:00000000 BSP_SDRAM_WriteData
+     /tmp/ccSi6H2i.s:315    .text.BSP_SDRAM_WriteData:00000024 $d
+     /tmp/ccSi6H2i.s:320    .text.BSP_SDRAM_WriteData_DMA:00000000 $t
+     /tmp/ccSi6H2i.s:326    .text.BSP_SDRAM_WriteData_DMA:00000000 BSP_SDRAM_WriteData_DMA
+     /tmp/ccSi6H2i.s:363    .text.BSP_SDRAM_WriteData_DMA:00000014 $d
+     /tmp/ccSi6H2i.s:368    .text.BSP_SDRAM_Sendcmd:00000000 $t
+     /tmp/ccSi6H2i.s:374    .text.BSP_SDRAM_Sendcmd:00000000 BSP_SDRAM_Sendcmd
+     /tmp/ccSi6H2i.s:406    .text.BSP_SDRAM_Sendcmd:00000014 $d
+     /tmp/ccSi6H2i.s:411    .text.BSP_SDRAM_DMA_IRQHandler:00000000 $t
+     /tmp/ccSi6H2i.s:417    .text.BSP_SDRAM_DMA_IRQHandler:00000000 BSP_SDRAM_DMA_IRQHandler
+     /tmp/ccSi6H2i.s:438    .text.BSP_SDRAM_DMA_IRQHandler:0000000c $d
+     /tmp/ccSi6H2i.s:443    .text.BSP_SDRAM_MspInit:00000000 $t
+     /tmp/ccSi6H2i.s:449    .text.BSP_SDRAM_MspInit:00000000 BSP_SDRAM_MspInit
+     /tmp/ccSi6H2i.s:768    .text.BSP_SDRAM_MspInit:0000016c $d
+     /tmp/ccSi6H2i.s:977    .bss.dmaHandle.1:00000000 dmaHandle.1
+     /tmp/ccSi6H2i.s:781    .text.BSP_SDRAM_Init:00000000 $t
+     /tmp/ccSi6H2i.s:787    .text.BSP_SDRAM_Init:00000000 BSP_SDRAM_Init
+     /tmp/ccSi6H2i.s:904    .text.BSP_SDRAM_Init:00000070 $d
+     /tmp/ccSi6H2i.s:994    .bss.Timing:00000000 Timing
+     /tmp/ccSi6H2i.s:982    .data.sdramstatus.2:00000000 sdramstatus.2
+     /tmp/ccSi6H2i.s:912    .text.BSP_SDRAM_MspDeInit:00000000 $t
+     /tmp/ccSi6H2i.s:918    .text.BSP_SDRAM_MspDeInit:00000000 BSP_SDRAM_MspDeInit
+     /tmp/ccSi6H2i.s:962    .text.BSP_SDRAM_MspDeInit:00000018 $d
+     /tmp/ccSi6H2i.s:971    .bss.dma_handle.0:00000000 dma_handle.0
+     /tmp/ccSi6H2i.s:968    .bss.dma_handle.0:00000000 $d
+     /tmp/ccSi6H2i.s:974    .bss.dmaHandle.1:00000000 $d
+     /tmp/ccSi6H2i.s:985    .bss.Command:00000000 $d
+     /tmp/ccSi6H2i.s:991    .bss.Timing:00000000 $d
+     /tmp/ccSi6H2i.s:997    .bss.SdramHandle:00000000 $d
+
+UNDEFINED SYMBOLS
+HAL_SDRAM_SendCommand
+HAL_Delay
+HAL_SDRAM_ProgramRefreshRate
+HAL_SDRAM_Read_32b
+HAL_SDRAM_Read_DMA
+HAL_SDRAM_WriteProtection_Disable
+HAL_SDRAM_Write_32b
+HAL_SDRAM_Write_DMA
+HAL_DMA_IRQHandler
+HAL_GPIO_Init
+HAL_DMA_DeInit
+HAL_DMA_Init
+ARM GAS  /tmp/ccSi6H2i.s 			page 29
+
+
+HAL_NVIC_SetPriority
+HAL_NVIC_EnableIRQ
+HAL_SDRAM_Init
+HAL_NVIC_DisableIRQ

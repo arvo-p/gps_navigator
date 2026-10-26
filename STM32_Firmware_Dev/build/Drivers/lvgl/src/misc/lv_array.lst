@@ -1,0 +1,2017 @@
+ARM GAS  /tmp/ccRHaJ18.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.arch armv7e-m
+   3              		.fpu fpv4-sp-d16
+   4              		.eabi_attribute 27, 1
+   5              		.eabi_attribute 28, 1
+   6              		.eabi_attribute 20, 1
+   7              		.eabi_attribute 21, 1
+   8              		.eabi_attribute 23, 3
+   9              		.eabi_attribute 24, 1
+  10              		.eabi_attribute 25, 1
+  11              		.eabi_attribute 26, 1
+  12              		.eabi_attribute 30, 1
+  13              		.eabi_attribute 34, 1
+  14              		.eabi_attribute 18, 4
+  15              		.file	"lv_array.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.file 1 "Drivers/lvgl/src/misc/lv_array.c"
+  20              		.section	.text.lv_array_init_from_buf,"ax",%progbits
+  21              		.align	1
+  22              		.global	lv_array_init_from_buf
+  23              		.syntax unified
+  24              		.thumb
+  25              		.thumb_func
+  27              	lv_array_init_from_buf:
+  28              	.LVL0:
+  29              	.LFB25:
+   1:Drivers/lvgl/src/misc/lv_array.c **** /**
+   2:Drivers/lvgl/src/misc/lv_array.c ****  * @file lv_array.c
+   3:Drivers/lvgl/src/misc/lv_array.c ****  * Array.
+   4:Drivers/lvgl/src/misc/lv_array.c ****  * The nodes are dynamically allocated by the 'lv_mem' module,
+   5:Drivers/lvgl/src/misc/lv_array.c ****  */
+   6:Drivers/lvgl/src/misc/lv_array.c **** 
+   7:Drivers/lvgl/src/misc/lv_array.c **** /*********************
+   8:Drivers/lvgl/src/misc/lv_array.c ****  *      INCLUDES
+   9:Drivers/lvgl/src/misc/lv_array.c ****  *********************/
+  10:Drivers/lvgl/src/misc/lv_array.c **** #include "../lvgl_public.h"
+  11:Drivers/lvgl/src/misc/lv_array.c **** #include "lv_array.h"
+  12:Drivers/lvgl/src/misc/lv_array.c **** 
+  13:Drivers/lvgl/src/misc/lv_array.c **** /*********************
+  14:Drivers/lvgl/src/misc/lv_array.c ****  *      DEFINES
+  15:Drivers/lvgl/src/misc/lv_array.c ****  *********************/
+  16:Drivers/lvgl/src/misc/lv_array.c **** 
+  17:Drivers/lvgl/src/misc/lv_array.c **** /**********************
+  18:Drivers/lvgl/src/misc/lv_array.c ****  *      TYPEDEFS
+  19:Drivers/lvgl/src/misc/lv_array.c ****  **********************/
+  20:Drivers/lvgl/src/misc/lv_array.c **** 
+  21:Drivers/lvgl/src/misc/lv_array.c **** /**********************
+  22:Drivers/lvgl/src/misc/lv_array.c ****  *  STATIC PROTOTYPES
+  23:Drivers/lvgl/src/misc/lv_array.c ****  **********************/
+  24:Drivers/lvgl/src/misc/lv_array.c **** 
+  25:Drivers/lvgl/src/misc/lv_array.c **** /**********************
+  26:Drivers/lvgl/src/misc/lv_array.c ****  *  STATIC VARIABLES
+  27:Drivers/lvgl/src/misc/lv_array.c ****  **********************/
+  28:Drivers/lvgl/src/misc/lv_array.c **** 
+  29:Drivers/lvgl/src/misc/lv_array.c **** /**********************
+ARM GAS  /tmp/ccRHaJ18.s 			page 2
+
+
+  30:Drivers/lvgl/src/misc/lv_array.c ****  *      MACROS
+  31:Drivers/lvgl/src/misc/lv_array.c ****  **********************/
+  32:Drivers/lvgl/src/misc/lv_array.c **** 
+  33:Drivers/lvgl/src/misc/lv_array.c **** /**********************
+  34:Drivers/lvgl/src/misc/lv_array.c ****  *   GLOBAL FUNCTIONS
+  35:Drivers/lvgl/src/misc/lv_array.c ****  **********************/
+  36:Drivers/lvgl/src/misc/lv_array.c **** lv_result_t lv_array_init(lv_array_t * array, uint32_t capacity, uint32_t element_size)
+  37:Drivers/lvgl/src/misc/lv_array.c **** {
+  38:Drivers/lvgl/src/misc/lv_array.c ****     LV_ASSERT(array != NULL);
+  39:Drivers/lvgl/src/misc/lv_array.c ****     lv_memset(array, 0,  sizeof(*array));
+  40:Drivers/lvgl/src/misc/lv_array.c **** 
+  41:Drivers/lvgl/src/misc/lv_array.c ****     void * data = lv_malloc(capacity * element_size);
+  42:Drivers/lvgl/src/misc/lv_array.c ****     LV_ASSERT_MALLOC(data);
+  43:Drivers/lvgl/src/misc/lv_array.c ****     if(!data) {
+  44:Drivers/lvgl/src/misc/lv_array.c ****         return LV_RESULT_INVALID;
+  45:Drivers/lvgl/src/misc/lv_array.c ****     }
+  46:Drivers/lvgl/src/misc/lv_array.c ****     lv_array_init_from_buf(array, data, capacity, element_size);
+  47:Drivers/lvgl/src/misc/lv_array.c ****     array->inner_alloc = true;
+  48:Drivers/lvgl/src/misc/lv_array.c ****     return LV_RESULT_OK;
+  49:Drivers/lvgl/src/misc/lv_array.c **** }
+  50:Drivers/lvgl/src/misc/lv_array.c **** 
+  51:Drivers/lvgl/src/misc/lv_array.c **** void lv_array_init_from_buf(lv_array_t * array, void * buf, uint32_t capacity, uint32_t element_siz
+  52:Drivers/lvgl/src/misc/lv_array.c **** {
+  30              		.loc 1 52 1 view -0
+  31              		.cfi_startproc
+  32              		@ args = 0, pretend = 0, frame = 0
+  33              		@ frame_needed = 0, uses_anonymous_args = 0
+  34              		.loc 1 52 1 is_stmt 0 view .LVU1
+  35 0000 F8B5     		push	{r3, r4, r5, r6, r7, lr}
+  36              	.LCFI0:
+  37              		.cfi_def_cfa_offset 24
+  38              		.cfi_offset 3, -24
+  39              		.cfi_offset 4, -20
+  40              		.cfi_offset 5, -16
+  41              		.cfi_offset 6, -12
+  42              		.cfi_offset 7, -8
+  43              		.cfi_offset 14, -4
+  44 0002 0446     		mov	r4, r0
+  45 0004 0F46     		mov	r7, r1
+  46 0006 1646     		mov	r6, r2
+  47 0008 1D46     		mov	r5, r3
+  53:Drivers/lvgl/src/misc/lv_array.c ****     LV_ASSERT(array != NULL);
+  48              		.loc 1 53 29 is_stmt 1 view .LVU2
+  54:Drivers/lvgl/src/misc/lv_array.c ****     LV_ASSERT(buf != NULL);
+  49              		.loc 1 54 27 view .LVU3
+  55:Drivers/lvgl/src/misc/lv_array.c ****     lv_memset(array, 0,  sizeof(*array));
+  50              		.loc 1 55 5 view .LVU4
+  51 000a 1422     		movs	r2, #20
+  52              	.LVL1:
+  53              		.loc 1 55 5 is_stmt 0 view .LVU5
+  54 000c 0021     		movs	r1, #0
+  55              	.LVL2:
+  56              		.loc 1 55 5 view .LVU6
+  57 000e FFF7FEFF 		bl	lv_memset
+  58              	.LVL3:
+  56:Drivers/lvgl/src/misc/lv_array.c ****     array->size = 0;
+  59              		.loc 1 56 5 is_stmt 1 view .LVU7
+ARM GAS  /tmp/ccRHaJ18.s 			page 3
+
+
+  60              		.loc 1 56 17 is_stmt 0 view .LVU8
+  61 0012 0023     		movs	r3, #0
+  62 0014 6360     		str	r3, [r4, #4]
+  57:Drivers/lvgl/src/misc/lv_array.c ****     array->capacity = capacity;
+  63              		.loc 1 57 5 is_stmt 1 view .LVU9
+  64              		.loc 1 57 21 is_stmt 0 view .LVU10
+  65 0016 A660     		str	r6, [r4, #8]
+  58:Drivers/lvgl/src/misc/lv_array.c ****     array->element_size = element_size;
+  66              		.loc 1 58 5 is_stmt 1 view .LVU11
+  67              		.loc 1 58 25 is_stmt 0 view .LVU12
+  68 0018 E560     		str	r5, [r4, #12]
+  59:Drivers/lvgl/src/misc/lv_array.c **** 
+  60:Drivers/lvgl/src/misc/lv_array.c ****     array->data = buf;
+  69              		.loc 1 60 5 is_stmt 1 view .LVU13
+  70              		.loc 1 60 17 is_stmt 0 view .LVU14
+  71 001a 2760     		str	r7, [r4]
+  61:Drivers/lvgl/src/misc/lv_array.c ****     array->inner_alloc = false;
+  72              		.loc 1 61 5 is_stmt 1 view .LVU15
+  73              		.loc 1 61 24 is_stmt 0 view .LVU16
+  74 001c 2374     		strb	r3, [r4, #16]
+  62:Drivers/lvgl/src/misc/lv_array.c **** }
+  75              		.loc 1 62 1 view .LVU17
+  76 001e F8BD     		pop	{r3, r4, r5, r6, r7, pc}
+  77              		.loc 1 62 1 view .LVU18
+  78              		.cfi_endproc
+  79              	.LFE25:
+  81              		.section	.text.lv_array_init,"ax",%progbits
+  82              		.align	1
+  83              		.global	lv_array_init
+  84              		.syntax unified
+  85              		.thumb
+  86              		.thumb_func
+  88              	lv_array_init:
+  89              	.LVL4:
+  90              	.LFB24:
+  37:Drivers/lvgl/src/misc/lv_array.c ****     LV_ASSERT(array != NULL);
+  91              		.loc 1 37 1 is_stmt 1 view -0
+  92              		.cfi_startproc
+  93              		@ args = 0, pretend = 0, frame = 0
+  94              		@ frame_needed = 0, uses_anonymous_args = 0
+  37:Drivers/lvgl/src/misc/lv_array.c ****     LV_ASSERT(array != NULL);
+  95              		.loc 1 37 1 is_stmt 0 view .LVU20
+  96 0000 70B5     		push	{r4, r5, r6, lr}
+  97              	.LCFI1:
+  98              		.cfi_def_cfa_offset 16
+  99              		.cfi_offset 4, -16
+ 100              		.cfi_offset 5, -12
+ 101              		.cfi_offset 6, -8
+ 102              		.cfi_offset 14, -4
+ 103 0002 0646     		mov	r6, r0
+ 104 0004 0C46     		mov	r4, r1
+ 105 0006 1546     		mov	r5, r2
+  38:Drivers/lvgl/src/misc/lv_array.c ****     lv_memset(array, 0,  sizeof(*array));
+ 106              		.loc 1 38 29 is_stmt 1 view .LVU21
+  39:Drivers/lvgl/src/misc/lv_array.c **** 
+ 107              		.loc 1 39 5 view .LVU22
+ 108 0008 1422     		movs	r2, #20
+ARM GAS  /tmp/ccRHaJ18.s 			page 4
+
+
+ 109              	.LVL5:
+  39:Drivers/lvgl/src/misc/lv_array.c **** 
+ 110              		.loc 1 39 5 is_stmt 0 view .LVU23
+ 111 000a 0021     		movs	r1, #0
+ 112              	.LVL6:
+  39:Drivers/lvgl/src/misc/lv_array.c **** 
+ 113              		.loc 1 39 5 view .LVU24
+ 114 000c FFF7FEFF 		bl	lv_memset
+ 115              	.LVL7:
+  41:Drivers/lvgl/src/misc/lv_array.c ****     LV_ASSERT_MALLOC(data);
+ 116              		.loc 1 41 5 is_stmt 1 view .LVU25
+  41:Drivers/lvgl/src/misc/lv_array.c ****     LV_ASSERT_MALLOC(data);
+ 117              		.loc 1 41 19 is_stmt 0 view .LVU26
+ 118 0010 05FB04F0 		mul	r0, r5, r4
+ 119 0014 FFF7FEFF 		bl	lv_malloc
+ 120              	.LVL8:
+  42:Drivers/lvgl/src/misc/lv_array.c ****     if(!data) {
+ 121              		.loc 1 42 27 is_stmt 1 view .LVU27
+  43:Drivers/lvgl/src/misc/lv_array.c ****         return LV_RESULT_INVALID;
+ 122              		.loc 1 43 5 view .LVU28
+  43:Drivers/lvgl/src/misc/lv_array.c ****         return LV_RESULT_INVALID;
+ 123              		.loc 1 43 7 is_stmt 0 view .LVU29
+ 124 0018 38B1     		cbz	r0, .L4
+ 125 001a 0146     		mov	r1, r0
+  46:Drivers/lvgl/src/misc/lv_array.c ****     array->inner_alloc = true;
+ 126              		.loc 1 46 5 is_stmt 1 view .LVU30
+ 127 001c 2B46     		mov	r3, r5
+ 128 001e 2246     		mov	r2, r4
+ 129 0020 3046     		mov	r0, r6
+ 130              	.LVL9:
+  46:Drivers/lvgl/src/misc/lv_array.c ****     array->inner_alloc = true;
+ 131              		.loc 1 46 5 is_stmt 0 view .LVU31
+ 132 0022 FFF7FEFF 		bl	lv_array_init_from_buf
+ 133              	.LVL10:
+  47:Drivers/lvgl/src/misc/lv_array.c ****     return LV_RESULT_OK;
+ 134              		.loc 1 47 5 is_stmt 1 view .LVU32
+  47:Drivers/lvgl/src/misc/lv_array.c ****     return LV_RESULT_OK;
+ 135              		.loc 1 47 24 is_stmt 0 view .LVU33
+ 136 0026 0120     		movs	r0, #1
+ 137 0028 3074     		strb	r0, [r6, #16]
+  48:Drivers/lvgl/src/misc/lv_array.c **** }
+ 138              		.loc 1 48 5 is_stmt 1 view .LVU34
+ 139              	.L4:
+  49:Drivers/lvgl/src/misc/lv_array.c **** 
+ 140              		.loc 1 49 1 is_stmt 0 view .LVU35
+ 141 002a 70BD     		pop	{r4, r5, r6, pc}
+  49:Drivers/lvgl/src/misc/lv_array.c **** 
+ 142              		.loc 1 49 1 view .LVU36
+ 143              		.cfi_endproc
+ 144              	.LFE24:
+ 146              		.section	.text.lv_array_deinit,"ax",%progbits
+ 147              		.align	1
+ 148              		.global	lv_array_deinit
+ 149              		.syntax unified
+ 150              		.thumb
+ 151              		.thumb_func
+ 153              	lv_array_deinit:
+ARM GAS  /tmp/ccRHaJ18.s 			page 5
+
+
+ 154              	.LVL11:
+ 155              	.LFB26:
+  63:Drivers/lvgl/src/misc/lv_array.c **** 
+  64:Drivers/lvgl/src/misc/lv_array.c **** void lv_array_deinit(lv_array_t * array)
+  65:Drivers/lvgl/src/misc/lv_array.c **** {
+ 156              		.loc 1 65 1 is_stmt 1 view -0
+ 157              		.cfi_startproc
+ 158              		@ args = 0, pretend = 0, frame = 0
+ 159              		@ frame_needed = 0, uses_anonymous_args = 0
+ 160              		.loc 1 65 1 is_stmt 0 view .LVU38
+ 161 0000 10B5     		push	{r4, lr}
+ 162              	.LCFI2:
+ 163              		.cfi_def_cfa_offset 8
+ 164              		.cfi_offset 4, -8
+ 165              		.cfi_offset 14, -4
+ 166 0002 0446     		mov	r4, r0
+  66:Drivers/lvgl/src/misc/lv_array.c ****     if(array->data) {
+ 167              		.loc 1 66 5 is_stmt 1 view .LVU39
+ 168              		.loc 1 66 13 is_stmt 0 view .LVU40
+ 169 0004 0068     		ldr	r0, [r0]
+ 170              	.LVL12:
+ 171              		.loc 1 66 7 view .LVU41
+ 172 0006 18B1     		cbz	r0, .L8
+  67:Drivers/lvgl/src/misc/lv_array.c ****         if(array->inner_alloc) lv_free(array->data);
+ 173              		.loc 1 67 9 is_stmt 1 view .LVU42
+ 174              		.loc 1 67 17 is_stmt 0 view .LVU43
+ 175 0008 237C     		ldrb	r3, [r4, #16]	@ zero_extendqisi2
+ 176              		.loc 1 67 11 view .LVU44
+ 177 000a 2BB9     		cbnz	r3, .L11
+ 178              	.L9:
+  68:Drivers/lvgl/src/misc/lv_array.c ****         array->data = NULL;
+ 179              		.loc 1 68 9 is_stmt 1 view .LVU45
+ 180              		.loc 1 68 21 is_stmt 0 view .LVU46
+ 181 000c 0023     		movs	r3, #0
+ 182 000e 2360     		str	r3, [r4]
+ 183              	.L8:
+  69:Drivers/lvgl/src/misc/lv_array.c ****     }
+  70:Drivers/lvgl/src/misc/lv_array.c **** 
+  71:Drivers/lvgl/src/misc/lv_array.c ****     array->size = 0;
+ 184              		.loc 1 71 5 is_stmt 1 view .LVU47
+ 185              		.loc 1 71 17 is_stmt 0 view .LVU48
+ 186 0010 0023     		movs	r3, #0
+ 187 0012 6360     		str	r3, [r4, #4]
+  72:Drivers/lvgl/src/misc/lv_array.c ****     array->capacity = 0;
+ 188              		.loc 1 72 5 is_stmt 1 view .LVU49
+ 189              		.loc 1 72 21 is_stmt 0 view .LVU50
+ 190 0014 A360     		str	r3, [r4, #8]
+  73:Drivers/lvgl/src/misc/lv_array.c **** }
+ 191              		.loc 1 73 1 view .LVU51
+ 192 0016 10BD     		pop	{r4, pc}
+ 193              	.LVL13:
+ 194              	.L11:
+  67:Drivers/lvgl/src/misc/lv_array.c ****         array->data = NULL;
+ 195              		.loc 1 67 32 is_stmt 1 discriminator 1 view .LVU52
+ 196 0018 FFF7FEFF 		bl	lv_free
+ 197              	.LVL14:
+ 198 001c F6E7     		b	.L9
+ARM GAS  /tmp/ccRHaJ18.s 			page 6
+
+
+ 199              		.cfi_endproc
+ 200              	.LFE26:
+ 202              		.section	.text.lv_array_copy,"ax",%progbits
+ 203              		.align	1
+ 204              		.global	lv_array_copy
+ 205              		.syntax unified
+ 206              		.thumb
+ 207              		.thumb_func
+ 209              	lv_array_copy:
+ 210              	.LVL15:
+ 211              	.LFB27:
+  74:Drivers/lvgl/src/misc/lv_array.c **** 
+  75:Drivers/lvgl/src/misc/lv_array.c **** void lv_array_copy(lv_array_t * target, const lv_array_t * source)
+  76:Drivers/lvgl/src/misc/lv_array.c **** {
+ 212              		.loc 1 76 1 view -0
+ 213              		.cfi_startproc
+ 214              		@ args = 0, pretend = 0, frame = 0
+ 215              		@ frame_needed = 0, uses_anonymous_args = 0
+  77:Drivers/lvgl/src/misc/lv_array.c ****     LV_ASSERT_NULL(target);
+ 216              		.loc 1 77 27 view .LVU54
+  78:Drivers/lvgl/src/misc/lv_array.c ****     LV_ASSERT_NULL(source);
+ 217              		.loc 1 78 27 view .LVU55
+  79:Drivers/lvgl/src/misc/lv_array.c **** 
+  80:Drivers/lvgl/src/misc/lv_array.c ****     if(target == source) return;
+ 218              		.loc 1 80 5 view .LVU56
+ 219              		.loc 1 80 7 is_stmt 0 view .LVU57
+ 220 0000 8842     		cmp	r0, r1
+ 221 0002 4AD0     		beq	.L22
+  76:Drivers/lvgl/src/misc/lv_array.c ****     LV_ASSERT_NULL(target);
+ 222              		.loc 1 76 1 view .LVU58
+ 223 0004 38B5     		push	{r3, r4, r5, lr}
+ 224              	.LCFI3:
+ 225              		.cfi_def_cfa_offset 16
+ 226              		.cfi_offset 3, -16
+ 227              		.cfi_offset 4, -12
+ 228              		.cfi_offset 5, -8
+ 229              		.cfi_offset 14, -4
+ 230 0006 0446     		mov	r4, r0
+ 231 0008 0D46     		mov	r5, r1
+  81:Drivers/lvgl/src/misc/lv_array.c **** 
+  82:Drivers/lvgl/src/misc/lv_array.c ****     lv_array_deinit(target);
+ 232              		.loc 1 82 5 is_stmt 1 view .LVU59
+ 233 000a FFF7FEFF 		bl	lv_array_deinit
+ 234              	.LVL16:
+  83:Drivers/lvgl/src/misc/lv_array.c **** 
+  84:Drivers/lvgl/src/misc/lv_array.c ****     /* Guard against multiplication overflow during allocation */
+  85:Drivers/lvgl/src/misc/lv_array.c ****     if(source->capacity > 0 && source->element_size > 0) {
+ 235              		.loc 1 85 5 view .LVU60
+ 236              		.loc 1 85 14 is_stmt 0 view .LVU61
+ 237 000e AB68     		ldr	r3, [r5, #8]
+ 238              		.loc 1 85 7 view .LVU62
+ 239 0010 1BB3     		cbz	r3, .L14
+ 240              		.loc 1 85 38 discriminator 1 view .LVU63
+ 241 0012 E868     		ldr	r0, [r5, #12]
+ 242              		.loc 1 85 29 discriminator 1 view .LVU64
+ 243 0014 08B3     		cbz	r0, .L14
+ 244              	.LBB14:
+ARM GAS  /tmp/ccRHaJ18.s 			page 7
+
+
+  86:Drivers/lvgl/src/misc/lv_array.c ****         if(source->capacity > UINT32_MAX / source->element_size) {
+ 245              		.loc 1 86 9 is_stmt 1 view .LVU65
+ 246              		.loc 1 86 29 is_stmt 0 view .LVU66
+ 247 0016 0022     		movs	r2, #0
+ 248 0018 A0FB03C1 		umull	ip, r1, r0, r3
+ 249 001c 79B9     		cbnz	r1, .L25
+ 250              	.L15:
+ 251              		.loc 1 86 11 discriminator 1 view .LVU67
+ 252 001e 82B9     		cbnz	r2, .L26
+  87:Drivers/lvgl/src/misc/lv_array.c ****             lv_memzero(target, sizeof(lv_array_t));
+  88:Drivers/lvgl/src/misc/lv_array.c ****             return;
+  89:Drivers/lvgl/src/misc/lv_array.c ****         }
+  90:Drivers/lvgl/src/misc/lv_array.c **** 
+  91:Drivers/lvgl/src/misc/lv_array.c ****         void * data = lv_malloc(source->capacity * source->element_size);
+ 253              		.loc 1 91 9 is_stmt 1 view .LVU68
+ 254              		.loc 1 91 23 is_stmt 0 view .LVU69
+ 255 0020 03FB00F0 		mul	r0, r3, r0
+ 256 0024 FFF7FEFF 		bl	lv_malloc
+ 257              	.LVL17:
+  92:Drivers/lvgl/src/misc/lv_array.c ****         if(data == NULL) {
+ 258              		.loc 1 92 9 is_stmt 1 view .LVU70
+ 259              		.loc 1 92 11 is_stmt 0 view .LVU71
+ 260 0028 88B1     		cbz	r0, .L27
+  93:Drivers/lvgl/src/misc/lv_array.c ****             lv_memzero(target, sizeof(lv_array_t));
+  94:Drivers/lvgl/src/misc/lv_array.c ****             return;
+  95:Drivers/lvgl/src/misc/lv_array.c ****         }
+  96:Drivers/lvgl/src/misc/lv_array.c **** 
+  97:Drivers/lvgl/src/misc/lv_array.c ****         target->data = data;
+ 261              		.loc 1 97 9 is_stmt 1 view .LVU72
+ 262              		.loc 1 97 22 is_stmt 0 view .LVU73
+ 263 002a 2060     		str	r0, [r4]
+  98:Drivers/lvgl/src/misc/lv_array.c ****         target->capacity = source->capacity;
+ 264              		.loc 1 98 9 is_stmt 1 view .LVU74
+ 265              		.loc 1 98 34 is_stmt 0 view .LVU75
+ 266 002c AB68     		ldr	r3, [r5, #8]
+ 267              		.loc 1 98 26 view .LVU76
+ 268 002e A360     		str	r3, [r4, #8]
+  99:Drivers/lvgl/src/misc/lv_array.c ****         target->element_size = source->element_size;
+ 269              		.loc 1 99 9 is_stmt 1 view .LVU77
+ 270              		.loc 1 99 38 is_stmt 0 view .LVU78
+ 271 0030 EB68     		ldr	r3, [r5, #12]
+ 272              		.loc 1 99 30 view .LVU79
+ 273 0032 E360     		str	r3, [r4, #12]
+ 100:Drivers/lvgl/src/misc/lv_array.c ****         target->inner_alloc = true;
+ 274              		.loc 1 100 9 is_stmt 1 view .LVU80
+ 275              		.loc 1 100 29 is_stmt 0 view .LVU81
+ 276 0034 0123     		movs	r3, #1
+ 277 0036 2374     		strb	r3, [r4, #16]
+ 101:Drivers/lvgl/src/misc/lv_array.c ****         target->size = 0;
+ 278              		.loc 1 101 9 is_stmt 1 view .LVU82
+ 279              		.loc 1 101 22 is_stmt 0 view .LVU83
+ 280 0038 0023     		movs	r3, #0
+ 281 003a 6360     		str	r3, [r4, #4]
+ 282              	.LBE14:
+  85:Drivers/lvgl/src/misc/lv_array.c ****         if(source->capacity > UINT32_MAX / source->element_size) {
+ 283              		.loc 1 85 58 discriminator 2 view .LVU84
+ 284 003c 1AE0     		b	.L19
+ARM GAS  /tmp/ccRHaJ18.s 			page 8
+
+
+ 285              	.LVL18:
+ 286              	.L25:
+ 287              	.LBB19:
+  86:Drivers/lvgl/src/misc/lv_array.c ****             lv_memzero(target, sizeof(lv_array_t));
+ 288              		.loc 1 86 29 view .LVU85
+ 289 003e 0122     		movs	r2, #1
+ 290 0040 EDE7     		b	.L15
+ 291              	.L26:
+  87:Drivers/lvgl/src/misc/lv_array.c ****             return;
+ 292              		.loc 1 87 13 is_stmt 1 view .LVU86
+ 293              	.LVL19:
+ 294              	.LBB15:
+ 295              	.LBI15:
+ 296              		.file 2 "Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h"
+   1:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** /**
+   2:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @file lv_string.h
+   3:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  *
+   4:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  */
+   5:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** 
+   6:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** #ifndef LV_STRING_H
+   7:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** #define LV_STRING_H
+   8:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** 
+   9:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** #ifdef __cplusplus
+  10:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** extern "C" {
+  11:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** #endif
+  12:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** 
+  13:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** /*********************
+  14:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  *      INCLUDES
+  15:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  *********************/
+  16:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** #include "../config/lv_conf_internal.h"
+  17:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** #include "../lv_types.h"
+  18:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** 
+  19:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** /*********************
+  20:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  *      DEFINES
+  21:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  *********************/
+  22:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** 
+  23:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** /**********************
+  24:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  *      TYPEDEFS
+  25:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  **********************/
+  26:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** 
+  27:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** /**********************
+  28:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * GLOBAL PROTOTYPES
+  29:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  **********************/
+  30:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** 
+  31:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** /**
+  32:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @brief Copies a block of memory from a source address to a destination address.
+  33:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @param dst Pointer to the destination array where the content is to be copied.
+  34:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @param src Pointer to the source of data to be copied.
+  35:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @param len Number of bytes to copy.
+  36:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @return Pointer to the destination array.
+  37:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @note The function does not check for any overlapping of the source and destination memory block
+  38:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  */
+  39:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** void * lv_memcpy(void * dst, const void * src, size_t len);
+  40:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** 
+  41:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** /**
+  42:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @brief Fills a block of memory with a specified value.
+  43:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @param dst Pointer to the destination array to fill with the specified value.
+ARM GAS  /tmp/ccRHaJ18.s 			page 9
+
+
+  44:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @param v Value to be set. The value is passed as an int, but the function fills
+  45:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  *          the block of memory using the unsigned char conversion of this value.
+  46:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @param len Number of bytes to be set to the value.
+  47:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  */
+  48:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** void lv_memset(void * dst, uint8_t v, size_t len);
+  49:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** 
+  50:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** /**
+  51:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @brief Move a block of memory from source to destination
+  52:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @param dst Pointer to the destination array where the content is to be copied.
+  53:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @param src Pointer to the source of data to be copied.
+  54:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @param len Number of bytes to copy
+  55:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @return Pointer to the destination array.
+  56:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  */
+  57:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** void * lv_memmove(void * dst, const void * src, size_t len);
+  58:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** 
+  59:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** /**
+  60:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @brief This function will compare two memory blocks
+  61:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @param p1 Pointer to the first memory block
+  62:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @param p2 Pointer to the second memory block
+  63:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @param len Number of bytes to compare
+  64:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @return The difference between the value of the first unmatching byte.
+  65:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  */
+  66:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** int lv_memcmp(const void * p1, const void * p2, size_t len);
+  67:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** 
+  68:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** /**
+  69:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * Same as `memset(dst, 0x00, len)`.
+  70:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @param dst pointer to the destination buffer
+  71:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @param len number of byte to set
+  72:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  */
+  73:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** static inline void lv_memzero(void * dst, size_t len)
+ 297              		.loc 2 73 20 view .LVU87
+ 298              	.LBB16:
+  74:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** {
+  75:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****     lv_memset(dst, 0x00, len);
+ 299              		.loc 2 75 5 view .LVU88
+ 300 0042 1422     		movs	r2, #20
+ 301 0044 0021     		movs	r1, #0
+ 302 0046 2046     		mov	r0, r4
+ 303 0048 FFF7FEFF 		bl	lv_memset
+ 304              	.LVL20:
+ 305              		.loc 2 75 5 is_stmt 0 view .LVU89
+ 306              	.LBE16:
+ 307              	.LBE15:
+  88:Drivers/lvgl/src/misc/lv_array.c ****         }
+ 308              		.loc 1 88 13 is_stmt 1 view .LVU90
+ 309 004c 14E0     		b	.L12
+ 310              	.LVL21:
+ 311              	.L27:
+  93:Drivers/lvgl/src/misc/lv_array.c ****             return;
+ 312              		.loc 1 93 13 view .LVU91
+ 313              	.LBB17:
+ 314              	.LBI17:
+  73:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** {
+ 315              		.loc 2 73 20 view .LVU92
+ 316              	.LBB18:
+ 317              		.loc 2 75 5 view .LVU93
+ 318 004e 1422     		movs	r2, #20
+ARM GAS  /tmp/ccRHaJ18.s 			page 10
+
+
+ 319 0050 0146     		mov	r1, r0
+ 320 0052 2046     		mov	r0, r4
+ 321              	.LVL22:
+ 322              		.loc 2 75 5 is_stmt 0 view .LVU94
+ 323 0054 FFF7FEFF 		bl	lv_memset
+ 324              	.LVL23:
+ 325              		.loc 2 75 5 view .LVU95
+ 326              	.LBE18:
+ 327              	.LBE17:
+  94:Drivers/lvgl/src/misc/lv_array.c ****         }
+ 328              		.loc 1 94 13 is_stmt 1 view .LVU96
+ 329 0058 0EE0     		b	.L12
+ 330              	.LVL24:
+ 331              	.L14:
+  94:Drivers/lvgl/src/misc/lv_array.c ****         }
+ 332              		.loc 1 94 13 is_stmt 0 view .LVU97
+ 333              	.LBE19:
+ 334              	.LBB20:
+ 102:Drivers/lvgl/src/misc/lv_array.c ****     }
+ 103:Drivers/lvgl/src/misc/lv_array.c ****     else {
+ 104:Drivers/lvgl/src/misc/lv_array.c ****         void * data = lv_malloc(0);
+ 335              		.loc 1 104 9 is_stmt 1 view .LVU98
+ 336              		.loc 1 104 23 is_stmt 0 view .LVU99
+ 337 005a 0020     		movs	r0, #0
+ 338 005c FFF7FEFF 		bl	lv_malloc
+ 339              	.LVL25:
+ 105:Drivers/lvgl/src/misc/lv_array.c ****         if(data == NULL) {
+ 340              		.loc 1 105 9 is_stmt 1 view .LVU100
+ 341              		.loc 1 105 11 is_stmt 0 view .LVU101
+ 342 0060 58B1     		cbz	r0, .L28
+ 106:Drivers/lvgl/src/misc/lv_array.c ****             lv_memzero(target, sizeof(lv_array_t));
+ 107:Drivers/lvgl/src/misc/lv_array.c ****             return;
+ 108:Drivers/lvgl/src/misc/lv_array.c ****         }
+ 109:Drivers/lvgl/src/misc/lv_array.c ****         target->data = data;
+ 343              		.loc 1 109 9 is_stmt 1 view .LVU102
+ 344              		.loc 1 109 22 is_stmt 0 view .LVU103
+ 345 0062 2060     		str	r0, [r4]
+ 110:Drivers/lvgl/src/misc/lv_array.c ****         target->capacity = source->capacity;
+ 346              		.loc 1 110 9 is_stmt 1 view .LVU104
+ 347              		.loc 1 110 34 is_stmt 0 view .LVU105
+ 348 0064 AB68     		ldr	r3, [r5, #8]
+ 349              		.loc 1 110 26 view .LVU106
+ 350 0066 A360     		str	r3, [r4, #8]
+ 111:Drivers/lvgl/src/misc/lv_array.c ****         target->element_size = source->element_size;
+ 351              		.loc 1 111 9 is_stmt 1 view .LVU107
+ 352              		.loc 1 111 38 is_stmt 0 view .LVU108
+ 353 0068 EB68     		ldr	r3, [r5, #12]
+ 354              		.loc 1 111 30 view .LVU109
+ 355 006a E360     		str	r3, [r4, #12]
+ 112:Drivers/lvgl/src/misc/lv_array.c ****         target->inner_alloc = true;
+ 356              		.loc 1 112 9 is_stmt 1 view .LVU110
+ 357              		.loc 1 112 29 is_stmt 0 view .LVU111
+ 358 006c 0123     		movs	r3, #1
+ 359 006e 2374     		strb	r3, [r4, #16]
+ 113:Drivers/lvgl/src/misc/lv_array.c ****         target->size = 0;
+ 360              		.loc 1 113 9 is_stmt 1 view .LVU112
+ 361              		.loc 1 113 22 is_stmt 0 view .LVU113
+ARM GAS  /tmp/ccRHaJ18.s 			page 11
+
+
+ 362 0070 0023     		movs	r3, #0
+ 363 0072 6360     		str	r3, [r4, #4]
+ 364              	.LVL26:
+ 365              	.L19:
+ 366              		.loc 1 113 22 view .LVU114
+ 367              	.LBE20:
+ 114:Drivers/lvgl/src/misc/lv_array.c ****     }
+ 115:Drivers/lvgl/src/misc/lv_array.c **** 
+ 116:Drivers/lvgl/src/misc/lv_array.c ****     if(lv_array_is_empty(source)) {
+ 368              		.loc 1 116 5 is_stmt 1 view .LVU115
+ 369              	.LBB23:
+ 370              	.LBI23:
+ 371              		.file 3 "Drivers/lvgl/src/misc/lv_array.h"
+   1:Drivers/lvgl/src/misc/lv_array.h **** /**
+   2:Drivers/lvgl/src/misc/lv_array.h ****  * @file lv_array.h
+   3:Drivers/lvgl/src/misc/lv_array.h ****  */
+   4:Drivers/lvgl/src/misc/lv_array.h **** 
+   5:Drivers/lvgl/src/misc/lv_array.h **** #ifndef LV_ARRAY_H
+   6:Drivers/lvgl/src/misc/lv_array.h **** #define LV_ARRAY_H
+   7:Drivers/lvgl/src/misc/lv_array.h **** 
+   8:Drivers/lvgl/src/misc/lv_array.h **** #ifdef __cplusplus
+   9:Drivers/lvgl/src/misc/lv_array.h **** extern "C" {
+  10:Drivers/lvgl/src/misc/lv_array.h **** #endif
+  11:Drivers/lvgl/src/misc/lv_array.h **** 
+  12:Drivers/lvgl/src/misc/lv_array.h **** /*********************
+  13:Drivers/lvgl/src/misc/lv_array.h ****  *      INCLUDES
+  14:Drivers/lvgl/src/misc/lv_array.h ****  *********************/
+  15:Drivers/lvgl/src/misc/lv_array.h **** #include "../lvgl_public.h"
+  16:Drivers/lvgl/src/misc/lv_array.h **** 
+  17:Drivers/lvgl/src/misc/lv_array.h **** /*********************
+  18:Drivers/lvgl/src/misc/lv_array.h ****  *      DEFINES
+  19:Drivers/lvgl/src/misc/lv_array.h ****  *********************/
+  20:Drivers/lvgl/src/misc/lv_array.h **** 
+  21:Drivers/lvgl/src/misc/lv_array.h **** #ifndef LV_ARRAY_DEFAULT_CAPACITY
+  22:Drivers/lvgl/src/misc/lv_array.h **** #define LV_ARRAY_DEFAULT_CAPACITY  4
+  23:Drivers/lvgl/src/misc/lv_array.h **** #endif
+  24:Drivers/lvgl/src/misc/lv_array.h **** 
+  25:Drivers/lvgl/src/misc/lv_array.h **** #ifndef LV_ARRAY_DEFAULT_SHRINK_RATIO
+  26:Drivers/lvgl/src/misc/lv_array.h **** #define LV_ARRAY_DEFAULT_SHRINK_RATIO 2
+  27:Drivers/lvgl/src/misc/lv_array.h **** #endif
+  28:Drivers/lvgl/src/misc/lv_array.h **** 
+  29:Drivers/lvgl/src/misc/lv_array.h **** /**********************
+  30:Drivers/lvgl/src/misc/lv_array.h ****  *      TYPEDEFS
+  31:Drivers/lvgl/src/misc/lv_array.h ****  **********************/
+  32:Drivers/lvgl/src/misc/lv_array.h **** 
+  33:Drivers/lvgl/src/misc/lv_array.h **** /** Description of a array*/
+  34:Drivers/lvgl/src/misc/lv_array.h **** typedef struct _lv_array_t {
+  35:Drivers/lvgl/src/misc/lv_array.h ****     uint8_t * data;
+  36:Drivers/lvgl/src/misc/lv_array.h ****     uint32_t size;
+  37:Drivers/lvgl/src/misc/lv_array.h ****     uint32_t capacity;
+  38:Drivers/lvgl/src/misc/lv_array.h ****     uint32_t element_size;
+  39:Drivers/lvgl/src/misc/lv_array.h **** 
+  40:Drivers/lvgl/src/misc/lv_array.h ****     bool inner_alloc; /* true: data is allocated by the array; false: data is allocated by the user
+  41:Drivers/lvgl/src/misc/lv_array.h **** } lv_array_t;
+  42:Drivers/lvgl/src/misc/lv_array.h **** 
+  43:Drivers/lvgl/src/misc/lv_array.h **** /**********************
+  44:Drivers/lvgl/src/misc/lv_array.h ****  * GLOBAL PROTOTYPES
+ARM GAS  /tmp/ccRHaJ18.s 			page 12
+
+
+  45:Drivers/lvgl/src/misc/lv_array.h ****  **********************/
+  46:Drivers/lvgl/src/misc/lv_array.h **** 
+  47:Drivers/lvgl/src/misc/lv_array.h **** /**
+  48:Drivers/lvgl/src/misc/lv_array.h ****  * Init an array.
+  49:Drivers/lvgl/src/misc/lv_array.h ****  * @param array pointer to an `lv_array_t` variable to initialize
+  50:Drivers/lvgl/src/misc/lv_array.h ****  * @param capacity the initial capacity of the array
+  51:Drivers/lvgl/src/misc/lv_array.h ****  * @param element_size the size of an element in bytes
+  52:Drivers/lvgl/src/misc/lv_array.h ****  */
+  53:Drivers/lvgl/src/misc/lv_array.h **** lv_result_t lv_array_init(lv_array_t * array, uint32_t capacity, uint32_t element_size);
+  54:Drivers/lvgl/src/misc/lv_array.h **** 
+  55:Drivers/lvgl/src/misc/lv_array.h **** /**
+  56:Drivers/lvgl/src/misc/lv_array.h ****  * Init an array from a buffer.
+  57:Drivers/lvgl/src/misc/lv_array.h ****  * @note The buffer must be large enough to store `capacity` elements. The array will not release t
+  58:Drivers/lvgl/src/misc/lv_array.h ****  *       The user must ensure that the buffer is valid during the lifetime of the array. And releas
+  59:Drivers/lvgl/src/misc/lv_array.h ****  * @param array pointer to an `lv_array_t` variable to initialize
+  60:Drivers/lvgl/src/misc/lv_array.h ****  * @param buf pointer to a buffer to use as the array's data
+  61:Drivers/lvgl/src/misc/lv_array.h ****  * @param capacity the initial capacity of the array
+  62:Drivers/lvgl/src/misc/lv_array.h ****  * @param element_size the size of an element in bytes
+  63:Drivers/lvgl/src/misc/lv_array.h ****  */
+  64:Drivers/lvgl/src/misc/lv_array.h **** void lv_array_init_from_buf(lv_array_t * array, void * buf, uint32_t capacity, uint32_t element_siz
+  65:Drivers/lvgl/src/misc/lv_array.h **** 
+  66:Drivers/lvgl/src/misc/lv_array.h **** /**
+  67:Drivers/lvgl/src/misc/lv_array.h ****  * Resize the array to the given capacity.
+  68:Drivers/lvgl/src/misc/lv_array.h ****  * @note if the new capacity is smaller than the current size, the array will be truncated.
+  69:Drivers/lvgl/src/misc/lv_array.h ****  * @param array pointer to an `lv_array_t` variable
+  70:Drivers/lvgl/src/misc/lv_array.h ****  * @param new_capacity the new capacity of the array
+  71:Drivers/lvgl/src/misc/lv_array.h ****  */
+  72:Drivers/lvgl/src/misc/lv_array.h **** bool lv_array_resize(lv_array_t * array, uint32_t new_capacity);
+  73:Drivers/lvgl/src/misc/lv_array.h **** 
+  74:Drivers/lvgl/src/misc/lv_array.h **** /**
+  75:Drivers/lvgl/src/misc/lv_array.h ****  * Deinit the array, and free the allocated memory
+  76:Drivers/lvgl/src/misc/lv_array.h ****  * @param array pointer to an `lv_array_t` variable to deinitialize
+  77:Drivers/lvgl/src/misc/lv_array.h ****  */
+  78:Drivers/lvgl/src/misc/lv_array.h **** void lv_array_deinit(lv_array_t * array);
+  79:Drivers/lvgl/src/misc/lv_array.h **** 
+  80:Drivers/lvgl/src/misc/lv_array.h **** /**
+  81:Drivers/lvgl/src/misc/lv_array.h ****  * Return how many elements are stored in the array.
+  82:Drivers/lvgl/src/misc/lv_array.h ****  * @param array pointer to an `lv_array_t` variable
+  83:Drivers/lvgl/src/misc/lv_array.h ****  * @return the number of elements stored in the array
+  84:Drivers/lvgl/src/misc/lv_array.h ****  */
+  85:Drivers/lvgl/src/misc/lv_array.h **** static inline uint32_t lv_array_size(const lv_array_t * array)
+  86:Drivers/lvgl/src/misc/lv_array.h **** {
+  87:Drivers/lvgl/src/misc/lv_array.h ****     return array->size;
+  88:Drivers/lvgl/src/misc/lv_array.h **** }
+  89:Drivers/lvgl/src/misc/lv_array.h **** 
+  90:Drivers/lvgl/src/misc/lv_array.h **** /**
+  91:Drivers/lvgl/src/misc/lv_array.h ****  * Return the capacity of the array, i.e. how many elements can be stored.
+  92:Drivers/lvgl/src/misc/lv_array.h ****  * @param array pointer to an `lv_array_t` variable
+  93:Drivers/lvgl/src/misc/lv_array.h ****  * @return the capacity of the array
+  94:Drivers/lvgl/src/misc/lv_array.h ****  */
+  95:Drivers/lvgl/src/misc/lv_array.h **** static inline uint32_t lv_array_capacity(const lv_array_t * array)
+  96:Drivers/lvgl/src/misc/lv_array.h **** {
+  97:Drivers/lvgl/src/misc/lv_array.h ****     return array->capacity;
+  98:Drivers/lvgl/src/misc/lv_array.h **** }
+  99:Drivers/lvgl/src/misc/lv_array.h **** 
+ 100:Drivers/lvgl/src/misc/lv_array.h **** /**
+ 101:Drivers/lvgl/src/misc/lv_array.h ****  * Return if the array is empty
+ARM GAS  /tmp/ccRHaJ18.s 			page 13
+
+
+ 102:Drivers/lvgl/src/misc/lv_array.h ****  * @param array pointer to an `lv_array_t` variable
+ 103:Drivers/lvgl/src/misc/lv_array.h ****  * @return true: array is empty; false: array is not empty
+ 104:Drivers/lvgl/src/misc/lv_array.h ****  */
+ 105:Drivers/lvgl/src/misc/lv_array.h **** static inline bool lv_array_is_empty(const lv_array_t * array)
+ 372              		.loc 3 105 20 view .LVU116
+ 373              	.LBB24:
+ 106:Drivers/lvgl/src/misc/lv_array.h **** {
+ 107:Drivers/lvgl/src/misc/lv_array.h ****     return array->size == 0;
+ 374              		.loc 3 107 5 view .LVU117
+ 375              		.loc 3 107 17 is_stmt 0 view .LVU118
+ 376 0074 6B68     		ldr	r3, [r5, #4]
+ 377              	.LVL27:
+ 378              		.loc 3 107 17 view .LVU119
+ 379              	.LBE24:
+ 380              	.LBE23:
+ 381              		.loc 1 116 7 discriminator 1 view .LVU120
+ 382 0076 33B9     		cbnz	r3, .L29
+ 383              	.L12:
+ 117:Drivers/lvgl/src/misc/lv_array.c ****         return;
+ 118:Drivers/lvgl/src/misc/lv_array.c ****     }
+ 119:Drivers/lvgl/src/misc/lv_array.c **** 
+ 120:Drivers/lvgl/src/misc/lv_array.c ****     lv_memcpy(target->data, source->data, source->size * source->element_size);
+ 121:Drivers/lvgl/src/misc/lv_array.c ****     target->size = source->size;
+ 122:Drivers/lvgl/src/misc/lv_array.c **** }
+ 384              		.loc 1 122 1 view .LVU121
+ 385 0078 38BD     		pop	{r3, r4, r5, pc}
+ 386              	.LVL28:
+ 387              	.L28:
+ 388              	.LBB25:
+ 106:Drivers/lvgl/src/misc/lv_array.c ****             return;
+ 389              		.loc 1 106 13 is_stmt 1 view .LVU122
+ 390              	.LBB21:
+ 391              	.LBI21:
+  73:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** {
+ 392              		.loc 2 73 20 view .LVU123
+ 393              	.LBB22:
+ 394              		.loc 2 75 5 view .LVU124
+ 395 007a 1422     		movs	r2, #20
+ 396 007c 0146     		mov	r1, r0
+ 397 007e 2046     		mov	r0, r4
+ 398              	.LVL29:
+ 399              		.loc 2 75 5 is_stmt 0 view .LVU125
+ 400 0080 FFF7FEFF 		bl	lv_memset
+ 401              	.LVL30:
+ 402              		.loc 2 75 5 view .LVU126
+ 403              	.LBE22:
+ 404              	.LBE21:
+ 107:Drivers/lvgl/src/misc/lv_array.c ****         }
+ 405              		.loc 1 107 13 is_stmt 1 view .LVU127
+ 406 0084 F8E7     		b	.L12
+ 407              	.LVL31:
+ 408              	.L29:
+ 107:Drivers/lvgl/src/misc/lv_array.c ****         }
+ 409              		.loc 1 107 13 is_stmt 0 view .LVU128
+ 410              	.LBE25:
+ 120:Drivers/lvgl/src/misc/lv_array.c ****     target->size = source->size;
+ 411              		.loc 1 120 5 is_stmt 1 view .LVU129
+ARM GAS  /tmp/ccRHaJ18.s 			page 14
+
+
+ 120:Drivers/lvgl/src/misc/lv_array.c ****     target->size = source->size;
+ 412              		.loc 1 120 64 is_stmt 0 view .LVU130
+ 413 0086 EA68     		ldr	r2, [r5, #12]
+ 120:Drivers/lvgl/src/misc/lv_array.c ****     target->size = source->size;
+ 414              		.loc 1 120 5 view .LVU131
+ 415 0088 03FB02F2 		mul	r2, r3, r2
+ 416 008c 2968     		ldr	r1, [r5]
+ 417 008e 2068     		ldr	r0, [r4]
+ 418 0090 FFF7FEFF 		bl	lv_memcpy
+ 419              	.LVL32:
+ 121:Drivers/lvgl/src/misc/lv_array.c **** }
+ 420              		.loc 1 121 5 is_stmt 1 view .LVU132
+ 121:Drivers/lvgl/src/misc/lv_array.c **** }
+ 421              		.loc 1 121 26 is_stmt 0 view .LVU133
+ 422 0094 6B68     		ldr	r3, [r5, #4]
+ 121:Drivers/lvgl/src/misc/lv_array.c **** }
+ 423              		.loc 1 121 18 view .LVU134
+ 424 0096 6360     		str	r3, [r4, #4]
+ 425 0098 EEE7     		b	.L12
+ 426              	.LVL33:
+ 427              	.L22:
+ 428              	.LCFI4:
+ 429              		.cfi_def_cfa_offset 0
+ 430              		.cfi_restore 3
+ 431              		.cfi_restore 4
+ 432              		.cfi_restore 5
+ 433              		.cfi_restore 14
+ 121:Drivers/lvgl/src/misc/lv_array.c **** }
+ 434              		.loc 1 121 18 view .LVU135
+ 435 009a 7047     		bx	lr
+ 436              		.cfi_endproc
+ 437              	.LFE27:
+ 439              		.section	.text.lv_array_resize,"ax",%progbits
+ 440              		.align	1
+ 441              		.global	lv_array_resize
+ 442              		.syntax unified
+ 443              		.thumb
+ 444              		.thumb_func
+ 446              	lv_array_resize:
+ 447              	.LVL34:
+ 448              	.LFB32:
+ 123:Drivers/lvgl/src/misc/lv_array.c **** 
+ 124:Drivers/lvgl/src/misc/lv_array.c **** void lv_array_shrink(lv_array_t * array)
+ 125:Drivers/lvgl/src/misc/lv_array.c **** {
+ 126:Drivers/lvgl/src/misc/lv_array.c ****     if(array->size <= array->capacity / LV_ARRAY_DEFAULT_SHRINK_RATIO) {
+ 127:Drivers/lvgl/src/misc/lv_array.c ****         lv_array_resize(array, array->size);
+ 128:Drivers/lvgl/src/misc/lv_array.c ****     }
+ 129:Drivers/lvgl/src/misc/lv_array.c **** }
+ 130:Drivers/lvgl/src/misc/lv_array.c **** 
+ 131:Drivers/lvgl/src/misc/lv_array.c **** lv_result_t lv_array_remove(lv_array_t * array, uint32_t index)
+ 132:Drivers/lvgl/src/misc/lv_array.c **** {
+ 133:Drivers/lvgl/src/misc/lv_array.c ****     if(!array) {
+ 134:Drivers/lvgl/src/misc/lv_array.c ****         return LV_RESULT_INVALID;
+ 135:Drivers/lvgl/src/misc/lv_array.c ****     }
+ 136:Drivers/lvgl/src/misc/lv_array.c **** 
+ 137:Drivers/lvgl/src/misc/lv_array.c ****     if(index >= array->size) {
+ 138:Drivers/lvgl/src/misc/lv_array.c ****         return LV_RESULT_INVALID;
+ARM GAS  /tmp/ccRHaJ18.s 			page 15
+
+
+ 139:Drivers/lvgl/src/misc/lv_array.c ****     }
+ 140:Drivers/lvgl/src/misc/lv_array.c **** 
+ 141:Drivers/lvgl/src/misc/lv_array.c ****     /*Shortcut*/
+ 142:Drivers/lvgl/src/misc/lv_array.c ****     if(index == array->size - 1) {
+ 143:Drivers/lvgl/src/misc/lv_array.c ****         array->size--;
+ 144:Drivers/lvgl/src/misc/lv_array.c ****         lv_array_shrink(array);
+ 145:Drivers/lvgl/src/misc/lv_array.c ****         return LV_RESULT_OK;
+ 146:Drivers/lvgl/src/misc/lv_array.c ****     }
+ 147:Drivers/lvgl/src/misc/lv_array.c **** 
+ 148:Drivers/lvgl/src/misc/lv_array.c ****     uint8_t * start = lv_array_at(array, index);
+ 149:Drivers/lvgl/src/misc/lv_array.c ****     uint8_t * remaining = start + array->element_size;
+ 150:Drivers/lvgl/src/misc/lv_array.c ****     uint32_t remaining_size = (array->size - index - 1) * array->element_size;
+ 151:Drivers/lvgl/src/misc/lv_array.c ****     lv_memmove(start, remaining, remaining_size);
+ 152:Drivers/lvgl/src/misc/lv_array.c ****     array->size--;
+ 153:Drivers/lvgl/src/misc/lv_array.c ****     lv_array_shrink(array);
+ 154:Drivers/lvgl/src/misc/lv_array.c ****     return LV_RESULT_OK;
+ 155:Drivers/lvgl/src/misc/lv_array.c **** }
+ 156:Drivers/lvgl/src/misc/lv_array.c **** 
+ 157:Drivers/lvgl/src/misc/lv_array.c **** lv_result_t lv_array_remove_unordered(lv_array_t * array, uint32_t index)
+ 158:Drivers/lvgl/src/misc/lv_array.c **** {
+ 159:Drivers/lvgl/src/misc/lv_array.c ****     if(!array) {
+ 160:Drivers/lvgl/src/misc/lv_array.c ****         return LV_RESULT_INVALID;
+ 161:Drivers/lvgl/src/misc/lv_array.c ****     }
+ 162:Drivers/lvgl/src/misc/lv_array.c **** 
+ 163:Drivers/lvgl/src/misc/lv_array.c ****     if(index >= array->size) {
+ 164:Drivers/lvgl/src/misc/lv_array.c ****         return LV_RESULT_INVALID;
+ 165:Drivers/lvgl/src/misc/lv_array.c ****     }
+ 166:Drivers/lvgl/src/misc/lv_array.c **** 
+ 167:Drivers/lvgl/src/misc/lv_array.c ****     /*Shortcut*/
+ 168:Drivers/lvgl/src/misc/lv_array.c ****     if(index == array->size - 1) {
+ 169:Drivers/lvgl/src/misc/lv_array.c ****         array->size--;
+ 170:Drivers/lvgl/src/misc/lv_array.c ****         lv_array_shrink(array);
+ 171:Drivers/lvgl/src/misc/lv_array.c ****         return LV_RESULT_OK;
+ 172:Drivers/lvgl/src/misc/lv_array.c ****     }
+ 173:Drivers/lvgl/src/misc/lv_array.c **** 
+ 174:Drivers/lvgl/src/misc/lv_array.c ****     /* Copy the last element into the position to remove*/
+ 175:Drivers/lvgl/src/misc/lv_array.c ****     uint8_t * dst = lv_array_at(array, index);
+ 176:Drivers/lvgl/src/misc/lv_array.c ****     uint8_t * src = lv_array_at(array, array->size - 1);
+ 177:Drivers/lvgl/src/misc/lv_array.c **** 
+ 178:Drivers/lvgl/src/misc/lv_array.c ****     lv_memcpy(dst, src, array->element_size);
+ 179:Drivers/lvgl/src/misc/lv_array.c ****     array->size--;
+ 180:Drivers/lvgl/src/misc/lv_array.c ****     lv_array_shrink(array);
+ 181:Drivers/lvgl/src/misc/lv_array.c ****     return LV_RESULT_OK;
+ 182:Drivers/lvgl/src/misc/lv_array.c **** }
+ 183:Drivers/lvgl/src/misc/lv_array.c **** 
+ 184:Drivers/lvgl/src/misc/lv_array.c **** lv_result_t lv_array_erase(lv_array_t * array, uint32_t start, uint32_t end)
+ 185:Drivers/lvgl/src/misc/lv_array.c **** {
+ 186:Drivers/lvgl/src/misc/lv_array.c ****     if(end > array->size) {
+ 187:Drivers/lvgl/src/misc/lv_array.c ****         end = array->size;
+ 188:Drivers/lvgl/src/misc/lv_array.c ****     }
+ 189:Drivers/lvgl/src/misc/lv_array.c **** 
+ 190:Drivers/lvgl/src/misc/lv_array.c ****     if(start >= end) {
+ 191:Drivers/lvgl/src/misc/lv_array.c ****         return LV_RESULT_INVALID;
+ 192:Drivers/lvgl/src/misc/lv_array.c ****     }
+ 193:Drivers/lvgl/src/misc/lv_array.c **** 
+ 194:Drivers/lvgl/src/misc/lv_array.c ****     /*Shortcut*/
+ 195:Drivers/lvgl/src/misc/lv_array.c ****     if(end == array->size) {
+ARM GAS  /tmp/ccRHaJ18.s 			page 16
+
+
+ 196:Drivers/lvgl/src/misc/lv_array.c ****         array->size = start;
+ 197:Drivers/lvgl/src/misc/lv_array.c ****         lv_array_shrink(array);
+ 198:Drivers/lvgl/src/misc/lv_array.c ****         return LV_RESULT_OK;
+ 199:Drivers/lvgl/src/misc/lv_array.c ****     }
+ 200:Drivers/lvgl/src/misc/lv_array.c **** 
+ 201:Drivers/lvgl/src/misc/lv_array.c ****     uint8_t * start_p = lv_array_at(array, start);
+ 202:Drivers/lvgl/src/misc/lv_array.c ****     uint8_t * remaining = start_p + (end - start) * array->element_size;
+ 203:Drivers/lvgl/src/misc/lv_array.c ****     uint32_t remaining_size = (array->size - end) * array->element_size;
+ 204:Drivers/lvgl/src/misc/lv_array.c ****     lv_memmove(start_p, remaining, remaining_size);
+ 205:Drivers/lvgl/src/misc/lv_array.c ****     array->size -= (end - start);
+ 206:Drivers/lvgl/src/misc/lv_array.c ****     lv_array_shrink(array);
+ 207:Drivers/lvgl/src/misc/lv_array.c ****     return LV_RESULT_OK;
+ 208:Drivers/lvgl/src/misc/lv_array.c **** }
+ 209:Drivers/lvgl/src/misc/lv_array.c **** 
+ 210:Drivers/lvgl/src/misc/lv_array.c **** bool lv_array_resize(lv_array_t * array, uint32_t new_capacity)
+ 211:Drivers/lvgl/src/misc/lv_array.c **** {
+ 449              		.loc 1 211 1 is_stmt 1 view -0
+ 450              		.cfi_startproc
+ 451              		@ args = 0, pretend = 0, frame = 0
+ 452              		@ frame_needed = 0, uses_anonymous_args = 0
+ 453              		.loc 1 211 1 is_stmt 0 view .LVU137
+ 454 0000 70B5     		push	{r4, r5, r6, lr}
+ 455              	.LCFI5:
+ 456              		.cfi_def_cfa_offset 16
+ 457              		.cfi_offset 4, -16
+ 458              		.cfi_offset 5, -12
+ 459              		.cfi_offset 6, -8
+ 460              		.cfi_offset 14, -4
+ 212:Drivers/lvgl/src/misc/lv_array.c ****     LV_ASSERT(array);
+ 461              		.loc 1 212 21 is_stmt 1 view .LVU138
+ 213:Drivers/lvgl/src/misc/lv_array.c **** 
+ 214:Drivers/lvgl/src/misc/lv_array.c ****     if(array->inner_alloc == false) {
+ 462              		.loc 1 214 5 view .LVU139
+ 463              		.loc 1 214 13 is_stmt 0 view .LVU140
+ 464 0002 057C     		ldrb	r5, [r0, #16]	@ zero_extendqisi2
+ 465              		.loc 1 214 7 view .LVU141
+ 466 0004 0DB9     		cbnz	r5, .L36
+ 467              	.LVL35:
+ 468              	.L32:
+ 215:Drivers/lvgl/src/misc/lv_array.c ****         LV_LOG_WARN("Cannot resize array with external buffer");
+ 216:Drivers/lvgl/src/misc/lv_array.c ****         return false;
+ 217:Drivers/lvgl/src/misc/lv_array.c ****     }
+ 218:Drivers/lvgl/src/misc/lv_array.c **** 
+ 219:Drivers/lvgl/src/misc/lv_array.c ****     uint8_t * data = lv_realloc(array->data, new_capacity * array->element_size);
+ 220:Drivers/lvgl/src/misc/lv_array.c ****     if(data == NULL) return false;
+ 221:Drivers/lvgl/src/misc/lv_array.c **** 
+ 222:Drivers/lvgl/src/misc/lv_array.c ****     array->data = data;
+ 223:Drivers/lvgl/src/misc/lv_array.c ****     array->capacity = new_capacity;
+ 224:Drivers/lvgl/src/misc/lv_array.c ****     if(array->size > new_capacity) {
+ 225:Drivers/lvgl/src/misc/lv_array.c ****         array->size = new_capacity;
+ 226:Drivers/lvgl/src/misc/lv_array.c ****     }
+ 227:Drivers/lvgl/src/misc/lv_array.c ****     return true;
+ 228:Drivers/lvgl/src/misc/lv_array.c **** }
+ 469              		.loc 1 228 1 view .LVU142
+ 470 0006 2846     		mov	r0, r5
+ 471 0008 70BD     		pop	{r4, r5, r6, pc}
+ 472              	.LVL36:
+ARM GAS  /tmp/ccRHaJ18.s 			page 17
+
+
+ 473              	.L36:
+ 474              		.loc 1 228 1 view .LVU143
+ 475 000a 0446     		mov	r4, r0
+ 476 000c 0E46     		mov	r6, r1
+ 219:Drivers/lvgl/src/misc/lv_array.c ****     if(data == NULL) return false;
+ 477              		.loc 1 219 5 is_stmt 1 view .LVU144
+ 219:Drivers/lvgl/src/misc/lv_array.c ****     if(data == NULL) return false;
+ 478              		.loc 1 219 66 is_stmt 0 view .LVU145
+ 479 000e C168     		ldr	r1, [r0, #12]
+ 480              	.LVL37:
+ 219:Drivers/lvgl/src/misc/lv_array.c ****     if(data == NULL) return false;
+ 481              		.loc 1 219 22 view .LVU146
+ 482 0010 06FB01F1 		mul	r1, r6, r1
+ 483 0014 0068     		ldr	r0, [r0]
+ 484              	.LVL38:
+ 219:Drivers/lvgl/src/misc/lv_array.c ****     if(data == NULL) return false;
+ 485              		.loc 1 219 22 view .LVU147
+ 486 0016 FFF7FEFF 		bl	lv_realloc
+ 487              	.LVL39:
+ 220:Drivers/lvgl/src/misc/lv_array.c **** 
+ 488              		.loc 1 220 5 is_stmt 1 view .LVU148
+ 220:Drivers/lvgl/src/misc/lv_array.c **** 
+ 489              		.loc 1 220 7 is_stmt 0 view .LVU149
+ 490 001a 30B1     		cbz	r0, .L34
+ 222:Drivers/lvgl/src/misc/lv_array.c ****     array->capacity = new_capacity;
+ 491              		.loc 1 222 5 is_stmt 1 view .LVU150
+ 222:Drivers/lvgl/src/misc/lv_array.c ****     array->capacity = new_capacity;
+ 492              		.loc 1 222 17 is_stmt 0 view .LVU151
+ 493 001c 2060     		str	r0, [r4]
+ 223:Drivers/lvgl/src/misc/lv_array.c ****     if(array->size > new_capacity) {
+ 494              		.loc 1 223 5 is_stmt 1 view .LVU152
+ 223:Drivers/lvgl/src/misc/lv_array.c ****     if(array->size > new_capacity) {
+ 495              		.loc 1 223 21 is_stmt 0 view .LVU153
+ 496 001e A660     		str	r6, [r4, #8]
+ 224:Drivers/lvgl/src/misc/lv_array.c ****         array->size = new_capacity;
+ 497              		.loc 1 224 5 is_stmt 1 view .LVU154
+ 224:Drivers/lvgl/src/misc/lv_array.c ****         array->size = new_capacity;
+ 498              		.loc 1 224 13 is_stmt 0 view .LVU155
+ 499 0020 6368     		ldr	r3, [r4, #4]
+ 224:Drivers/lvgl/src/misc/lv_array.c ****         array->size = new_capacity;
+ 500              		.loc 1 224 7 view .LVU156
+ 501 0022 B342     		cmp	r3, r6
+ 502 0024 EFD9     		bls	.L32
+ 225:Drivers/lvgl/src/misc/lv_array.c ****     }
+ 503              		.loc 1 225 9 is_stmt 1 view .LVU157
+ 225:Drivers/lvgl/src/misc/lv_array.c ****     }
+ 504              		.loc 1 225 21 is_stmt 0 view .LVU158
+ 505 0026 6660     		str	r6, [r4, #4]
+ 506 0028 EDE7     		b	.L32
+ 507              	.L34:
+ 220:Drivers/lvgl/src/misc/lv_array.c **** 
+ 508              		.loc 1 220 29 discriminator 1 view .LVU159
+ 509 002a 0546     		mov	r5, r0
+ 510 002c EBE7     		b	.L32
+ 511              		.cfi_endproc
+ 512              	.LFE32:
+ 514              		.section	.text.lv_array_shrink,"ax",%progbits
+ARM GAS  /tmp/ccRHaJ18.s 			page 18
+
+
+ 515              		.align	1
+ 516              		.global	lv_array_shrink
+ 517              		.syntax unified
+ 518              		.thumb
+ 519              		.thumb_func
+ 521              	lv_array_shrink:
+ 522              	.LVL40:
+ 523              	.LFB28:
+ 125:Drivers/lvgl/src/misc/lv_array.c ****     if(array->size <= array->capacity / LV_ARRAY_DEFAULT_SHRINK_RATIO) {
+ 524              		.loc 1 125 1 is_stmt 1 view -0
+ 525              		.cfi_startproc
+ 526              		@ args = 0, pretend = 0, frame = 0
+ 527              		@ frame_needed = 0, uses_anonymous_args = 0
+ 125:Drivers/lvgl/src/misc/lv_array.c ****     if(array->size <= array->capacity / LV_ARRAY_DEFAULT_SHRINK_RATIO) {
+ 528              		.loc 1 125 1 is_stmt 0 view .LVU161
+ 529 0000 08B5     		push	{r3, lr}
+ 530              	.LCFI6:
+ 531              		.cfi_def_cfa_offset 8
+ 532              		.cfi_offset 3, -8
+ 533              		.cfi_offset 14, -4
+ 126:Drivers/lvgl/src/misc/lv_array.c ****         lv_array_resize(array, array->size);
+ 534              		.loc 1 126 5 is_stmt 1 view .LVU162
+ 126:Drivers/lvgl/src/misc/lv_array.c ****         lv_array_resize(array, array->size);
+ 535              		.loc 1 126 13 is_stmt 0 view .LVU163
+ 536 0002 4168     		ldr	r1, [r0, #4]
+ 126:Drivers/lvgl/src/misc/lv_array.c ****         lv_array_resize(array, array->size);
+ 537              		.loc 1 126 28 view .LVU164
+ 538 0004 8368     		ldr	r3, [r0, #8]
+ 126:Drivers/lvgl/src/misc/lv_array.c ****         lv_array_resize(array, array->size);
+ 539              		.loc 1 126 7 view .LVU165
+ 540 0006 B1EB530F 		cmp	r1, r3, lsr #1
+ 541 000a 00D9     		bls	.L40
+ 542              	.LVL41:
+ 543              	.L37:
+ 129:Drivers/lvgl/src/misc/lv_array.c **** 
+ 544              		.loc 1 129 1 view .LVU166
+ 545 000c 08BD     		pop	{r3, pc}
+ 546              	.LVL42:
+ 547              	.L40:
+ 127:Drivers/lvgl/src/misc/lv_array.c ****     }
+ 548              		.loc 1 127 9 is_stmt 1 view .LVU167
+ 549 000e FFF7FEFF 		bl	lv_array_resize
+ 550              	.LVL43:
+ 129:Drivers/lvgl/src/misc/lv_array.c **** 
+ 551              		.loc 1 129 1 is_stmt 0 view .LVU168
+ 552 0012 FBE7     		b	.L37
+ 553              		.cfi_endproc
+ 554              	.LFE28:
+ 556              		.section	.text.lv_array_concat,"ax",%progbits
+ 557              		.align	1
+ 558              		.global	lv_array_concat
+ 559              		.syntax unified
+ 560              		.thumb
+ 561              		.thumb_func
+ 563              	lv_array_concat:
+ 564              	.LVL44:
+ 565              	.LFB33:
+ARM GAS  /tmp/ccRHaJ18.s 			page 19
+
+
+ 229:Drivers/lvgl/src/misc/lv_array.c **** 
+ 230:Drivers/lvgl/src/misc/lv_array.c **** lv_result_t lv_array_concat(lv_array_t * array, const lv_array_t * other)
+ 231:Drivers/lvgl/src/misc/lv_array.c **** {
+ 566              		.loc 1 231 1 is_stmt 1 view -0
+ 567              		.cfi_startproc
+ 568              		@ args = 0, pretend = 0, frame = 0
+ 569              		@ frame_needed = 0, uses_anonymous_args = 0
+ 232:Drivers/lvgl/src/misc/lv_array.c ****     LV_ASSERT(array);
+ 570              		.loc 1 232 21 view .LVU170
+ 233:Drivers/lvgl/src/misc/lv_array.c ****     LV_ASSERT(other);
+ 571              		.loc 1 233 21 view .LVU171
+ 234:Drivers/lvgl/src/misc/lv_array.c **** 
+ 235:Drivers/lvgl/src/misc/lv_array.c ****     if(array->element_size != other->element_size) {
+ 572              		.loc 1 235 5 view .LVU172
+ 573              		.loc 1 235 13 is_stmt 0 view .LVU173
+ 574 0000 C268     		ldr	r2, [r0, #12]
+ 575              		.loc 1 235 36 view .LVU174
+ 576 0002 CB68     		ldr	r3, [r1, #12]
+ 577              		.loc 1 235 7 view .LVU175
+ 578 0004 9A42     		cmp	r2, r3
+ 579 0006 03D0     		beq	.L42
+ 236:Drivers/lvgl/src/misc/lv_array.c ****         LV_LOG_ERROR("Element size mismatch: %"LV_PRIu32" vs %"LV_PRIu32, array->element_size, othe
+ 237:Drivers/lvgl/src/misc/lv_array.c ****         return LV_RESULT_INVALID;
+ 580              		.loc 1 237 16 view .LVU176
+ 581 0008 0020     		movs	r0, #0
+ 582              	.LVL45:
+ 238:Drivers/lvgl/src/misc/lv_array.c ****     }
+ 239:Drivers/lvgl/src/misc/lv_array.c **** 
+ 240:Drivers/lvgl/src/misc/lv_array.c ****     uint32_t size = other->size;
+ 241:Drivers/lvgl/src/misc/lv_array.c ****     if(size == 0) {
+ 242:Drivers/lvgl/src/misc/lv_array.c ****         return LV_RESULT_OK;
+ 243:Drivers/lvgl/src/misc/lv_array.c ****     }
+ 244:Drivers/lvgl/src/misc/lv_array.c **** 
+ 245:Drivers/lvgl/src/misc/lv_array.c ****     if(UINT32_MAX - array->size < size) {
+ 246:Drivers/lvgl/src/misc/lv_array.c ****         LV_LOG_ERROR("Array size overflow");
+ 247:Drivers/lvgl/src/misc/lv_array.c ****         return LV_RESULT_INVALID;
+ 248:Drivers/lvgl/src/misc/lv_array.c ****     }
+ 249:Drivers/lvgl/src/misc/lv_array.c **** 
+ 250:Drivers/lvgl/src/misc/lv_array.c ****     if(array->size + size > array->capacity) {
+ 251:Drivers/lvgl/src/misc/lv_array.c ****         /*array is full*/
+ 252:Drivers/lvgl/src/misc/lv_array.c ****         if(lv_array_resize(array, array->size + size) == false) {
+ 253:Drivers/lvgl/src/misc/lv_array.c ****             return LV_RESULT_INVALID;
+ 254:Drivers/lvgl/src/misc/lv_array.c ****         }
+ 255:Drivers/lvgl/src/misc/lv_array.c ****     }
+ 256:Drivers/lvgl/src/misc/lv_array.c **** 
+ 257:Drivers/lvgl/src/misc/lv_array.c ****     uint8_t * data = array->data + array->size * array->element_size;
+ 258:Drivers/lvgl/src/misc/lv_array.c ****     lv_memcpy(data, other->data, array->element_size * size);
+ 259:Drivers/lvgl/src/misc/lv_array.c ****     array->size += size;
+ 260:Drivers/lvgl/src/misc/lv_array.c ****     return LV_RESULT_OK;
+ 261:Drivers/lvgl/src/misc/lv_array.c **** }
+ 583              		.loc 1 261 1 view .LVU177
+ 584 000a 7047     		bx	lr
+ 585              	.LVL46:
+ 586              	.L45:
+ 587              	.LCFI7:
+ 588              		.cfi_def_cfa_offset 16
+ 589              		.cfi_offset 4, -16
+ARM GAS  /tmp/ccRHaJ18.s 			page 20
+
+
+ 590              		.cfi_offset 5, -12
+ 591              		.cfi_offset 6, -8
+ 592              		.cfi_offset 14, -4
+ 237:Drivers/lvgl/src/misc/lv_array.c ****     }
+ 593              		.loc 1 237 16 view .LVU178
+ 594 000c 0020     		movs	r0, #0
+ 595 000e 1EE0     		b	.L43
+ 596              	.LVL47:
+ 597              	.L42:
+ 598              	.LCFI8:
+ 599              		.cfi_def_cfa_offset 0
+ 600              		.cfi_restore 4
+ 601              		.cfi_restore 5
+ 602              		.cfi_restore 6
+ 603              		.cfi_restore 14
+ 231:Drivers/lvgl/src/misc/lv_array.c ****     LV_ASSERT(array);
+ 604              		.loc 1 231 1 view .LVU179
+ 605 0010 70B5     		push	{r4, r5, r6, lr}
+ 606              	.LCFI9:
+ 607              		.cfi_def_cfa_offset 16
+ 608              		.cfi_offset 4, -16
+ 609              		.cfi_offset 5, -12
+ 610              		.cfi_offset 6, -8
+ 611              		.cfi_offset 14, -4
+ 612 0012 0446     		mov	r4, r0
+ 613 0014 0D46     		mov	r5, r1
+ 240:Drivers/lvgl/src/misc/lv_array.c ****     if(size == 0) {
+ 614              		.loc 1 240 5 is_stmt 1 view .LVU180
+ 240:Drivers/lvgl/src/misc/lv_array.c ****     if(size == 0) {
+ 615              		.loc 1 240 14 is_stmt 0 view .LVU181
+ 616 0016 4E68     		ldr	r6, [r1, #4]
+ 617              	.LVL48:
+ 241:Drivers/lvgl/src/misc/lv_array.c ****         return LV_RESULT_OK;
+ 618              		.loc 1 241 5 is_stmt 1 view .LVU182
+ 241:Drivers/lvgl/src/misc/lv_array.c ****         return LV_RESULT_OK;
+ 619              		.loc 1 241 7 is_stmt 0 view .LVU183
+ 620 0018 C6B1     		cbz	r6, .L47
+ 245:Drivers/lvgl/src/misc/lv_array.c ****         LV_LOG_ERROR("Array size overflow");
+ 621              		.loc 1 245 5 is_stmt 1 view .LVU184
+ 245:Drivers/lvgl/src/misc/lv_array.c ****         LV_LOG_ERROR("Array size overflow");
+ 622              		.loc 1 245 26 is_stmt 0 view .LVU185
+ 623 001a 4168     		ldr	r1, [r0, #4]
+ 624              	.LVL49:
+ 245:Drivers/lvgl/src/misc/lv_array.c ****         LV_LOG_ERROR("Array size overflow");
+ 625              		.loc 1 245 19 view .LVU186
+ 626 001c CB43     		mvns	r3, r1
+ 245:Drivers/lvgl/src/misc/lv_array.c ****         LV_LOG_ERROR("Array size overflow");
+ 627              		.loc 1 245 7 view .LVU187
+ 628 001e B342     		cmp	r3, r6
+ 629 0020 F4D3     		bcc	.L45
+ 250:Drivers/lvgl/src/misc/lv_array.c ****         /*array is full*/
+ 630              		.loc 1 250 5 is_stmt 1 view .LVU188
+ 250:Drivers/lvgl/src/misc/lv_array.c ****         /*array is full*/
+ 631              		.loc 1 250 20 is_stmt 0 view .LVU189
+ 632 0022 3144     		add	r1, r1, r6
+ 250:Drivers/lvgl/src/misc/lv_array.c ****         /*array is full*/
+ 633              		.loc 1 250 34 view .LVU190
+ARM GAS  /tmp/ccRHaJ18.s 			page 21
+
+
+ 634 0024 8368     		ldr	r3, [r0, #8]
+ 250:Drivers/lvgl/src/misc/lv_array.c ****         /*array is full*/
+ 635              		.loc 1 250 7 view .LVU191
+ 636 0026 9942     		cmp	r1, r3
+ 637 0028 03D9     		bls	.L46
+ 252:Drivers/lvgl/src/misc/lv_array.c ****             return LV_RESULT_INVALID;
+ 638              		.loc 1 252 9 is_stmt 1 view .LVU192
+ 252:Drivers/lvgl/src/misc/lv_array.c ****             return LV_RESULT_INVALID;
+ 639              		.loc 1 252 12 is_stmt 0 view .LVU193
+ 640 002a FFF7FEFF 		bl	lv_array_resize
+ 641              	.LVL50:
+ 252:Drivers/lvgl/src/misc/lv_array.c ****             return LV_RESULT_INVALID;
+ 642              		.loc 1 252 11 discriminator 1 view .LVU194
+ 643 002e 0028     		cmp	r0, #0
+ 644 0030 ECD0     		beq	.L45
+ 645              	.L46:
+ 257:Drivers/lvgl/src/misc/lv_array.c ****     lv_memcpy(data, other->data, array->element_size * size);
+ 646              		.loc 1 257 5 is_stmt 1 view .LVU195
+ 257:Drivers/lvgl/src/misc/lv_array.c ****     lv_memcpy(data, other->data, array->element_size * size);
+ 647              		.loc 1 257 27 is_stmt 0 view .LVU196
+ 648 0032 2068     		ldr	r0, [r4]
+ 257:Drivers/lvgl/src/misc/lv_array.c ****     lv_memcpy(data, other->data, array->element_size * size);
+ 649              		.loc 1 257 55 view .LVU197
+ 650 0034 E368     		ldr	r3, [r4, #12]
+ 651              	.LVL51:
+ 258:Drivers/lvgl/src/misc/lv_array.c ****     array->size += size;
+ 652              		.loc 1 258 5 is_stmt 1 view .LVU198
+ 653 0036 06FB03F2 		mul	r2, r6, r3
+ 654 003a 2968     		ldr	r1, [r5]
+ 655 003c 6568     		ldr	r5, [r4, #4]
+ 656              	.LVL52:
+ 258:Drivers/lvgl/src/misc/lv_array.c ****     array->size += size;
+ 657              		.loc 1 258 5 is_stmt 0 view .LVU199
+ 658 003e 03FB0500 		mla	r0, r3, r5, r0
+ 659              	.LVL53:
+ 258:Drivers/lvgl/src/misc/lv_array.c ****     array->size += size;
+ 660              		.loc 1 258 5 view .LVU200
+ 661 0042 FFF7FEFF 		bl	lv_memcpy
+ 662              	.LVL54:
+ 259:Drivers/lvgl/src/misc/lv_array.c ****     return LV_RESULT_OK;
+ 663              		.loc 1 259 5 is_stmt 1 view .LVU201
+ 259:Drivers/lvgl/src/misc/lv_array.c ****     return LV_RESULT_OK;
+ 664              		.loc 1 259 10 is_stmt 0 view .LVU202
+ 665 0046 6368     		ldr	r3, [r4, #4]
+ 259:Drivers/lvgl/src/misc/lv_array.c ****     return LV_RESULT_OK;
+ 666              		.loc 1 259 17 view .LVU203
+ 667 0048 3344     		add	r3, r3, r6
+ 668 004a 6360     		str	r3, [r4, #4]
+ 260:Drivers/lvgl/src/misc/lv_array.c **** }
+ 669              		.loc 1 260 5 is_stmt 1 view .LVU204
+ 670              	.LVL55:
+ 671              	.L47:
+ 242:Drivers/lvgl/src/misc/lv_array.c ****     }
+ 672              		.loc 1 242 16 is_stmt 0 view .LVU205
+ 673 004c 0120     		movs	r0, #1
+ 674              	.L43:
+ 675              		.loc 1 261 1 view .LVU206
+ARM GAS  /tmp/ccRHaJ18.s 			page 22
+
+
+ 676 004e 70BD     		pop	{r4, r5, r6, pc}
+ 677              		.loc 1 261 1 view .LVU207
+ 678              		.cfi_endproc
+ 679              	.LFE33:
+ 681              		.section	.text.lv_array_push_back,"ax",%progbits
+ 682              		.align	1
+ 683              		.global	lv_array_push_back
+ 684              		.syntax unified
+ 685              		.thumb
+ 686              		.thumb_func
+ 688              	lv_array_push_back:
+ 689              	.LVL56:
+ 690              	.LFB34:
+ 262:Drivers/lvgl/src/misc/lv_array.c **** 
+ 263:Drivers/lvgl/src/misc/lv_array.c **** lv_result_t lv_array_push_back(lv_array_t * array, const void * element)
+ 264:Drivers/lvgl/src/misc/lv_array.c **** {
+ 691              		.loc 1 264 1 is_stmt 1 view -0
+ 692              		.cfi_startproc
+ 693              		@ args = 0, pretend = 0, frame = 0
+ 694              		@ frame_needed = 0, uses_anonymous_args = 0
+ 695              		.loc 1 264 1 is_stmt 0 view .LVU209
+ 696 0000 38B5     		push	{r3, r4, r5, lr}
+ 697              	.LCFI10:
+ 698              		.cfi_def_cfa_offset 16
+ 699              		.cfi_offset 3, -16
+ 700              		.cfi_offset 4, -12
+ 701              		.cfi_offset 5, -8
+ 702              		.cfi_offset 14, -4
+ 703 0002 0446     		mov	r4, r0
+ 704 0004 0D46     		mov	r5, r1
+ 265:Drivers/lvgl/src/misc/lv_array.c ****     LV_ASSERT_NULL(array->data);
+ 705              		.loc 1 265 32 is_stmt 1 view .LVU210
+ 266:Drivers/lvgl/src/misc/lv_array.c **** 
+ 267:Drivers/lvgl/src/misc/lv_array.c ****     if(array->size == array->capacity) {
+ 706              		.loc 1 267 5 view .LVU211
+ 707              		.loc 1 267 13 is_stmt 0 view .LVU212
+ 708 0006 4368     		ldr	r3, [r0, #4]
+ 709              		.loc 1 267 28 view .LVU213
+ 710 0008 8168     		ldr	r1, [r0, #8]
+ 711              	.LVL57:
+ 712              		.loc 1 267 7 view .LVU214
+ 713 000a 8B42     		cmp	r3, r1
+ 714 000c 0DD0     		beq	.L58
+ 715              	.LVL58:
+ 716              	.L52:
+ 268:Drivers/lvgl/src/misc/lv_array.c ****         /*array is full*/
+ 269:Drivers/lvgl/src/misc/lv_array.c ****         if(lv_array_resize(array, array->capacity + LV_ARRAY_DEFAULT_CAPACITY) == false) {
+ 270:Drivers/lvgl/src/misc/lv_array.c ****             return LV_RESULT_INVALID;
+ 271:Drivers/lvgl/src/misc/lv_array.c ****         }
+ 272:Drivers/lvgl/src/misc/lv_array.c ****     }
+ 273:Drivers/lvgl/src/misc/lv_array.c **** 
+ 274:Drivers/lvgl/src/misc/lv_array.c ****     /**
+ 275:Drivers/lvgl/src/misc/lv_array.c ****      * When the element is NULL, it means that the user wants to add an empty element.
+ 276:Drivers/lvgl/src/misc/lv_array.c ****      */
+ 277:Drivers/lvgl/src/misc/lv_array.c ****     uint8_t * data = array->data + array->size * array->element_size;
+ 717              		.loc 1 277 5 is_stmt 1 view .LVU215
+ 718              		.loc 1 277 27 is_stmt 0 view .LVU216
+ARM GAS  /tmp/ccRHaJ18.s 			page 23
+
+
+ 719 000e 2068     		ldr	r0, [r4]
+ 720              		.loc 1 277 41 view .LVU217
+ 721 0010 6368     		ldr	r3, [r4, #4]
+ 722              		.loc 1 277 55 view .LVU218
+ 723 0012 E268     		ldr	r2, [r4, #12]
+ 724              		.loc 1 277 15 view .LVU219
+ 725 0014 02FB0300 		mla	r0, r2, r3, r0
+ 726              	.LVL59:
+ 278:Drivers/lvgl/src/misc/lv_array.c ****     if(element) lv_memcpy(data, element, array->element_size);
+ 727              		.loc 1 278 5 is_stmt 1 view .LVU220
+ 728              		.loc 1 278 7 is_stmt 0 view .LVU221
+ 729 0018 2946     		mov	r1, r5
+ 730 001a 65B1     		cbz	r5, .L54
+ 731              	.LVL60:
+ 732              		.loc 1 278 17 is_stmt 1 discriminator 1 view .LVU222
+ 733 001c FFF7FEFF 		bl	lv_memcpy
+ 734              	.LVL61:
+ 735              	.L55:
+ 279:Drivers/lvgl/src/misc/lv_array.c ****     else lv_memzero(data, array->element_size);
+ 280:Drivers/lvgl/src/misc/lv_array.c **** 
+ 281:Drivers/lvgl/src/misc/lv_array.c ****     array->size++;
+ 736              		.loc 1 281 5 view .LVU223
+ 737              		.loc 1 281 10 is_stmt 0 view .LVU224
+ 738 0020 6368     		ldr	r3, [r4, #4]
+ 739              		.loc 1 281 16 view .LVU225
+ 740 0022 0133     		adds	r3, r3, #1
+ 741 0024 6360     		str	r3, [r4, #4]
+ 282:Drivers/lvgl/src/misc/lv_array.c ****     return LV_RESULT_OK;
+ 742              		.loc 1 282 5 is_stmt 1 view .LVU226
+ 743              		.loc 1 282 12 is_stmt 0 view .LVU227
+ 744 0026 0120     		movs	r0, #1
+ 745              	.LVL62:
+ 746              	.L53:
+ 283:Drivers/lvgl/src/misc/lv_array.c **** }
+ 747              		.loc 1 283 1 view .LVU228
+ 748 0028 38BD     		pop	{r3, r4, r5, pc}
+ 749              	.LVL63:
+ 750              	.L58:
+ 269:Drivers/lvgl/src/misc/lv_array.c ****             return LV_RESULT_INVALID;
+ 751              		.loc 1 269 9 is_stmt 1 view .LVU229
+ 269:Drivers/lvgl/src/misc/lv_array.c ****             return LV_RESULT_INVALID;
+ 752              		.loc 1 269 12 is_stmt 0 view .LVU230
+ 753 002a 0431     		adds	r1, r1, #4
+ 754 002c FFF7FEFF 		bl	lv_array_resize
+ 755              	.LVL64:
+ 269:Drivers/lvgl/src/misc/lv_array.c ****             return LV_RESULT_INVALID;
+ 756              		.loc 1 269 11 discriminator 1 view .LVU231
+ 757 0030 0028     		cmp	r0, #0
+ 758 0032 ECD1     		bne	.L52
+ 759 0034 F8E7     		b	.L53
+ 760              	.LVL65:
+ 761              	.L54:
+ 279:Drivers/lvgl/src/misc/lv_array.c **** 
+ 762              		.loc 1 279 10 is_stmt 1 view .LVU232
+ 763              	.LBB26:
+ 764              	.LBI26:
+  73:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** {
+ARM GAS  /tmp/ccRHaJ18.s 			page 24
+
+
+ 765              		.loc 2 73 20 view .LVU233
+ 766              	.LBB27:
+ 767              		.loc 2 75 5 view .LVU234
+ 768 0036 FFF7FEFF 		bl	lv_memset
+ 769              	.LVL66:
+ 770              		.loc 2 75 5 is_stmt 0 view .LVU235
+ 771 003a F1E7     		b	.L55
+ 772              	.LBE27:
+ 773              	.LBE26:
+ 774              		.cfi_endproc
+ 775              	.LFE34:
+ 777              		.section	.text.lv_array_at,"ax",%progbits
+ 778              		.align	1
+ 779              		.global	lv_array_at
+ 780              		.syntax unified
+ 781              		.thumb
+ 782              		.thumb_func
+ 784              	lv_array_at:
+ 785              	.LVL67:
+ 786              	.LFB35:
+ 284:Drivers/lvgl/src/misc/lv_array.c **** 
+ 285:Drivers/lvgl/src/misc/lv_array.c **** void * lv_array_at(const lv_array_t * array, uint32_t index)
+ 286:Drivers/lvgl/src/misc/lv_array.c **** {
+ 787              		.loc 1 286 1 is_stmt 1 view -0
+ 788              		.cfi_startproc
+ 789              		@ args = 0, pretend = 0, frame = 0
+ 790              		@ frame_needed = 0, uses_anonymous_args = 0
+ 791              		@ link register save eliminated.
+ 287:Drivers/lvgl/src/misc/lv_array.c ****     if(index >= array->size) {
+ 792              		.loc 1 287 5 view .LVU237
+ 793              		.loc 1 287 22 is_stmt 0 view .LVU238
+ 794 0000 4368     		ldr	r3, [r0, #4]
+ 795              		.loc 1 287 7 view .LVU239
+ 796 0002 8B42     		cmp	r3, r1
+ 797 0004 04D9     		bls	.L61
+ 288:Drivers/lvgl/src/misc/lv_array.c ****         return NULL;
+ 289:Drivers/lvgl/src/misc/lv_array.c ****     }
+ 290:Drivers/lvgl/src/misc/lv_array.c **** 
+ 291:Drivers/lvgl/src/misc/lv_array.c ****     LV_ASSERT_NULL(array->data);
+ 798              		.loc 1 291 32 is_stmt 1 view .LVU240
+ 292:Drivers/lvgl/src/misc/lv_array.c ****     return array->data + index * array->element_size;
+ 799              		.loc 1 292 5 view .LVU241
+ 800              		.loc 1 292 17 is_stmt 0 view .LVU242
+ 801 0006 0368     		ldr	r3, [r0]
+ 802              		.loc 1 292 39 view .LVU243
+ 803 0008 C068     		ldr	r0, [r0, #12]
+ 804              	.LVL68:
+ 805              		.loc 1 292 24 view .LVU244
+ 806 000a 01FB0030 		mla	r0, r1, r0, r3
+ 807 000e 7047     		bx	lr
+ 808              	.LVL69:
+ 809              	.L61:
+ 288:Drivers/lvgl/src/misc/lv_array.c ****         return NULL;
+ 810              		.loc 1 288 16 view .LVU245
+ 811 0010 0020     		movs	r0, #0
+ 812              	.LVL70:
+ 293:Drivers/lvgl/src/misc/lv_array.c **** }
+ARM GAS  /tmp/ccRHaJ18.s 			page 25
+
+
+ 813              		.loc 1 293 1 view .LVU246
+ 814 0012 7047     		bx	lr
+ 815              		.cfi_endproc
+ 816              	.LFE35:
+ 818              		.section	.text.lv_array_remove,"ax",%progbits
+ 819              		.align	1
+ 820              		.global	lv_array_remove
+ 821              		.syntax unified
+ 822              		.thumb
+ 823              		.thumb_func
+ 825              	lv_array_remove:
+ 826              	.LVL71:
+ 827              	.LFB29:
+ 132:Drivers/lvgl/src/misc/lv_array.c ****     if(!array) {
+ 828              		.loc 1 132 1 is_stmt 1 view -0
+ 829              		.cfi_startproc
+ 830              		@ args = 0, pretend = 0, frame = 0
+ 831              		@ frame_needed = 0, uses_anonymous_args = 0
+ 133:Drivers/lvgl/src/misc/lv_array.c ****         return LV_RESULT_INVALID;
+ 832              		.loc 1 133 5 view .LVU248
+ 133:Drivers/lvgl/src/misc/lv_array.c ****         return LV_RESULT_INVALID;
+ 833              		.loc 1 133 7 is_stmt 0 view .LVU249
+ 834 0000 00B3     		cbz	r0, .L71
+ 132:Drivers/lvgl/src/misc/lv_array.c ****     if(!array) {
+ 835              		.loc 1 132 1 view .LVU250
+ 836 0002 70B5     		push	{r4, r5, r6, lr}
+ 837              	.LCFI11:
+ 838              		.cfi_def_cfa_offset 16
+ 839              		.cfi_offset 4, -16
+ 840              		.cfi_offset 5, -12
+ 841              		.cfi_offset 6, -8
+ 842              		.cfi_offset 14, -4
+ 843 0004 0C46     		mov	r4, r1
+ 844 0006 0646     		mov	r6, r0
+ 137:Drivers/lvgl/src/misc/lv_array.c ****         return LV_RESULT_INVALID;
+ 845              		.loc 1 137 5 is_stmt 1 view .LVU251
+ 137:Drivers/lvgl/src/misc/lv_array.c ****         return LV_RESULT_INVALID;
+ 846              		.loc 1 137 22 is_stmt 0 view .LVU252
+ 847 0008 4568     		ldr	r5, [r0, #4]
+ 137:Drivers/lvgl/src/misc/lv_array.c ****         return LV_RESULT_INVALID;
+ 848              		.loc 1 137 7 view .LVU253
+ 849 000a 8D42     		cmp	r5, r1
+ 850 000c 14D9     		bls	.L65
+ 142:Drivers/lvgl/src/misc/lv_array.c ****         array->size--;
+ 851              		.loc 1 142 5 is_stmt 1 view .LVU254
+ 142:Drivers/lvgl/src/misc/lv_array.c ****         array->size--;
+ 852              		.loc 1 142 29 is_stmt 0 view .LVU255
+ 853 000e 6B1E     		subs	r3, r5, #1
+ 142:Drivers/lvgl/src/misc/lv_array.c ****         array->size--;
+ 854              		.loc 1 142 7 view .LVU256
+ 855 0010 8B42     		cmp	r3, r1
+ 856 0012 13D0     		beq	.L72
+ 148:Drivers/lvgl/src/misc/lv_array.c ****     uint8_t * remaining = start + array->element_size;
+ 857              		.loc 1 148 5 is_stmt 1 view .LVU257
+ 148:Drivers/lvgl/src/misc/lv_array.c ****     uint8_t * remaining = start + array->element_size;
+ 858              		.loc 1 148 23 is_stmt 0 view .LVU258
+ 859 0014 FFF7FEFF 		bl	lv_array_at
+ARM GAS  /tmp/ccRHaJ18.s 			page 26
+
+
+ 860              	.LVL72:
+ 149:Drivers/lvgl/src/misc/lv_array.c ****     uint32_t remaining_size = (array->size - index - 1) * array->element_size;
+ 861              		.loc 1 149 5 is_stmt 1 view .LVU259
+ 149:Drivers/lvgl/src/misc/lv_array.c ****     uint32_t remaining_size = (array->size - index - 1) * array->element_size;
+ 862              		.loc 1 149 40 is_stmt 0 view .LVU260
+ 863 0018 F168     		ldr	r1, [r6, #12]
+ 864              	.LVL73:
+ 150:Drivers/lvgl/src/misc/lv_array.c ****     lv_memmove(start, remaining, remaining_size);
+ 865              		.loc 1 150 5 is_stmt 1 view .LVU261
+ 150:Drivers/lvgl/src/misc/lv_array.c ****     lv_memmove(start, remaining, remaining_size);
+ 866              		.loc 1 150 44 is_stmt 0 view .LVU262
+ 867 001a 2A1B     		subs	r2, r5, r4
+ 150:Drivers/lvgl/src/misc/lv_array.c ****     lv_memmove(start, remaining, remaining_size);
+ 868              		.loc 1 150 52 view .LVU263
+ 869 001c 013A     		subs	r2, r2, #1
+ 870              	.LVL74:
+ 151:Drivers/lvgl/src/misc/lv_array.c ****     array->size--;
+ 871              		.loc 1 151 5 is_stmt 1 view .LVU264
+ 872 001e 01FB02F2 		mul	r2, r1, r2
+ 873              	.LVL75:
+ 151:Drivers/lvgl/src/misc/lv_array.c ****     array->size--;
+ 874              		.loc 1 151 5 is_stmt 0 view .LVU265
+ 875 0022 0144     		add	r1, r1, r0
+ 876              	.LVL76:
+ 151:Drivers/lvgl/src/misc/lv_array.c ****     array->size--;
+ 877              		.loc 1 151 5 view .LVU266
+ 878 0024 FFF7FEFF 		bl	lv_memmove
+ 879              	.LVL77:
+ 152:Drivers/lvgl/src/misc/lv_array.c ****     lv_array_shrink(array);
+ 880              		.loc 1 152 5 is_stmt 1 view .LVU267
+ 152:Drivers/lvgl/src/misc/lv_array.c ****     lv_array_shrink(array);
+ 881              		.loc 1 152 10 is_stmt 0 view .LVU268
+ 882 0028 7368     		ldr	r3, [r6, #4]
+ 152:Drivers/lvgl/src/misc/lv_array.c ****     lv_array_shrink(array);
+ 883              		.loc 1 152 16 view .LVU269
+ 884 002a 013B     		subs	r3, r3, #1
+ 885 002c 7360     		str	r3, [r6, #4]
+ 153:Drivers/lvgl/src/misc/lv_array.c ****     return LV_RESULT_OK;
+ 886              		.loc 1 153 5 is_stmt 1 view .LVU270
+ 887 002e 3046     		mov	r0, r6
+ 888 0030 FFF7FEFF 		bl	lv_array_shrink
+ 889              	.LVL78:
+ 154:Drivers/lvgl/src/misc/lv_array.c **** }
+ 890              		.loc 1 154 5 view .LVU271
+ 891              	.L67:
+ 145:Drivers/lvgl/src/misc/lv_array.c ****     }
+ 892              		.loc 1 145 16 is_stmt 0 view .LVU272
+ 893 0034 0120     		movs	r0, #1
+ 894              	.L64:
+ 155:Drivers/lvgl/src/misc/lv_array.c **** 
+ 895              		.loc 1 155 1 view .LVU273
+ 896 0036 70BD     		pop	{r4, r5, r6, pc}
+ 897              	.LVL79:
+ 898              	.L65:
+ 134:Drivers/lvgl/src/misc/lv_array.c ****     }
+ 899              		.loc 1 134 16 view .LVU274
+ 900 0038 0020     		movs	r0, #0
+ARM GAS  /tmp/ccRHaJ18.s 			page 27
+
+
+ 901              	.LVL80:
+ 134:Drivers/lvgl/src/misc/lv_array.c ****     }
+ 902              		.loc 1 134 16 view .LVU275
+ 903 003a FCE7     		b	.L64
+ 904              	.LVL81:
+ 905              	.L72:
+ 143:Drivers/lvgl/src/misc/lv_array.c ****         lv_array_shrink(array);
+ 906              		.loc 1 143 9 is_stmt 1 view .LVU276
+ 143:Drivers/lvgl/src/misc/lv_array.c ****         lv_array_shrink(array);
+ 907              		.loc 1 143 20 is_stmt 0 view .LVU277
+ 908 003c 4360     		str	r3, [r0, #4]
+ 144:Drivers/lvgl/src/misc/lv_array.c ****         return LV_RESULT_OK;
+ 909              		.loc 1 144 9 is_stmt 1 view .LVU278
+ 910 003e FFF7FEFF 		bl	lv_array_shrink
+ 911              	.LVL82:
+ 145:Drivers/lvgl/src/misc/lv_array.c ****     }
+ 912              		.loc 1 145 9 view .LVU279
+ 145:Drivers/lvgl/src/misc/lv_array.c ****     }
+ 913              		.loc 1 145 16 is_stmt 0 view .LVU280
+ 914 0042 F7E7     		b	.L67
+ 915              	.LVL83:
+ 916              	.L71:
+ 917              	.LCFI12:
+ 918              		.cfi_def_cfa_offset 0
+ 919              		.cfi_restore 4
+ 920              		.cfi_restore 5
+ 921              		.cfi_restore 6
+ 922              		.cfi_restore 14
+ 134:Drivers/lvgl/src/misc/lv_array.c ****     }
+ 923              		.loc 1 134 16 view .LVU281
+ 924 0044 0020     		movs	r0, #0
+ 925              	.LVL84:
+ 155:Drivers/lvgl/src/misc/lv_array.c **** 
+ 926              		.loc 1 155 1 view .LVU282
+ 927 0046 7047     		bx	lr
+ 928              		.cfi_endproc
+ 929              	.LFE29:
+ 931              		.section	.text.lv_array_remove_unordered,"ax",%progbits
+ 932              		.align	1
+ 933              		.global	lv_array_remove_unordered
+ 934              		.syntax unified
+ 935              		.thumb
+ 936              		.thumb_func
+ 938              	lv_array_remove_unordered:
+ 939              	.LVL85:
+ 940              	.LFB30:
+ 158:Drivers/lvgl/src/misc/lv_array.c ****     if(!array) {
+ 941              		.loc 1 158 1 is_stmt 1 view -0
+ 942              		.cfi_startproc
+ 943              		@ args = 0, pretend = 0, frame = 0
+ 944              		@ frame_needed = 0, uses_anonymous_args = 0
+ 159:Drivers/lvgl/src/misc/lv_array.c ****         return LV_RESULT_INVALID;
+ 945              		.loc 1 159 5 view .LVU284
+ 159:Drivers/lvgl/src/misc/lv_array.c ****         return LV_RESULT_INVALID;
+ 946              		.loc 1 159 7 is_stmt 0 view .LVU285
+ 947 0000 10B3     		cbz	r0, .L82
+ 158:Drivers/lvgl/src/misc/lv_array.c ****     if(!array) {
+ARM GAS  /tmp/ccRHaJ18.s 			page 28
+
+
+ 948              		.loc 1 158 1 view .LVU286
+ 949 0002 70B5     		push	{r4, r5, r6, lr}
+ 950              	.LCFI13:
+ 951              		.cfi_def_cfa_offset 16
+ 952              		.cfi_offset 4, -16
+ 953              		.cfi_offset 5, -12
+ 954              		.cfi_offset 6, -8
+ 955              		.cfi_offset 14, -4
+ 956 0004 0446     		mov	r4, r0
+ 163:Drivers/lvgl/src/misc/lv_array.c ****         return LV_RESULT_INVALID;
+ 957              		.loc 1 163 5 is_stmt 1 view .LVU287
+ 163:Drivers/lvgl/src/misc/lv_array.c ****         return LV_RESULT_INVALID;
+ 958              		.loc 1 163 22 is_stmt 0 view .LVU288
+ 959 0006 4368     		ldr	r3, [r0, #4]
+ 163:Drivers/lvgl/src/misc/lv_array.c ****         return LV_RESULT_INVALID;
+ 960              		.loc 1 163 7 view .LVU289
+ 961 0008 8B42     		cmp	r3, r1
+ 962 000a 17D9     		bls	.L76
+ 168:Drivers/lvgl/src/misc/lv_array.c ****         array->size--;
+ 963              		.loc 1 168 5 is_stmt 1 view .LVU290
+ 168:Drivers/lvgl/src/misc/lv_array.c ****         array->size--;
+ 964              		.loc 1 168 29 is_stmt 0 view .LVU291
+ 965 000c 013B     		subs	r3, r3, #1
+ 966 000e 1E46     		mov	r6, r3
+ 168:Drivers/lvgl/src/misc/lv_array.c ****         array->size--;
+ 967              		.loc 1 168 7 view .LVU292
+ 968 0010 8B42     		cmp	r3, r1
+ 969 0012 15D0     		beq	.L83
+ 175:Drivers/lvgl/src/misc/lv_array.c ****     uint8_t * src = lv_array_at(array, array->size - 1);
+ 970              		.loc 1 175 5 is_stmt 1 view .LVU293
+ 175:Drivers/lvgl/src/misc/lv_array.c ****     uint8_t * src = lv_array_at(array, array->size - 1);
+ 971              		.loc 1 175 21 is_stmt 0 view .LVU294
+ 972 0014 FFF7FEFF 		bl	lv_array_at
+ 973              	.LVL86:
+ 175:Drivers/lvgl/src/misc/lv_array.c ****     uint8_t * src = lv_array_at(array, array->size - 1);
+ 974              		.loc 1 175 21 view .LVU295
+ 975 0018 0546     		mov	r5, r0
+ 976              	.LVL87:
+ 176:Drivers/lvgl/src/misc/lv_array.c **** 
+ 977              		.loc 1 176 5 is_stmt 1 view .LVU296
+ 176:Drivers/lvgl/src/misc/lv_array.c **** 
+ 978              		.loc 1 176 21 is_stmt 0 view .LVU297
+ 979 001a 3146     		mov	r1, r6
+ 980 001c 2046     		mov	r0, r4
+ 981              	.LVL88:
+ 176:Drivers/lvgl/src/misc/lv_array.c **** 
+ 982              		.loc 1 176 21 view .LVU298
+ 983 001e FFF7FEFF 		bl	lv_array_at
+ 984              	.LVL89:
+ 985 0022 0146     		mov	r1, r0
+ 986              	.LVL90:
+ 178:Drivers/lvgl/src/misc/lv_array.c ****     array->size--;
+ 987              		.loc 1 178 5 is_stmt 1 view .LVU299
+ 988 0024 E268     		ldr	r2, [r4, #12]
+ 989 0026 2846     		mov	r0, r5
+ 990              	.LVL91:
+ 178:Drivers/lvgl/src/misc/lv_array.c ****     array->size--;
+ARM GAS  /tmp/ccRHaJ18.s 			page 29
+
+
+ 991              		.loc 1 178 5 is_stmt 0 view .LVU300
+ 992 0028 FFF7FEFF 		bl	lv_memcpy
+ 993              	.LVL92:
+ 179:Drivers/lvgl/src/misc/lv_array.c ****     lv_array_shrink(array);
+ 994              		.loc 1 179 5 is_stmt 1 view .LVU301
+ 179:Drivers/lvgl/src/misc/lv_array.c ****     lv_array_shrink(array);
+ 995              		.loc 1 179 10 is_stmt 0 view .LVU302
+ 996 002c 6368     		ldr	r3, [r4, #4]
+ 179:Drivers/lvgl/src/misc/lv_array.c ****     lv_array_shrink(array);
+ 997              		.loc 1 179 16 view .LVU303
+ 998 002e 013B     		subs	r3, r3, #1
+ 999 0030 6360     		str	r3, [r4, #4]
+ 180:Drivers/lvgl/src/misc/lv_array.c ****     return LV_RESULT_OK;
+ 1000              		.loc 1 180 5 is_stmt 1 view .LVU304
+ 1001 0032 2046     		mov	r0, r4
+ 1002 0034 FFF7FEFF 		bl	lv_array_shrink
+ 1003              	.LVL93:
+ 181:Drivers/lvgl/src/misc/lv_array.c **** }
+ 1004              		.loc 1 181 5 view .LVU305
+ 1005              	.L78:
+ 171:Drivers/lvgl/src/misc/lv_array.c ****     }
+ 1006              		.loc 1 171 16 is_stmt 0 view .LVU306
+ 1007 0038 0120     		movs	r0, #1
+ 1008              	.L75:
+ 182:Drivers/lvgl/src/misc/lv_array.c **** 
+ 1009              		.loc 1 182 1 view .LVU307
+ 1010 003a 70BD     		pop	{r4, r5, r6, pc}
+ 1011              	.LVL94:
+ 1012              	.L76:
+ 160:Drivers/lvgl/src/misc/lv_array.c ****     }
+ 1013              		.loc 1 160 16 view .LVU308
+ 1014 003c 0020     		movs	r0, #0
+ 1015              	.LVL95:
+ 160:Drivers/lvgl/src/misc/lv_array.c ****     }
+ 1016              		.loc 1 160 16 view .LVU309
+ 1017 003e FCE7     		b	.L75
+ 1018              	.LVL96:
+ 1019              	.L83:
+ 169:Drivers/lvgl/src/misc/lv_array.c ****         lv_array_shrink(array);
+ 1020              		.loc 1 169 9 is_stmt 1 view .LVU310
+ 169:Drivers/lvgl/src/misc/lv_array.c ****         lv_array_shrink(array);
+ 1021              		.loc 1 169 20 is_stmt 0 view .LVU311
+ 1022 0040 4360     		str	r3, [r0, #4]
+ 170:Drivers/lvgl/src/misc/lv_array.c ****         return LV_RESULT_OK;
+ 1023              		.loc 1 170 9 is_stmt 1 view .LVU312
+ 1024 0042 FFF7FEFF 		bl	lv_array_shrink
+ 1025              	.LVL97:
+ 171:Drivers/lvgl/src/misc/lv_array.c ****     }
+ 1026              		.loc 1 171 9 view .LVU313
+ 171:Drivers/lvgl/src/misc/lv_array.c ****     }
+ 1027              		.loc 1 171 16 is_stmt 0 view .LVU314
+ 1028 0046 F7E7     		b	.L78
+ 1029              	.LVL98:
+ 1030              	.L82:
+ 1031              	.LCFI14:
+ 1032              		.cfi_def_cfa_offset 0
+ 1033              		.cfi_restore 4
+ARM GAS  /tmp/ccRHaJ18.s 			page 30
+
+
+ 1034              		.cfi_restore 5
+ 1035              		.cfi_restore 6
+ 1036              		.cfi_restore 14
+ 160:Drivers/lvgl/src/misc/lv_array.c ****     }
+ 1037              		.loc 1 160 16 view .LVU315
+ 1038 0048 0020     		movs	r0, #0
+ 1039              	.LVL99:
+ 182:Drivers/lvgl/src/misc/lv_array.c **** 
+ 1040              		.loc 1 182 1 view .LVU316
+ 1041 004a 7047     		bx	lr
+ 1042              		.cfi_endproc
+ 1043              	.LFE30:
+ 1045              		.section	.text.lv_array_erase,"ax",%progbits
+ 1046              		.align	1
+ 1047              		.global	lv_array_erase
+ 1048              		.syntax unified
+ 1049              		.thumb
+ 1050              		.thumb_func
+ 1052              	lv_array_erase:
+ 1053              	.LVL100:
+ 1054              	.LFB31:
+ 185:Drivers/lvgl/src/misc/lv_array.c ****     if(end > array->size) {
+ 1055              		.loc 1 185 1 is_stmt 1 view -0
+ 1056              		.cfi_startproc
+ 1057              		@ args = 0, pretend = 0, frame = 0
+ 1058              		@ frame_needed = 0, uses_anonymous_args = 0
+ 185:Drivers/lvgl/src/misc/lv_array.c ****     if(end > array->size) {
+ 1059              		.loc 1 185 1 is_stmt 0 view .LVU318
+ 1060 0000 F8B5     		push	{r3, r4, r5, r6, r7, lr}
+ 1061              	.LCFI15:
+ 1062              		.cfi_def_cfa_offset 24
+ 1063              		.cfi_offset 3, -24
+ 1064              		.cfi_offset 4, -20
+ 1065              		.cfi_offset 5, -16
+ 1066              		.cfi_offset 6, -12
+ 1067              		.cfi_offset 7, -8
+ 1068              		.cfi_offset 14, -4
+ 1069 0002 0746     		mov	r7, r0
+ 1070 0004 0C46     		mov	r4, r1
+ 1071 0006 1546     		mov	r5, r2
+ 186:Drivers/lvgl/src/misc/lv_array.c ****         end = array->size;
+ 1072              		.loc 1 186 5 is_stmt 1 view .LVU319
+ 186:Drivers/lvgl/src/misc/lv_array.c ****         end = array->size;
+ 1073              		.loc 1 186 19 is_stmt 0 view .LVU320
+ 1074 0008 4668     		ldr	r6, [r0, #4]
+ 186:Drivers/lvgl/src/misc/lv_array.c ****         end = array->size;
+ 1075              		.loc 1 186 7 view .LVU321
+ 1076 000a 9642     		cmp	r6, r2
+ 1077 000c 00D2     		bcs	.L85
+ 187:Drivers/lvgl/src/misc/lv_array.c ****     }
+ 1078              		.loc 1 187 13 view .LVU322
+ 1079 000e 3546     		mov	r5, r6
+ 1080              	.L85:
+ 1081              	.LVL101:
+ 190:Drivers/lvgl/src/misc/lv_array.c ****         return LV_RESULT_INVALID;
+ 1082              		.loc 1 190 5 is_stmt 1 view .LVU323
+ 190:Drivers/lvgl/src/misc/lv_array.c ****         return LV_RESULT_INVALID;
+ARM GAS  /tmp/ccRHaJ18.s 			page 31
+
+
+ 1083              		.loc 1 190 7 is_stmt 0 view .LVU324
+ 1084 0010 A542     		cmp	r5, r4
+ 1085 0012 1CD9     		bls	.L90
+ 195:Drivers/lvgl/src/misc/lv_array.c ****         array->size = start;
+ 1086              		.loc 1 195 5 is_stmt 1 view .LVU325
+ 195:Drivers/lvgl/src/misc/lv_array.c ****         array->size = start;
+ 1087              		.loc 1 195 7 is_stmt 0 view .LVU326
+ 1088 0014 AE42     		cmp	r6, r5
+ 1089 0016 15D0     		beq	.L92
+ 201:Drivers/lvgl/src/misc/lv_array.c ****     uint8_t * remaining = start_p + (end - start) * array->element_size;
+ 1090              		.loc 1 201 5 is_stmt 1 view .LVU327
+ 201:Drivers/lvgl/src/misc/lv_array.c ****     uint8_t * remaining = start_p + (end - start) * array->element_size;
+ 1091              		.loc 1 201 25 is_stmt 0 view .LVU328
+ 1092 0018 2146     		mov	r1, r4
+ 1093              	.LVL102:
+ 201:Drivers/lvgl/src/misc/lv_array.c ****     uint8_t * remaining = start_p + (end - start) * array->element_size;
+ 1094              		.loc 1 201 25 view .LVU329
+ 1095 001a 3846     		mov	r0, r7
+ 1096              	.LVL103:
+ 201:Drivers/lvgl/src/misc/lv_array.c ****     uint8_t * remaining = start_p + (end - start) * array->element_size;
+ 1097              		.loc 1 201 25 view .LVU330
+ 1098 001c FFF7FEFF 		bl	lv_array_at
+ 1099              	.LVL104:
+ 202:Drivers/lvgl/src/misc/lv_array.c ****     uint32_t remaining_size = (array->size - end) * array->element_size;
+ 1100              		.loc 1 202 5 is_stmt 1 view .LVU331
+ 202:Drivers/lvgl/src/misc/lv_array.c ****     uint32_t remaining_size = (array->size - end) * array->element_size;
+ 1101              		.loc 1 202 42 is_stmt 0 view .LVU332
+ 1102 0020 291B     		subs	r1, r5, r4
+ 202:Drivers/lvgl/src/misc/lv_array.c ****     uint32_t remaining_size = (array->size - end) * array->element_size;
+ 1103              		.loc 1 202 58 view .LVU333
+ 1104 0022 FB68     		ldr	r3, [r7, #12]
+ 1105              	.LVL105:
+ 203:Drivers/lvgl/src/misc/lv_array.c ****     lv_memmove(start_p, remaining, remaining_size);
+ 1106              		.loc 1 203 5 is_stmt 1 view .LVU334
+ 203:Drivers/lvgl/src/misc/lv_array.c ****     lv_memmove(start_p, remaining, remaining_size);
+ 1107              		.loc 1 203 44 is_stmt 0 view .LVU335
+ 1108 0024 721B     		subs	r2, r6, r5
+ 1109              	.LVL106:
+ 204:Drivers/lvgl/src/misc/lv_array.c ****     array->size -= (end - start);
+ 1110              		.loc 1 204 5 is_stmt 1 view .LVU336
+ 1111 0026 03FB02F2 		mul	r2, r3, r2
+ 1112              	.LVL107:
+ 204:Drivers/lvgl/src/misc/lv_array.c ****     array->size -= (end - start);
+ 1113              		.loc 1 204 5 is_stmt 0 view .LVU337
+ 1114 002a 03FB0101 		mla	r1, r3, r1, r0
+ 1115              	.LVL108:
+ 204:Drivers/lvgl/src/misc/lv_array.c ****     array->size -= (end - start);
+ 1116              		.loc 1 204 5 view .LVU338
+ 1117 002e FFF7FEFF 		bl	lv_memmove
+ 1118              	.LVL109:
+ 205:Drivers/lvgl/src/misc/lv_array.c ****     lv_array_shrink(array);
+ 1119              		.loc 1 205 5 is_stmt 1 view .LVU339
+ 205:Drivers/lvgl/src/misc/lv_array.c ****     lv_array_shrink(array);
+ 1120              		.loc 1 205 10 is_stmt 0 view .LVU340
+ 1121 0032 7B68     		ldr	r3, [r7, #4]
+ 205:Drivers/lvgl/src/misc/lv_array.c ****     lv_array_shrink(array);
+ 1122              		.loc 1 205 17 view .LVU341
+ARM GAS  /tmp/ccRHaJ18.s 			page 32
+
+
+ 1123 0034 641B     		subs	r4, r4, r5
+ 1124              	.LVL110:
+ 205:Drivers/lvgl/src/misc/lv_array.c ****     lv_array_shrink(array);
+ 1125              		.loc 1 205 17 view .LVU342
+ 1126 0036 1C44     		add	r4, r4, r3
+ 1127 0038 7C60     		str	r4, [r7, #4]
+ 206:Drivers/lvgl/src/misc/lv_array.c ****     return LV_RESULT_OK;
+ 1128              		.loc 1 206 5 is_stmt 1 view .LVU343
+ 1129 003a 3846     		mov	r0, r7
+ 1130 003c FFF7FEFF 		bl	lv_array_shrink
+ 1131              	.LVL111:
+ 207:Drivers/lvgl/src/misc/lv_array.c **** }
+ 1132              		.loc 1 207 5 view .LVU344
+ 1133              	.L88:
+ 198:Drivers/lvgl/src/misc/lv_array.c ****     }
+ 1134              		.loc 1 198 16 is_stmt 0 view .LVU345
+ 1135 0040 0120     		movs	r0, #1
+ 1136              	.L86:
+ 208:Drivers/lvgl/src/misc/lv_array.c **** 
+ 1137              		.loc 1 208 1 view .LVU346
+ 1138 0042 F8BD     		pop	{r3, r4, r5, r6, r7, pc}
+ 1139              	.LVL112:
+ 1140              	.L92:
+ 196:Drivers/lvgl/src/misc/lv_array.c ****         lv_array_shrink(array);
+ 1141              		.loc 1 196 9 is_stmt 1 view .LVU347
+ 196:Drivers/lvgl/src/misc/lv_array.c ****         lv_array_shrink(array);
+ 1142              		.loc 1 196 21 is_stmt 0 view .LVU348
+ 1143 0044 7C60     		str	r4, [r7, #4]
+ 197:Drivers/lvgl/src/misc/lv_array.c ****         return LV_RESULT_OK;
+ 1144              		.loc 1 197 9 is_stmt 1 view .LVU349
+ 1145 0046 3846     		mov	r0, r7
+ 1146              	.LVL113:
+ 197:Drivers/lvgl/src/misc/lv_array.c ****         return LV_RESULT_OK;
+ 1147              		.loc 1 197 9 is_stmt 0 view .LVU350
+ 1148 0048 FFF7FEFF 		bl	lv_array_shrink
+ 1149              	.LVL114:
+ 198:Drivers/lvgl/src/misc/lv_array.c ****     }
+ 1150              		.loc 1 198 9 is_stmt 1 view .LVU351
+ 198:Drivers/lvgl/src/misc/lv_array.c ****     }
+ 1151              		.loc 1 198 16 is_stmt 0 view .LVU352
+ 1152 004c F8E7     		b	.L88
+ 1153              	.LVL115:
+ 1154              	.L90:
+ 191:Drivers/lvgl/src/misc/lv_array.c ****     }
+ 1155              		.loc 1 191 16 view .LVU353
+ 1156 004e 0020     		movs	r0, #0
+ 1157              	.LVL116:
+ 191:Drivers/lvgl/src/misc/lv_array.c ****     }
+ 1158              		.loc 1 191 16 view .LVU354
+ 1159 0050 F7E7     		b	.L86
+ 1160              		.cfi_endproc
+ 1161              	.LFE31:
+ 1163              		.section	.text.lv_array_assign,"ax",%progbits
+ 1164              		.align	1
+ 1165              		.global	lv_array_assign
+ 1166              		.syntax unified
+ 1167              		.thumb
+ARM GAS  /tmp/ccRHaJ18.s 			page 33
+
+
+ 1168              		.thumb_func
+ 1170              	lv_array_assign:
+ 1171              	.LVL117:
+ 1172              	.LFB36:
+ 294:Drivers/lvgl/src/misc/lv_array.c **** 
+ 295:Drivers/lvgl/src/misc/lv_array.c **** lv_result_t lv_array_assign(lv_array_t * array, uint32_t index, const void * value)
+ 296:Drivers/lvgl/src/misc/lv_array.c **** {
+ 1173              		.loc 1 296 1 is_stmt 1 view -0
+ 1174              		.cfi_startproc
+ 1175              		@ args = 0, pretend = 0, frame = 0
+ 1176              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1177              		.loc 1 296 1 is_stmt 0 view .LVU356
+ 1178 0000 38B5     		push	{r3, r4, r5, lr}
+ 1179              	.LCFI16:
+ 1180              		.cfi_def_cfa_offset 16
+ 1181              		.cfi_offset 3, -16
+ 1182              		.cfi_offset 4, -12
+ 1183              		.cfi_offset 5, -8
+ 1184              		.cfi_offset 14, -4
+ 1185 0002 0546     		mov	r5, r0
+ 1186 0004 1446     		mov	r4, r2
+ 297:Drivers/lvgl/src/misc/lv_array.c ****     uint8_t * data = lv_array_at(array, index);
+ 1187              		.loc 1 297 5 is_stmt 1 view .LVU357
+ 1188              		.loc 1 297 22 is_stmt 0 view .LVU358
+ 1189 0006 FFF7FEFF 		bl	lv_array_at
+ 1190              	.LVL118:
+ 298:Drivers/lvgl/src/misc/lv_array.c ****     if(data == NULL) return LV_RESULT_INVALID;
+ 1191              		.loc 1 298 5 is_stmt 1 view .LVU359
+ 1192              		.loc 1 298 7 is_stmt 0 view .LVU360
+ 1193 000a 20B1     		cbz	r0, .L94
+ 299:Drivers/lvgl/src/misc/lv_array.c **** 
+ 300:Drivers/lvgl/src/misc/lv_array.c ****     lv_memcpy(data, value, array->element_size);
+ 1194              		.loc 1 300 5 is_stmt 1 view .LVU361
+ 1195 000c EA68     		ldr	r2, [r5, #12]
+ 1196 000e 2146     		mov	r1, r4
+ 1197 0010 FFF7FEFF 		bl	lv_memcpy
+ 1198              	.LVL119:
+ 301:Drivers/lvgl/src/misc/lv_array.c ****     return LV_RESULT_OK;
+ 1199              		.loc 1 301 5 view .LVU362
+ 1200              		.loc 1 301 12 is_stmt 0 view .LVU363
+ 1201 0014 0120     		movs	r0, #1
+ 1202              	.L94:
+ 302:Drivers/lvgl/src/misc/lv_array.c **** }
+ 1203              		.loc 1 302 1 view .LVU364
+ 1204 0016 38BD     		pop	{r3, r4, r5, pc}
+ 1205              		.loc 1 302 1 view .LVU365
+ 1206              		.cfi_endproc
+ 1207              	.LFE36:
+ 1209              		.text
+ 1210              	.Letext0:
+ 1211              		.file 4 "/usr/arm-none-eabi/include/machine/_default_types.h"
+ 1212              		.file 5 "/usr/arm-none-eabi/include/sys/_stdint.h"
+ 1213              		.file 6 "/usr/lib/gcc/arm-none-eabi/16.2.0/include/stddef.h"
+ 1214              		.file 7 "Drivers/lvgl/src/misc/../../include/lvgl/core/../lv_types.h"
+ 1215              		.file 8 "Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../debugging/../stdlib/lv_m
+ARM GAS  /tmp/ccRHaJ18.s 			page 34
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 lv_array.c
+     /tmp/ccRHaJ18.s:21     .text.lv_array_init_from_buf:00000000 $t
+     /tmp/ccRHaJ18.s:27     .text.lv_array_init_from_buf:00000000 lv_array_init_from_buf
+     /tmp/ccRHaJ18.s:82     .text.lv_array_init:00000000 $t
+     /tmp/ccRHaJ18.s:88     .text.lv_array_init:00000000 lv_array_init
+     /tmp/ccRHaJ18.s:147    .text.lv_array_deinit:00000000 $t
+     /tmp/ccRHaJ18.s:153    .text.lv_array_deinit:00000000 lv_array_deinit
+     /tmp/ccRHaJ18.s:203    .text.lv_array_copy:00000000 $t
+     /tmp/ccRHaJ18.s:209    .text.lv_array_copy:00000000 lv_array_copy
+     /tmp/ccRHaJ18.s:440    .text.lv_array_resize:00000000 $t
+     /tmp/ccRHaJ18.s:446    .text.lv_array_resize:00000000 lv_array_resize
+     /tmp/ccRHaJ18.s:515    .text.lv_array_shrink:00000000 $t
+     /tmp/ccRHaJ18.s:521    .text.lv_array_shrink:00000000 lv_array_shrink
+     /tmp/ccRHaJ18.s:557    .text.lv_array_concat:00000000 $t
+     /tmp/ccRHaJ18.s:563    .text.lv_array_concat:00000000 lv_array_concat
+     /tmp/ccRHaJ18.s:682    .text.lv_array_push_back:00000000 $t
+     /tmp/ccRHaJ18.s:688    .text.lv_array_push_back:00000000 lv_array_push_back
+     /tmp/ccRHaJ18.s:778    .text.lv_array_at:00000000 $t
+     /tmp/ccRHaJ18.s:784    .text.lv_array_at:00000000 lv_array_at
+     /tmp/ccRHaJ18.s:819    .text.lv_array_remove:00000000 $t
+     /tmp/ccRHaJ18.s:825    .text.lv_array_remove:00000000 lv_array_remove
+     /tmp/ccRHaJ18.s:932    .text.lv_array_remove_unordered:00000000 $t
+     /tmp/ccRHaJ18.s:938    .text.lv_array_remove_unordered:00000000 lv_array_remove_unordered
+     /tmp/ccRHaJ18.s:1046   .text.lv_array_erase:00000000 $t
+     /tmp/ccRHaJ18.s:1052   .text.lv_array_erase:00000000 lv_array_erase
+     /tmp/ccRHaJ18.s:1164   .text.lv_array_assign:00000000 $t
+     /tmp/ccRHaJ18.s:1170   .text.lv_array_assign:00000000 lv_array_assign
+
+UNDEFINED SYMBOLS
+lv_memset
+lv_malloc
+lv_free
+lv_memcpy
+lv_realloc
+lv_memmove

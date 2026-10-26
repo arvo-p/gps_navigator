@@ -1,0 +1,822 @@
+ARM GAS  /tmp/ccHrpNV7.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.arch armv7e-m
+   3              		.fpu fpv4-sp-d16
+   4              		.eabi_attribute 27, 1
+   5              		.eabi_attribute 28, 1
+   6              		.eabi_attribute 20, 1
+   7              		.eabi_attribute 21, 1
+   8              		.eabi_attribute 23, 3
+   9              		.eabi_attribute 24, 1
+  10              		.eabi_attribute 25, 1
+  11              		.eabi_attribute 26, 1
+  12              		.eabi_attribute 30, 1
+  13              		.eabi_attribute 34, 1
+  14              		.eabi_attribute 18, 4
+  15              		.file	"lv_pending.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.file 1 "Drivers/lvgl/src/misc/lv_pending.c"
+  20              		.section	.text.lv_pending_array_clear,"ax",%progbits
+  21              		.align	1
+  22              		.syntax unified
+  23              		.thumb
+  24              		.thumb_func
+  26              	lv_pending_array_clear:
+  27              	.LVL0:
+  28              	.LFB30:
+   1:Drivers/lvgl/src/misc/lv_pending.c **** /**
+   2:Drivers/lvgl/src/misc/lv_pending.c ****  * @file lv_pending.c
+   3:Drivers/lvgl/src/misc/lv_pending.c ****  *
+   4:Drivers/lvgl/src/misc/lv_pending.c ****  */
+   5:Drivers/lvgl/src/misc/lv_pending.c **** 
+   6:Drivers/lvgl/src/misc/lv_pending.c **** /*********************
+   7:Drivers/lvgl/src/misc/lv_pending.c ****  *      INCLUDES
+   8:Drivers/lvgl/src/misc/lv_pending.c ****  *********************/
+   9:Drivers/lvgl/src/misc/lv_pending.c **** 
+  10:Drivers/lvgl/src/misc/lv_pending.c **** #include "../lvgl_public.h"
+  11:Drivers/lvgl/src/misc/lv_pending.c **** #include "lv_pending.h"
+  12:Drivers/lvgl/src/misc/lv_pending.c **** #include "lv_array.h"
+  13:Drivers/lvgl/src/misc/lv_pending.c **** 
+  14:Drivers/lvgl/src/misc/lv_pending.c **** /*********************
+  15:Drivers/lvgl/src/misc/lv_pending.c ****  *      DEFINES
+  16:Drivers/lvgl/src/misc/lv_pending.c ****  *********************/
+  17:Drivers/lvgl/src/misc/lv_pending.c **** 
+  18:Drivers/lvgl/src/misc/lv_pending.c **** /**********************
+  19:Drivers/lvgl/src/misc/lv_pending.c ****  *      TYPEDEFS
+  20:Drivers/lvgl/src/misc/lv_pending.c ****  **********************/
+  21:Drivers/lvgl/src/misc/lv_pending.c **** 
+  22:Drivers/lvgl/src/misc/lv_pending.c **** struct _lv_pending_t {
+  23:Drivers/lvgl/src/misc/lv_pending.c ****     lv_array_t * arr_act;
+  24:Drivers/lvgl/src/misc/lv_pending.c ****     lv_array_t arr_1;
+  25:Drivers/lvgl/src/misc/lv_pending.c ****     lv_array_t arr_2;
+  26:Drivers/lvgl/src/misc/lv_pending.c ****     lv_pending_free_cb_t free_cb;
+  27:Drivers/lvgl/src/misc/lv_pending.c ****     void * user_data;
+  28:Drivers/lvgl/src/misc/lv_pending.c **** };
+  29:Drivers/lvgl/src/misc/lv_pending.c **** 
+  30:Drivers/lvgl/src/misc/lv_pending.c **** /**********************
+ARM GAS  /tmp/ccHrpNV7.s 			page 2
+
+
+  31:Drivers/lvgl/src/misc/lv_pending.c ****  *  STATIC PROTOTYPES
+  32:Drivers/lvgl/src/misc/lv_pending.c ****  **********************/
+  33:Drivers/lvgl/src/misc/lv_pending.c **** 
+  34:Drivers/lvgl/src/misc/lv_pending.c **** static inline void lv_pending_array_clear(lv_pending_t * pending, lv_array_t * arr);
+  35:Drivers/lvgl/src/misc/lv_pending.c **** 
+  36:Drivers/lvgl/src/misc/lv_pending.c **** /**********************
+  37:Drivers/lvgl/src/misc/lv_pending.c ****  *  STATIC VARIABLES
+  38:Drivers/lvgl/src/misc/lv_pending.c ****  **********************/
+  39:Drivers/lvgl/src/misc/lv_pending.c **** 
+  40:Drivers/lvgl/src/misc/lv_pending.c **** /**********************
+  41:Drivers/lvgl/src/misc/lv_pending.c ****  *      MACROS
+  42:Drivers/lvgl/src/misc/lv_pending.c ****  **********************/
+  43:Drivers/lvgl/src/misc/lv_pending.c **** 
+  44:Drivers/lvgl/src/misc/lv_pending.c **** /**********************
+  45:Drivers/lvgl/src/misc/lv_pending.c ****  *   GLOBAL FUNCTIONS
+  46:Drivers/lvgl/src/misc/lv_pending.c ****  **********************/
+  47:Drivers/lvgl/src/misc/lv_pending.c **** 
+  48:Drivers/lvgl/src/misc/lv_pending.c **** lv_pending_t * lv_pending_create(size_t obj_size, uint32_t capacity_default)
+  49:Drivers/lvgl/src/misc/lv_pending.c **** {
+  50:Drivers/lvgl/src/misc/lv_pending.c ****     lv_pending_t * pending = lv_malloc_zeroed(sizeof(lv_pending_t));
+  51:Drivers/lvgl/src/misc/lv_pending.c ****     LV_ASSERT_MALLOC(pending);
+  52:Drivers/lvgl/src/misc/lv_pending.c ****     lv_array_init(&pending->arr_1, capacity_default, obj_size);
+  53:Drivers/lvgl/src/misc/lv_pending.c ****     lv_array_init(&pending->arr_2, capacity_default, obj_size);
+  54:Drivers/lvgl/src/misc/lv_pending.c ****     pending->arr_act = &pending->arr_1;
+  55:Drivers/lvgl/src/misc/lv_pending.c ****     return pending;
+  56:Drivers/lvgl/src/misc/lv_pending.c **** }
+  57:Drivers/lvgl/src/misc/lv_pending.c **** 
+  58:Drivers/lvgl/src/misc/lv_pending.c **** void lv_pending_destroy(lv_pending_t * pending)
+  59:Drivers/lvgl/src/misc/lv_pending.c **** {
+  60:Drivers/lvgl/src/misc/lv_pending.c ****     LV_ASSERT_NULL(pending);
+  61:Drivers/lvgl/src/misc/lv_pending.c ****     lv_pending_remove_all(pending);
+  62:Drivers/lvgl/src/misc/lv_pending.c ****     lv_array_deinit(&pending->arr_1);
+  63:Drivers/lvgl/src/misc/lv_pending.c ****     lv_array_deinit(&pending->arr_2);
+  64:Drivers/lvgl/src/misc/lv_pending.c ****     lv_memzero(pending, sizeof(lv_pending_t));
+  65:Drivers/lvgl/src/misc/lv_pending.c ****     lv_free(pending);
+  66:Drivers/lvgl/src/misc/lv_pending.c **** }
+  67:Drivers/lvgl/src/misc/lv_pending.c **** 
+  68:Drivers/lvgl/src/misc/lv_pending.c **** void lv_pending_set_free_cb(lv_pending_t * pending, lv_pending_free_cb_t free_cb,
+  69:Drivers/lvgl/src/misc/lv_pending.c ****                             void * user_data)
+  70:Drivers/lvgl/src/misc/lv_pending.c **** {
+  71:Drivers/lvgl/src/misc/lv_pending.c ****     LV_ASSERT_NULL(pending);
+  72:Drivers/lvgl/src/misc/lv_pending.c ****     LV_ASSERT_NULL(free_cb);
+  73:Drivers/lvgl/src/misc/lv_pending.c ****     pending->free_cb = free_cb;
+  74:Drivers/lvgl/src/misc/lv_pending.c ****     pending->user_data = user_data;
+  75:Drivers/lvgl/src/misc/lv_pending.c **** }
+  76:Drivers/lvgl/src/misc/lv_pending.c **** 
+  77:Drivers/lvgl/src/misc/lv_pending.c **** void lv_pending_add(lv_pending_t * pending, void * obj)
+  78:Drivers/lvgl/src/misc/lv_pending.c **** {
+  79:Drivers/lvgl/src/misc/lv_pending.c ****     LV_ASSERT_NULL(pending);
+  80:Drivers/lvgl/src/misc/lv_pending.c ****     LV_ASSERT_NULL(obj);
+  81:Drivers/lvgl/src/misc/lv_pending.c ****     lv_array_push_back(pending->arr_act, obj);
+  82:Drivers/lvgl/src/misc/lv_pending.c **** }
+  83:Drivers/lvgl/src/misc/lv_pending.c **** 
+  84:Drivers/lvgl/src/misc/lv_pending.c **** void lv_pending_remove_all(lv_pending_t * pending)
+  85:Drivers/lvgl/src/misc/lv_pending.c **** {
+  86:Drivers/lvgl/src/misc/lv_pending.c ****     LV_ASSERT_NULL(pending);
+  87:Drivers/lvgl/src/misc/lv_pending.c **** 
+ARM GAS  /tmp/ccHrpNV7.s 			page 3
+
+
+  88:Drivers/lvgl/src/misc/lv_pending.c ****     lv_pending_array_clear(pending, &pending->arr_1);
+  89:Drivers/lvgl/src/misc/lv_pending.c ****     lv_pending_array_clear(pending, &pending->arr_2);
+  90:Drivers/lvgl/src/misc/lv_pending.c **** }
+  91:Drivers/lvgl/src/misc/lv_pending.c **** 
+  92:Drivers/lvgl/src/misc/lv_pending.c **** void lv_pending_swap(lv_pending_t * pending)
+  93:Drivers/lvgl/src/misc/lv_pending.c **** {
+  94:Drivers/lvgl/src/misc/lv_pending.c ****     pending->arr_act = (pending->arr_act == &pending->arr_1) ? &pending->arr_2 : &pending->arr_1;
+  95:Drivers/lvgl/src/misc/lv_pending.c ****     lv_pending_array_clear(pending, pending->arr_act);
+  96:Drivers/lvgl/src/misc/lv_pending.c **** }
+  97:Drivers/lvgl/src/misc/lv_pending.c **** 
+  98:Drivers/lvgl/src/misc/lv_pending.c **** /**********************
+  99:Drivers/lvgl/src/misc/lv_pending.c ****  *   STATIC FUNCTIONS
+ 100:Drivers/lvgl/src/misc/lv_pending.c ****  **********************/
+ 101:Drivers/lvgl/src/misc/lv_pending.c **** 
+ 102:Drivers/lvgl/src/misc/lv_pending.c **** static inline void lv_pending_array_clear(lv_pending_t * pending, lv_array_t * arr)
+ 103:Drivers/lvgl/src/misc/lv_pending.c **** {
+  29              		.loc 1 103 1 view -0
+  30              		.cfi_startproc
+  31              		@ args = 0, pretend = 0, frame = 0
+  32              		@ frame_needed = 0, uses_anonymous_args = 0
+  33              		.loc 1 103 1 is_stmt 0 view .LVU1
+  34 0000 2DE9F041 		push	{r4, r5, r6, r7, r8, lr}
+  35              	.LCFI0:
+  36              		.cfi_def_cfa_offset 24
+  37              		.cfi_offset 4, -24
+  38              		.cfi_offset 5, -20
+  39              		.cfi_offset 6, -16
+  40              		.cfi_offset 7, -12
+  41              		.cfi_offset 8, -8
+  42              		.cfi_offset 14, -4
+ 104:Drivers/lvgl/src/misc/lv_pending.c ****     LV_ASSERT_NULL(pending->free_cb);
+  43              		.loc 1 104 37 is_stmt 1 view .LVU2
+ 105:Drivers/lvgl/src/misc/lv_pending.c **** 
+ 106:Drivers/lvgl/src/misc/lv_pending.c ****     uint32_t size = lv_array_size(arr);
+  44              		.loc 1 106 5 view .LVU3
+  45              	.LVL1:
+  46              	.LBB9:
+  47              	.LBI9:
+  48              		.file 2 "Drivers/lvgl/src/misc/lv_array.h"
+   1:Drivers/lvgl/src/misc/lv_array.h **** /**
+   2:Drivers/lvgl/src/misc/lv_array.h ****  * @file lv_array.h
+   3:Drivers/lvgl/src/misc/lv_array.h ****  */
+   4:Drivers/lvgl/src/misc/lv_array.h **** 
+   5:Drivers/lvgl/src/misc/lv_array.h **** #ifndef LV_ARRAY_H
+   6:Drivers/lvgl/src/misc/lv_array.h **** #define LV_ARRAY_H
+   7:Drivers/lvgl/src/misc/lv_array.h **** 
+   8:Drivers/lvgl/src/misc/lv_array.h **** #ifdef __cplusplus
+   9:Drivers/lvgl/src/misc/lv_array.h **** extern "C" {
+  10:Drivers/lvgl/src/misc/lv_array.h **** #endif
+  11:Drivers/lvgl/src/misc/lv_array.h **** 
+  12:Drivers/lvgl/src/misc/lv_array.h **** /*********************
+  13:Drivers/lvgl/src/misc/lv_array.h ****  *      INCLUDES
+  14:Drivers/lvgl/src/misc/lv_array.h ****  *********************/
+  15:Drivers/lvgl/src/misc/lv_array.h **** #include "../lvgl_public.h"
+  16:Drivers/lvgl/src/misc/lv_array.h **** 
+  17:Drivers/lvgl/src/misc/lv_array.h **** /*********************
+  18:Drivers/lvgl/src/misc/lv_array.h ****  *      DEFINES
+ARM GAS  /tmp/ccHrpNV7.s 			page 4
+
+
+  19:Drivers/lvgl/src/misc/lv_array.h ****  *********************/
+  20:Drivers/lvgl/src/misc/lv_array.h **** 
+  21:Drivers/lvgl/src/misc/lv_array.h **** #ifndef LV_ARRAY_DEFAULT_CAPACITY
+  22:Drivers/lvgl/src/misc/lv_array.h **** #define LV_ARRAY_DEFAULT_CAPACITY  4
+  23:Drivers/lvgl/src/misc/lv_array.h **** #endif
+  24:Drivers/lvgl/src/misc/lv_array.h **** 
+  25:Drivers/lvgl/src/misc/lv_array.h **** #ifndef LV_ARRAY_DEFAULT_SHRINK_RATIO
+  26:Drivers/lvgl/src/misc/lv_array.h **** #define LV_ARRAY_DEFAULT_SHRINK_RATIO 2
+  27:Drivers/lvgl/src/misc/lv_array.h **** #endif
+  28:Drivers/lvgl/src/misc/lv_array.h **** 
+  29:Drivers/lvgl/src/misc/lv_array.h **** /**********************
+  30:Drivers/lvgl/src/misc/lv_array.h ****  *      TYPEDEFS
+  31:Drivers/lvgl/src/misc/lv_array.h ****  **********************/
+  32:Drivers/lvgl/src/misc/lv_array.h **** 
+  33:Drivers/lvgl/src/misc/lv_array.h **** /** Description of a array*/
+  34:Drivers/lvgl/src/misc/lv_array.h **** typedef struct _lv_array_t {
+  35:Drivers/lvgl/src/misc/lv_array.h ****     uint8_t * data;
+  36:Drivers/lvgl/src/misc/lv_array.h ****     uint32_t size;
+  37:Drivers/lvgl/src/misc/lv_array.h ****     uint32_t capacity;
+  38:Drivers/lvgl/src/misc/lv_array.h ****     uint32_t element_size;
+  39:Drivers/lvgl/src/misc/lv_array.h **** 
+  40:Drivers/lvgl/src/misc/lv_array.h ****     bool inner_alloc; /* true: data is allocated by the array; false: data is allocated by the user
+  41:Drivers/lvgl/src/misc/lv_array.h **** } lv_array_t;
+  42:Drivers/lvgl/src/misc/lv_array.h **** 
+  43:Drivers/lvgl/src/misc/lv_array.h **** /**********************
+  44:Drivers/lvgl/src/misc/lv_array.h ****  * GLOBAL PROTOTYPES
+  45:Drivers/lvgl/src/misc/lv_array.h ****  **********************/
+  46:Drivers/lvgl/src/misc/lv_array.h **** 
+  47:Drivers/lvgl/src/misc/lv_array.h **** /**
+  48:Drivers/lvgl/src/misc/lv_array.h ****  * Init an array.
+  49:Drivers/lvgl/src/misc/lv_array.h ****  * @param array pointer to an `lv_array_t` variable to initialize
+  50:Drivers/lvgl/src/misc/lv_array.h ****  * @param capacity the initial capacity of the array
+  51:Drivers/lvgl/src/misc/lv_array.h ****  * @param element_size the size of an element in bytes
+  52:Drivers/lvgl/src/misc/lv_array.h ****  */
+  53:Drivers/lvgl/src/misc/lv_array.h **** lv_result_t lv_array_init(lv_array_t * array, uint32_t capacity, uint32_t element_size);
+  54:Drivers/lvgl/src/misc/lv_array.h **** 
+  55:Drivers/lvgl/src/misc/lv_array.h **** /**
+  56:Drivers/lvgl/src/misc/lv_array.h ****  * Init an array from a buffer.
+  57:Drivers/lvgl/src/misc/lv_array.h ****  * @note The buffer must be large enough to store `capacity` elements. The array will not release t
+  58:Drivers/lvgl/src/misc/lv_array.h ****  *       The user must ensure that the buffer is valid during the lifetime of the array. And releas
+  59:Drivers/lvgl/src/misc/lv_array.h ****  * @param array pointer to an `lv_array_t` variable to initialize
+  60:Drivers/lvgl/src/misc/lv_array.h ****  * @param buf pointer to a buffer to use as the array's data
+  61:Drivers/lvgl/src/misc/lv_array.h ****  * @param capacity the initial capacity of the array
+  62:Drivers/lvgl/src/misc/lv_array.h ****  * @param element_size the size of an element in bytes
+  63:Drivers/lvgl/src/misc/lv_array.h ****  */
+  64:Drivers/lvgl/src/misc/lv_array.h **** void lv_array_init_from_buf(lv_array_t * array, void * buf, uint32_t capacity, uint32_t element_siz
+  65:Drivers/lvgl/src/misc/lv_array.h **** 
+  66:Drivers/lvgl/src/misc/lv_array.h **** /**
+  67:Drivers/lvgl/src/misc/lv_array.h ****  * Resize the array to the given capacity.
+  68:Drivers/lvgl/src/misc/lv_array.h ****  * @note if the new capacity is smaller than the current size, the array will be truncated.
+  69:Drivers/lvgl/src/misc/lv_array.h ****  * @param array pointer to an `lv_array_t` variable
+  70:Drivers/lvgl/src/misc/lv_array.h ****  * @param new_capacity the new capacity of the array
+  71:Drivers/lvgl/src/misc/lv_array.h ****  */
+  72:Drivers/lvgl/src/misc/lv_array.h **** bool lv_array_resize(lv_array_t * array, uint32_t new_capacity);
+  73:Drivers/lvgl/src/misc/lv_array.h **** 
+  74:Drivers/lvgl/src/misc/lv_array.h **** /**
+  75:Drivers/lvgl/src/misc/lv_array.h ****  * Deinit the array, and free the allocated memory
+ARM GAS  /tmp/ccHrpNV7.s 			page 5
+
+
+  76:Drivers/lvgl/src/misc/lv_array.h ****  * @param array pointer to an `lv_array_t` variable to deinitialize
+  77:Drivers/lvgl/src/misc/lv_array.h ****  */
+  78:Drivers/lvgl/src/misc/lv_array.h **** void lv_array_deinit(lv_array_t * array);
+  79:Drivers/lvgl/src/misc/lv_array.h **** 
+  80:Drivers/lvgl/src/misc/lv_array.h **** /**
+  81:Drivers/lvgl/src/misc/lv_array.h ****  * Return how many elements are stored in the array.
+  82:Drivers/lvgl/src/misc/lv_array.h ****  * @param array pointer to an `lv_array_t` variable
+  83:Drivers/lvgl/src/misc/lv_array.h ****  * @return the number of elements stored in the array
+  84:Drivers/lvgl/src/misc/lv_array.h ****  */
+  85:Drivers/lvgl/src/misc/lv_array.h **** static inline uint32_t lv_array_size(const lv_array_t * array)
+  49              		.loc 2 85 24 view .LVU4
+  50              	.LBB10:
+  86:Drivers/lvgl/src/misc/lv_array.h **** {
+  87:Drivers/lvgl/src/misc/lv_array.h ****     return array->size;
+  51              		.loc 2 87 5 view .LVU5
+  52              		.loc 2 87 17 is_stmt 0 view .LVU6
+  53 0004 D1F80480 		ldr	r8, [r1, #4]
+  54              	.LVL2:
+  55              		.loc 2 87 17 view .LVU7
+  56              	.LBE10:
+  57              	.LBE9:
+ 107:Drivers/lvgl/src/misc/lv_pending.c ****     if(size == 0) {
+  58              		.loc 1 107 5 is_stmt 1 view .LVU8
+  59              		.loc 1 107 7 is_stmt 0 view .LVU9
+  60 0008 B8F1000F 		cmp	r8, #0
+  61 000c 0FD0     		beq	.L1
+  62 000e 0546     		mov	r5, r0
+  63 0010 0F46     		mov	r7, r1
+  64              	.LBB11:
+ 108:Drivers/lvgl/src/misc/lv_pending.c ****         return;
+ 109:Drivers/lvgl/src/misc/lv_pending.c ****     }
+ 110:Drivers/lvgl/src/misc/lv_pending.c **** 
+ 111:Drivers/lvgl/src/misc/lv_pending.c ****     /* remove all the pending objects */
+ 112:Drivers/lvgl/src/misc/lv_pending.c ****     for(uint32_t i = 0; i < size; i++) {
+  65              		.loc 1 112 18 view .LVU10
+  66 0012 0024     		movs	r4, #0
+  67 0014 07E0     		b	.L3
+  68              	.LVL3:
+  69              	.L4:
+ 113:Drivers/lvgl/src/misc/lv_pending.c ****         pending->free_cb(lv_array_at(arr, i), pending->user_data);
+  70              		.loc 1 113 9 is_stmt 1 view .LVU11
+  71              		.loc 1 113 16 is_stmt 0 view .LVU12
+  72 0016 EE6A     		ldr	r6, [r5, #44]
+  73              		.loc 1 113 9 view .LVU13
+  74 0018 2146     		mov	r1, r4
+  75 001a 3846     		mov	r0, r7
+  76 001c FFF7FEFF 		bl	lv_array_at
+  77              	.LVL4:
+  78              		.loc 1 113 9 discriminator 1 view .LVU14
+  79 0020 296B     		ldr	r1, [r5, #48]
+  80 0022 B047     		blx	r6
+  81              	.LVL5:
+ 112:Drivers/lvgl/src/misc/lv_pending.c ****         pending->free_cb(lv_array_at(arr, i), pending->user_data);
+  82              		.loc 1 112 36 is_stmt 1 discriminator 1 view .LVU15
+  83 0024 0134     		adds	r4, r4, #1
+  84              	.LVL6:
+  85              	.L3:
+ARM GAS  /tmp/ccHrpNV7.s 			page 6
+
+
+ 112:Drivers/lvgl/src/misc/lv_pending.c ****         pending->free_cb(lv_array_at(arr, i), pending->user_data);
+  86              		.loc 1 112 27 discriminator 2 view .LVU16
+  87 0026 4445     		cmp	r4, r8
+  88 0028 F5D3     		bcc	.L4
+  89              	.LBE11:
+ 114:Drivers/lvgl/src/misc/lv_pending.c ****     }
+ 115:Drivers/lvgl/src/misc/lv_pending.c **** 
+ 116:Drivers/lvgl/src/misc/lv_pending.c ****     lv_array_clear(arr);
+  90              		.loc 1 116 5 view .LVU17
+  91              	.LVL7:
+  92              	.LBB12:
+  93              	.LBI12:
+  88:Drivers/lvgl/src/misc/lv_array.h **** }
+  89:Drivers/lvgl/src/misc/lv_array.h **** 
+  90:Drivers/lvgl/src/misc/lv_array.h **** /**
+  91:Drivers/lvgl/src/misc/lv_array.h ****  * Return the capacity of the array, i.e. how many elements can be stored.
+  92:Drivers/lvgl/src/misc/lv_array.h ****  * @param array pointer to an `lv_array_t` variable
+  93:Drivers/lvgl/src/misc/lv_array.h ****  * @return the capacity of the array
+  94:Drivers/lvgl/src/misc/lv_array.h ****  */
+  95:Drivers/lvgl/src/misc/lv_array.h **** static inline uint32_t lv_array_capacity(const lv_array_t * array)
+  96:Drivers/lvgl/src/misc/lv_array.h **** {
+  97:Drivers/lvgl/src/misc/lv_array.h ****     return array->capacity;
+  98:Drivers/lvgl/src/misc/lv_array.h **** }
+  99:Drivers/lvgl/src/misc/lv_array.h **** 
+ 100:Drivers/lvgl/src/misc/lv_array.h **** /**
+ 101:Drivers/lvgl/src/misc/lv_array.h ****  * Return if the array is empty
+ 102:Drivers/lvgl/src/misc/lv_array.h ****  * @param array pointer to an `lv_array_t` variable
+ 103:Drivers/lvgl/src/misc/lv_array.h ****  * @return true: array is empty; false: array is not empty
+ 104:Drivers/lvgl/src/misc/lv_array.h ****  */
+ 105:Drivers/lvgl/src/misc/lv_array.h **** static inline bool lv_array_is_empty(const lv_array_t * array)
+ 106:Drivers/lvgl/src/misc/lv_array.h **** {
+ 107:Drivers/lvgl/src/misc/lv_array.h ****     return array->size == 0;
+ 108:Drivers/lvgl/src/misc/lv_array.h **** }
+ 109:Drivers/lvgl/src/misc/lv_array.h **** 
+ 110:Drivers/lvgl/src/misc/lv_array.h **** /**
+ 111:Drivers/lvgl/src/misc/lv_array.h ****  * Return if the array is full
+ 112:Drivers/lvgl/src/misc/lv_array.h ****  * @param array pointer to an `lv_array_t` variable
+ 113:Drivers/lvgl/src/misc/lv_array.h ****  * @return true: array is full; false: array is not full
+ 114:Drivers/lvgl/src/misc/lv_array.h ****  */
+ 115:Drivers/lvgl/src/misc/lv_array.h **** static inline bool lv_array_is_full(const lv_array_t * array)
+ 116:Drivers/lvgl/src/misc/lv_array.h **** {
+ 117:Drivers/lvgl/src/misc/lv_array.h ****     return array->size == array->capacity;
+ 118:Drivers/lvgl/src/misc/lv_array.h **** }
+ 119:Drivers/lvgl/src/misc/lv_array.h **** 
+ 120:Drivers/lvgl/src/misc/lv_array.h **** /**
+ 121:Drivers/lvgl/src/misc/lv_array.h ****  * Copy an array to another.
+ 122:Drivers/lvgl/src/misc/lv_array.h ****  * @note target is always made an exact copy of source. Any existing content in target is
+ 123:Drivers/lvgl/src/misc/lv_array.h ****  *       deinitialized. If source is empty, target will also be empty. If target's previous
+ 124:Drivers/lvgl/src/misc/lv_array.h ****  *       contents need to be preserved when source is empty, check `lv_array_is_empty` first.
+ 125:Drivers/lvgl/src/misc/lv_array.h ****  * @param target pointer to an `lv_array_t` variable to copy to
+ 126:Drivers/lvgl/src/misc/lv_array.h ****  * @param source pointer to an `lv_array_t` variable to copy from
+ 127:Drivers/lvgl/src/misc/lv_array.h ****  */
+ 128:Drivers/lvgl/src/misc/lv_array.h **** void lv_array_copy(lv_array_t * target, const lv_array_t * source);
+ 129:Drivers/lvgl/src/misc/lv_array.h **** 
+ 130:Drivers/lvgl/src/misc/lv_array.h **** /**
+ 131:Drivers/lvgl/src/misc/lv_array.h ****  * Remove all elements in array.
+ 132:Drivers/lvgl/src/misc/lv_array.h ****  * @param array pointer to an `lv_array_t` variable
+ARM GAS  /tmp/ccHrpNV7.s 			page 7
+
+
+ 133:Drivers/lvgl/src/misc/lv_array.h ****  */
+ 134:Drivers/lvgl/src/misc/lv_array.h **** static inline void lv_array_clear(lv_array_t * array)
+  94              		.loc 2 134 20 view .LVU18
+  95              	.LBB13:
+ 135:Drivers/lvgl/src/misc/lv_array.h **** {
+ 136:Drivers/lvgl/src/misc/lv_array.h ****     array->size = 0;
+  96              		.loc 2 136 5 view .LVU19
+  97              		.loc 2 136 17 is_stmt 0 view .LVU20
+  98 002a 0023     		movs	r3, #0
+  99 002c 7B60     		str	r3, [r7, #4]
+ 100              	.LVL8:
+ 101              	.L1:
+ 102              		.loc 2 136 17 view .LVU21
+ 103              	.LBE13:
+ 104              	.LBE12:
+ 117:Drivers/lvgl/src/misc/lv_pending.c **** }
+ 105              		.loc 1 117 1 view .LVU22
+ 106 002e BDE8F081 		pop	{r4, r5, r6, r7, r8, pc}
+ 107              		.loc 1 117 1 view .LVU23
+ 108              		.cfi_endproc
+ 109              	.LFE30:
+ 111              		.section	.text.lv_pending_create,"ax",%progbits
+ 112              		.align	1
+ 113              		.global	lv_pending_create
+ 114              		.syntax unified
+ 115              		.thumb
+ 116              		.thumb_func
+ 118              	lv_pending_create:
+ 119              	.LVL9:
+ 120              	.LFB24:
+  49:Drivers/lvgl/src/misc/lv_pending.c ****     lv_pending_t * pending = lv_malloc_zeroed(sizeof(lv_pending_t));
+ 121              		.loc 1 49 1 is_stmt 1 view -0
+ 122              		.cfi_startproc
+ 123              		@ args = 0, pretend = 0, frame = 0
+ 124              		@ frame_needed = 0, uses_anonymous_args = 0
+  49:Drivers/lvgl/src/misc/lv_pending.c ****     lv_pending_t * pending = lv_malloc_zeroed(sizeof(lv_pending_t));
+ 125              		.loc 1 49 1 is_stmt 0 view .LVU25
+ 126 0000 F8B5     		push	{r3, r4, r5, r6, r7, lr}
+ 127              	.LCFI1:
+ 128              		.cfi_def_cfa_offset 24
+ 129              		.cfi_offset 3, -24
+ 130              		.cfi_offset 4, -20
+ 131              		.cfi_offset 5, -16
+ 132              		.cfi_offset 6, -12
+ 133              		.cfi_offset 7, -8
+ 134              		.cfi_offset 14, -4
+ 135 0002 0746     		mov	r7, r0
+ 136 0004 0E46     		mov	r6, r1
+  50:Drivers/lvgl/src/misc/lv_pending.c ****     LV_ASSERT_MALLOC(pending);
+ 137              		.loc 1 50 5 is_stmt 1 view .LVU26
+  50:Drivers/lvgl/src/misc/lv_pending.c ****     LV_ASSERT_MALLOC(pending);
+ 138              		.loc 1 50 30 is_stmt 0 view .LVU27
+ 139 0006 3420     		movs	r0, #52
+ 140              	.LVL10:
+  50:Drivers/lvgl/src/misc/lv_pending.c ****     LV_ASSERT_MALLOC(pending);
+ 141              		.loc 1 50 30 view .LVU28
+ 142 0008 FFF7FEFF 		bl	lv_malloc_zeroed
+ARM GAS  /tmp/ccHrpNV7.s 			page 8
+
+
+ 143              	.LVL11:
+  50:Drivers/lvgl/src/misc/lv_pending.c ****     LV_ASSERT_MALLOC(pending);
+ 144              		.loc 1 50 30 view .LVU29
+ 145 000c 0446     		mov	r4, r0
+ 146              	.LVL12:
+  51:Drivers/lvgl/src/misc/lv_pending.c ****     lv_array_init(&pending->arr_1, capacity_default, obj_size);
+ 147              		.loc 1 51 30 is_stmt 1 view .LVU30
+  52:Drivers/lvgl/src/misc/lv_pending.c ****     lv_array_init(&pending->arr_2, capacity_default, obj_size);
+ 148              		.loc 1 52 5 view .LVU31
+ 149 000e 051D     		adds	r5, r0, #4
+ 150 0010 3A46     		mov	r2, r7
+ 151 0012 3146     		mov	r1, r6
+ 152 0014 2846     		mov	r0, r5
+ 153              	.LVL13:
+  52:Drivers/lvgl/src/misc/lv_pending.c ****     lv_array_init(&pending->arr_2, capacity_default, obj_size);
+ 154              		.loc 1 52 5 is_stmt 0 view .LVU32
+ 155 0016 FFF7FEFF 		bl	lv_array_init
+ 156              	.LVL14:
+  53:Drivers/lvgl/src/misc/lv_pending.c ****     pending->arr_act = &pending->arr_1;
+ 157              		.loc 1 53 5 is_stmt 1 view .LVU33
+ 158 001a 3A46     		mov	r2, r7
+ 159 001c 3146     		mov	r1, r6
+ 160 001e 04F11800 		add	r0, r4, #24
+ 161 0022 FFF7FEFF 		bl	lv_array_init
+ 162              	.LVL15:
+  54:Drivers/lvgl/src/misc/lv_pending.c ****     return pending;
+ 163              		.loc 1 54 5 view .LVU34
+  54:Drivers/lvgl/src/misc/lv_pending.c ****     return pending;
+ 164              		.loc 1 54 22 is_stmt 0 view .LVU35
+ 165 0026 2560     		str	r5, [r4]
+  55:Drivers/lvgl/src/misc/lv_pending.c **** }
+ 166              		.loc 1 55 5 is_stmt 1 view .LVU36
+  56:Drivers/lvgl/src/misc/lv_pending.c **** 
+ 167              		.loc 1 56 1 is_stmt 0 view .LVU37
+ 168 0028 2046     		mov	r0, r4
+ 169 002a F8BD     		pop	{r3, r4, r5, r6, r7, pc}
+  56:Drivers/lvgl/src/misc/lv_pending.c **** 
+ 170              		.loc 1 56 1 view .LVU38
+ 171              		.cfi_endproc
+ 172              	.LFE24:
+ 174              		.section	.text.lv_pending_set_free_cb,"ax",%progbits
+ 175              		.align	1
+ 176              		.global	lv_pending_set_free_cb
+ 177              		.syntax unified
+ 178              		.thumb
+ 179              		.thumb_func
+ 181              	lv_pending_set_free_cb:
+ 182              	.LVL16:
+ 183              	.LFB26:
+  70:Drivers/lvgl/src/misc/lv_pending.c ****     LV_ASSERT_NULL(pending);
+ 184              		.loc 1 70 1 is_stmt 1 view -0
+ 185              		.cfi_startproc
+ 186              		@ args = 0, pretend = 0, frame = 0
+ 187              		@ frame_needed = 0, uses_anonymous_args = 0
+ 188              		@ link register save eliminated.
+  71:Drivers/lvgl/src/misc/lv_pending.c ****     LV_ASSERT_NULL(free_cb);
+ 189              		.loc 1 71 28 view .LVU40
+ARM GAS  /tmp/ccHrpNV7.s 			page 9
+
+
+  72:Drivers/lvgl/src/misc/lv_pending.c ****     pending->free_cb = free_cb;
+ 190              		.loc 1 72 28 view .LVU41
+  73:Drivers/lvgl/src/misc/lv_pending.c ****     pending->user_data = user_data;
+ 191              		.loc 1 73 5 view .LVU42
+  73:Drivers/lvgl/src/misc/lv_pending.c ****     pending->user_data = user_data;
+ 192              		.loc 1 73 22 is_stmt 0 view .LVU43
+ 193 0000 C162     		str	r1, [r0, #44]
+  74:Drivers/lvgl/src/misc/lv_pending.c **** }
+ 194              		.loc 1 74 5 is_stmt 1 view .LVU44
+  74:Drivers/lvgl/src/misc/lv_pending.c **** }
+ 195              		.loc 1 74 24 is_stmt 0 view .LVU45
+ 196 0002 0263     		str	r2, [r0, #48]
+  75:Drivers/lvgl/src/misc/lv_pending.c **** 
+ 197              		.loc 1 75 1 view .LVU46
+ 198 0004 7047     		bx	lr
+ 199              		.cfi_endproc
+ 200              	.LFE26:
+ 202              		.section	.text.lv_pending_add,"ax",%progbits
+ 203              		.align	1
+ 204              		.global	lv_pending_add
+ 205              		.syntax unified
+ 206              		.thumb
+ 207              		.thumb_func
+ 209              	lv_pending_add:
+ 210              	.LVL17:
+ 211              	.LFB27:
+  78:Drivers/lvgl/src/misc/lv_pending.c ****     LV_ASSERT_NULL(pending);
+ 212              		.loc 1 78 1 is_stmt 1 view -0
+ 213              		.cfi_startproc
+ 214              		@ args = 0, pretend = 0, frame = 0
+ 215              		@ frame_needed = 0, uses_anonymous_args = 0
+  78:Drivers/lvgl/src/misc/lv_pending.c ****     LV_ASSERT_NULL(pending);
+ 216              		.loc 1 78 1 is_stmt 0 view .LVU48
+ 217 0000 08B5     		push	{r3, lr}
+ 218              	.LCFI2:
+ 219              		.cfi_def_cfa_offset 8
+ 220              		.cfi_offset 3, -8
+ 221              		.cfi_offset 14, -4
+  79:Drivers/lvgl/src/misc/lv_pending.c ****     LV_ASSERT_NULL(obj);
+ 222              		.loc 1 79 28 is_stmt 1 view .LVU49
+  80:Drivers/lvgl/src/misc/lv_pending.c ****     lv_array_push_back(pending->arr_act, obj);
+ 223              		.loc 1 80 24 view .LVU50
+  81:Drivers/lvgl/src/misc/lv_pending.c **** }
+ 224              		.loc 1 81 5 view .LVU51
+ 225 0002 0068     		ldr	r0, [r0]
+ 226              	.LVL18:
+  81:Drivers/lvgl/src/misc/lv_pending.c **** }
+ 227              		.loc 1 81 5 is_stmt 0 view .LVU52
+ 228 0004 FFF7FEFF 		bl	lv_array_push_back
+ 229              	.LVL19:
+  82:Drivers/lvgl/src/misc/lv_pending.c **** 
+ 230              		.loc 1 82 1 view .LVU53
+ 231 0008 08BD     		pop	{r3, pc}
+ 232              		.cfi_endproc
+ 233              	.LFE27:
+ 235              		.section	.text.lv_pending_remove_all,"ax",%progbits
+ 236              		.align	1
+ARM GAS  /tmp/ccHrpNV7.s 			page 10
+
+
+ 237              		.global	lv_pending_remove_all
+ 238              		.syntax unified
+ 239              		.thumb
+ 240              		.thumb_func
+ 242              	lv_pending_remove_all:
+ 243              	.LVL20:
+ 244              	.LFB28:
+  85:Drivers/lvgl/src/misc/lv_pending.c ****     LV_ASSERT_NULL(pending);
+ 245              		.loc 1 85 1 is_stmt 1 view -0
+ 246              		.cfi_startproc
+ 247              		@ args = 0, pretend = 0, frame = 0
+ 248              		@ frame_needed = 0, uses_anonymous_args = 0
+  85:Drivers/lvgl/src/misc/lv_pending.c ****     LV_ASSERT_NULL(pending);
+ 249              		.loc 1 85 1 is_stmt 0 view .LVU55
+ 250 0000 10B5     		push	{r4, lr}
+ 251              	.LCFI3:
+ 252              		.cfi_def_cfa_offset 8
+ 253              		.cfi_offset 4, -8
+ 254              		.cfi_offset 14, -4
+ 255 0002 0446     		mov	r4, r0
+  86:Drivers/lvgl/src/misc/lv_pending.c **** 
+ 256              		.loc 1 86 28 is_stmt 1 view .LVU56
+  88:Drivers/lvgl/src/misc/lv_pending.c ****     lv_pending_array_clear(pending, &pending->arr_2);
+ 257              		.loc 1 88 5 view .LVU57
+ 258 0004 011D     		adds	r1, r0, #4
+ 259 0006 FFF7FEFF 		bl	lv_pending_array_clear
+ 260              	.LVL21:
+  89:Drivers/lvgl/src/misc/lv_pending.c **** }
+ 261              		.loc 1 89 5 view .LVU58
+ 262 000a 04F11801 		add	r1, r4, #24
+ 263 000e 2046     		mov	r0, r4
+ 264 0010 FFF7FEFF 		bl	lv_pending_array_clear
+ 265              	.LVL22:
+  90:Drivers/lvgl/src/misc/lv_pending.c **** 
+ 266              		.loc 1 90 1 is_stmt 0 view .LVU59
+ 267 0014 10BD     		pop	{r4, pc}
+  90:Drivers/lvgl/src/misc/lv_pending.c **** 
+ 268              		.loc 1 90 1 view .LVU60
+ 269              		.cfi_endproc
+ 270              	.LFE28:
+ 272              		.section	.text.lv_pending_destroy,"ax",%progbits
+ 273              		.align	1
+ 274              		.global	lv_pending_destroy
+ 275              		.syntax unified
+ 276              		.thumb
+ 277              		.thumb_func
+ 279              	lv_pending_destroy:
+ 280              	.LVL23:
+ 281              	.LFB25:
+  59:Drivers/lvgl/src/misc/lv_pending.c ****     LV_ASSERT_NULL(pending);
+ 282              		.loc 1 59 1 is_stmt 1 view -0
+ 283              		.cfi_startproc
+ 284              		@ args = 0, pretend = 0, frame = 0
+ 285              		@ frame_needed = 0, uses_anonymous_args = 0
+  59:Drivers/lvgl/src/misc/lv_pending.c ****     LV_ASSERT_NULL(pending);
+ 286              		.loc 1 59 1 is_stmt 0 view .LVU62
+ 287 0000 10B5     		push	{r4, lr}
+ARM GAS  /tmp/ccHrpNV7.s 			page 11
+
+
+ 288              	.LCFI4:
+ 289              		.cfi_def_cfa_offset 8
+ 290              		.cfi_offset 4, -8
+ 291              		.cfi_offset 14, -4
+ 292 0002 0446     		mov	r4, r0
+  60:Drivers/lvgl/src/misc/lv_pending.c ****     lv_pending_remove_all(pending);
+ 293              		.loc 1 60 28 is_stmt 1 view .LVU63
+  61:Drivers/lvgl/src/misc/lv_pending.c ****     lv_array_deinit(&pending->arr_1);
+ 294              		.loc 1 61 5 view .LVU64
+ 295 0004 FFF7FEFF 		bl	lv_pending_remove_all
+ 296              	.LVL24:
+  62:Drivers/lvgl/src/misc/lv_pending.c ****     lv_array_deinit(&pending->arr_2);
+ 297              		.loc 1 62 5 view .LVU65
+ 298 0008 201D     		adds	r0, r4, #4
+ 299 000a FFF7FEFF 		bl	lv_array_deinit
+ 300              	.LVL25:
+  63:Drivers/lvgl/src/misc/lv_pending.c ****     lv_memzero(pending, sizeof(lv_pending_t));
+ 301              		.loc 1 63 5 view .LVU66
+ 302 000e 04F11800 		add	r0, r4, #24
+ 303 0012 FFF7FEFF 		bl	lv_array_deinit
+ 304              	.LVL26:
+  64:Drivers/lvgl/src/misc/lv_pending.c ****     lv_free(pending);
+ 305              		.loc 1 64 5 view .LVU67
+ 306              	.LBB14:
+ 307              	.LBI14:
+ 308              		.file 3 "Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h"
+   1:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** /**
+   2:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @file lv_string.h
+   3:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  *
+   4:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  */
+   5:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** 
+   6:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** #ifndef LV_STRING_H
+   7:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** #define LV_STRING_H
+   8:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** 
+   9:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** #ifdef __cplusplus
+  10:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** extern "C" {
+  11:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** #endif
+  12:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** 
+  13:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** /*********************
+  14:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  *      INCLUDES
+  15:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  *********************/
+  16:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** #include "../config/lv_conf_internal.h"
+  17:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** #include "../lv_types.h"
+  18:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** 
+  19:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** /*********************
+  20:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  *      DEFINES
+  21:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  *********************/
+  22:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** 
+  23:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** /**********************
+  24:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  *      TYPEDEFS
+  25:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  **********************/
+  26:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** 
+  27:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** /**********************
+  28:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * GLOBAL PROTOTYPES
+  29:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  **********************/
+  30:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** 
+  31:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** /**
+ARM GAS  /tmp/ccHrpNV7.s 			page 12
+
+
+  32:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @brief Copies a block of memory from a source address to a destination address.
+  33:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @param dst Pointer to the destination array where the content is to be copied.
+  34:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @param src Pointer to the source of data to be copied.
+  35:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @param len Number of bytes to copy.
+  36:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @return Pointer to the destination array.
+  37:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @note The function does not check for any overlapping of the source and destination memory block
+  38:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  */
+  39:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** void * lv_memcpy(void * dst, const void * src, size_t len);
+  40:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** 
+  41:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** /**
+  42:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @brief Fills a block of memory with a specified value.
+  43:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @param dst Pointer to the destination array to fill with the specified value.
+  44:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @param v Value to be set. The value is passed as an int, but the function fills
+  45:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  *          the block of memory using the unsigned char conversion of this value.
+  46:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @param len Number of bytes to be set to the value.
+  47:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  */
+  48:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** void lv_memset(void * dst, uint8_t v, size_t len);
+  49:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** 
+  50:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** /**
+  51:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @brief Move a block of memory from source to destination
+  52:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @param dst Pointer to the destination array where the content is to be copied.
+  53:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @param src Pointer to the source of data to be copied.
+  54:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @param len Number of bytes to copy
+  55:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @return Pointer to the destination array.
+  56:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  */
+  57:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** void * lv_memmove(void * dst, const void * src, size_t len);
+  58:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** 
+  59:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** /**
+  60:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @brief This function will compare two memory blocks
+  61:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @param p1 Pointer to the first memory block
+  62:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @param p2 Pointer to the second memory block
+  63:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @param len Number of bytes to compare
+  64:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @return The difference between the value of the first unmatching byte.
+  65:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  */
+  66:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** int lv_memcmp(const void * p1, const void * p2, size_t len);
+  67:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** 
+  68:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** /**
+  69:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * Same as `memset(dst, 0x00, len)`.
+  70:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @param dst pointer to the destination buffer
+  71:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @param len number of byte to set
+  72:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  */
+  73:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** static inline void lv_memzero(void * dst, size_t len)
+ 309              		.loc 3 73 20 view .LVU68
+ 310              	.LBB15:
+  74:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** {
+  75:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****     lv_memset(dst, 0x00, len);
+ 311              		.loc 3 75 5 view .LVU69
+ 312 0016 3422     		movs	r2, #52
+ 313 0018 0021     		movs	r1, #0
+ 314 001a 2046     		mov	r0, r4
+ 315 001c FFF7FEFF 		bl	lv_memset
+ 316              	.LVL27:
+ 317              		.loc 3 75 5 is_stmt 0 view .LVU70
+ 318              	.LBE15:
+ 319              	.LBE14:
+  65:Drivers/lvgl/src/misc/lv_pending.c **** }
+ 320              		.loc 1 65 5 is_stmt 1 view .LVU71
+ARM GAS  /tmp/ccHrpNV7.s 			page 13
+
+
+ 321 0020 2046     		mov	r0, r4
+ 322 0022 FFF7FEFF 		bl	lv_free
+ 323              	.LVL28:
+  66:Drivers/lvgl/src/misc/lv_pending.c **** 
+ 324              		.loc 1 66 1 is_stmt 0 view .LVU72
+ 325 0026 10BD     		pop	{r4, pc}
+  66:Drivers/lvgl/src/misc/lv_pending.c **** 
+ 326              		.loc 1 66 1 view .LVU73
+ 327              		.cfi_endproc
+ 328              	.LFE25:
+ 330              		.section	.text.lv_pending_swap,"ax",%progbits
+ 331              		.align	1
+ 332              		.global	lv_pending_swap
+ 333              		.syntax unified
+ 334              		.thumb
+ 335              		.thumb_func
+ 337              	lv_pending_swap:
+ 338              	.LVL29:
+ 339              	.LFB29:
+  93:Drivers/lvgl/src/misc/lv_pending.c ****     pending->arr_act = (pending->arr_act == &pending->arr_1) ? &pending->arr_2 : &pending->arr_1;
+ 340              		.loc 1 93 1 is_stmt 1 view -0
+ 341              		.cfi_startproc
+ 342              		@ args = 0, pretend = 0, frame = 0
+ 343              		@ frame_needed = 0, uses_anonymous_args = 0
+  93:Drivers/lvgl/src/misc/lv_pending.c ****     pending->arr_act = (pending->arr_act == &pending->arr_1) ? &pending->arr_2 : &pending->arr_1;
+ 344              		.loc 1 93 1 is_stmt 0 view .LVU75
+ 345 0000 08B5     		push	{r3, lr}
+ 346              	.LCFI5:
+ 347              		.cfi_def_cfa_offset 8
+ 348              		.cfi_offset 3, -8
+ 349              		.cfi_offset 14, -4
+  94:Drivers/lvgl/src/misc/lv_pending.c ****     lv_pending_array_clear(pending, pending->arr_act);
+ 350              		.loc 1 94 5 is_stmt 1 view .LVU76
+  94:Drivers/lvgl/src/misc/lv_pending.c ****     lv_pending_array_clear(pending, pending->arr_act);
+ 351              		.loc 1 94 32 is_stmt 0 view .LVU77
+ 352 0002 0146     		mov	r1, r0
+ 353 0004 51F8043B 		ldr	r3, [r1], #4
+  94:Drivers/lvgl/src/misc/lv_pending.c ****     lv_pending_array_clear(pending, pending->arr_act);
+ 354              		.loc 1 94 80 view .LVU78
+ 355 0008 8B42     		cmp	r3, r1
+ 356 000a 03D0     		beq	.L18
+ 357              	.L16:
+  94:Drivers/lvgl/src/misc/lv_pending.c ****     lv_pending_array_clear(pending, pending->arr_act);
+ 358              		.loc 1 94 22 discriminator 3 view .LVU79
+ 359 000c 0160     		str	r1, [r0]
+  95:Drivers/lvgl/src/misc/lv_pending.c **** }
+ 360              		.loc 1 95 5 is_stmt 1 view .LVU80
+ 361 000e FFF7FEFF 		bl	lv_pending_array_clear
+ 362              	.LVL30:
+  96:Drivers/lvgl/src/misc/lv_pending.c **** 
+ 363              		.loc 1 96 1 is_stmt 0 view .LVU81
+ 364 0012 08BD     		pop	{r3, pc}
+ 365              	.LVL31:
+ 366              	.L18:
+  94:Drivers/lvgl/src/misc/lv_pending.c ****     lv_pending_array_clear(pending, pending->arr_act);
+ 367              		.loc 1 94 80 discriminator 1 view .LVU82
+ 368 0014 00F11801 		add	r1, r0, #24
+ARM GAS  /tmp/ccHrpNV7.s 			page 14
+
+
+ 369 0018 F8E7     		b	.L16
+ 370              		.cfi_endproc
+ 371              	.LFE29:
+ 373              		.text
+ 374              	.Letext0:
+ 375              		.file 4 "/usr/arm-none-eabi/include/machine/_default_types.h"
+ 376              		.file 5 "/usr/arm-none-eabi/include/sys/_stdint.h"
+ 377              		.file 6 "/usr/lib/gcc/arm-none-eabi/16.2.0/include/stddef.h"
+ 378              		.file 7 "Drivers/lvgl/src/misc/../../include/lvgl/core/../lv_types.h"
+ 379              		.file 8 "Drivers/lvgl/src/misc/lv_pending.h"
+ 380              		.file 9 "Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../debugging/../stdlib/lv_m
+ARM GAS  /tmp/ccHrpNV7.s 			page 15
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 lv_pending.c
+     /tmp/ccHrpNV7.s:21     .text.lv_pending_array_clear:00000000 $t
+     /tmp/ccHrpNV7.s:26     .text.lv_pending_array_clear:00000000 lv_pending_array_clear
+     /tmp/ccHrpNV7.s:112    .text.lv_pending_create:00000000 $t
+     /tmp/ccHrpNV7.s:118    .text.lv_pending_create:00000000 lv_pending_create
+     /tmp/ccHrpNV7.s:175    .text.lv_pending_set_free_cb:00000000 $t
+     /tmp/ccHrpNV7.s:181    .text.lv_pending_set_free_cb:00000000 lv_pending_set_free_cb
+     /tmp/ccHrpNV7.s:203    .text.lv_pending_add:00000000 $t
+     /tmp/ccHrpNV7.s:209    .text.lv_pending_add:00000000 lv_pending_add
+     /tmp/ccHrpNV7.s:236    .text.lv_pending_remove_all:00000000 $t
+     /tmp/ccHrpNV7.s:242    .text.lv_pending_remove_all:00000000 lv_pending_remove_all
+     /tmp/ccHrpNV7.s:273    .text.lv_pending_destroy:00000000 $t
+     /tmp/ccHrpNV7.s:279    .text.lv_pending_destroy:00000000 lv_pending_destroy
+     /tmp/ccHrpNV7.s:331    .text.lv_pending_swap:00000000 $t
+     /tmp/ccHrpNV7.s:337    .text.lv_pending_swap:00000000 lv_pending_swap
+
+UNDEFINED SYMBOLS
+lv_array_at
+lv_malloc_zeroed
+lv_array_init
+lv_array_push_back
+lv_array_deinit
+lv_memset
+lv_free

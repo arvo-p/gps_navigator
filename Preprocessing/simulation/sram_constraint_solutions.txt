@@ -1,0 +1,265 @@
+================================================================================
+  SOLUTIONS SPECIFICATION: OVERCOMING THE 786 KB SRAM CONSTRAINT ON STM32
+================================================================================
+Target Hardware: STMicroelectronics STM32U575RIT6 (ARM Cortex-M33, LQFP-64)
+Internal Memory: 786 KB SRAM, 2 MB Flash ROM, 0 KB External RAM on current PCB
+Problem Scope:   PC Simulation allocates ~12.0 MB in .bss for graph caching & A*
+
+--------------------------------------------------------------------------------
+TABLE OF CONTENTS
+--------------------------------------------------------------------------------
+  1. Executive Summary & Concrete Memory Audit
+  2. STM32U575 Physical SRAM Bank Architecture
+  3. Path A: The Hardware Solution (Add OctoSPI PSRAM to KiCad PCB)
+  4. Path B: The Pure Firmware Solution (Fitting in 786 KB Internal SRAM)
+     4.1. Pruning Backbone Road Classification in Preprocessor
+     4.2. Spatial Tile Re-partitioning (0.1° -> 0.025°)
+     4.3. A* Algorithm Data Structure Compaction (Bitmasks & Hash Maps)
+     4.4. MicroSD Block-Streaming for Outgoing Edges & Road Curves
+  5. Side-by-Side Comparison Matrix (Hardware vs Firmware)
+  6. Actionable Implementation Checklist
+
+================================================================================
+1. EXECUTIVE SUMMARY & CONCRETE MEMORY AUDIT
+================================================================================
+In the PC simulation, map data was pre-processed assuming desktop memory budgets:
+  - Nationwide Highway Backbone:
+      backbone_nodes.bin:  1.37 MB  (85,876 nodes * 16 bytes)
+      backbone_edges.bin:  2.46 MB (123,140 edges * 20 bytes)
+      backbone_geom.bin:   1.90 MB (intermediate curve coordinates)
+      -------------------------------------------------------
+      Total Backbone Data: 5.73 MB
+
+  - Dense Urban Tile (e.g. Brussels City Center - local_508_043):
+      local_nodes.bin:     0.35 MB  (22,148 nodes * 16 bytes)
+      local_edges.bin:     0.83 MB  (41,731 edges * 20 bytes)
+      -------------------------------------------------------
+      Single City Tile:    1.18 MB
+
+  - Pathfinder Working Memory (Flat Arrays in .bss):
+      s_local_g_scores (4 tiles * 24k nodes):    384 KB
+      s_local_came_from_keys (4 * 24k):          384 KB
+      s_local_came_from_edges (4 * 24k):         384 KB
+      s_bb_g_scores (90,000 nodes):              360 KB
+      s_bb_came_from_nodes (90,000):             360 KB
+      s_bb_came_from_edges (90,000):             360 KB
+      A* Binary Min-Heap (32,768 entries):       384 KB
+      -------------------------------------------------------
+      Total Working Arrays:                    2,616 KB (~2.6 MB)
+
+CONCLUSION:
+A single dense city tile (1.18 MB) already exceeds total internal SRAM (786 KB).
+Loading the nationwide backbone (3.8 MB) or the working arrays (2.6 MB) directly
+into internal SRAM is physically impossible without adaptation.
+
+
+================================================================================
+2. STM32U575 PHYSICAL SRAM BANK ARCHITECTURE
+================================================================================
+The STM32U575's 786 KB internal SRAM is not a single contiguous block; it is
+physically segmented into four separate bus-mastered SRAM banks:
+
+  ┌──────────┬──────────┬───────────────────┬────────────────────────────────┐
+  │ Bank     │ Size     │ Address Range     │ Optimized Embedded Purpose     │
+  ├──────────┼──────────┼───────────────────┼────────────────────────────────┤
+  │ SRAM1    │ 192 KB   │ 0x20000000        │ Display Framebuffer (150 KB)   │
+  │          │          │                   │ + LCD DMA Transmit Descriptors │
+  ├──────────┼──────────┼───────────────────┼────────────────────────────────┤
+  │ SRAM2    │  64 KB   │ 0x20030000        │ Stack, RTOS, FatFs buffers,   │
+  │          │          │                   │ UART GNSS DMA Circular Buffer  │
+  ├──────────┼──────────┼───────────────────┼────────────────────────────────┤
+  │ SRAM3    │ 512 KB   │ 0x20040000        │ Dedicated Routing Engine:      │
+  │          │          │                   │ Local Tile Cache + A* Heap     │
+  ├──────────┼──────────┼───────────────────┼────────────────────────────────┤
+  │ SRAM4    │  16 KB   │ 0x28000000        │ Backup Domain & Retentive Data │
+  ├──────────┼──────────┼───────────────────┼────────────────────────────────┤
+  │ TOTAL    │ 786 KB   │                   │ Max Working Memory Budget      │
+  └──────────┴──────────┴───────────────────┴────────────────────────────────┘
+
+Key Takeaway: The maximum contiguous RAM block available for the navigation
+and pathfinding engine is SRAM3 (512 KB). The routing engine MUST operate
+within a 512 KB footprint.
+
+
+================================================================================
+3. PATH A: THE HARDWARE SOLUTION (ADD OCTOSPI PSRAM TO KiCad PCB)
+================================================================================
+Because the PCB layout in KiCad (Documents/Projects/GPS/Carte/) is still in the
+design/buying phase, adding an external Pseudo-SRAM (PSRAM) IC is by far the
+most robust, industry-standard solution.
+
+A. Recommended Component:
+   - APMemory APS6404L-3SQR (8 Megabytes / 64 Mbit) or ISSI IS66WVS4M8ALL
+   - Package: SOIC-8 (150 mil) or 8-pin USON-8 (easy to route, hand-solderable)
+   - Unit Cost: ~$1.20 - $1.80 on Mouser / Farnell / LCSC
+   - Voltage: 3.3V (directly compatible with AP7361C regulator on your schematic)
+
+B. Microcontroller Hardware Interface:
+   The STM32U575RIT6 features dual OctoSPI interfaces (OCTOSPI1 and OCTOSPI2).
+   A Quad-SPI / Octal-SPI PSRAM connects using only 6 to 10 pins:
+     1. OCTOSPIM_P1_CLK   -> PSRAM Clock (SCK)
+     2. OCTOSPIM_P1_NCS   -> PSRAM Chip Select (/CS)
+     3. OCTOSPIM_P1_IO0   -> PSRAM Data SI / SIO0
+     4. OCTOSPIM_P1_IO1   -> PSRAM Data SO / SIO1
+     5. OCTOSPIM_P1_IO2   -> PSRAM Data SIO2
+     6. OCTOSPIM_P1_IO3   -> PSRAM Data SIO3
+     (Optional IO4-IO7 and DQS if using true 8-bit Octal mode)
+
+C. The Major Engineering Advantage: Memory-Mapped Mode
+   - Once configured, the STM32 OCTOSPI peripheral maps the 8 MB PSRAM directly
+     into the CPU's 32-bit linear memory space at:
+       0x90000000 - 0x907FFFFF
+   - The Cortex-M33 reads and writes to this address space just like internal SRAM
+     via normal C pointers (e.g., `NodeRecord *node = &g_nodes[idx];`).
+   - The Cortex-M33 Data Cache (D-Cache) and Instruction Cache (I-Cache) can be
+     enabled on the OctoSPI region, giving near-zero wait-state performance.
+   - Result: ZERO major algorithm rewrites, instant nationwide A* routing, and
+     support for dense city tiles without compromise.
+
+
+================================================================================
+4. PATH B: THE PURE FIRMWARE SOLUTION (FITTING IN 786 KB INTERNAL SRAM)
+================================================================================
+If hardware modifications are completely off the table, the firmware and data
+pipeline must be redesigned to fit inside SRAM3 (512 KB).
+
+--------------------------------------------------------------------------------
+4.1. Pruning Backbone Road Classification in Preprocessor
+--------------------------------------------------------------------------------
+In map_binaries_gen.py:
+  BACKBONE_HIGHWAYS currently includes "primary" and "primary_link".
+  Primary roads represent hundreds of minor town corridors and traffic lights.
+
+Fix:
+  Restrict backbone strictly to grade-separated, long-distance corridors:
+    BACKBONE_HIGHWAYS = {
+        "motorway", "motorway_link",
+        "trunk", "trunk_link"
+    }
+  Move "primary" and "primary_link" to LOCAL_HIGHWAYS.
+
+Impact:
+  - Backbone node count in Belgium drops from 85,876 down to ~12,000 nodes.
+  - Backbone edge count drops from 123,140 down to ~18,000 edges.
+  - Backbone memory footprint drops from 3.8 MB to:
+      12,000 nodes * 16 bytes = 192 KB
+      18,000 edges * 20 bytes = 360 KB (or streamed on-demand)
+
+--------------------------------------------------------------------------------
+4.2. Spatial Tile Re-partitioning (0.1° -> 0.025°)
+--------------------------------------------------------------------------------
+In map_binaries_gen.py, spatial partitioning is hardcoded to 0.1°:
+  grid_key = f"{int(u_lat*10):03d}_{int(u_lon*10):03d}"
+
+A 0.1° cell covers ~11 km x 7 km (~77 km²), which is too large for dense cities.
+
+Fix:
+  Subdivide grid resolution to 0.025° (~2.7 km x 1.7 km, ~4.6 km²):
+    grid_lat_idx = int(u_lat * 40)
+    grid_lon_idx = int(u_lon * 40)
+    grid_key = f"{grid_lat_idx:04d}_{grid_lon_idx:04d}"
+
+Impact:
+  - Brussels city center is divided across 16 small tiles instead of 1 giant tile.
+  - The largest single tile drops from 22,148 nodes (354 KB) down to ~1,500 nodes (24 KB).
+  - Outgoing edges drop from 41,731 (834 KB) down to ~3,000 edges (60 KB).
+  - Maximum size of any local tile on MicroSD: ~84 KB.
+  - Two active tiles in RAM consume only: 2 * 84 KB = 168 KB!
+
+--------------------------------------------------------------------------------
+4.3. A* Algorithm Data Structure Compaction (Bitmasks & Hash Maps)
+--------------------------------------------------------------------------------
+In pathfinder.c, replace flat 32-bit arrays:
+
+1. Closed Set Replacement:
+   Instead of:
+     uint32_t s_bb_g_scores[90000];  // 360 KB
+   Use a 1-bit-per-node Closed Set bitmask:
+     uint8_t s_closed_bitmask[12000 / 8];  // Exactly 1,500 bytes (1.5 KB)!
+   Test: `s_closed_bitmask[node >> 3] & (1 << (node & 7))`
+
+2. Open Set & G-Score Hash Map:
+   In any A* search, over 90% of graph nodes are never expanded.
+   Instead of storing g-scores for every node in the graph, use a fixed-capacity
+   open-addressing static hash map:
+     typedef struct {
+         uint32_t node_id;
+         uint32_t g_score;
+         uint32_t came_from_node;
+         uint16_t came_from_edge;
+     } AstarVisitedEntry;  // 14 bytes
+
+     #define ASTAR_VISITED_CAPACITY 4096
+     static AstarVisitedEntry s_visited_table[ASTAR_VISITED_CAPACITY];
+   Total RAM: 4,096 * 14 bytes = ~57 KB!
+
+3. A* Priority Queue:
+   Reduce `ASTAR_HEAP_MAX_ENTRIES` from 32,768 (384 KB) down to:
+     #define ASTAR_HEAP_MAX_ENTRIES 4096
+     Total RAM: 4,096 * 12 bytes = 49 KB.
+
+--------------------------------------------------------------------------------
+4.4. MicroSD Block-Streaming for Outgoing Edges & Road Curves
+--------------------------------------------------------------------------------
+1. Edge Streaming:
+   Do NOT load all edges into RAM. Only keep `NodeRecord` list in RAM.
+   When A* pops a node, it inspects:
+     node.first_edge
+     node.edge_count
+   Use FatFs to seek and read only that node's edges (typically 2 to 4 edges =
+   40 to 80 bytes) directly from the MicroSD card:
+     f_lseek(&edges_fil, node.first_edge * sizeof(EdgeRecord));
+     f_read(&edges_fil, edge_buf, node.edge_count * sizeof(EdgeRecord), &br);
+   * MicroSD 4-bit SDMMC read speed: ~50 microseconds per sector.
+
+2. Zero Geometry Loading During Search:
+   Road polyline curves (`*_geom.bin`) are strictly for visual display.
+   Never read geom records while computing shortest paths.
+   Only after the destination is reached, stream the curve points for the final
+   winning segments directly into the rendering buffer.
+
+
+================================================================================
+5. SIDE-BY-SIDE COMPARISON MATRIX (HARDWARE VS FIRMWARE)
+================================================================================
+
+┌────────────────────────────┬──────────────────────┬──────────────────────────┐
+│ Criteria                   │ Path A: Hardware     │ Path B: Pure Firmware    │
+│                            │ (+ OctoSPI PSRAM)    │ (786 KB Internal SRAM)   │
+├────────────────────────────┼──────────────────────┼──────────────────────────┤
+│ PCB Schematic Changes      │ Add 1 IC (8-pin)     │ None (keep existing PCB) │
+│ Added Hardware Cost        │ ~$1.50               │ $0.00                    │
+│ Pin Budget Impact          │ 6-10 pins used       │ 0 extra pins used        │
+│ Routing Search Speed       │ Instant (< 200 ms)   │ Moderate (~1-3 seconds)  │
+│ Map Density Capability     │ Motorway + Primary   │ Motorway + Trunk only    │
+│ Firmware Complexity        │ Low (Standard code)  │ High (Streaming + Hashes)│
+│ Preprocessing Pipeline     │ Unchanged            │ Re-tile to 0.025° grid   │
+│ Code Refactoring Effort    │ ~1 day (OCTOSPI cfg) │ ~2-3 weeks algorithmic   │
+└────────────────────────────┴──────────────────────┴──────────────────────────┘
+
+
+================================================================================
+6. ACTIONABLE IMPLEMENTATION CHECKLIST
+================================================================================
+If proceeding with Path A (Hardware):
+  [ ] Select PSRAM IC (e.g. APMemory APS6404L-3SQR-SN, SOIC-8).
+  [ ] Wire to STM32 OCTOSPI1 pins (SCK, /CS, IO0-IO3).
+  [ ] Enable OCTOSPI Memory-Mapped Mode in STM32CubeMX.
+  [ ] Add linker script memory section:
+        OCTOSPI (rwx) : ORIGIN = 0x90000000, LENGTH = 8M
+  [ ] Place `s_local_node_pool`, `s_local_edge_pool`, and `s_backbone_*` in OCTOSPI.
+
+If proceeding with Path B (Firmware):
+  [ ] Modify `map_binaries_gen.py`:
+      - Remove "primary" from `BACKBONE_HIGHWAYS`.
+      - Change grid partition from 0.1° to 0.025°.
+      - Re-run export on `belgium-latest.osm.pbf`.
+  [ ] Modify `pathfinder.c`:
+      - Replace flat `g_score` arrays with 1-bit bitmask and 4096-entry hash table.
+      - Shrink `ASTAR_HEAP_MAX_ENTRIES` to 4,096.
+      - Add on-demand edge streaming from FatFs.
+  [ ] Map internal SRAM banks in STM32 linker script:
+      - `.framebuffer` -> SRAM1 (0x20000000)
+      - `.bss` / `.data` / `.stack` -> SRAM2 (0x20030000)
+      - `.routing_engine` -> SRAM3 (0x20040000)
+================================================================================

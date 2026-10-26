@@ -1,0 +1,687 @@
+ARM GAS  /tmp/ccJirkIH.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.arch armv7e-m
+   3              		.fpu fpv4-sp-d16
+   4              		.eabi_attribute 27, 1
+   5              		.eabi_attribute 28, 1
+   6              		.eabi_attribute 20, 1
+   7              		.eabi_attribute 21, 1
+   8              		.eabi_attribute 23, 3
+   9              		.eabi_attribute 24, 1
+  10              		.eabi_attribute 25, 1
+  11              		.eabi_attribute 26, 1
+  12              		.eabi_attribute 30, 1
+  13              		.eabi_attribute 34, 1
+  14              		.eabi_attribute 18, 4
+  15              		.file	"lv_color_op.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.file 1 "Drivers/lvgl/src/misc/lv_color_op.c"
+  20              		.section	.text.lv_color_mix,"ax",%progbits
+  21              		.align	1
+  22              		.global	lv_color_mix
+  23              		.syntax unified
+  24              		.thumb
+  25              		.thumb_func
+  27              	lv_color_mix:
+  28              	.LVL0:
+  29              	.LFB17:
+   1:Drivers/lvgl/src/misc/lv_color_op.c **** /**
+   2:Drivers/lvgl/src/misc/lv_color_op.c ****  * @file lv_color_op.c
+   3:Drivers/lvgl/src/misc/lv_color_op.c ****  *
+   4:Drivers/lvgl/src/misc/lv_color_op.c ****  */
+   5:Drivers/lvgl/src/misc/lv_color_op.c **** 
+   6:Drivers/lvgl/src/misc/lv_color_op.c **** /*********************
+   7:Drivers/lvgl/src/misc/lv_color_op.c ****  *      INCLUDES
+   8:Drivers/lvgl/src/misc/lv_color_op.c ****  *********************/
+   9:Drivers/lvgl/src/misc/lv_color_op.c **** 
+  10:Drivers/lvgl/src/misc/lv_color_op.c **** #include "../lvgl_public.h"
+  11:Drivers/lvgl/src/misc/lv_color_op.c **** 
+  12:Drivers/lvgl/src/misc/lv_color_op.c **** /*********************
+  13:Drivers/lvgl/src/misc/lv_color_op.c ****  *      DEFINES
+  14:Drivers/lvgl/src/misc/lv_color_op.c ****  *********************/
+  15:Drivers/lvgl/src/misc/lv_color_op.c **** 
+  16:Drivers/lvgl/src/misc/lv_color_op.c **** /**********************
+  17:Drivers/lvgl/src/misc/lv_color_op.c ****  *      TYPEDEFS
+  18:Drivers/lvgl/src/misc/lv_color_op.c ****  **********************/
+  19:Drivers/lvgl/src/misc/lv_color_op.c **** 
+  20:Drivers/lvgl/src/misc/lv_color_op.c **** /**********************
+  21:Drivers/lvgl/src/misc/lv_color_op.c ****  *  STATIC PROTOTYPES
+  22:Drivers/lvgl/src/misc/lv_color_op.c ****  **********************/
+  23:Drivers/lvgl/src/misc/lv_color_op.c **** 
+  24:Drivers/lvgl/src/misc/lv_color_op.c **** /**********************
+  25:Drivers/lvgl/src/misc/lv_color_op.c ****  *  STATIC VARIABLES
+  26:Drivers/lvgl/src/misc/lv_color_op.c ****  **********************/
+  27:Drivers/lvgl/src/misc/lv_color_op.c **** 
+  28:Drivers/lvgl/src/misc/lv_color_op.c **** /**********************
+  29:Drivers/lvgl/src/misc/lv_color_op.c ****  *      MACROS
+ARM GAS  /tmp/ccJirkIH.s 			page 2
+
+
+  30:Drivers/lvgl/src/misc/lv_color_op.c ****  **********************/
+  31:Drivers/lvgl/src/misc/lv_color_op.c **** 
+  32:Drivers/lvgl/src/misc/lv_color_op.c **** /**********************
+  33:Drivers/lvgl/src/misc/lv_color_op.c ****  *   GLOBAL FUNCTIONS
+  34:Drivers/lvgl/src/misc/lv_color_op.c ****  **********************/
+  35:Drivers/lvgl/src/misc/lv_color_op.c **** 
+  36:Drivers/lvgl/src/misc/lv_color_op.c **** lv_color_t LV_ATTRIBUTE_FAST_MEM lv_color_mix(lv_color_t c1, lv_color_t c2, uint8_t mix)
+  37:Drivers/lvgl/src/misc/lv_color_op.c **** {
+  30              		.loc 1 37 1 view -0
+  31              		.cfi_startproc
+  32              		@ args = 0, pretend = 0, frame = 16
+  33              		@ frame_needed = 0, uses_anonymous_args = 0
+  34              		@ link register save eliminated.
+  35              		.loc 1 37 1 is_stmt 0 view .LVU1
+  36 0000 84B0     		sub	sp, sp, #16
+  37              	.LCFI0:
+  38              		.cfi_def_cfa_offset 16
+  39 0002 0190     		str	r0, [sp, #4]
+  40 0004 0091     		str	r1, [sp]
+  38:Drivers/lvgl/src/misc/lv_color_op.c ****     lv_color_t ret;
+  41              		.loc 1 38 5 is_stmt 1 view .LVU2
+  39:Drivers/lvgl/src/misc/lv_color_op.c **** 
+  40:Drivers/lvgl/src/misc/lv_color_op.c ****     ret.red = LV_UDIV255((uint16_t)c1.red * mix + c2.red * (255 - mix) + LV_COLOR_MIX_ROUND_OFS);
+  42              		.loc 1 40 5 view .LVU3
+  43              		.loc 1 40 15 is_stmt 0 view .LVU4
+  44 0006 9DF80600 		ldrb	r0, [sp, #6]	@ zero_extendqisi2
+  45 000a 9DF80210 		ldrb	r1, [sp, #2]	@ zero_extendqisi2
+  46 000e C2F1FF03 		rsb	r3, r2, #255
+  47 0012 03FB01F1 		mul	r1, r3, r1
+  48 0016 02FB0011 		mla	r1, r2, r0, r1
+  49 001a 01EB0120 		add	r0, r1, r1, lsl #8
+  50 001e 01EBC011 		add	r1, r1, r0, lsl #7
+  51 0022 C90D     		lsrs	r1, r1, #23
+  52              		.loc 1 40 13 view .LVU5
+  53 0024 8DF80A10 		strb	r1, [sp, #10]
+  41:Drivers/lvgl/src/misc/lv_color_op.c ****     ret.green = LV_UDIV255((uint16_t)c1.green * mix + c2.green * (255 - mix) + LV_COLOR_MIX_ROUND_O
+  54              		.loc 1 41 5 is_stmt 1 view .LVU6
+  55              		.loc 1 41 17 is_stmt 0 view .LVU7
+  56 0028 9DF80500 		ldrb	r0, [sp, #5]	@ zero_extendqisi2
+  57 002c 9DF80110 		ldrb	r1, [sp, #1]	@ zero_extendqisi2
+  58 0030 03FB01F1 		mul	r1, r3, r1
+  59 0034 00FB0211 		mla	r1, r0, r2, r1
+  60 0038 01EB0120 		add	r0, r1, r1, lsl #8
+  61 003c 01EBC011 		add	r1, r1, r0, lsl #7
+  62 0040 C90D     		lsrs	r1, r1, #23
+  63              		.loc 1 41 15 view .LVU8
+  64 0042 8DF80910 		strb	r1, [sp, #9]
+  42:Drivers/lvgl/src/misc/lv_color_op.c ****     ret.blue = LV_UDIV255((uint16_t)c1.blue * mix + c2.blue * (255 - mix) + LV_COLOR_MIX_ROUND_OFS)
+  65              		.loc 1 42 5 is_stmt 1 view .LVU9
+  66              		.loc 1 42 16 is_stmt 0 view .LVU10
+  67 0046 9DF80410 		ldrb	r1, [sp, #4]	@ zero_extendqisi2
+  68 004a 9DF80000 		ldrb	r0, [sp]	@ zero_extendqisi2
+  69 004e 00FB03F3 		mul	r3, r0, r3
+  70 0052 01FB0232 		mla	r2, r1, r2, r3
+  71              	.LVL1:
+  72              		.loc 1 42 16 view .LVU11
+  73 0056 02EB0223 		add	r3, r2, r2, lsl #8
+ARM GAS  /tmp/ccJirkIH.s 			page 3
+
+
+  74 005a 02EBC312 		add	r2, r2, r3, lsl #7
+  75 005e D20D     		lsrs	r2, r2, #23
+  76              		.loc 1 42 14 view .LVU12
+  77 0060 8DF80820 		strb	r2, [sp, #8]
+  43:Drivers/lvgl/src/misc/lv_color_op.c ****     return ret;
+  78              		.loc 1 43 5 is_stmt 1 view .LVU13
+  79              		.loc 1 43 12 is_stmt 0 view .LVU14
+  80 0064 029B     		ldr	r3, [sp, #8]
+  81 0066 ADF80C30 		strh	r3, [sp, #12]	@ movhi
+  82 006a 1B0C     		lsrs	r3, r3, #16
+  83 006c 8DF80E30 		strb	r3, [sp, #14]
+  84              		.loc 1 43 12 discriminator 1 view .LVU15
+  85 0070 0020     		movs	r0, #0
+  86 0072 9DF80C30 		ldrb	r3, [sp, #12]	@ zero_extendqisi2
+  87 0076 63F30700 		bfi	r0, r3, #0, #8
+  88 007a 9DF80D30 		ldrb	r3, [sp, #13]	@ zero_extendqisi2
+  89 007e 63F30F20 		bfi	r0, r3, #8, #8
+  90 0082 9DF80E30 		ldrb	r3, [sp, #14]	@ zero_extendqisi2
+  91 0086 63F31740 		bfi	r0, r3, #16, #8
+  44:Drivers/lvgl/src/misc/lv_color_op.c **** }
+  92              		.loc 1 44 1 view .LVU16
+  93 008a 04B0     		add	sp, sp, #16
+  94              	.LCFI1:
+  95              		.cfi_def_cfa_offset 0
+  96              		@ sp needed
+  97 008c 7047     		bx	lr
+  98              		.cfi_endproc
+  99              	.LFE17:
+ 101              		.section	.text.lv_color_mix32,"ax",%progbits
+ 102              		.align	1
+ 103              		.global	lv_color_mix32
+ 104              		.syntax unified
+ 105              		.thumb
+ 106              		.thumb_func
+ 108              	lv_color_mix32:
+ 109              	.LFB18:
+  45:Drivers/lvgl/src/misc/lv_color_op.c **** 
+  46:Drivers/lvgl/src/misc/lv_color_op.c **** lv_color32_t lv_color_mix32(lv_color32_t fg, lv_color32_t bg)
+  47:Drivers/lvgl/src/misc/lv_color_op.c **** {
+ 110              		.loc 1 47 1 is_stmt 1 view -0
+ 111              		.cfi_startproc
+ 112              		@ args = 0, pretend = 0, frame = 16
+ 113              		@ frame_needed = 0, uses_anonymous_args = 0
+ 114              		@ link register save eliminated.
+ 115 0000 84B0     		sub	sp, sp, #16
+ 116              	.LCFI2:
+ 117              		.cfi_def_cfa_offset 16
+ 118 0002 0190     		str	r0, [sp, #4]
+ 119 0004 0091     		str	r1, [sp]
+  48:Drivers/lvgl/src/misc/lv_color_op.c ****     if(fg.alpha >= LV_OPA_MAX) {
+ 120              		.loc 1 48 5 view .LVU18
+ 121              		.loc 1 48 10 is_stmt 0 view .LVU19
+ 122 0006 9DF80710 		ldrb	r1, [sp, #7]	@ zero_extendqisi2
+ 123              		.loc 1 48 7 view .LVU20
+ 124 000a FC29     		cmp	r1, #252
+ 125 000c 45D8     		bhi	.L8
+  49:Drivers/lvgl/src/misc/lv_color_op.c ****         fg.alpha = bg.alpha;
+ARM GAS  /tmp/ccJirkIH.s 			page 4
+
+
+  50:Drivers/lvgl/src/misc/lv_color_op.c ****         return fg;
+  51:Drivers/lvgl/src/misc/lv_color_op.c ****     }
+  52:Drivers/lvgl/src/misc/lv_color_op.c ****     if(fg.alpha <= LV_OPA_MIN) {
+ 126              		.loc 1 52 5 is_stmt 1 view .LVU21
+ 127              		.loc 1 52 7 is_stmt 0 view .LVU22
+ 128 000e 0229     		cmp	r1, #2
+ 129 0010 4AD9     		bls	.L9
+  53:Drivers/lvgl/src/misc/lv_color_op.c ****         return bg;
+  54:Drivers/lvgl/src/misc/lv_color_op.c ****     }
+  55:Drivers/lvgl/src/misc/lv_color_op.c ****     bg.red = LV_UDIV255((uint32_t)((uint32_t)fg.red * fg.alpha + (uint32_t)bg.red * (255 - fg.alpha
+ 130              		.loc 1 55 5 is_stmt 1 view .LVU23
+ 131              		.loc 1 55 14 is_stmt 0 view .LVU24
+ 132 0012 9DF80600 		ldrb	r0, [sp, #6]	@ zero_extendqisi2
+ 133 0016 9DF80220 		ldrb	r2, [sp, #2]	@ zero_extendqisi2
+ 134 001a C1F1FF03 		rsb	r3, r1, #255
+ 135 001e 03FB02F2 		mul	r2, r3, r2
+ 136 0022 01FB0022 		mla	r2, r1, r0, r2
+ 137 0026 02EB0220 		add	r0, r2, r2, lsl #8
+ 138 002a 02EBC012 		add	r2, r2, r0, lsl #7
+ 139 002e D20D     		lsrs	r2, r2, #23
+ 140              		.loc 1 55 12 view .LVU25
+ 141 0030 8DF80220 		strb	r2, [sp, #2]
+  56:Drivers/lvgl/src/misc/lv_color_op.c ****     bg.green = LV_UDIV255((uint32_t)((uint32_t)fg.green * fg.alpha + (uint32_t)bg.green * (255 - fg
+ 142              		.loc 1 56 5 is_stmt 1 view .LVU26
+ 143              		.loc 1 56 16 is_stmt 0 view .LVU27
+ 144 0034 9DF80500 		ldrb	r0, [sp, #5]	@ zero_extendqisi2
+ 145 0038 9DF80120 		ldrb	r2, [sp, #1]	@ zero_extendqisi2
+ 146 003c 03FB02F2 		mul	r2, r3, r2
+ 147 0040 00FB0122 		mla	r2, r0, r1, r2
+ 148 0044 02EB0220 		add	r0, r2, r2, lsl #8
+ 149 0048 02EBC012 		add	r2, r2, r0, lsl #7
+ 150 004c D20D     		lsrs	r2, r2, #23
+ 151              		.loc 1 56 14 view .LVU28
+ 152 004e 8DF80120 		strb	r2, [sp, #1]
+  57:Drivers/lvgl/src/misc/lv_color_op.c ****     bg.blue = LV_UDIV255((uint32_t)((uint32_t)fg.blue * fg.alpha + (uint32_t)bg.blue * (255 - fg.al
+ 153              		.loc 1 57 5 is_stmt 1 view .LVU29
+ 154              		.loc 1 57 15 is_stmt 0 view .LVU30
+ 155 0052 9DF80420 		ldrb	r2, [sp, #4]	@ zero_extendqisi2
+ 156 0056 9DF80000 		ldrb	r0, [sp]	@ zero_extendqisi2
+ 157 005a 00FB03F3 		mul	r3, r0, r3
+ 158 005e 02FB0133 		mla	r3, r2, r1, r3
+ 159 0062 03EB0322 		add	r2, r3, r3, lsl #8
+ 160 0066 03EBC213 		add	r3, r3, r2, lsl #7
+ 161 006a DB0D     		lsrs	r3, r3, #23
+ 162              		.loc 1 57 13 view .LVU31
+ 163 006c 8DF80030 		strb	r3, [sp]
+  58:Drivers/lvgl/src/misc/lv_color_op.c ****     return bg;
+ 164              		.loc 1 58 5 is_stmt 1 view .LVU32
+ 165              		.loc 1 58 12 is_stmt 0 view .LVU33
+ 166 0070 009B     		ldr	r3, [sp]
+ 167 0072 0393     		str	r3, [sp, #12]
+ 168              	.L5:
+  59:Drivers/lvgl/src/misc/lv_color_op.c **** }
+ 169              		.loc 1 59 1 view .LVU34
+ 170 0074 0020     		movs	r0, #0
+ 171 0076 9DF80C30 		ldrb	r3, [sp, #12]	@ zero_extendqisi2
+ 172 007a 63F30700 		bfi	r0, r3, #0, #8
+ARM GAS  /tmp/ccJirkIH.s 			page 5
+
+
+ 173 007e 9DF80D30 		ldrb	r3, [sp, #13]	@ zero_extendqisi2
+ 174 0082 63F30F20 		bfi	r0, r3, #8, #8
+ 175 0086 9DF80E30 		ldrb	r3, [sp, #14]	@ zero_extendqisi2
+ 176 008a 63F31740 		bfi	r0, r3, #16, #8
+ 177 008e 9DF80F30 		ldrb	r3, [sp, #15]	@ zero_extendqisi2
+ 178 0092 63F31F60 		bfi	r0, r3, #24, #8
+ 179 0096 04B0     		add	sp, sp, #16
+ 180              	.LCFI3:
+ 181              		.cfi_remember_state
+ 182              		.cfi_def_cfa_offset 0
+ 183              		@ sp needed
+ 184 0098 7047     		bx	lr
+ 185              	.L8:
+ 186              	.LCFI4:
+ 187              		.cfi_restore_state
+  49:Drivers/lvgl/src/misc/lv_color_op.c ****         return fg;
+ 188              		.loc 1 49 9 is_stmt 1 view .LVU35
+  49:Drivers/lvgl/src/misc/lv_color_op.c ****         return fg;
+ 189              		.loc 1 49 22 is_stmt 0 view .LVU36
+ 190 009a 9DF80330 		ldrb	r3, [sp, #3]	@ zero_extendqisi2
+  49:Drivers/lvgl/src/misc/lv_color_op.c ****         return fg;
+ 191              		.loc 1 49 18 view .LVU37
+ 192 009e 8DF80730 		strb	r3, [sp, #7]
+  50:Drivers/lvgl/src/misc/lv_color_op.c ****     }
+ 193              		.loc 1 50 9 is_stmt 1 view .LVU38
+  50:Drivers/lvgl/src/misc/lv_color_op.c ****     }
+ 194              		.loc 1 50 16 is_stmt 0 view .LVU39
+ 195 00a2 019B     		ldr	r3, [sp, #4]
+ 196 00a4 0393     		str	r3, [sp, #12]
+ 197 00a6 E5E7     		b	.L5
+ 198              	.L9:
+  53:Drivers/lvgl/src/misc/lv_color_op.c ****     }
+ 199              		.loc 1 53 9 is_stmt 1 view .LVU40
+  53:Drivers/lvgl/src/misc/lv_color_op.c ****     }
+ 200              		.loc 1 53 16 is_stmt 0 view .LVU41
+ 201 00a8 009B     		ldr	r3, [sp]
+ 202 00aa 0393     		str	r3, [sp, #12]
+ 203 00ac E2E7     		b	.L5
+ 204              		.cfi_endproc
+ 205              	.LFE18:
+ 207              		.section	.text.lv_color_mix32_premultiplied,"ax",%progbits
+ 208              		.align	1
+ 209              		.global	lv_color_mix32_premultiplied
+ 210              		.syntax unified
+ 211              		.thumb
+ 212              		.thumb_func
+ 214              	lv_color_mix32_premultiplied:
+ 215              	.LFB19:
+  60:Drivers/lvgl/src/misc/lv_color_op.c **** 
+  61:Drivers/lvgl/src/misc/lv_color_op.c **** lv_color32_t lv_color_mix32_premultiplied(lv_color32_t fg, lv_color32_t bg)
+  62:Drivers/lvgl/src/misc/lv_color_op.c **** {
+ 216              		.loc 1 62 1 is_stmt 1 view -0
+ 217              		.cfi_startproc
+ 218              		@ args = 0, pretend = 0, frame = 16
+ 219              		@ frame_needed = 0, uses_anonymous_args = 0
+ 220              		@ link register save eliminated.
+ 221 0000 84B0     		sub	sp, sp, #16
+ARM GAS  /tmp/ccJirkIH.s 			page 6
+
+
+ 222              	.LCFI5:
+ 223              		.cfi_def_cfa_offset 16
+ 224 0002 0190     		str	r0, [sp, #4]
+ 225 0004 0091     		str	r1, [sp]
+  63:Drivers/lvgl/src/misc/lv_color_op.c ****     if(fg.alpha >= LV_OPA_MAX) {
+ 226              		.loc 1 63 5 view .LVU43
+ 227              		.loc 1 63 10 is_stmt 0 view .LVU44
+ 228 0006 9DF80730 		ldrb	r3, [sp, #7]	@ zero_extendqisi2
+ 229              		.loc 1 63 7 view .LVU45
+ 230 000a FC2B     		cmp	r3, #252
+ 231 000c 36D8     		bhi	.L15
+  64:Drivers/lvgl/src/misc/lv_color_op.c ****         return fg;  /* Fully opaque foreground replaces background */
+  65:Drivers/lvgl/src/misc/lv_color_op.c ****     }
+  66:Drivers/lvgl/src/misc/lv_color_op.c ****     if(fg.alpha <= LV_OPA_MIN) {
+ 232              		.loc 1 66 5 is_stmt 1 view .LVU46
+ 233              		.loc 1 66 7 is_stmt 0 view .LVU47
+ 234 000e 022B     		cmp	r3, #2
+ 235 0010 36D9     		bls	.L16
+  67:Drivers/lvgl/src/misc/lv_color_op.c ****         return bg;  /* Fully transparent foreground, return background */
+  68:Drivers/lvgl/src/misc/lv_color_op.c ****     }
+  69:Drivers/lvgl/src/misc/lv_color_op.c **** 
+  70:Drivers/lvgl/src/misc/lv_color_op.c ****     uint32_t inv_fg_alpha = LV_OPA_MAX - fg.alpha;
+ 236              		.loc 1 70 5 is_stmt 1 view .LVU48
+ 237              		.loc 1 70 40 is_stmt 0 view .LVU49
+ 238 0012 C3F1FD03 		rsb	r3, r3, #253
+ 239              	.LVL2:
+  71:Drivers/lvgl/src/misc/lv_color_op.c **** 
+  72:Drivers/lvgl/src/misc/lv_color_op.c ****     /* Premultiplied blending */
+  73:Drivers/lvgl/src/misc/lv_color_op.c ****     bg.red   = fg.red   + ((bg.red   * inv_fg_alpha) >> 8);
+ 240              		.loc 1 73 5 is_stmt 1 view .LVU50
+ 241              		.loc 1 73 18 is_stmt 0 view .LVU51
+ 242 0016 9DF80620 		ldrb	r2, [sp, #6]	@ zero_extendqisi2
+ 243              		.loc 1 73 31 view .LVU52
+ 244 001a 9DF80210 		ldrb	r1, [sp, #2]	@ zero_extendqisi2
+ 245              		.loc 1 73 38 view .LVU53
+ 246 001e 03FB01F1 		mul	r1, r3, r1
+ 247              		.loc 1 73 25 view .LVU54
+ 248 0022 02EB1122 		add	r2, r2, r1, lsr #8
+ 249              		.loc 1 73 14 view .LVU55
+ 250 0026 8DF80220 		strb	r2, [sp, #2]
+  74:Drivers/lvgl/src/misc/lv_color_op.c ****     bg.green = fg.green + ((bg.green * inv_fg_alpha) >> 8);
+ 251              		.loc 1 74 5 is_stmt 1 view .LVU56
+ 252              		.loc 1 74 18 is_stmt 0 view .LVU57
+ 253 002a 9DF80520 		ldrb	r2, [sp, #5]	@ zero_extendqisi2
+ 254              		.loc 1 74 31 view .LVU58
+ 255 002e 9DF80110 		ldrb	r1, [sp, #1]	@ zero_extendqisi2
+ 256              		.loc 1 74 38 view .LVU59
+ 257 0032 03FB01F1 		mul	r1, r3, r1
+ 258              		.loc 1 74 25 view .LVU60
+ 259 0036 02EB1122 		add	r2, r2, r1, lsr #8
+ 260              		.loc 1 74 14 view .LVU61
+ 261 003a 8DF80120 		strb	r2, [sp, #1]
+  75:Drivers/lvgl/src/misc/lv_color_op.c ****     bg.blue  = fg.blue  + ((bg.blue  * inv_fg_alpha) >> 8);
+ 262              		.loc 1 75 5 is_stmt 1 view .LVU62
+ 263              		.loc 1 75 18 is_stmt 0 view .LVU63
+ 264 003e 9DF80420 		ldrb	r2, [sp, #4]	@ zero_extendqisi2
+ 265              		.loc 1 75 31 view .LVU64
+ARM GAS  /tmp/ccJirkIH.s 			page 7
+
+
+ 266 0042 9DF80010 		ldrb	r1, [sp]	@ zero_extendqisi2
+ 267              		.loc 1 75 38 view .LVU65
+ 268 0046 01FB03F3 		mul	r3, r1, r3
+ 269              	.LVL3:
+ 270              		.loc 1 75 25 view .LVU66
+ 271 004a 02EB1323 		add	r3, r2, r3, lsr #8
+ 272              		.loc 1 75 14 view .LVU67
+ 273 004e 8DF80030 		strb	r3, [sp]
+  76:Drivers/lvgl/src/misc/lv_color_op.c **** 
+  77:Drivers/lvgl/src/misc/lv_color_op.c ****     return bg;
+ 274              		.loc 1 77 5 is_stmt 1 view .LVU68
+ 275              		.loc 1 77 12 is_stmt 0 view .LVU69
+ 276 0052 009B     		ldr	r3, [sp]
+ 277 0054 0393     		str	r3, [sp, #12]
+ 278              	.LVL4:
+ 279              	.L12:
+  78:Drivers/lvgl/src/misc/lv_color_op.c **** }
+ 280              		.loc 1 78 1 view .LVU70
+ 281 0056 0020     		movs	r0, #0
+ 282 0058 9DF80C30 		ldrb	r3, [sp, #12]	@ zero_extendqisi2
+ 283 005c 63F30700 		bfi	r0, r3, #0, #8
+ 284 0060 9DF80D30 		ldrb	r3, [sp, #13]	@ zero_extendqisi2
+ 285 0064 63F30F20 		bfi	r0, r3, #8, #8
+ 286 0068 9DF80E30 		ldrb	r3, [sp, #14]	@ zero_extendqisi2
+ 287 006c 63F31740 		bfi	r0, r3, #16, #8
+ 288 0070 9DF80F30 		ldrb	r3, [sp, #15]	@ zero_extendqisi2
+ 289 0074 63F31F60 		bfi	r0, r3, #24, #8
+ 290 0078 04B0     		add	sp, sp, #16
+ 291              	.LCFI6:
+ 292              		.cfi_remember_state
+ 293              		.cfi_def_cfa_offset 0
+ 294              		@ sp needed
+ 295 007a 7047     		bx	lr
+ 296              	.L15:
+ 297              	.LCFI7:
+ 298              		.cfi_restore_state
+  64:Drivers/lvgl/src/misc/lv_color_op.c ****     }
+ 299              		.loc 1 64 9 is_stmt 1 view .LVU71
+  64:Drivers/lvgl/src/misc/lv_color_op.c ****     }
+ 300              		.loc 1 64 16 is_stmt 0 view .LVU72
+ 301 007c 0390     		str	r0, [sp, #12]
+ 302 007e EAE7     		b	.L12
+ 303              	.L16:
+  67:Drivers/lvgl/src/misc/lv_color_op.c ****     }
+ 304              		.loc 1 67 9 is_stmt 1 view .LVU73
+  67:Drivers/lvgl/src/misc/lv_color_op.c ****     }
+ 305              		.loc 1 67 16 is_stmt 0 view .LVU74
+ 306 0080 009B     		ldr	r3, [sp]
+ 307 0082 0393     		str	r3, [sp, #12]
+ 308 0084 E7E7     		b	.L12
+ 309              		.cfi_endproc
+ 310              	.LFE19:
+ 312              		.section	.text.lv_color_brightness,"ax",%progbits
+ 313              		.align	1
+ 314              		.global	lv_color_brightness
+ 315              		.syntax unified
+ 316              		.thumb
+ARM GAS  /tmp/ccJirkIH.s 			page 8
+
+
+ 317              		.thumb_func
+ 319              	lv_color_brightness:
+ 320              	.LFB20:
+  79:Drivers/lvgl/src/misc/lv_color_op.c **** 
+  80:Drivers/lvgl/src/misc/lv_color_op.c **** uint8_t lv_color_brightness(lv_color_t c)
+  81:Drivers/lvgl/src/misc/lv_color_op.c **** {
+ 321              		.loc 1 81 1 is_stmt 1 view -0
+ 322              		.cfi_startproc
+ 323              		@ args = 0, pretend = 0, frame = 8
+ 324              		@ frame_needed = 0, uses_anonymous_args = 0
+ 325              		@ link register save eliminated.
+ 326 0000 82B0     		sub	sp, sp, #8
+ 327              	.LCFI8:
+ 328              		.cfi_def_cfa_offset 8
+ 329 0002 0190     		str	r0, [sp, #4]
+  82:Drivers/lvgl/src/misc/lv_color_op.c ****     uint16_t bright = (uint16_t)(3u * c.red + c.green + 4u * c.blue);
+ 330              		.loc 1 82 5 view .LVU76
+ 331              		.loc 1 82 40 is_stmt 0 view .LVU77
+ 332 0004 9DF80600 		ldrb	r0, [sp, #6]	@ zero_extendqisi2
+ 333              		.loc 1 82 37 view .LVU78
+ 334 0008 00EB4000 		add	r0, r0, r0, lsl #1
+ 335              		.loc 1 82 63 view .LVU79
+ 336 000c 9DF80430 		ldrb	r3, [sp, #4]	@ zero_extendqisi2
+ 337              		.loc 1 82 55 view .LVU80
+ 338 0010 00EB8300 		add	r0, r0, r3, lsl #2
+ 339              		.loc 1 82 48 view .LVU81
+ 340 0014 9DF80530 		ldrb	r3, [sp, #5]	@ zero_extendqisi2
+ 341              		.loc 1 82 14 view .LVU82
+ 342 0018 1844     		add	r0, r0, r3
+ 343              	.LVL5:
+  83:Drivers/lvgl/src/misc/lv_color_op.c ****     return (uint8_t)(bright >> 3);
+ 344              		.loc 1 83 5 is_stmt 1 view .LVU83
+  84:Drivers/lvgl/src/misc/lv_color_op.c **** }
+ 345              		.loc 1 84 1 is_stmt 0 view .LVU84
+ 346 001a C0F3C700 		ubfx	r0, r0, #3, #8
+ 347              	.LVL6:
+ 348              		.loc 1 84 1 view .LVU85
+ 349 001e 02B0     		add	sp, sp, #8
+ 350              	.LCFI9:
+ 351              		.cfi_def_cfa_offset 0
+ 352              	.LVL7:
+ 353              		.loc 1 84 1 view .LVU86
+ 354              		@ sp needed
+ 355 0020 7047     		bx	lr
+ 356              		.cfi_endproc
+ 357              	.LFE20:
+ 359              		.section	.text.lv_color_filter_dsc_init,"ax",%progbits
+ 360              		.align	1
+ 361              		.global	lv_color_filter_dsc_init
+ 362              		.syntax unified
+ 363              		.thumb
+ 364              		.thumb_func
+ 366              	lv_color_filter_dsc_init:
+ 367              	.LVL8:
+ 368              	.LFB21:
+  85:Drivers/lvgl/src/misc/lv_color_op.c **** 
+  86:Drivers/lvgl/src/misc/lv_color_op.c **** void lv_color_filter_dsc_init(lv_color_filter_dsc_t * dsc, lv_color_filter_cb_t cb)
+ARM GAS  /tmp/ccJirkIH.s 			page 9
+
+
+  87:Drivers/lvgl/src/misc/lv_color_op.c **** {
+ 369              		.loc 1 87 1 is_stmt 1 view -0
+ 370              		.cfi_startproc
+ 371              		@ args = 0, pretend = 0, frame = 0
+ 372              		@ frame_needed = 0, uses_anonymous_args = 0
+ 373              		@ link register save eliminated.
+  88:Drivers/lvgl/src/misc/lv_color_op.c ****     LV_CHECK_ARG(dsc != NULL, return);
+ 374              		.loc 1 88 5 view .LVU88
+ 375              		.loc 1 88 5 is_stmt 0 discriminator 1 view .LVU89
+ 376 0000 00B1     		cbz	r0, .L19
+ 377              		.loc 1 88 5 is_stmt 1 discriminator 3 view .LVU90
+ 378              		.loc 1 88 38 discriminator 3 view .LVU91
+  89:Drivers/lvgl/src/misc/lv_color_op.c **** 
+  90:Drivers/lvgl/src/misc/lv_color_op.c ****     dsc->filter_cb = cb;
+ 379              		.loc 1 90 5 view .LVU92
+ 380              		.loc 1 90 20 is_stmt 0 view .LVU93
+ 381 0002 0160     		str	r1, [r0]
+ 382              	.L19:
+  91:Drivers/lvgl/src/misc/lv_color_op.c **** }
+ 383              		.loc 1 91 1 view .LVU94
+ 384 0004 7047     		bx	lr
+ 385              		.cfi_endproc
+ 386              	.LFE21:
+ 388              		.section	.text.lv_color_over32,"ax",%progbits
+ 389              		.align	1
+ 390              		.global	lv_color_over32
+ 391              		.syntax unified
+ 392              		.thumb
+ 393              		.thumb_func
+ 395              	lv_color_over32:
+ 396              	.LFB22:
+  92:Drivers/lvgl/src/misc/lv_color_op.c **** 
+  93:Drivers/lvgl/src/misc/lv_color_op.c **** lv_color32_t lv_color_over32(lv_color32_t fg, lv_color32_t bg)
+  94:Drivers/lvgl/src/misc/lv_color_op.c **** {
+ 397              		.loc 1 94 1 is_stmt 1 view -0
+ 398              		.cfi_startproc
+ 399              		@ args = 0, pretend = 0, frame = 16
+ 400              		@ frame_needed = 0, uses_anonymous_args = 0
+ 401 0000 10B5     		push	{r4, lr}
+ 402              	.LCFI10:
+ 403              		.cfi_def_cfa_offset 8
+ 404              		.cfi_offset 4, -8
+ 405              		.cfi_offset 14, -4
+ 406 0002 84B0     		sub	sp, sp, #16
+ 407              	.LCFI11:
+ 408              		.cfi_def_cfa_offset 24
+ 409 0004 0190     		str	r0, [sp, #4]
+ 410 0006 0091     		str	r1, [sp]
+  95:Drivers/lvgl/src/misc/lv_color_op.c ****     if(fg.alpha >= LV_OPA_MAX || bg.alpha <= LV_OPA_MIN) {
+ 411              		.loc 1 95 5 view .LVU96
+ 412              		.loc 1 95 10 is_stmt 0 view .LVU97
+ 413 0008 9DF80730 		ldrb	r3, [sp, #7]	@ zero_extendqisi2
+ 414              		.loc 1 95 7 view .LVU98
+ 415 000c FC2B     		cmp	r3, #252
+ 416 000e 21D8     		bhi	.L22
+ 417              		.loc 1 95 36 discriminator 1 view .LVU99
+ 418 0010 9DF80320 		ldrb	r2, [sp, #3]	@ zero_extendqisi2
+ARM GAS  /tmp/ccJirkIH.s 			page 10
+
+
+ 419              		.loc 1 95 31 discriminator 1 view .LVU100
+ 420 0014 022A     		cmp	r2, #2
+ 421 0016 1DD9     		bls	.L22
+  96:Drivers/lvgl/src/misc/lv_color_op.c ****         return fg;
+  97:Drivers/lvgl/src/misc/lv_color_op.c ****     }
+  98:Drivers/lvgl/src/misc/lv_color_op.c ****     else if(fg.alpha <= LV_OPA_MIN) {
+ 422              		.loc 1 98 10 is_stmt 1 view .LVU101
+ 423              		.loc 1 98 12 is_stmt 0 view .LVU102
+ 424 0018 022B     		cmp	r3, #2
+ 425 001a 30D9     		bls	.L28
+  99:Drivers/lvgl/src/misc/lv_color_op.c ****         return bg;
+ 100:Drivers/lvgl/src/misc/lv_color_op.c ****     }
+ 101:Drivers/lvgl/src/misc/lv_color_op.c ****     else if(bg.alpha == 255) {
+ 426              		.loc 1 101 10 is_stmt 1 view .LVU103
+ 427              		.loc 1 101 12 is_stmt 0 view .LVU104
+ 428 001c FF2A     		cmp	r2, #255
+ 429 001e 31D0     		beq	.L29
+ 102:Drivers/lvgl/src/misc/lv_color_op.c ****         return lv_color_mix32(fg, bg);
+ 103:Drivers/lvgl/src/misc/lv_color_op.c ****     }
+ 104:Drivers/lvgl/src/misc/lv_color_op.c **** 
+ 105:Drivers/lvgl/src/misc/lv_color_op.c ****     lv_opa_t res_alpha  = 255 - LV_OPA_MIX2(255 - fg.alpha, 255 - bg.alpha);
+ 430              		.loc 1 105 5 is_stmt 1 view .LVU105
+ 431              		.loc 1 105 33 is_stmt 0 view .LVU106
+ 432 0020 C3F1FF01 		rsb	r1, r3, #255
+ 433 0024 C2F1FF02 		rsb	r2, r2, #255
+ 434 0028 01FB02F2 		mul	r2, r1, r2
+ 435 002c C2F30722 		ubfx	r2, r2, #8, #8
+ 436              		.loc 1 105 14 view .LVU107
+ 437 0030 82F0FF04 		eor	r4, r2, #255
+ 438              	.LVL9:
+ 106:Drivers/lvgl/src/misc/lv_color_op.c ****     lv_opa_t ratio = (uint32_t)((uint32_t)fg.alpha * 255) / res_alpha;
+ 439              		.loc 1 106 5 is_stmt 1 view .LVU108
+ 440              		.loc 1 106 22 is_stmt 0 view .LVU109
+ 441 0034 C3EB0323 		rsb	r3, r3, r3, lsl #8
+ 442              		.loc 1 106 59 view .LVU110
+ 443 0038 B3FBF4F3 		udiv	r3, r3, r4
+ 444              	.LVL10:
+ 107:Drivers/lvgl/src/misc/lv_color_op.c ****     fg.alpha = ratio;
+ 445              		.loc 1 107 5 is_stmt 1 view .LVU111
+ 446              		.loc 1 107 14 is_stmt 0 view .LVU112
+ 447 003c 8DF80730 		strb	r3, [sp, #7]
+ 108:Drivers/lvgl/src/misc/lv_color_op.c ****     lv_color32_t res = lv_color_mix32(fg, bg);
+ 448              		.loc 1 108 5 is_stmt 1 view .LVU113
+ 449              		.loc 1 108 24 is_stmt 0 view .LVU114
+ 450 0040 0099     		ldr	r1, [sp]
+ 451 0042 0198     		ldr	r0, [sp, #4]
+ 452 0044 FFF7FEFF 		bl	lv_color_mix32
+ 453              	.LVL11:
+ 454              		.loc 1 108 24 view .LVU115
+ 455 0048 0290     		str	r0, [sp, #8]
+ 109:Drivers/lvgl/src/misc/lv_color_op.c ****     res.alpha = res_alpha;
+ 456              		.loc 1 109 5 is_stmt 1 view .LVU116
+ 457              		.loc 1 109 15 is_stmt 0 view .LVU117
+ 458 004a 8DF80B40 		strb	r4, [sp, #11]
+ 110:Drivers/lvgl/src/misc/lv_color_op.c **** 
+ 111:Drivers/lvgl/src/misc/lv_color_op.c ****     return res;
+ 459              		.loc 1 111 5 is_stmt 1 view .LVU118
+ARM GAS  /tmp/ccJirkIH.s 			page 11
+
+
+ 460              		.loc 1 111 12 is_stmt 0 view .LVU119
+ 461 004e 029B     		ldr	r3, [sp, #8]
+ 462 0050 0393     		str	r3, [sp, #12]
+ 463 0052 01E0     		b	.L24
+ 464              	.LVL12:
+ 465              	.L22:
+  96:Drivers/lvgl/src/misc/lv_color_op.c ****     }
+ 466              		.loc 1 96 9 is_stmt 1 view .LVU120
+  96:Drivers/lvgl/src/misc/lv_color_op.c ****     }
+ 467              		.loc 1 96 16 is_stmt 0 view .LVU121
+ 468 0054 019B     		ldr	r3, [sp, #4]
+ 469 0056 0393     		str	r3, [sp, #12]
+ 470              	.L24:
+ 112:Drivers/lvgl/src/misc/lv_color_op.c **** }
+ 471              		.loc 1 112 1 view .LVU122
+ 472 0058 0020     		movs	r0, #0
+ 473 005a 9DF80C30 		ldrb	r3, [sp, #12]	@ zero_extendqisi2
+ 474 005e 63F30700 		bfi	r0, r3, #0, #8
+ 475 0062 9DF80D30 		ldrb	r3, [sp, #13]	@ zero_extendqisi2
+ 476 0066 63F30F20 		bfi	r0, r3, #8, #8
+ 477 006a 9DF80E30 		ldrb	r3, [sp, #14]	@ zero_extendqisi2
+ 478 006e 63F31740 		bfi	r0, r3, #16, #8
+ 479 0072 9DF80F30 		ldrb	r3, [sp, #15]	@ zero_extendqisi2
+ 480 0076 63F31F60 		bfi	r0, r3, #24, #8
+ 481 007a 04B0     		add	sp, sp, #16
+ 482              	.LCFI12:
+ 483              		.cfi_remember_state
+ 484              		.cfi_def_cfa_offset 8
+ 485              		@ sp needed
+ 486 007c 10BD     		pop	{r4, pc}
+ 487              	.L28:
+ 488              	.LCFI13:
+ 489              		.cfi_restore_state
+  99:Drivers/lvgl/src/misc/lv_color_op.c ****     }
+ 490              		.loc 1 99 9 is_stmt 1 view .LVU123
+  99:Drivers/lvgl/src/misc/lv_color_op.c ****     }
+ 491              		.loc 1 99 16 is_stmt 0 view .LVU124
+ 492 007e 009B     		ldr	r3, [sp]
+ 493 0080 0393     		str	r3, [sp, #12]
+ 494 0082 E9E7     		b	.L24
+ 495              	.L29:
+ 102:Drivers/lvgl/src/misc/lv_color_op.c ****     }
+ 496              		.loc 1 102 9 is_stmt 1 view .LVU125
+ 102:Drivers/lvgl/src/misc/lv_color_op.c ****     }
+ 497              		.loc 1 102 16 is_stmt 0 view .LVU126
+ 498 0084 0099     		ldr	r1, [sp]
+ 499 0086 0198     		ldr	r0, [sp, #4]
+ 500 0088 FFF7FEFF 		bl	lv_color_mix32
+ 501              	.LVL13:
+ 502 008c 0390     		str	r0, [sp, #12]
+ 102:Drivers/lvgl/src/misc/lv_color_op.c ****     }
+ 503              		.loc 1 102 16 discriminator 1 view .LVU127
+ 504 008e E3E7     		b	.L24
+ 505              		.cfi_endproc
+ 506              	.LFE22:
+ 508              		.text
+ 509              	.Letext0:
+ARM GAS  /tmp/ccJirkIH.s 			page 12
+
+
+ 510              		.file 2 "/usr/arm-none-eabi/include/machine/_default_types.h"
+ 511              		.file 3 "/usr/arm-none-eabi/include/sys/_stdint.h"
+ 512              		.file 4 "Drivers/lvgl/src/misc/../../include/lvgl/core/../lv_types.h"
+ 513              		.file 5 "Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/lv_color_op.h"
+ 514              		.file 6 "Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/lv_color.h"
+ARM GAS  /tmp/ccJirkIH.s 			page 13
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 lv_color_op.c
+     /tmp/ccJirkIH.s:21     .text.lv_color_mix:00000000 $t
+     /tmp/ccJirkIH.s:27     .text.lv_color_mix:00000000 lv_color_mix
+     /tmp/ccJirkIH.s:102    .text.lv_color_mix32:00000000 $t
+     /tmp/ccJirkIH.s:108    .text.lv_color_mix32:00000000 lv_color_mix32
+     /tmp/ccJirkIH.s:208    .text.lv_color_mix32_premultiplied:00000000 $t
+     /tmp/ccJirkIH.s:214    .text.lv_color_mix32_premultiplied:00000000 lv_color_mix32_premultiplied
+     /tmp/ccJirkIH.s:313    .text.lv_color_brightness:00000000 $t
+     /tmp/ccJirkIH.s:319    .text.lv_color_brightness:00000000 lv_color_brightness
+     /tmp/ccJirkIH.s:360    .text.lv_color_filter_dsc_init:00000000 $t
+     /tmp/ccJirkIH.s:366    .text.lv_color_filter_dsc_init:00000000 lv_color_filter_dsc_init
+     /tmp/ccJirkIH.s:389    .text.lv_color_over32:00000000 $t
+     /tmp/ccJirkIH.s:395    .text.lv_color_over32:00000000 lv_color_over32
+
+NO UNDEFINED SYMBOLS

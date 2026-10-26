@@ -1,0 +1,168 @@
+================================================================================
+  OCTOSPI PSRAM: POWER CONSUMPTION, TRADE-OFFS & FEASIBILITY FOR EMBEDDED GPS
+================================================================================
+Target Platform: STMicroelectronics STM32U575RIT6 (ARM Cortex-M33 @ 160 MHz)
+Power Source:    3.7V Li-Ion Battery + MCP73831 Charge Controller + AP7361C 3.3V LDO
+Subsystems:      MicroSD (SDMMC), TESEO-LIV3R GNSS (UART), Color mLCD (SPI/Parallel)
+
+--------------------------------------------------------------------------------
+TABLE OF CONTENTS
+--------------------------------------------------------------------------------
+  1. The Core Question: Is PSRAM More Power Consuming?
+  2. Full System Power Breakdown & Battery Budget
+  3. Battery Lifetime Impact Analysis (1,000 mAh Li-Ion Cell)
+  4. The "Race to Sleep" Energy Paradox (Why PSRAM Saves Battery)
+  5. Why PSRAM Is Not Used in Every Project (The 5 Industry Reasons)
+  6. Final Verdict for the GPS Handheld Navigator
+
+================================================================================
+1. THE CORE QUESTION: IS PSRAM MORE POWER CONSUMING?
+================================================================================
+Technically, YES — when evaluated as an isolated silicon component compared to
+pure internal microcontroller SRAM:
+  - Internal SRAM: True static latches (6 transistors per bit). Zero refresh
+    current. In deep-sleep modes, retention takes less than 1 microamp (< 1 uA).
+  - PSRAM (Pseudo-SRAM): Internally uses DRAM cells (1 transistor + 1 capacitor
+    per bit). Capacitors continuously leak charge. An internal oscillator must
+    self-refresh the memory array thousands of times per second, drawing
+    between 20 uA and 80 uA even in standby sleep.
+
+PRACTICAL REALITY:
+In a portable device equipped with a display backlight and a GPS radio, total
+system power draw is measured in tens or hundreds of MILLIAMPS (mA), NOT microamps.
+In this context, PSRAM's power consumption is completely negligible (less than
+1% to 2% of total battery drain).
+
+
+================================================================================
+2. FULL SYSTEM POWER BREAKDOWN & BATTERY BUDGET
+================================================================================
+Typical operating currents for the complete handheld GPS hardware stack:
+
+┌────────────────────────────┬──────────────────┬─────────────────┬────────────┐
+│ Subsystem / Component      │ Active Current   │ Standby Current │ % of Total │
+├────────────────────────────┼──────────────────┼─────────────────┼────────────┤
+│ LCD Screen Backlight       │ 80 – 150 mA      │ 0 mA (off)      │ ~65%       │
+│                            │ (Brightness dep.)│                 │ (DOMINANT) │
+├────────────────────────────┼──────────────────┼─────────────────┼────────────┤
+│ TESEO-LIV3R GNSS Module    │ 30 – 40 mA       │ 1 – 2 mA (sleep)│ ~20%       │
+│ (RF Front-end + Tracking)  │ (Tracking 10 Hz) │                 │            │
+├────────────────────────────┼──────────────────┼─────────────────┼────────────┤
+│ STM32U575 MCU (160 MHz)    │ 15 – 25 mA       │ < 1 mA          │ ~10%       │
+│ (Ultra-Low-Power Cortex-M) │ (Running code)   │ (Low power run) │            │
+├────────────────────────────┼──────────────────┼─────────────────┼────────────┤
+│ MicroSD Card (SDMMC bus)   │ 30 – 60 mA       │ 0.1 – 0.2 mA    │ Spikes     │
+│ (Flash write/sector reads) │ (During reads)   │                 │ only       │
+├────────────────────────────┼──────────────────┼─────────────────┼────────────┤
+│ OctoSPI PSRAM (8 MB)       │ 10 – 15 mA       │ 0.1 – 0.3 mA    │ < 2%       │
+│ (APS6404L / IS66WVS4M8ALL) │ (Routing calc)   │ (Holding data)  │ (NEGLIG.)  │
+└────────────────────────────┴──────────────────┴─────────────────┴────────────┘
+
+Key Insight: The display backlight and the GPS satellite receiver consume over
+85% of your battery. The PSRAM is a rounding error in the total power equation.
+
+
+================================================================================
+3. BATTERY LIFETIME IMPACT ANALYSIS (1,000 mAh Li-Ion CELL)
+================================================================================
+Assuming a standard 3.7V 1,000 mAh lithium-polymer / 18650 cell charged by the
+MCP73831 IC on your schematic:
+
+Scenario: Continuous Map Navigation with Screen On:
+  - Average System Active Draw (without PSRAM): ~160.0 mA
+      Estimated Runtime: 1,000 mAh / 160.0 mA = 6 hours 15 minutes (375 min)
+
+  - Average System Active Draw (with OctoSPI PSRAM idling/holding map): ~160.2 mA
+      Estimated Runtime: 1,000 mAh / 160.2 mA = 6 hours 14 minutes (374 min)
+
+  NET DIFFERENCE:
+  Running PSRAM costs approximately ONE to TWO MINUTES of total battery runtime
+  across an entire 6-hour charge cycle!
+
+
+================================================================================
+4. THE "RACE TO SLEEP" ENERGY PARADOX (WHY PSRAM SAVES BATTERY)
+================================================================================
+In embedded engineering, total battery drain is governed by Total Energy (Joules):
+  Energy = Voltage * Current * Time
+
+Paradoxically, adding PSRAM can NET REDUCE total battery consumption during
+trip routing due to the "Race to Sleep" phenomenon:
+
+A. Architecture WITHOUT PSRAM (MicroSD Disk Streaming):
+   - Entire road network cannot fit in 786 KB SRAM.
+   - When calculating a route, MCU must repeatedly issue random sector reads
+     over SDMMC to fetch node and edge records from the MicroSD card.
+   - SD cards draw 30 to 60 mA during read cycles and suffer 1-2 ms seek latencies.
+   - The CPU and SD card must run at full power for 3.0 to 5.0 seconds.
+   - Energy burned:
+       (45 mA SD + 20 mA MCU) * 4.0 seconds = 260 mA*seconds of energy.
+
+B. Architecture WITH PSRAM (Memory-Mapped In-Memory Routing):
+   - Entire road network resides in fast 8 MB PSRAM.
+   - Cortex-M33 executes A* directly at 160 MHz with D-Cache enabled.
+   - The exact same route completes in 0.15 to 0.25 seconds.
+   - SD card remains completely powered down in sleep mode.
+   - Energy burned:
+       (15 mA PSRAM + 20 mA MCU) * 0.25 seconds = 8.75 mA*seconds of energy.
+
+CONCLUSION:
+Routing directly in PSRAM uses ~30 TIMES LESS ENERGY per trip search than
+thrashing the MicroSD card to compensate for lack of RAM.
+
+
+================================================================================
+5. WHY PSRAM IS NOT USED IN EVERY PROJECT (THE 5 INDUSTRY REASONS)
+================================================================================
+If PSRAM is cheap ($1.50) and low-power, why isn't it on every microcontroller board?
+
+1. Legacy MCUs Lacked Hardware Memory-Mapping (XIP):
+   Older microcontrollers (Arduino ATmega, STM32F1) could only talk to SPI RAM
+   via manual software commands (send address byte, wait, read byte). It was too
+   slow for real-time code. Modern chips (STM32U5, ESP32, STM32H7) feature
+   hardware OctoSPI engines with automatic address decoders that make external
+   RAM appear as transparent linear memory at 0x90000000.
+
+2. Random-Access Latency vs True Internal SRAM:
+   Internal SRAM has 0 wait states (1 clock cycle latency, ~6 ns at 160 MHz).
+   PSRAM is serial (4 or 8 data bits). A random access requires sending a
+   command/address packet (taking 6-10 wait cycles before data arrives).
+   * Note: The STM32U575's internal Data Cache (D-Cache) mitigates this by
+     burst-reading full cache lines.
+
+3. Most Embedded Devices Simply Don't Need Megabytes:
+   90% of industrial microcontrollers run motor control, temperature logging,
+   or CAN bus sensors. These tasks fit comfortably in 16 KB to 64 KB of RAM.
+   Megabytes are only needed for:
+     - Large color display framebuffers
+     - Audio/video buffers
+     - Spatial graph pathfinding (GPS Navigation)
+
+4. Standby Refresh Physics (Coin-Cell Limitations):
+   Because PSRAM is internally DRAM, it must continuously refresh its internal
+   capacitors, requiring 20 uA to 80 uA in deep sleep.
+   For products meant to run for 10 years on an unchargeable CR2032 coin cell
+   (e.g. Apple AirTag or smart water meter), 20 uA is unacceptable.
+   For rechargeable Li-Ion products (like your GPS), 20 uA is completely trivial.
+
+5. Sourcing & Supplier Landscape:
+   Standard DRAM and Flash are made by multi-billion dollar commodity giants
+   (Samsung, Micron, SK Hynix). PSRAM is produced by specialized suppliers
+   (APMemory, ISSI, Winbond). Some automotive/military corporations avoid parts
+   that don't have 5 different manufacturing sources.
+
+
+================================================================================
+6. FINAL VERDICT FOR THE GPS HANDHELD NAVIGATOR
+================================================================================
+For your specific design:
+  - STM32U575RIT6 (has hardware OctoSPI + D-Cache)
+  - LQFP-64 Package (only 64 pins available; PSRAM only needs 6 pins)
+  - Rechargeable 3.7V Battery via MCP73831
+  - Heavy graph routing algorithm (Belgium = 85k backbone nodes)
+
+OCTOSPI PSRAM IS THE IDEAL ARCHITECTURAL MATCH:
+It solves your #1 engineering bottleneck (12 MB vs 786 KB) for ~$1.50, consumes
+virtually no battery relative to your screen, and avoids weeks of complex
+streaming code.
+================================================================================

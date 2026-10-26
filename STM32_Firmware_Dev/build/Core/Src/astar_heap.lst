@@ -1,0 +1,675 @@
+ARM GAS  /tmp/ccPvwRiB.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.arch armv7e-m
+   3              		.fpu fpv4-sp-d16
+   4              		.eabi_attribute 27, 1
+   5              		.eabi_attribute 28, 1
+   6              		.eabi_attribute 20, 1
+   7              		.eabi_attribute 21, 1
+   8              		.eabi_attribute 23, 3
+   9              		.eabi_attribute 24, 1
+  10              		.eabi_attribute 25, 1
+  11              		.eabi_attribute 26, 1
+  12              		.eabi_attribute 30, 1
+  13              		.eabi_attribute 34, 1
+  14              		.eabi_attribute 18, 4
+  15              		.file	"astar_heap.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.file 1 "Core/Src/astar_heap.c"
+  20              		.section	.text.astar_heap_init,"ax",%progbits
+  21              		.align	1
+  22              		.global	astar_heap_init
+  23              		.syntax unified
+  24              		.thumb
+  25              		.thumb_func
+  27              	astar_heap_init:
+  28              	.LVL0:
+  29              	.LFB0:
+   1:Core/Src/astar_heap.c **** /**
+   2:Core/Src/astar_heap.c ****  * @file astar_heap.c
+   3:Core/Src/astar_heap.c ****  * @brief Binary min-heap priority queue implementation.
+   4:Core/Src/astar_heap.c ****  */
+   5:Core/Src/astar_heap.c **** 
+   6:Core/Src/astar_heap.c **** #include "astar_heap.h"
+   7:Core/Src/astar_heap.c **** #include <string.h>
+   8:Core/Src/astar_heap.c **** 
+   9:Core/Src/astar_heap.c **** void astar_heap_init(AstarHeap *heap) {
+  30              		.loc 1 9 39 view -0
+  31              		.cfi_startproc
+  32              		@ args = 0, pretend = 0, frame = 0
+  33              		@ frame_needed = 0, uses_anonymous_args = 0
+  34              		@ link register save eliminated.
+  10:Core/Src/astar_heap.c ****     if (heap) {
+  35              		.loc 1 10 5 view .LVU1
+  36              		.loc 1 10 8 is_stmt 0 view .LVU2
+  37 0000 18B1     		cbz	r0, .L1
+  11:Core/Src/astar_heap.c ****         heap->size = 0;
+  38              		.loc 1 11 9 is_stmt 1 view .LVU3
+  39              		.loc 1 11 20 is_stmt 0 view .LVU4
+  40 0002 00F5F033 		add	r3, r0, #122880
+  41 0006 0022     		movs	r2, #0
+  42 0008 1A60     		str	r2, [r3]
+  43              	.L1:
+  12:Core/Src/astar_heap.c ****     }
+  13:Core/Src/astar_heap.c **** }
+  44              		.loc 1 13 1 view .LVU5
+  45 000a 7047     		bx	lr
+ARM GAS  /tmp/ccPvwRiB.s 			page 2
+
+
+  46              		.cfi_endproc
+  47              	.LFE0:
+  49              		.section	.text.astar_heap_clear,"ax",%progbits
+  50              		.align	1
+  51              		.global	astar_heap_clear
+  52              		.syntax unified
+  53              		.thumb
+  54              		.thumb_func
+  56              	astar_heap_clear:
+  57              	.LVL1:
+  58              	.LFB1:
+  14:Core/Src/astar_heap.c **** 
+  15:Core/Src/astar_heap.c **** void astar_heap_clear(AstarHeap *heap) {
+  59              		.loc 1 15 40 is_stmt 1 view -0
+  60              		.cfi_startproc
+  61              		@ args = 0, pretend = 0, frame = 0
+  62              		@ frame_needed = 0, uses_anonymous_args = 0
+  63              		@ link register save eliminated.
+  16:Core/Src/astar_heap.c ****     if (heap) {
+  64              		.loc 1 16 5 view .LVU7
+  65              		.loc 1 16 8 is_stmt 0 view .LVU8
+  66 0000 18B1     		cbz	r0, .L3
+  17:Core/Src/astar_heap.c ****         heap->size = 0;
+  67              		.loc 1 17 9 is_stmt 1 view .LVU9
+  68              		.loc 1 17 20 is_stmt 0 view .LVU10
+  69 0002 00F5F033 		add	r3, r0, #122880
+  70 0006 0022     		movs	r2, #0
+  71 0008 1A60     		str	r2, [r3]
+  72              	.L3:
+  18:Core/Src/astar_heap.c ****     }
+  19:Core/Src/astar_heap.c **** }
+  73              		.loc 1 19 1 view .LVU11
+  74 000a 7047     		bx	lr
+  75              		.cfi_endproc
+  76              	.LFE1:
+  78              		.section	.text.astar_heap_is_empty,"ax",%progbits
+  79              		.align	1
+  80              		.global	astar_heap_is_empty
+  81              		.syntax unified
+  82              		.thumb
+  83              		.thumb_func
+  85              	astar_heap_is_empty:
+  86              	.LVL2:
+  87              	.LFB2:
+  20:Core/Src/astar_heap.c **** 
+  21:Core/Src/astar_heap.c **** bool astar_heap_is_empty(const AstarHeap *heap) {
+  88              		.loc 1 21 49 is_stmt 1 view -0
+  89              		.cfi_startproc
+  90              		@ args = 0, pretend = 0, frame = 0
+  91              		@ frame_needed = 0, uses_anonymous_args = 0
+  92              		@ link register save eliminated.
+  22:Core/Src/astar_heap.c ****     return (!heap || heap->size == 0);
+  93              		.loc 1 22 5 view .LVU13
+  94              		.loc 1 22 19 is_stmt 0 view .LVU14
+  95 0000 28B1     		cbz	r0, .L7
+  96              		.loc 1 22 26 discriminator 1 view .LVU15
+  97 0002 00F5F033 		add	r3, r0, #122880
+ARM GAS  /tmp/ccPvwRiB.s 			page 3
+
+
+  98 0006 1B68     		ldr	r3, [r3]
+  99              		.loc 1 22 19 discriminator 1 view .LVU16
+ 100 0008 1BB9     		cbnz	r3, .L8
+ 101              		.loc 1 22 19 discriminator 2 view .LVU17
+ 102 000a 0120     		movs	r0, #1
+ 103              	.LVL3:
+ 104              		.loc 1 22 19 discriminator 2 view .LVU18
+ 105 000c 7047     		bx	lr
+ 106              	.LVL4:
+ 107              	.L7:
+ 108              		.loc 1 22 19 discriminator 2 view .LVU19
+ 109 000e 0120     		movs	r0, #1
+ 110              	.LVL5:
+ 111              		.loc 1 22 19 discriminator 2 view .LVU20
+ 112 0010 7047     		bx	lr
+ 113              	.LVL6:
+ 114              	.L8:
+ 115              		.loc 1 22 19 discriminator 3 view .LVU21
+ 116 0012 0020     		movs	r0, #0
+ 117              	.LVL7:
+  23:Core/Src/astar_heap.c **** }
+ 118              		.loc 1 23 1 view .LVU22
+ 119 0014 7047     		bx	lr
+ 120              		.cfi_endproc
+ 121              	.LFE2:
+ 123              		.section	.text.astar_heap_push,"ax",%progbits
+ 124              		.align	1
+ 125              		.global	astar_heap_push
+ 126              		.syntax unified
+ 127              		.thumb
+ 128              		.thumb_func
+ 130              	astar_heap_push:
+ 131              	.LVL8:
+ 132              	.LFB3:
+  24:Core/Src/astar_heap.c **** 
+  25:Core/Src/astar_heap.c **** bool astar_heap_push(AstarHeap *heap, uint32_t node_key, uint32_t g_cost, uint32_t f_score) {
+ 133              		.loc 1 25 93 is_stmt 1 view -0
+ 134              		.cfi_startproc
+ 135              		@ args = 0, pretend = 0, frame = 16
+ 136              		@ frame_needed = 0, uses_anonymous_args = 0
+  26:Core/Src/astar_heap.c ****     if (!heap || heap->size >= ASTAR_HEAP_MAX_ENTRIES) {
+ 137              		.loc 1 26 5 view .LVU24
+ 138              		.loc 1 26 8 is_stmt 0 view .LVU25
+ 139 0000 0028     		cmp	r0, #0
+ 140 0002 4BD0     		beq	.L18
+  25:Core/Src/astar_heap.c ****     if (!heap || heap->size >= ASTAR_HEAP_MAX_ENTRIES) {
+ 141              		.loc 1 25 93 view .LVU26
+ 142 0004 30B5     		push	{r4, r5, lr}
+ 143              	.LCFI0:
+ 144              		.cfi_def_cfa_offset 12
+ 145              		.cfi_offset 4, -12
+ 146              		.cfi_offset 5, -8
+ 147              		.cfi_offset 14, -4
+ 148 0006 85B0     		sub	sp, sp, #20
+ 149              	.LCFI1:
+ 150              		.cfi_def_cfa_offset 32
+ 151 0008 1D46     		mov	r5, r3
+ARM GAS  /tmp/ccPvwRiB.s 			page 4
+
+
+ 152 000a 0446     		mov	r4, r0
+ 153              		.loc 1 26 22 discriminator 1 view .LVU27
+ 154 000c 00F5F033 		add	r3, r0, #122880
+ 155              	.LVL9:
+ 156              		.loc 1 26 22 discriminator 1 view .LVU28
+ 157 0010 1B68     		ldr	r3, [r3]
+ 158              		.loc 1 26 15 discriminator 1 view .LVU29
+ 159 0012 B3F5205F 		cmp	r3, #10240
+ 160 0016 0EDA     		bge	.L21
+  27:Core/Src/astar_heap.c ****         return false;
+  28:Core/Src/astar_heap.c ****     }
+  29:Core/Src/astar_heap.c **** 
+  30:Core/Src/astar_heap.c ****     int32_t idx = heap->size++;
+ 161              		.loc 1 30 5 is_stmt 1 view .LVU30
+ 162              		.loc 1 30 29 is_stmt 0 view .LVU31
+ 163 0018 00F5F030 		add	r0, r0, #122880
+ 164              	.LVL10:
+ 165              		.loc 1 30 29 view .LVU32
+ 166 001c 03F1010C 		add	ip, r3, #1
+ 167 0020 C0F800C0 		str	ip, [r0]
+ 168              	.LVL11:
+  31:Core/Src/astar_heap.c ****     heap->entries[idx].node_key = node_key;
+ 169              		.loc 1 31 5 is_stmt 1 view .LVU33
+ 170              		.loc 1 31 33 is_stmt 0 view .LVU34
+ 171 0024 03EB430C 		add	ip, r3, r3, lsl #1
+ 172 0028 04EB8C00 		add	r0, r4, ip, lsl #2
+ 173 002c 44F82C10 		str	r1, [r4, ip, lsl #2]
+  32:Core/Src/astar_heap.c ****     heap->entries[idx].g_cost = g_cost;
+ 174              		.loc 1 32 5 is_stmt 1 view .LVU35
+ 175              		.loc 1 32 31 is_stmt 0 view .LVU36
+ 176 0030 4260     		str	r2, [r0, #4]
+  33:Core/Src/astar_heap.c ****     heap->entries[idx].f_score = f_score;
+ 177              		.loc 1 33 5 is_stmt 1 view .LVU37
+ 178              		.loc 1 33 32 is_stmt 0 view .LVU38
+ 179 0032 8560     		str	r5, [r0, #8]
+  34:Core/Src/astar_heap.c **** 
+  35:Core/Src/astar_heap.c ****     /* Sift up */
+  36:Core/Src/astar_heap.c ****     while (idx > 0) {
+ 180              		.loc 1 36 5 is_stmt 1 view .LVU39
+ 181              		.loc 1 36 11 is_stmt 0 view .LVU40
+ 182 0034 1BE0     		b	.L13
+ 183              	.LVL12:
+ 184              	.L21:
+  27:Core/Src/astar_heap.c ****     }
+ 185              		.loc 1 27 16 view .LVU41
+ 186 0036 0020     		movs	r0, #0
+ 187              	.LVL13:
+  27:Core/Src/astar_heap.c ****     }
+ 188              		.loc 1 27 16 view .LVU42
+ 189 0038 2EE0     		b	.L12
+ 190              	.LVL14:
+ 191              	.L22:
+ 192              	.LBB2:
+  37:Core/Src/astar_heap.c ****         int32_t parent = (idx - 1) / 2;
+  38:Core/Src/astar_heap.c ****         if (heap->entries[idx].f_score >= heap->entries[parent].f_score) {
+  39:Core/Src/astar_heap.c ****             break;
+  40:Core/Src/astar_heap.c ****         }
+ARM GAS  /tmp/ccPvwRiB.s 			page 5
+
+
+  41:Core/Src/astar_heap.c ****         HeapEntry temp = heap->entries[idx];
+ 193              		.loc 1 41 9 is_stmt 1 view .LVU43
+ 194              		.loc 1 41 19 is_stmt 0 view .LVU44
+ 195 003a 03EB4302 		add	r2, r3, r3, lsl #1
+ 196 003e 04EB8202 		add	r2, r4, r2, lsl #2
+ 197 0042 0DF1040E 		add	lr, sp, #4
+ 198 0046 07CA     		ldm	r2, {r0, r1, r2}
+ 199 0048 8EE80700 		stm	lr, {r0, r1, r2}
+  42:Core/Src/astar_heap.c ****         heap->entries[idx] = heap->entries[parent];
+ 200              		.loc 1 42 9 is_stmt 1 view .LVU45
+ 201              		.loc 1 42 28 is_stmt 0 view .LVU46
+ 202 004c 03EB4303 		add	r3, r3, r3, lsl #1
+ 203              	.LVL15:
+ 204              		.loc 1 42 28 view .LVU47
+ 205 0050 04EB8303 		add	r3, r4, r3, lsl #2
+ 206 0054 05EB450C 		add	ip, r5, r5, lsl #1
+ 207 0058 04EB8C0C 		add	ip, r4, ip, lsl #2
+ 208 005c 9CE80700 		ldm	ip, {r0, r1, r2}
+ 209 0060 83E80700 		stm	r3, {r0, r1, r2}
+  43:Core/Src/astar_heap.c ****         heap->entries[parent] = temp;
+ 210              		.loc 1 43 9 is_stmt 1 view .LVU48
+ 211              		.loc 1 43 31 is_stmt 0 view .LVU49
+ 212 0064 9EE80700 		ldm	lr, {r0, r1, r2}
+ 213 0068 8CE80700 		stm	ip, {r0, r1, r2}
+  44:Core/Src/astar_heap.c ****         idx = parent;
+ 214              		.loc 1 44 9 is_stmt 1 view .LVU50
+ 215              	.LVL16:
+ 216              		.loc 1 44 13 is_stmt 0 view .LVU51
+ 217 006c 2B46     		mov	r3, r5
+ 218              	.LVL17:
+ 219              	.L13:
+ 220              		.loc 1 44 13 view .LVU52
+ 221              	.LBE2:
+  36:Core/Src/astar_heap.c ****         int32_t parent = (idx - 1) / 2;
+ 222              		.loc 1 36 16 is_stmt 1 discriminator 1 view .LVU53
+ 223 006e 002B     		cmp	r3, #0
+ 224 0070 11DD     		ble	.L15
+ 225              	.LBB3:
+  37:Core/Src/astar_heap.c ****         if (heap->entries[idx].f_score >= heap->entries[parent].f_score) {
+ 226              		.loc 1 37 9 view .LVU54
+  37:Core/Src/astar_heap.c ****         if (heap->entries[idx].f_score >= heap->entries[parent].f_score) {
+ 227              		.loc 1 37 31 is_stmt 0 view .LVU55
+ 228 0072 5A1E     		subs	r2, r3, #1
+  37:Core/Src/astar_heap.c ****         if (heap->entries[idx].f_score >= heap->entries[parent].f_score) {
+ 229              		.loc 1 37 17 view .LVU56
+ 230 0074 02EBD272 		add	r2, r2, r2, lsr #31
+ 231 0078 5510     		asrs	r5, r2, #1
+ 232              	.LVL18:
+  38:Core/Src/astar_heap.c ****             break;
+ 233              		.loc 1 38 9 is_stmt 1 view .LVU57
+  38:Core/Src/astar_heap.c ****             break;
+ 234              		.loc 1 38 31 is_stmt 0 view .LVU58
+ 235 007a 03EB4301 		add	r1, r3, r3, lsl #1
+ 236 007e 04EB8101 		add	r1, r4, r1, lsl #2
+ 237 0082 8868     		ldr	r0, [r1, #8]
+  38:Core/Src/astar_heap.c ****             break;
+ 238              		.loc 1 38 64 view .LVU59
+ARM GAS  /tmp/ccPvwRiB.s 			page 6
+
+
+ 239 0084 22F00101 		bic	r1, r2, #1
+ 240 0088 01EB6202 		add	r2, r1, r2, asr #1
+ 241 008c 04EB8202 		add	r2, r4, r2, lsl #2
+ 242 0090 9268     		ldr	r2, [r2, #8]
+  38:Core/Src/astar_heap.c ****             break;
+ 243              		.loc 1 38 12 view .LVU60
+ 244 0092 9042     		cmp	r0, r2
+ 245 0094 D1D3     		bcc	.L22
+ 246              	.LVL19:
+ 247              	.L15:
+  38:Core/Src/astar_heap.c ****             break;
+ 248              		.loc 1 38 12 view .LVU61
+ 249              	.LBE3:
+  45:Core/Src/astar_heap.c ****     }
+  46:Core/Src/astar_heap.c **** 
+  47:Core/Src/astar_heap.c ****     return true;
+ 250              		.loc 1 47 12 view .LVU62
+ 251 0096 0120     		movs	r0, #1
+ 252              	.LVL20:
+ 253              	.L12:
+  48:Core/Src/astar_heap.c **** }
+ 254              		.loc 1 48 1 view .LVU63
+ 255 0098 05B0     		add	sp, sp, #20
+ 256              	.LCFI2:
+ 257              		.cfi_def_cfa_offset 12
+ 258              		@ sp needed
+ 259 009a 30BD     		pop	{r4, r5, pc}
+ 260              	.LVL21:
+ 261              	.L18:
+ 262              	.LCFI3:
+ 263              		.cfi_def_cfa_offset 0
+ 264              		.cfi_restore 4
+ 265              		.cfi_restore 5
+ 266              		.cfi_restore 14
+  27:Core/Src/astar_heap.c ****     }
+ 267              		.loc 1 27 16 view .LVU64
+ 268 009c 0020     		movs	r0, #0
+ 269              	.LVL22:
+ 270              		.loc 1 48 1 view .LVU65
+ 271 009e 7047     		bx	lr
+ 272              		.cfi_endproc
+ 273              	.LFE3:
+ 275              		.section	.text.astar_heap_pop,"ax",%progbits
+ 276              		.align	1
+ 277              		.global	astar_heap_pop
+ 278              		.syntax unified
+ 279              		.thumb
+ 280              		.thumb_func
+ 282              	astar_heap_pop:
+ 283              	.LVL23:
+ 284              	.LFB4:
+  49:Core/Src/astar_heap.c **** 
+  50:Core/Src/astar_heap.c **** bool astar_heap_pop(AstarHeap *heap, HeapEntry *out_entry) {
+ 285              		.loc 1 50 60 is_stmt 1 view -0
+ 286              		.cfi_startproc
+ 287              		@ args = 0, pretend = 0, frame = 16
+ 288              		@ frame_needed = 0, uses_anonymous_args = 0
+ARM GAS  /tmp/ccPvwRiB.s 			page 7
+
+
+  51:Core/Src/astar_heap.c ****     if (!heap || heap->size == 0) return false;
+ 289              		.loc 1 51 5 view .LVU67
+ 290              		.loc 1 51 8 is_stmt 0 view .LVU68
+ 291 0000 0028     		cmp	r0, #0
+ 292 0002 5FD0     		beq	.L35
+  50:Core/Src/astar_heap.c ****     if (!heap || heap->size == 0) return false;
+ 293              		.loc 1 50 60 view .LVU69
+ 294 0004 70B5     		push	{r4, r5, r6, lr}
+ 295              	.LCFI4:
+ 296              		.cfi_def_cfa_offset 16
+ 297              		.cfi_offset 4, -16
+ 298              		.cfi_offset 5, -12
+ 299              		.cfi_offset 6, -8
+ 300              		.cfi_offset 14, -4
+ 301 0006 84B0     		sub	sp, sp, #16
+ 302              	.LCFI5:
+ 303              		.cfi_def_cfa_offset 32
+ 304 0008 0B46     		mov	r3, r1
+ 305 000a 0546     		mov	r5, r0
+ 306              		.loc 1 51 22 discriminator 1 view .LVU70
+ 307 000c 00F5F032 		add	r2, r0, #122880
+ 308 0010 1268     		ldr	r2, [r2]
+ 309              		.loc 1 51 15 discriminator 1 view .LVU71
+ 310 0012 92B1     		cbz	r2, .L38
+  52:Core/Src/astar_heap.c **** 
+  53:Core/Src/astar_heap.c ****     if (out_entry) {
+ 311              		.loc 1 53 5 is_stmt 1 view .LVU72
+ 312              		.loc 1 53 8 is_stmt 0 view .LVU73
+ 313 0014 11B1     		cbz	r1, .L27
+  54:Core/Src/astar_heap.c ****         *out_entry = heap->entries[0];
+ 314              		.loc 1 54 9 is_stmt 1 view .LVU74
+ 315              		.loc 1 54 20 is_stmt 0 view .LVU75
+ 316 0016 07C8     		ldm	r0, {r0, r1, r2}
+ 317              	.LVL24:
+ 318              		.loc 1 54 20 view .LVU76
+ 319 0018 83E80700 		stm	r3, {r0, r1, r2}
+ 320              	.L27:
+  55:Core/Src/astar_heap.c ****     }
+  56:Core/Src/astar_heap.c **** 
+  57:Core/Src/astar_heap.c ****     heap->entries[0] = heap->entries[--heap->size];
+ 321              		.loc 1 57 5 is_stmt 1 view .LVU77
+ 322              		.loc 1 57 44 is_stmt 0 view .LVU78
+ 323 001c 05F5F033 		add	r3, r5, #122880
+ 324              	.LVL25:
+ 325              		.loc 1 57 44 view .LVU79
+ 326 0020 1E68     		ldr	r6, [r3]
+ 327              		.loc 1 57 38 view .LVU80
+ 328 0022 013E     		subs	r6, r6, #1
+ 329              		.loc 1 57 22 view .LVU81
+ 330 0024 1E60     		str	r6, [r3]
+ 331 0026 06EB4603 		add	r3, r6, r6, lsl #1
+ 332 002a 05EB8303 		add	r3, r5, r3, lsl #2
+ 333 002e 93E80700 		ldm	r3, {r0, r1, r2}
+ 334 0032 85E80700 		stm	r5, {r0, r1, r2}
+  58:Core/Src/astar_heap.c **** 
+  59:Core/Src/astar_heap.c ****     /* Sift down */
+  60:Core/Src/astar_heap.c ****     int32_t idx = 0;
+ARM GAS  /tmp/ccPvwRiB.s 			page 8
+
+
+ 335              		.loc 1 60 5 is_stmt 1 view .LVU82
+ 336              	.LVL26:
+ 337              		.loc 1 60 13 is_stmt 0 view .LVU83
+ 338 0036 0023     		movs	r3, #0
+ 339 0038 2DE0     		b	.L31
+ 340              	.LVL27:
+ 341              	.L38:
+  51:Core/Src/astar_heap.c **** 
+ 342              		.loc 1 51 42 discriminator 2 view .LVU84
+ 343 003a 0020     		movs	r0, #0
+ 344              	.LVL28:
+  51:Core/Src/astar_heap.c **** 
+ 345              		.loc 1 51 42 discriminator 2 view .LVU85
+ 346 003c 40E0     		b	.L26
+ 347              	.LVL29:
+ 348              	.L32:
+ 349              	.LBB4:
+  61:Core/Src/astar_heap.c ****     while (1) {
+  62:Core/Src/astar_heap.c ****         int32_t left = 2 * idx + 1;
+  63:Core/Src/astar_heap.c ****         int32_t right = 2 * idx + 2;
+  64:Core/Src/astar_heap.c ****         int32_t smallest = idx;
+ 350              		.loc 1 64 17 view .LVU86
+ 351 003e 1C46     		mov	r4, r3
+ 352              	.LVL30:
+ 353              	.L28:
+  65:Core/Src/astar_heap.c **** 
+  66:Core/Src/astar_heap.c ****         if (left < heap->size && heap->entries[left].f_score < heap->entries[smallest].f_score) {
+  67:Core/Src/astar_heap.c ****             smallest = left;
+  68:Core/Src/astar_heap.c ****         }
+  69:Core/Src/astar_heap.c ****         if (right < heap->size && heap->entries[right].f_score < heap->entries[smallest].f_score) {
+ 354              		.loc 1 69 9 is_stmt 1 view .LVU87
+ 355              		.loc 1 69 12 is_stmt 0 view .LVU88
+ 356 0040 9642     		cmp	r6, r2
+ 357 0042 0CDD     		ble	.L29
+ 358              		.loc 1 69 55 discriminator 1 view .LVU89
+ 359 0044 02EB4201 		add	r1, r2, r2, lsl #1
+ 360 0048 05EB8101 		add	r1, r5, r1, lsl #2
+ 361 004c 8868     		ldr	r0, [r1, #8]
+ 362              		.loc 1 69 89 discriminator 1 view .LVU90
+ 363 004e 04EB4401 		add	r1, r4, r4, lsl #1
+ 364 0052 05EB8101 		add	r1, r5, r1, lsl #2
+ 365 0056 8968     		ldr	r1, [r1, #8]
+ 366              		.loc 1 69 32 discriminator 1 view .LVU91
+ 367 0058 8842     		cmp	r0, r1
+ 368 005a 00D2     		bcs	.L29
+  70:Core/Src/astar_heap.c ****             smallest = right;
+ 369              		.loc 1 70 22 view .LVU92
+ 370 005c 1446     		mov	r4, r2
+ 371              	.LVL31:
+ 372              	.L29:
+  71:Core/Src/astar_heap.c ****         }
+  72:Core/Src/astar_heap.c **** 
+  73:Core/Src/astar_heap.c ****         if (smallest == idx) {
+ 373              		.loc 1 73 9 is_stmt 1 view .LVU93
+ 374              		.loc 1 73 12 is_stmt 0 view .LVU94
+ 375 005e A342     		cmp	r3, r4
+ 376 0060 2DD0     		beq	.L30
+ARM GAS  /tmp/ccPvwRiB.s 			page 9
+
+
+  74:Core/Src/astar_heap.c ****             break;
+  75:Core/Src/astar_heap.c ****         }
+  76:Core/Src/astar_heap.c **** 
+  77:Core/Src/astar_heap.c ****         HeapEntry temp = heap->entries[idx];
+ 377              		.loc 1 77 9 is_stmt 1 view .LVU95
+ 378              		.loc 1 77 19 is_stmt 0 view .LVU96
+ 379 0062 03EB4302 		add	r2, r3, r3, lsl #1
+ 380              	.LVL32:
+ 381              		.loc 1 77 19 view .LVU97
+ 382 0066 05EB8202 		add	r2, r5, r2, lsl #2
+ 383 006a 0DF1040E 		add	lr, sp, #4
+ 384 006e 07CA     		ldm	r2, {r0, r1, r2}
+ 385 0070 8EE80700 		stm	lr, {r0, r1, r2}
+  78:Core/Src/astar_heap.c ****         heap->entries[idx] = heap->entries[smallest];
+ 386              		.loc 1 78 9 is_stmt 1 view .LVU98
+ 387              		.loc 1 78 28 is_stmt 0 view .LVU99
+ 388 0074 03EB4303 		add	r3, r3, r3, lsl #1
+ 389              	.LVL33:
+ 390              		.loc 1 78 28 view .LVU100
+ 391 0078 05EB8303 		add	r3, r5, r3, lsl #2
+ 392 007c 04EB440C 		add	ip, r4, r4, lsl #1
+ 393 0080 05EB8C0C 		add	ip, r5, ip, lsl #2
+ 394 0084 9CE80700 		ldm	ip, {r0, r1, r2}
+ 395 0088 83E80700 		stm	r3, {r0, r1, r2}
+  79:Core/Src/astar_heap.c ****         heap->entries[smallest] = temp;
+ 396              		.loc 1 79 9 is_stmt 1 view .LVU101
+ 397              		.loc 1 79 33 is_stmt 0 view .LVU102
+ 398 008c 9EE80700 		ldm	lr, {r0, r1, r2}
+ 399 0090 8CE80700 		stm	ip, {r0, r1, r2}
+  80:Core/Src/astar_heap.c ****         idx = smallest;
+ 400              		.loc 1 80 9 is_stmt 1 view .LVU103
+ 401              	.LVL34:
+ 402              		.loc 1 80 9 is_stmt 0 view .LVU104
+ 403              	.LBE4:
+  61:Core/Src/astar_heap.c ****         int32_t left = 2 * idx + 1;
+ 404              		.loc 1 61 11 is_stmt 1 discriminator 1 view .LVU105
+ 405              	.LBB5:
+ 406              		.loc 1 80 13 is_stmt 0 view .LVU106
+ 407 0094 2346     		mov	r3, r4
+ 408              	.LVL35:
+ 409              	.L31:
+ 410              		.loc 1 80 13 view .LVU107
+ 411              	.LBE5:
+  61:Core/Src/astar_heap.c ****         int32_t left = 2 * idx + 1;
+ 412              		.loc 1 61 5 is_stmt 1 view .LVU108
+ 413              	.LBB6:
+  62:Core/Src/astar_heap.c ****         int32_t right = 2 * idx + 2;
+ 414              		.loc 1 62 9 view .LVU109
+  62:Core/Src/astar_heap.c ****         int32_t right = 2 * idx + 2;
+ 415              		.loc 1 62 26 is_stmt 0 view .LVU110
+ 416 0096 5C00     		lsls	r4, r3, #1
+  62:Core/Src/astar_heap.c ****         int32_t right = 2 * idx + 2;
+ 417              		.loc 1 62 17 view .LVU111
+ 418 0098 0134     		adds	r4, r4, #1
+ 419              	.LVL36:
+  63:Core/Src/astar_heap.c ****         int32_t smallest = idx;
+ 420              		.loc 1 63 9 is_stmt 1 view .LVU112
+ARM GAS  /tmp/ccPvwRiB.s 			page 10
+
+
+  63:Core/Src/astar_heap.c ****         int32_t smallest = idx;
+ 421              		.loc 1 63 33 is_stmt 0 view .LVU113
+ 422 009a 5A1C     		adds	r2, r3, #1
+  63:Core/Src/astar_heap.c ****         int32_t smallest = idx;
+ 423              		.loc 1 63 17 view .LVU114
+ 424 009c 5200     		lsls	r2, r2, #1
+ 425              	.LVL37:
+  64:Core/Src/astar_heap.c **** 
+ 426              		.loc 1 64 9 is_stmt 1 view .LVU115
+  66:Core/Src/astar_heap.c ****             smallest = left;
+ 427              		.loc 1 66 9 view .LVU116
+  66:Core/Src/astar_heap.c ****             smallest = left;
+ 428              		.loc 1 66 12 is_stmt 0 view .LVU117
+ 429 009e A642     		cmp	r6, r4
+ 430 00a0 CDDD     		ble	.L32
+  66:Core/Src/astar_heap.c ****             smallest = left;
+ 431              		.loc 1 66 53 discriminator 1 view .LVU118
+ 432 00a2 04EB4401 		add	r1, r4, r4, lsl #1
+ 433 00a6 05EB8101 		add	r1, r5, r1, lsl #2
+ 434 00aa 8868     		ldr	r0, [r1, #8]
+  66:Core/Src/astar_heap.c ****             smallest = left;
+ 435              		.loc 1 66 87 discriminator 1 view .LVU119
+ 436 00ac 03EB4301 		add	r1, r3, r3, lsl #1
+ 437 00b0 05EB8101 		add	r1, r5, r1, lsl #2
+ 438 00b4 8968     		ldr	r1, [r1, #8]
+  66:Core/Src/astar_heap.c ****             smallest = left;
+ 439              		.loc 1 66 31 discriminator 1 view .LVU120
+ 440 00b6 8842     		cmp	r0, r1
+ 441 00b8 C2D3     		bcc	.L28
+  64:Core/Src/astar_heap.c **** 
+ 442              		.loc 1 64 17 view .LVU121
+ 443 00ba 1C46     		mov	r4, r3
+ 444              	.LVL38:
+  64:Core/Src/astar_heap.c **** 
+ 445              		.loc 1 64 17 view .LVU122
+ 446 00bc C0E7     		b	.L28
+ 447              	.LVL39:
+ 448              	.L30:
+  64:Core/Src/astar_heap.c **** 
+ 449              		.loc 1 64 17 view .LVU123
+ 450              	.LBE6:
+  81:Core/Src/astar_heap.c ****     }
+  82:Core/Src/astar_heap.c **** 
+  83:Core/Src/astar_heap.c ****     return true;
+ 451              		.loc 1 83 5 is_stmt 1 view .LVU124
+ 452              		.loc 1 83 12 is_stmt 0 view .LVU125
+ 453 00be 0120     		movs	r0, #1
+ 454              	.LVL40:
+ 455              	.L26:
+  84:Core/Src/astar_heap.c **** }
+ 456              		.loc 1 84 1 view .LVU126
+ 457 00c0 04B0     		add	sp, sp, #16
+ 458              	.LCFI6:
+ 459              		.cfi_def_cfa_offset 16
+ 460              		@ sp needed
+ 461 00c2 70BD     		pop	{r4, r5, r6, pc}
+ 462              	.LVL41:
+ARM GAS  /tmp/ccPvwRiB.s 			page 11
+
+
+ 463              	.L35:
+ 464              	.LCFI7:
+ 465              		.cfi_def_cfa_offset 0
+ 466              		.cfi_restore 4
+ 467              		.cfi_restore 5
+ 468              		.cfi_restore 6
+ 469              		.cfi_restore 14
+  51:Core/Src/astar_heap.c **** 
+ 470              		.loc 1 51 42 discriminator 2 view .LVU127
+ 471 00c4 0020     		movs	r0, #0
+ 472              	.LVL42:
+ 473              		.loc 1 84 1 view .LVU128
+ 474 00c6 7047     		bx	lr
+ 475              		.cfi_endproc
+ 476              	.LFE4:
+ 478              		.section	.text.astar_heap_destroy,"ax",%progbits
+ 479              		.align	1
+ 480              		.global	astar_heap_destroy
+ 481              		.syntax unified
+ 482              		.thumb
+ 483              		.thumb_func
+ 485              	astar_heap_destroy:
+ 486              	.LVL43:
+ 487              	.LFB5:
+  85:Core/Src/astar_heap.c **** 
+  86:Core/Src/astar_heap.c **** void astar_heap_destroy(AstarHeap *heap) {
+ 488              		.loc 1 86 42 is_stmt 1 view -0
+ 489              		.cfi_startproc
+ 490              		@ args = 0, pretend = 0, frame = 0
+ 491              		@ frame_needed = 0, uses_anonymous_args = 0
+ 492              		@ link register save eliminated.
+  87:Core/Src/astar_heap.c ****     if (heap) {
+ 493              		.loc 1 87 5 view .LVU130
+ 494              		.loc 1 87 8 is_stmt 0 view .LVU131
+ 495 0000 18B1     		cbz	r0, .L39
+  88:Core/Src/astar_heap.c ****         heap->size = 0;
+ 496              		.loc 1 88 9 is_stmt 1 view .LVU132
+ 497              		.loc 1 88 20 is_stmt 0 view .LVU133
+ 498 0002 00F5F033 		add	r3, r0, #122880
+ 499 0006 0022     		movs	r2, #0
+ 500 0008 1A60     		str	r2, [r3]
+ 501              	.L39:
+  89:Core/Src/astar_heap.c ****     }
+  90:Core/Src/astar_heap.c **** }
+ 502              		.loc 1 90 1 view .LVU134
+ 503 000a 7047     		bx	lr
+ 504              		.cfi_endproc
+ 505              	.LFE5:
+ 507              		.text
+ 508              	.Letext0:
+ 509              		.file 2 "/usr/arm-none-eabi/include/machine/_default_types.h"
+ 510              		.file 3 "/usr/arm-none-eabi/include/sys/_stdint.h"
+ 511              		.file 4 "Core/Inc/astar_heap.h"
+ARM GAS  /tmp/ccPvwRiB.s 			page 12
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 astar_heap.c
+     /tmp/ccPvwRiB.s:21     .text.astar_heap_init:00000000 $t
+     /tmp/ccPvwRiB.s:27     .text.astar_heap_init:00000000 astar_heap_init
+     /tmp/ccPvwRiB.s:50     .text.astar_heap_clear:00000000 $t
+     /tmp/ccPvwRiB.s:56     .text.astar_heap_clear:00000000 astar_heap_clear
+     /tmp/ccPvwRiB.s:79     .text.astar_heap_is_empty:00000000 $t
+     /tmp/ccPvwRiB.s:85     .text.astar_heap_is_empty:00000000 astar_heap_is_empty
+     /tmp/ccPvwRiB.s:124    .text.astar_heap_push:00000000 $t
+     /tmp/ccPvwRiB.s:130    .text.astar_heap_push:00000000 astar_heap_push
+     /tmp/ccPvwRiB.s:276    .text.astar_heap_pop:00000000 $t
+     /tmp/ccPvwRiB.s:282    .text.astar_heap_pop:00000000 astar_heap_pop
+     /tmp/ccPvwRiB.s:479    .text.astar_heap_destroy:00000000 $t
+     /tmp/ccPvwRiB.s:485    .text.astar_heap_destroy:00000000 astar_heap_destroy
+
+NO UNDEFINED SYMBOLS

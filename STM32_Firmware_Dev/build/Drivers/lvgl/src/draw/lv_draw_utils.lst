@@ -1,0 +1,3570 @@
+ARM GAS  /tmp/ccMRemNS.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.arch armv7e-m
+   3              		.fpu fpv4-sp-d16
+   4              		.eabi_attribute 27, 1
+   5              		.eabi_attribute 28, 1
+   6              		.eabi_attribute 20, 1
+   7              		.eabi_attribute 21, 1
+   8              		.eabi_attribute 23, 3
+   9              		.eabi_attribute 24, 1
+  10              		.eabi_attribute 25, 1
+  11              		.eabi_attribute 26, 1
+  12              		.eabi_attribute 30, 1
+  13              		.eabi_attribute 34, 1
+  14              		.eabi_attribute 18, 4
+  15              		.file	"lv_draw_utils.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.file 1 "Drivers/lvgl/src/draw/lv_draw_utils.c"
+  20              		.section	.text.rotate270_argb8888,"ax",%progbits
+  21              		.align	1
+  22              		.syntax unified
+  23              		.thumb
+  24              		.thumb_func
+  26              	rotate270_argb8888:
+  27              	.LVL0:
+  28              	.LFB34:
+   1:Drivers/lvgl/src/draw/lv_draw_utils.c **** /**
+   2:Drivers/lvgl/src/draw/lv_draw_utils.c ****  * @file lv_draw_utils.c
+   3:Drivers/lvgl/src/draw/lv_draw_utils.c ****  *
+   4:Drivers/lvgl/src/draw/lv_draw_utils.c ****  */
+   5:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+   6:Drivers/lvgl/src/draw/lv_draw_utils.c **** /*********************
+   7:Drivers/lvgl/src/draw/lv_draw_utils.c ****  *      INCLUDES
+   8:Drivers/lvgl/src/draw/lv_draw_utils.c ****  *********************/
+   9:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+  10:Drivers/lvgl/src/draw/lv_draw_utils.c **** #include "../lvgl_public.h"
+  11:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+  12:Drivers/lvgl/src/draw/lv_draw_utils.c **** /* Allow a draw unit to define one of these
+  13:Drivers/lvgl/src/draw/lv_draw_utils.c ****  * operations in order to speed them up*/
+  14:Drivers/lvgl/src/draw/lv_draw_utils.c **** #include "sw/lv_draw_sw.h"
+  15:Drivers/lvgl/src/draw/lv_draw_utils.c **** #include "dma2d/lv_draw_dma2d.h"
+  16:Drivers/lvgl/src/draw/lv_draw_utils.c **** #include "espressif/ppa/lv_draw_ppa.h"
+  17:Drivers/lvgl/src/draw/lv_draw_utils.c **** #include "eve/lv_draw_eve.h"
+  18:Drivers/lvgl/src/draw/lv_draw_utils.c **** #include "nanovg/lv_draw_nanovg.h"
+  19:Drivers/lvgl/src/draw/lv_draw_utils.c **** #include "nema_gfx/lv_draw_nema_gfx.h"
+  20:Drivers/lvgl/src/draw/lv_draw_utils.c **** #include "nxp/g2d/lv_draw_g2d.h"
+  21:Drivers/lvgl/src/draw/lv_draw_utils.c **** #include "nxp/pxp/lv_draw_pxp.h"
+  22:Drivers/lvgl/src/draw/lv_draw_utils.c **** #include "opengles/lv_draw_opengles.h"
+  23:Drivers/lvgl/src/draw/lv_draw_utils.c **** #include "renesas/dave2d/lv_draw_dave2d.h"
+  24:Drivers/lvgl/src/draw/lv_draw_utils.c **** #include "sdl/lv_draw_sdl.h"
+  25:Drivers/lvgl/src/draw/lv_draw_utils.c **** #include "vg_lite/lv_draw_vg_lite.h"
+  26:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+  27:Drivers/lvgl/src/draw/lv_draw_utils.c **** /*********************
+  28:Drivers/lvgl/src/draw/lv_draw_utils.c ****  *      DEFINES
+  29:Drivers/lvgl/src/draw/lv_draw_utils.c ****  *********************/
+  30:Drivers/lvgl/src/draw/lv_draw_utils.c **** #ifndef LV_DRAW_RGB565_SWAP
+ARM GAS  /tmp/ccMRemNS.s 			page 2
+
+
+  31:Drivers/lvgl/src/draw/lv_draw_utils.c ****     #define LV_DRAW_RGB565_SWAP(...) LV_RESULT_INVALID
+  32:Drivers/lvgl/src/draw/lv_draw_utils.c **** #endif
+  33:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+  34:Drivers/lvgl/src/draw/lv_draw_utils.c **** #ifndef LV_DRAW_ROTATE90_ARGB8888
+  35:Drivers/lvgl/src/draw/lv_draw_utils.c ****     #define LV_DRAW_ROTATE90_ARGB8888(...) LV_RESULT_INVALID
+  36:Drivers/lvgl/src/draw/lv_draw_utils.c **** #endif
+  37:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+  38:Drivers/lvgl/src/draw/lv_draw_utils.c **** #ifndef LV_DRAW_ROTATE180_ARGB8888
+  39:Drivers/lvgl/src/draw/lv_draw_utils.c ****     #define LV_DRAW_ROTATE180_ARGB8888(...) LV_RESULT_INVALID
+  40:Drivers/lvgl/src/draw/lv_draw_utils.c **** #endif
+  41:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+  42:Drivers/lvgl/src/draw/lv_draw_utils.c **** #ifndef LV_DRAW_ROTATE270_ARGB8888
+  43:Drivers/lvgl/src/draw/lv_draw_utils.c ****     #define LV_DRAW_ROTATE270_ARGB8888(...) LV_RESULT_INVALID
+  44:Drivers/lvgl/src/draw/lv_draw_utils.c **** #endif
+  45:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+  46:Drivers/lvgl/src/draw/lv_draw_utils.c **** #ifndef LV_DRAW_ROTATE90_RGB888
+  47:Drivers/lvgl/src/draw/lv_draw_utils.c ****     #define LV_DRAW_ROTATE90_RGB888(...) LV_RESULT_INVALID
+  48:Drivers/lvgl/src/draw/lv_draw_utils.c **** #endif
+  49:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+  50:Drivers/lvgl/src/draw/lv_draw_utils.c **** #ifndef LV_DRAW_ROTATE180_RGB888
+  51:Drivers/lvgl/src/draw/lv_draw_utils.c ****     #define LV_DRAW_ROTATE180_RGB888(...) LV_RESULT_INVALID
+  52:Drivers/lvgl/src/draw/lv_draw_utils.c **** #endif
+  53:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+  54:Drivers/lvgl/src/draw/lv_draw_utils.c **** #ifndef LV_DRAW_ROTATE270_RGB888
+  55:Drivers/lvgl/src/draw/lv_draw_utils.c ****     #define LV_DRAW_ROTATE270_RGB888(...) LV_RESULT_INVALID
+  56:Drivers/lvgl/src/draw/lv_draw_utils.c **** #endif
+  57:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+  58:Drivers/lvgl/src/draw/lv_draw_utils.c **** #ifndef LV_DRAW_ROTATE90_RGB565
+  59:Drivers/lvgl/src/draw/lv_draw_utils.c ****     #define LV_DRAW_ROTATE90_RGB565(...) LV_RESULT_INVALID
+  60:Drivers/lvgl/src/draw/lv_draw_utils.c **** #endif
+  61:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+  62:Drivers/lvgl/src/draw/lv_draw_utils.c **** #ifndef LV_DRAW_ROTATE180_RGB565
+  63:Drivers/lvgl/src/draw/lv_draw_utils.c ****     #define LV_DRAW_ROTATE180_RGB565(...) LV_RESULT_INVALID
+  64:Drivers/lvgl/src/draw/lv_draw_utils.c **** #endif
+  65:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+  66:Drivers/lvgl/src/draw/lv_draw_utils.c **** #ifndef LV_DRAW_ROTATE270_RGB565
+  67:Drivers/lvgl/src/draw/lv_draw_utils.c ****     #define LV_DRAW_ROTATE270_RGB565(...) LV_RESULT_INVALID
+  68:Drivers/lvgl/src/draw/lv_draw_utils.c **** #endif
+  69:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+  70:Drivers/lvgl/src/draw/lv_draw_utils.c **** #ifndef LV_DRAW_ROTATE90_L8
+  71:Drivers/lvgl/src/draw/lv_draw_utils.c ****     #define LV_DRAW_ROTATE90_L8(...) LV_RESULT_INVALID
+  72:Drivers/lvgl/src/draw/lv_draw_utils.c **** #endif
+  73:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+  74:Drivers/lvgl/src/draw/lv_draw_utils.c **** #ifndef LV_DRAW_ROTATE180_L8
+  75:Drivers/lvgl/src/draw/lv_draw_utils.c ****     #define LV_DRAW_ROTATE180_L8(...) LV_RESULT_INVALID
+  76:Drivers/lvgl/src/draw/lv_draw_utils.c **** #endif
+  77:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+  78:Drivers/lvgl/src/draw/lv_draw_utils.c **** #ifndef LV_DRAW_ROTATE270_L8
+  79:Drivers/lvgl/src/draw/lv_draw_utils.c ****     #define LV_DRAW_ROTATE270_L8(...) LV_RESULT_INVALID
+  80:Drivers/lvgl/src/draw/lv_draw_utils.c **** #endif
+  81:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+  82:Drivers/lvgl/src/draw/lv_draw_utils.c **** /**********************
+  83:Drivers/lvgl/src/draw/lv_draw_utils.c ****  *      TYPEDEFS
+  84:Drivers/lvgl/src/draw/lv_draw_utils.c ****  **********************/
+  85:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+  86:Drivers/lvgl/src/draw/lv_draw_utils.c **** /**********************
+  87:Drivers/lvgl/src/draw/lv_draw_utils.c ****  *  STATIC PROTOTYPES
+ARM GAS  /tmp/ccMRemNS.s 			page 3
+
+
+  88:Drivers/lvgl/src/draw/lv_draw_utils.c ****  **********************/
+  89:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+  90:Drivers/lvgl/src/draw/lv_draw_utils.c **** static void rotate90_argb8888(const uint32_t * src, uint32_t * dst, int32_t src_width, int32_t src_
+  91:Drivers/lvgl/src/draw/lv_draw_utils.c ****                               int32_t src_stride,
+  92:Drivers/lvgl/src/draw/lv_draw_utils.c ****                               int32_t dst_stride);
+  93:Drivers/lvgl/src/draw/lv_draw_utils.c **** static void rotate180_argb8888(const uint32_t * src, uint32_t * dst, int32_t width, int32_t height,
+  94:Drivers/lvgl/src/draw/lv_draw_utils.c ****                                int32_t dest_stride);
+  95:Drivers/lvgl/src/draw/lv_draw_utils.c **** static void rotate270_argb8888(const uint32_t * src, uint32_t * dst, int32_t src_width, int32_t src
+  96:Drivers/lvgl/src/draw/lv_draw_utils.c ****                                int32_t src_stride,
+  97:Drivers/lvgl/src/draw/lv_draw_utils.c ****                                int32_t dst_stride);
+  98:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+  99:Drivers/lvgl/src/draw/lv_draw_utils.c **** static void rotate90_rgb888(const uint8_t * src, uint8_t * dst, int32_t src_width, int32_t src_heig
+ 100:Drivers/lvgl/src/draw/lv_draw_utils.c ****                             int32_t src_stride,
+ 101:Drivers/lvgl/src/draw/lv_draw_utils.c ****                             int32_t dst_stride);
+ 102:Drivers/lvgl/src/draw/lv_draw_utils.c **** static void rotate180_rgb888(const uint8_t * src, uint8_t * dst, int32_t width, int32_t height, int
+ 103:Drivers/lvgl/src/draw/lv_draw_utils.c ****                              int32_t dest_stride);
+ 104:Drivers/lvgl/src/draw/lv_draw_utils.c **** static void rotate270_rgb888(const uint8_t * src, uint8_t * dst, int32_t width, int32_t height, int
+ 105:Drivers/lvgl/src/draw/lv_draw_utils.c ****                              int32_t dst_stride);
+ 106:Drivers/lvgl/src/draw/lv_draw_utils.c **** static void rotate90_rgb565(const uint16_t * src, uint16_t * dst, int32_t src_width, int32_t src_he
+ 107:Drivers/lvgl/src/draw/lv_draw_utils.c ****                             int32_t src_stride,
+ 108:Drivers/lvgl/src/draw/lv_draw_utils.c ****                             int32_t dst_stride);
+ 109:Drivers/lvgl/src/draw/lv_draw_utils.c **** static void rotate180_rgb565(const uint16_t * src, uint16_t * dst, int32_t width, int32_t height, i
+ 110:Drivers/lvgl/src/draw/lv_draw_utils.c ****                              int32_t dest_stride);
+ 111:Drivers/lvgl/src/draw/lv_draw_utils.c **** static void rotate270_rgb565(const uint16_t * src, uint16_t * dst, int32_t src_width, int32_t src_h
+ 112:Drivers/lvgl/src/draw/lv_draw_utils.c ****                              int32_t src_stride,
+ 113:Drivers/lvgl/src/draw/lv_draw_utils.c ****                              int32_t dst_stride);
+ 114:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 115:Drivers/lvgl/src/draw/lv_draw_utils.c **** static void rotate90_l8(const uint8_t * src, uint8_t * dst, int32_t src_width, int32_t src_height,
+ 116:Drivers/lvgl/src/draw/lv_draw_utils.c ****                         int32_t src_stride,
+ 117:Drivers/lvgl/src/draw/lv_draw_utils.c ****                         int32_t dst_stride);
+ 118:Drivers/lvgl/src/draw/lv_draw_utils.c **** static void rotate180_l8(const uint8_t * src, uint8_t * dst, int32_t width, int32_t height, int32_t
+ 119:Drivers/lvgl/src/draw/lv_draw_utils.c ****                          int32_t dest_stride);
+ 120:Drivers/lvgl/src/draw/lv_draw_utils.c **** static void rotate270_l8(const uint8_t * src, uint8_t * dst, int32_t src_width, int32_t src_height,
+ 121:Drivers/lvgl/src/draw/lv_draw_utils.c ****                          int32_t src_stride,
+ 122:Drivers/lvgl/src/draw/lv_draw_utils.c ****                          int32_t dst_stride);
+ 123:Drivers/lvgl/src/draw/lv_draw_utils.c **** /**********************
+ 124:Drivers/lvgl/src/draw/lv_draw_utils.c ****  *  STATIC VARIABLES
+ 125:Drivers/lvgl/src/draw/lv_draw_utils.c ****  **********************/
+ 126:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 127:Drivers/lvgl/src/draw/lv_draw_utils.c **** /**********************
+ 128:Drivers/lvgl/src/draw/lv_draw_utils.c ****  *      MACROS
+ 129:Drivers/lvgl/src/draw/lv_draw_utils.c ****  **********************/
+ 130:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 131:Drivers/lvgl/src/draw/lv_draw_utils.c **** /**********************
+ 132:Drivers/lvgl/src/draw/lv_draw_utils.c ****  *   GLOBAL FUNCTIONS
+ 133:Drivers/lvgl/src/draw/lv_draw_utils.c ****  **********************/
+ 134:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 135:Drivers/lvgl/src/draw/lv_draw_utils.c **** void lv_draw_i1_to_argb8888(const void * buf_i1, void * buf_argb8888, uint32_t width, uint32_t heig
+ 136:Drivers/lvgl/src/draw/lv_draw_utils.c ****                             uint32_t buf_i1_stride, uint32_t buf_argb8888_stride, uint32_t index0_c
+ 137:Drivers/lvgl/src/draw/lv_draw_utils.c **** {
+ 138:Drivers/lvgl/src/draw/lv_draw_utils.c ****     LV_CHECK_ARG(buf_i1 != NULL, return);
+ 139:Drivers/lvgl/src/draw/lv_draw_utils.c ****     LV_CHECK_ARG(buf_argb8888 != NULL, return);
+ 140:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 141:Drivers/lvgl/src/draw/lv_draw_utils.c ****     /*Extract the bits of I1 px_map and convert them to ARGB8888*/
+ 142:Drivers/lvgl/src/draw/lv_draw_utils.c ****     const uint8_t * src = buf_i1;
+ 143:Drivers/lvgl/src/draw/lv_draw_utils.c ****     uint32_t * dst = buf_argb8888;
+ 144:Drivers/lvgl/src/draw/lv_draw_utils.c ****     uint32_t i1_row_byte_count = width / 8;
+ARM GAS  /tmp/ccMRemNS.s 			page 4
+
+
+ 145:Drivers/lvgl/src/draw/lv_draw_utils.c ****     for(uint32_t row = 0; row < height; row++) {
+ 146:Drivers/lvgl/src/draw/lv_draw_utils.c ****         uint32_t * dst_p = dst;
+ 147:Drivers/lvgl/src/draw/lv_draw_utils.c ****         for(uint32_t i = 0; i < i1_row_byte_count; i++) {
+ 148:Drivers/lvgl/src/draw/lv_draw_utils.c ****             /*From MSB to LSB (pixel 0 to pixel 7 in a byte)*/
+ 149:Drivers/lvgl/src/draw/lv_draw_utils.c ****             for(int32_t bit = 7; bit >= 0; bit--) {
+ 150:Drivers/lvgl/src/draw/lv_draw_utils.c ****                 *dst_p++ = ((src[i] >> bit) & 1) ? index1_color : index0_color;
+ 151:Drivers/lvgl/src/draw/lv_draw_utils.c ****             }
+ 152:Drivers/lvgl/src/draw/lv_draw_utils.c ****         }
+ 153:Drivers/lvgl/src/draw/lv_draw_utils.c ****         src += buf_i1_stride;
+ 154:Drivers/lvgl/src/draw/lv_draw_utils.c ****         dst += buf_argb8888_stride / 4;
+ 155:Drivers/lvgl/src/draw/lv_draw_utils.c ****     }
+ 156:Drivers/lvgl/src/draw/lv_draw_utils.c **** }
+ 157:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 158:Drivers/lvgl/src/draw/lv_draw_utils.c **** void lv_draw_rgb565_swap(void * buf, uint32_t buf_size_px)
+ 159:Drivers/lvgl/src/draw/lv_draw_utils.c **** {
+ 160:Drivers/lvgl/src/draw/lv_draw_utils.c ****     LV_CHECK_ARG(buf != NULL, return);
+ 161:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 162:Drivers/lvgl/src/draw/lv_draw_utils.c ****     if(LV_DRAW_RGB565_SWAP(buf, buf_size_px) == LV_RESULT_OK) return;
+ 163:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 164:Drivers/lvgl/src/draw/lv_draw_utils.c ****     uint16_t * buf16 = buf;
+ 165:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 166:Drivers/lvgl/src/draw/lv_draw_utils.c ****     /*2 pixels will be processed later, so handle 1 pixel alignment*/
+ 167:Drivers/lvgl/src/draw/lv_draw_utils.c ****     if((lv_uintptr_t)buf16 & 0x2) {
+ 168:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf16[0] = ((buf16[0] & 0xff00) >> 8) | ((buf16[0] & 0x00ff) << 8);
+ 169:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf16++;
+ 170:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf_size_px--;
+ 171:Drivers/lvgl/src/draw/lv_draw_utils.c ****     }
+ 172:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 173:Drivers/lvgl/src/draw/lv_draw_utils.c ****     uint32_t * buf32 = (uint32_t *)buf16;
+ 174:Drivers/lvgl/src/draw/lv_draw_utils.c ****     uint32_t u32_cnt = buf_size_px / 2;
+ 175:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 176:Drivers/lvgl/src/draw/lv_draw_utils.c ****     while(u32_cnt >= 8) {
+ 177:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf32[0] = ((buf32[0] & 0xff00ff00) >> 8) | ((buf32[0] & 0x00ff00ff) << 8);
+ 178:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf32[1] = ((buf32[1] & 0xff00ff00) >> 8) | ((buf32[1] & 0x00ff00ff) << 8);
+ 179:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf32[2] = ((buf32[2] & 0xff00ff00) >> 8) | ((buf32[2] & 0x00ff00ff) << 8);
+ 180:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf32[3] = ((buf32[3] & 0xff00ff00) >> 8) | ((buf32[3] & 0x00ff00ff) << 8);
+ 181:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf32[4] = ((buf32[4] & 0xff00ff00) >> 8) | ((buf32[4] & 0x00ff00ff) << 8);
+ 182:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf32[5] = ((buf32[5] & 0xff00ff00) >> 8) | ((buf32[5] & 0x00ff00ff) << 8);
+ 183:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf32[6] = ((buf32[6] & 0xff00ff00) >> 8) | ((buf32[6] & 0x00ff00ff) << 8);
+ 184:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf32[7] = ((buf32[7] & 0xff00ff00) >> 8) | ((buf32[7] & 0x00ff00ff) << 8);
+ 185:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf32 += 8;
+ 186:Drivers/lvgl/src/draw/lv_draw_utils.c ****         u32_cnt -= 8;
+ 187:Drivers/lvgl/src/draw/lv_draw_utils.c ****     }
+ 188:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 189:Drivers/lvgl/src/draw/lv_draw_utils.c ****     while(u32_cnt) {
+ 190:Drivers/lvgl/src/draw/lv_draw_utils.c ****         *buf32 = ((*buf32 & 0xff00ff00) >> 8) | ((*buf32 & 0x00ff00ff) << 8);
+ 191:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf32++;
+ 192:Drivers/lvgl/src/draw/lv_draw_utils.c ****         u32_cnt--;
+ 193:Drivers/lvgl/src/draw/lv_draw_utils.c ****     }
+ 194:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 195:Drivers/lvgl/src/draw/lv_draw_utils.c ****     /*Process the last pixel if needed*/
+ 196:Drivers/lvgl/src/draw/lv_draw_utils.c ****     if(buf_size_px & 0x1) {
+ 197:Drivers/lvgl/src/draw/lv_draw_utils.c ****         uint32_t e = buf_size_px - 1;
+ 198:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf16[e] = ((buf16[e] & 0xff00) >> 8) | ((buf16[e] & 0x00ff) << 8);
+ 199:Drivers/lvgl/src/draw/lv_draw_utils.c ****     }
+ 200:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 201:Drivers/lvgl/src/draw/lv_draw_utils.c **** }
+ARM GAS  /tmp/ccMRemNS.s 			page 5
+
+
+ 202:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 203:Drivers/lvgl/src/draw/lv_draw_utils.c **** void lv_draw_i1_invert(void * buf, uint32_t buf_size)
+ 204:Drivers/lvgl/src/draw/lv_draw_utils.c **** {
+ 205:Drivers/lvgl/src/draw/lv_draw_utils.c ****     LV_CHECK_ARG(buf != NULL, return);
+ 206:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 207:Drivers/lvgl/src/draw/lv_draw_utils.c ****     uint8_t * byte_buf = (uint8_t *)buf;
+ 208:Drivers/lvgl/src/draw/lv_draw_utils.c ****     uint32_t i;
+ 209:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 210:Drivers/lvgl/src/draw/lv_draw_utils.c ****     /*Make the buffer aligned*/
+ 211:Drivers/lvgl/src/draw/lv_draw_utils.c ****     while(((uintptr_t)(byte_buf) & (sizeof(int) - 1)) && buf_size > 0) {
+ 212:Drivers/lvgl/src/draw/lv_draw_utils.c ****         *byte_buf = ~(*byte_buf);
+ 213:Drivers/lvgl/src/draw/lv_draw_utils.c ****         byte_buf++;
+ 214:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf_size--;
+ 215:Drivers/lvgl/src/draw/lv_draw_utils.c ****     }
+ 216:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 217:Drivers/lvgl/src/draw/lv_draw_utils.c ****     if(buf_size >= sizeof(uint32_t)) {
+ 218:Drivers/lvgl/src/draw/lv_draw_utils.c ****         uint32_t * aligned_addr = (uint32_t *)byte_buf;
+ 219:Drivers/lvgl/src/draw/lv_draw_utils.c ****         uint32_t word_count = buf_size / 4;
+ 220:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 221:Drivers/lvgl/src/draw/lv_draw_utils.c ****         for(i = 0; i < word_count; ++i) {
+ 222:Drivers/lvgl/src/draw/lv_draw_utils.c ****             aligned_addr[i] = ~aligned_addr[i];
+ 223:Drivers/lvgl/src/draw/lv_draw_utils.c ****         }
+ 224:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 225:Drivers/lvgl/src/draw/lv_draw_utils.c ****         byte_buf = (uint8_t *)(aligned_addr + word_count);
+ 226:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf_size = buf_size % sizeof(uint32_t);
+ 227:Drivers/lvgl/src/draw/lv_draw_utils.c ****     }
+ 228:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 229:Drivers/lvgl/src/draw/lv_draw_utils.c ****     for(i = 0; i < buf_size; ++i) {
+ 230:Drivers/lvgl/src/draw/lv_draw_utils.c ****         byte_buf[i] = ~byte_buf[i];
+ 231:Drivers/lvgl/src/draw/lv_draw_utils.c ****     }
+ 232:Drivers/lvgl/src/draw/lv_draw_utils.c **** }
+ 233:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 234:Drivers/lvgl/src/draw/lv_draw_utils.c **** void lv_draw_i1_convert_to_vtiled(const void * buf, uint32_t buf_size, uint32_t width, uint32_t hei
+ 235:Drivers/lvgl/src/draw/lv_draw_utils.c ****                                   void * out_buf,
+ 236:Drivers/lvgl/src/draw/lv_draw_utils.c ****                                   uint32_t out_buf_size, bool bit_order_lsb)
+ 237:Drivers/lvgl/src/draw/lv_draw_utils.c **** {
+ 238:Drivers/lvgl/src/draw/lv_draw_utils.c ****     LV_CHECK_ARG(buf != NULL, return);
+ 239:Drivers/lvgl/src/draw/lv_draw_utils.c ****     LV_CHECK_ARG(out_buf != NULL, return);
+ 240:Drivers/lvgl/src/draw/lv_draw_utils.c ****     LV_CHECK_ARG(width % 8 == 0 && height % 8 == 0, return);
+ 241:Drivers/lvgl/src/draw/lv_draw_utils.c ****     LV_CHECK_ARG(buf_size >= (width / 8) * height, return);
+ 242:Drivers/lvgl/src/draw/lv_draw_utils.c ****     LV_CHECK_ARG(out_buf_size >= buf_size, return);
+ 243:Drivers/lvgl/src/draw/lv_draw_utils.c ****     LV_UNUSED(buf_size);
+ 244:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 245:Drivers/lvgl/src/draw/lv_draw_utils.c ****     lv_memset(out_buf, 0, out_buf_size);
+ 246:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 247:Drivers/lvgl/src/draw/lv_draw_utils.c ****     const uint8_t * src_buf = (uint8_t *)buf;
+ 248:Drivers/lvgl/src/draw/lv_draw_utils.c ****     uint8_t * dst_buf = (uint8_t *)out_buf;
+ 249:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 250:Drivers/lvgl/src/draw/lv_draw_utils.c ****     for(uint32_t y = 0; y < height; y++) {
+ 251:Drivers/lvgl/src/draw/lv_draw_utils.c ****         for(uint32_t x = 0; x < width; x++) {
+ 252:Drivers/lvgl/src/draw/lv_draw_utils.c ****             uint32_t src_index = y * width + x;
+ 253:Drivers/lvgl/src/draw/lv_draw_utils.c ****             uint32_t dst_index = x * height + y;
+ 254:Drivers/lvgl/src/draw/lv_draw_utils.c ****             uint8_t bit = (src_buf[src_index / 8] >> (7 - (src_index % 8))) & 0x01;
+ 255:Drivers/lvgl/src/draw/lv_draw_utils.c ****             if(bit_order_lsb) {
+ 256:Drivers/lvgl/src/draw/lv_draw_utils.c ****                 dst_buf[dst_index / 8] |= (bit << (dst_index % 8));
+ 257:Drivers/lvgl/src/draw/lv_draw_utils.c ****             }
+ 258:Drivers/lvgl/src/draw/lv_draw_utils.c ****             else {
+ARM GAS  /tmp/ccMRemNS.s 			page 6
+
+
+ 259:Drivers/lvgl/src/draw/lv_draw_utils.c ****                 dst_buf[dst_index / 8] |= (bit << (7 - (dst_index % 8)));
+ 260:Drivers/lvgl/src/draw/lv_draw_utils.c ****             }
+ 261:Drivers/lvgl/src/draw/lv_draw_utils.c ****         }
+ 262:Drivers/lvgl/src/draw/lv_draw_utils.c ****     }
+ 263:Drivers/lvgl/src/draw/lv_draw_utils.c **** }
+ 264:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 265:Drivers/lvgl/src/draw/lv_draw_utils.c **** void lv_draw_rotate(const void * src, void * dest, int32_t src_width, int32_t src_height, int32_t s
+ 266:Drivers/lvgl/src/draw/lv_draw_utils.c ****                     int32_t dest_stride, lv_rotation_t rotation, lv_color_format_t color_format)
+ 267:Drivers/lvgl/src/draw/lv_draw_utils.c **** {
+ 268:Drivers/lvgl/src/draw/lv_draw_utils.c ****     LV_CHECK_ARG(src != NULL, return);
+ 269:Drivers/lvgl/src/draw/lv_draw_utils.c ****     LV_CHECK_ARG(dest != NULL, return);
+ 270:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 271:Drivers/lvgl/src/draw/lv_draw_utils.c ****     if(rotation == LV_ROTATION_90) {
+ 272:Drivers/lvgl/src/draw/lv_draw_utils.c ****         switch(color_format) {
+ 273:Drivers/lvgl/src/draw/lv_draw_utils.c ****             case LV_COLOR_FORMAT_L8:
+ 274:Drivers/lvgl/src/draw/lv_draw_utils.c ****                 rotate90_l8(src, dest, src_width, src_height, src_stride, dest_stride);
+ 275:Drivers/lvgl/src/draw/lv_draw_utils.c ****                 break;
+ 276:Drivers/lvgl/src/draw/lv_draw_utils.c ****             case LV_COLOR_FORMAT_RGB565:
+ 277:Drivers/lvgl/src/draw/lv_draw_utils.c ****                 rotate90_rgb565(src, dest, src_width, src_height, src_stride, dest_stride);
+ 278:Drivers/lvgl/src/draw/lv_draw_utils.c ****                 break;
+ 279:Drivers/lvgl/src/draw/lv_draw_utils.c ****             case LV_COLOR_FORMAT_RGB888:
+ 280:Drivers/lvgl/src/draw/lv_draw_utils.c ****                 rotate90_rgb888(src, dest, src_width, src_height, src_stride, dest_stride);
+ 281:Drivers/lvgl/src/draw/lv_draw_utils.c ****                 break;
+ 282:Drivers/lvgl/src/draw/lv_draw_utils.c ****             case LV_COLOR_FORMAT_XRGB8888:
+ 283:Drivers/lvgl/src/draw/lv_draw_utils.c ****             case LV_COLOR_FORMAT_ARGB8888:
+ 284:Drivers/lvgl/src/draw/lv_draw_utils.c ****             case LV_COLOR_FORMAT_ARGB8888_PREMULTIPLIED:
+ 285:Drivers/lvgl/src/draw/lv_draw_utils.c ****                 rotate90_argb8888(src, dest, src_width, src_height, src_stride, dest_stride);
+ 286:Drivers/lvgl/src/draw/lv_draw_utils.c ****                 break;
+ 287:Drivers/lvgl/src/draw/lv_draw_utils.c ****             default:
+ 288:Drivers/lvgl/src/draw/lv_draw_utils.c ****                 break;
+ 289:Drivers/lvgl/src/draw/lv_draw_utils.c ****         }
+ 290:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 291:Drivers/lvgl/src/draw/lv_draw_utils.c ****         return;
+ 292:Drivers/lvgl/src/draw/lv_draw_utils.c ****     }
+ 293:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 294:Drivers/lvgl/src/draw/lv_draw_utils.c ****     if(rotation == LV_ROTATION_180) {
+ 295:Drivers/lvgl/src/draw/lv_draw_utils.c ****         switch(color_format) {
+ 296:Drivers/lvgl/src/draw/lv_draw_utils.c ****             case LV_COLOR_FORMAT_L8:
+ 297:Drivers/lvgl/src/draw/lv_draw_utils.c ****                 rotate180_l8(src, dest, src_width, src_height, src_stride, dest_stride);
+ 298:Drivers/lvgl/src/draw/lv_draw_utils.c ****                 break;
+ 299:Drivers/lvgl/src/draw/lv_draw_utils.c ****             case LV_COLOR_FORMAT_RGB565:
+ 300:Drivers/lvgl/src/draw/lv_draw_utils.c ****                 rotate180_rgb565(src, dest, src_width, src_height, src_stride, dest_stride);
+ 301:Drivers/lvgl/src/draw/lv_draw_utils.c ****                 break;
+ 302:Drivers/lvgl/src/draw/lv_draw_utils.c ****             case LV_COLOR_FORMAT_RGB888:
+ 303:Drivers/lvgl/src/draw/lv_draw_utils.c ****                 rotate180_rgb888(src, dest, src_width, src_height, src_stride, dest_stride);
+ 304:Drivers/lvgl/src/draw/lv_draw_utils.c ****                 break;
+ 305:Drivers/lvgl/src/draw/lv_draw_utils.c ****             case LV_COLOR_FORMAT_XRGB8888:
+ 306:Drivers/lvgl/src/draw/lv_draw_utils.c ****             case LV_COLOR_FORMAT_ARGB8888:
+ 307:Drivers/lvgl/src/draw/lv_draw_utils.c ****             case LV_COLOR_FORMAT_ARGB8888_PREMULTIPLIED:
+ 308:Drivers/lvgl/src/draw/lv_draw_utils.c ****                 rotate180_argb8888(src, dest, src_width, src_height, src_stride, dest_stride);
+ 309:Drivers/lvgl/src/draw/lv_draw_utils.c ****                 break;
+ 310:Drivers/lvgl/src/draw/lv_draw_utils.c ****             default:
+ 311:Drivers/lvgl/src/draw/lv_draw_utils.c ****                 break;
+ 312:Drivers/lvgl/src/draw/lv_draw_utils.c ****         }
+ 313:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 314:Drivers/lvgl/src/draw/lv_draw_utils.c ****         return;
+ 315:Drivers/lvgl/src/draw/lv_draw_utils.c ****     }
+ARM GAS  /tmp/ccMRemNS.s 			page 7
+
+
+ 316:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 317:Drivers/lvgl/src/draw/lv_draw_utils.c ****     if(rotation == LV_ROTATION_270) {
+ 318:Drivers/lvgl/src/draw/lv_draw_utils.c ****         switch(color_format) {
+ 319:Drivers/lvgl/src/draw/lv_draw_utils.c ****             case LV_COLOR_FORMAT_L8:
+ 320:Drivers/lvgl/src/draw/lv_draw_utils.c ****                 rotate270_l8(src, dest, src_width, src_height, src_stride, dest_stride);
+ 321:Drivers/lvgl/src/draw/lv_draw_utils.c ****                 break;
+ 322:Drivers/lvgl/src/draw/lv_draw_utils.c ****             case LV_COLOR_FORMAT_RGB565:
+ 323:Drivers/lvgl/src/draw/lv_draw_utils.c ****                 rotate270_rgb565(src, dest, src_width, src_height, src_stride, dest_stride);
+ 324:Drivers/lvgl/src/draw/lv_draw_utils.c ****                 break;
+ 325:Drivers/lvgl/src/draw/lv_draw_utils.c ****             case LV_COLOR_FORMAT_RGB888:
+ 326:Drivers/lvgl/src/draw/lv_draw_utils.c ****                 rotate270_rgb888(src, dest, src_width, src_height, src_stride, dest_stride);
+ 327:Drivers/lvgl/src/draw/lv_draw_utils.c ****                 break;
+ 328:Drivers/lvgl/src/draw/lv_draw_utils.c ****             case LV_COLOR_FORMAT_XRGB8888:
+ 329:Drivers/lvgl/src/draw/lv_draw_utils.c ****             case LV_COLOR_FORMAT_ARGB8888:
+ 330:Drivers/lvgl/src/draw/lv_draw_utils.c ****             case LV_COLOR_FORMAT_ARGB8888_PREMULTIPLIED:
+ 331:Drivers/lvgl/src/draw/lv_draw_utils.c ****                 rotate270_argb8888(src, dest, src_width, src_height, src_stride, dest_stride);
+ 332:Drivers/lvgl/src/draw/lv_draw_utils.c ****                 break;
+ 333:Drivers/lvgl/src/draw/lv_draw_utils.c ****             default:
+ 334:Drivers/lvgl/src/draw/lv_draw_utils.c ****                 break;
+ 335:Drivers/lvgl/src/draw/lv_draw_utils.c ****         }
+ 336:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 337:Drivers/lvgl/src/draw/lv_draw_utils.c ****         return;
+ 338:Drivers/lvgl/src/draw/lv_draw_utils.c ****     }
+ 339:Drivers/lvgl/src/draw/lv_draw_utils.c **** }
+ 340:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 341:Drivers/lvgl/src/draw/lv_draw_utils.c **** /**********************
+ 342:Drivers/lvgl/src/draw/lv_draw_utils.c ****  *   STATIC FUNCTIONS
+ 343:Drivers/lvgl/src/draw/lv_draw_utils.c ****  **********************/
+ 344:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 345:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 346:Drivers/lvgl/src/draw/lv_draw_utils.c **** static void rotate270_argb8888(const uint32_t * src, uint32_t * dst, int32_t src_width, int32_t src
+ 347:Drivers/lvgl/src/draw/lv_draw_utils.c ****                                int32_t src_stride,
+ 348:Drivers/lvgl/src/draw/lv_draw_utils.c ****                                int32_t dst_stride)
+ 349:Drivers/lvgl/src/draw/lv_draw_utils.c **** {
+  29              		.loc 1 349 1 view -0
+  30              		.cfi_startproc
+  31              		@ args = 8, pretend = 0, frame = 0
+  32              		@ frame_needed = 0, uses_anonymous_args = 0
+  33              		.loc 1 349 1 is_stmt 0 view .LVU1
+  34 0000 2DE9F043 		push	{r4, r5, r6, r7, r8, r9, lr}
+  35              	.LCFI0:
+  36              		.cfi_def_cfa_offset 28
+  37              		.cfi_offset 4, -28
+  38              		.cfi_offset 5, -24
+  39              		.cfi_offset 6, -20
+  40              		.cfi_offset 7, -16
+  41              		.cfi_offset 8, -12
+  42              		.cfi_offset 9, -8
+  43              		.cfi_offset 14, -4
+  44 0004 0546     		mov	r5, r0
+  45 0006 0C46     		mov	r4, r1
+  46 0008 9146     		mov	r9, r2
+  47 000a 1A46     		mov	r2, r3
+  48              	.LVL1:
+ 350:Drivers/lvgl/src/draw/lv_draw_utils.c ****     if(LV_RESULT_OK == LV_DRAW_ROTATE270_ARGB8888(src, dst, src_width, src_height, src_stride, dst_
+  49              		.loc 1 350 5 is_stmt 1 view .LVU2
+ 351:Drivers/lvgl/src/draw/lv_draw_utils.c ****         return ;
+ARM GAS  /tmp/ccMRemNS.s 			page 8
+
+
+ 352:Drivers/lvgl/src/draw/lv_draw_utils.c ****     }
+ 353:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 354:Drivers/lvgl/src/draw/lv_draw_utils.c ****     src_stride /= sizeof(uint32_t);
+  50              		.loc 1 354 5 view .LVU3
+  51              		.loc 1 354 16 is_stmt 0 view .LVU4
+  52 000c 0798     		ldr	r0, [sp, #28]
+  53              	.LVL2:
+  54              		.loc 1 354 16 view .LVU5
+  55 000e 8008     		lsrs	r0, r0, #2
+  56              	.LVL3:
+ 355:Drivers/lvgl/src/draw/lv_draw_utils.c ****     dst_stride /= sizeof(uint32_t);
+  57              		.loc 1 355 5 is_stmt 1 view .LVU6
+  58              		.loc 1 355 16 is_stmt 0 view .LVU7
+  59 0010 089B     		ldr	r3, [sp, #32]
+  60              	.LVL4:
+  61              		.loc 1 355 16 view .LVU8
+  62 0012 4FEA9308 		lsr	r8, r3, #2
+  63              	.LVL5:
+ 356:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 357:Drivers/lvgl/src/draw/lv_draw_utils.c ****     for(int32_t x = 0; x < src_width; ++x) {
+  64              		.loc 1 357 5 is_stmt 1 view .LVU9
+  65              	.LBB2:
+  66              		.loc 1 357 9 view .LVU10
+  67              		.loc 1 357 17 is_stmt 0 view .LVU11
+  68 0016 0026     		movs	r6, #0
+  69              		.loc 1 357 5 view .LVU12
+  70 0018 0EE0     		b	.L2
+  71              	.LVL6:
+  72              	.L4:
+  73              	.LBB3:
+  74              	.LBB4:
+ 358:Drivers/lvgl/src/draw/lv_draw_utils.c ****         int32_t dstIndex = x * dst_stride;
+ 359:Drivers/lvgl/src/draw/lv_draw_utils.c ****         int32_t srcIndex = x;
+ 360:Drivers/lvgl/src/draw/lv_draw_utils.c ****         for(int32_t y = 0; y < src_height; ++y) {
+ 361:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex + (src_height - y - 1)] = src[srcIndex];
+  75              		.loc 1 361 13 is_stmt 1 view .LVU13
+  76              		.loc 1 361 40 is_stmt 0 view .LVU14
+  77 001a A2EB0E0C 		sub	ip, r2, lr
+  78              		.loc 1 361 44 view .LVU15
+  79 001e 0CF1FF3C 		add	ip, ip, #-1
+  80              		.loc 1 361 26 view .LVU16
+  81 0022 8C44     		add	ip, ip, r1
+  82              		.loc 1 361 50 view .LVU17
+  83 0024 55F82370 		ldr	r7, [r5, r3, lsl #2]
+  84 0028 44F82C70 		str	r7, [r4, ip, lsl #2]
+ 362:Drivers/lvgl/src/draw/lv_draw_utils.c ****             srcIndex += src_stride;
+  85              		.loc 1 362 13 is_stmt 1 view .LVU18
+  86              		.loc 1 362 22 is_stmt 0 view .LVU19
+  87 002c 0344     		add	r3, r3, r0
+  88              	.LVL7:
+ 360:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex + (src_height - y - 1)] = src[srcIndex];
+  89              		.loc 1 360 44 is_stmt 1 discriminator 1 view .LVU20
+  90 002e 0EF1010E 		add	lr, lr, #1
+  91              	.LVL8:
+  92              	.L3:
+ 360:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex + (src_height - y - 1)] = src[srcIndex];
+  93              		.loc 1 360 30 discriminator 2 view .LVU21
+ARM GAS  /tmp/ccMRemNS.s 			page 9
+
+
+  94 0032 9645     		cmp	lr, r2
+  95 0034 F1DB     		blt	.L4
+ 360:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex + (src_height - y - 1)] = src[srcIndex];
+  96              		.loc 1 360 30 is_stmt 0 discriminator 2 view .LVU22
+  97              	.LBE4:
+  98              	.LBE3:
+ 357:Drivers/lvgl/src/draw/lv_draw_utils.c ****         int32_t dstIndex = x * dst_stride;
+  99              		.loc 1 357 39 is_stmt 1 discriminator 1 view .LVU23
+ 100 0036 0136     		adds	r6, r6, #1
+ 101              	.LVL9:
+ 102              	.L2:
+ 357:Drivers/lvgl/src/draw/lv_draw_utils.c ****         int32_t dstIndex = x * dst_stride;
+ 103              		.loc 1 357 26 discriminator 2 view .LVU24
+ 104 0038 4E45     		cmp	r6, r9
+ 105 003a 05DA     		bge	.L7
+ 106              	.LBB7:
+ 358:Drivers/lvgl/src/draw/lv_draw_utils.c ****         int32_t srcIndex = x;
+ 107              		.loc 1 358 9 view .LVU25
+ 358:Drivers/lvgl/src/draw/lv_draw_utils.c ****         int32_t srcIndex = x;
+ 108              		.loc 1 358 17 is_stmt 0 view .LVU26
+ 109 003c 08FB06F1 		mul	r1, r8, r6
+ 110              	.LVL10:
+ 359:Drivers/lvgl/src/draw/lv_draw_utils.c ****         for(int32_t y = 0; y < src_height; ++y) {
+ 111              		.loc 1 359 9 is_stmt 1 view .LVU27
+ 360:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex + (src_height - y - 1)] = src[srcIndex];
+ 112              		.loc 1 360 9 view .LVU28
+ 113              	.LBB5:
+ 360:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex + (src_height - y - 1)] = src[srcIndex];
+ 114              		.loc 1 360 13 view .LVU29
+ 360:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex + (src_height - y - 1)] = src[srcIndex];
+ 115              		.loc 1 360 13 is_stmt 0 view .LVU30
+ 116              	.LBE5:
+ 359:Drivers/lvgl/src/draw/lv_draw_utils.c ****         for(int32_t y = 0; y < src_height; ++y) {
+ 117              		.loc 1 359 17 view .LVU31
+ 118 0040 3346     		mov	r3, r6
+ 119              	.LBB6:
+ 360:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex + (src_height - y - 1)] = src[srcIndex];
+ 120              		.loc 1 360 21 view .LVU32
+ 121 0042 4FF0000E 		mov	lr, #0
+ 360:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex + (src_height - y - 1)] = src[srcIndex];
+ 122              		.loc 1 360 9 view .LVU33
+ 123 0046 F4E7     		b	.L3
+ 124              	.LVL11:
+ 125              	.L7:
+ 360:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex + (src_height - y - 1)] = src[srcIndex];
+ 126              		.loc 1 360 9 view .LVU34
+ 127              	.LBE6:
+ 128              	.LBE7:
+ 129              	.LBE2:
+ 363:Drivers/lvgl/src/draw/lv_draw_utils.c ****         }
+ 364:Drivers/lvgl/src/draw/lv_draw_utils.c ****     }
+ 365:Drivers/lvgl/src/draw/lv_draw_utils.c **** }
+ 130              		.loc 1 365 1 view .LVU35
+ 131 0048 BDE8F083 		pop	{r4, r5, r6, r7, r8, r9, pc}
+ 132              		.loc 1 365 1 view .LVU36
+ 133              		.cfi_endproc
+ 134              	.LFE34:
+ARM GAS  /tmp/ccMRemNS.s 			page 10
+
+
+ 136              		.section	.text.rotate180_argb8888,"ax",%progbits
+ 137              		.align	1
+ 138              		.syntax unified
+ 139              		.thumb
+ 140              		.thumb_func
+ 142              	rotate180_argb8888:
+ 143              	.LVL12:
+ 144              	.LFB35:
+ 366:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 367:Drivers/lvgl/src/draw/lv_draw_utils.c **** static void rotate180_argb8888(const uint32_t * src, uint32_t * dst, int32_t width, int32_t height,
+ 368:Drivers/lvgl/src/draw/lv_draw_utils.c ****                                int32_t dest_stride)
+ 369:Drivers/lvgl/src/draw/lv_draw_utils.c **** {
+ 145              		.loc 1 369 1 is_stmt 1 view -0
+ 146              		.cfi_startproc
+ 147              		@ args = 8, pretend = 0, frame = 0
+ 148              		@ frame_needed = 0, uses_anonymous_args = 0
+ 149              		.loc 1 369 1 is_stmt 0 view .LVU38
+ 150 0000 2DE9F043 		push	{r4, r5, r6, r7, r8, r9, lr}
+ 151              	.LCFI1:
+ 152              		.cfi_def_cfa_offset 28
+ 153              		.cfi_offset 4, -28
+ 154              		.cfi_offset 5, -24
+ 155              		.cfi_offset 6, -20
+ 156              		.cfi_offset 7, -16
+ 157              		.cfi_offset 8, -12
+ 158              		.cfi_offset 9, -8
+ 159              		.cfi_offset 14, -4
+ 160 0004 0546     		mov	r5, r0
+ 161 0006 0C46     		mov	r4, r1
+ 162 0008 1F46     		mov	r7, r3
+ 370:Drivers/lvgl/src/draw/lv_draw_utils.c ****     LV_UNUSED(dest_stride);
+ 163              		.loc 1 370 5 is_stmt 1 view .LVU39
+ 371:Drivers/lvgl/src/draw/lv_draw_utils.c ****     if(LV_RESULT_OK == LV_DRAW_ROTATE180_ARGB8888(src, dst, src_width, src_height, src_stride, dst_
+ 164              		.loc 1 371 5 view .LVU40
+ 372:Drivers/lvgl/src/draw/lv_draw_utils.c ****         return ;
+ 373:Drivers/lvgl/src/draw/lv_draw_utils.c ****     }
+ 374:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 375:Drivers/lvgl/src/draw/lv_draw_utils.c ****     src_stride /= sizeof(uint32_t);
+ 165              		.loc 1 375 5 view .LVU41
+ 166              		.loc 1 375 16 is_stmt 0 view .LVU42
+ 167 000a 079B     		ldr	r3, [sp, #28]
+ 168              	.LVL13:
+ 169              		.loc 1 375 16 view .LVU43
+ 170 000c 4FEA9309 		lsr	r9, r3, #2
+ 171              	.LVL14:
+ 376:Drivers/lvgl/src/draw/lv_draw_utils.c ****     dest_stride /= sizeof(uint32_t);
+ 172              		.loc 1 376 5 is_stmt 1 view .LVU44
+ 173              		.loc 1 376 17 is_stmt 0 view .LVU45
+ 174 0010 089B     		ldr	r3, [sp, #32]
+ 175 0012 4FEA9308 		lsr	r8, r3, #2
+ 176              	.LVL15:
+ 377:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 378:Drivers/lvgl/src/draw/lv_draw_utils.c ****     for(int32_t y = 0; y < height; ++y) {
+ 177              		.loc 1 378 5 is_stmt 1 view .LVU46
+ 178              	.LBB8:
+ 179              		.loc 1 378 9 view .LVU47
+ 180              		.loc 1 378 17 is_stmt 0 view .LVU48
+ARM GAS  /tmp/ccMRemNS.s 			page 11
+
+
+ 181 0016 0026     		movs	r6, #0
+ 182              		.loc 1 378 5 view .LVU49
+ 183 0018 12E0     		b	.L9
+ 184              	.LVL16:
+ 185              	.L11:
+ 186              	.LBB9:
+ 187              	.LBB10:
+ 379:Drivers/lvgl/src/draw/lv_draw_utils.c ****         int32_t dstIndex = (height - y - 1) * dest_stride;
+ 380:Drivers/lvgl/src/draw/lv_draw_utils.c ****         int32_t srcIndex = y * src_stride;
+ 381:Drivers/lvgl/src/draw/lv_draw_utils.c ****         for(int32_t x = 0; x < width; ++x) {
+ 382:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex + width - x - 1] = src[srcIndex + x];
+ 188              		.loc 1 382 13 is_stmt 1 view .LVU50
+ 189              		.loc 1 382 58 is_stmt 0 view .LVU51
+ 190 001a 0EEB0003 		add	r3, lr, r0
+ 191              		.loc 1 382 26 view .LVU52
+ 192 001e 01EB020C 		add	ip, r1, r2
+ 193              		.loc 1 382 34 view .LVU53
+ 194 0022 ACEB0E0C 		sub	ip, ip, lr
+ 195              		.loc 1 382 38 view .LVU54
+ 196 0026 0CF1804C 		add	ip, ip, #1073741824
+ 197 002a 0CF1FF3C 		add	ip, ip, #-1
+ 198              		.loc 1 382 48 view .LVU55
+ 199 002e 55F82330 		ldr	r3, [r5, r3, lsl #2]
+ 200              		.loc 1 382 43 view .LVU56
+ 201 0032 44F82C30 		str	r3, [r4, ip, lsl #2]
+ 381:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex + width - x - 1] = src[srcIndex + x];
+ 202              		.loc 1 381 39 is_stmt 1 discriminator 1 view .LVU57
+ 203 0036 0EF1010E 		add	lr, lr, #1
+ 204              	.LVL17:
+ 205              	.L10:
+ 381:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex + width - x - 1] = src[srcIndex + x];
+ 206              		.loc 1 381 30 discriminator 2 view .LVU58
+ 207 003a 9645     		cmp	lr, r2
+ 208 003c EDDB     		blt	.L11
+ 209              	.LBE10:
+ 210              	.LBE9:
+ 378:Drivers/lvgl/src/draw/lv_draw_utils.c ****         int32_t dstIndex = (height - y - 1) * dest_stride;
+ 211              		.loc 1 378 36 discriminator 1 view .LVU59
+ 212 003e 0136     		adds	r6, r6, #1
+ 213              	.LVL18:
+ 214              	.L9:
+ 378:Drivers/lvgl/src/draw/lv_draw_utils.c ****         int32_t dstIndex = (height - y - 1) * dest_stride;
+ 215              		.loc 1 378 26 discriminator 2 view .LVU60
+ 216 0040 BE42     		cmp	r6, r7
+ 217 0042 08DA     		bge	.L14
+ 218              	.LBB12:
+ 379:Drivers/lvgl/src/draw/lv_draw_utils.c ****         int32_t dstIndex = (height - y - 1) * dest_stride;
+ 219              		.loc 1 379 9 view .LVU61
+ 379:Drivers/lvgl/src/draw/lv_draw_utils.c ****         int32_t dstIndex = (height - y - 1) * dest_stride;
+ 220              		.loc 1 379 36 is_stmt 0 view .LVU62
+ 221 0044 B91B     		subs	r1, r7, r6
+ 379:Drivers/lvgl/src/draw/lv_draw_utils.c ****         int32_t dstIndex = (height - y - 1) * dest_stride;
+ 222              		.loc 1 379 40 view .LVU63
+ 223 0046 0139     		subs	r1, r1, #1
+ 379:Drivers/lvgl/src/draw/lv_draw_utils.c ****         int32_t dstIndex = (height - y - 1) * dest_stride;
+ 224              		.loc 1 379 17 view .LVU64
+ 225 0048 08FB01F1 		mul	r1, r8, r1
+ARM GAS  /tmp/ccMRemNS.s 			page 12
+
+
+ 226              	.LVL19:
+ 380:Drivers/lvgl/src/draw/lv_draw_utils.c ****         for(int32_t x = 0; x < width; ++x) {
+ 227              		.loc 1 380 9 is_stmt 1 view .LVU65
+ 380:Drivers/lvgl/src/draw/lv_draw_utils.c ****         for(int32_t x = 0; x < width; ++x) {
+ 228              		.loc 1 380 17 is_stmt 0 view .LVU66
+ 229 004c 09FB06F0 		mul	r0, r9, r6
+ 230              	.LVL20:
+ 381:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex + width - x - 1] = src[srcIndex + x];
+ 231              		.loc 1 381 9 is_stmt 1 view .LVU67
+ 232              	.LBB11:
+ 381:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex + width - x - 1] = src[srcIndex + x];
+ 233              		.loc 1 381 13 view .LVU68
+ 381:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex + width - x - 1] = src[srcIndex + x];
+ 234              		.loc 1 381 21 is_stmt 0 view .LVU69
+ 235 0050 4FF0000E 		mov	lr, #0
+ 381:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex + width - x - 1] = src[srcIndex + x];
+ 236              		.loc 1 381 9 view .LVU70
+ 237 0054 F1E7     		b	.L10
+ 238              	.LVL21:
+ 239              	.L14:
+ 381:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex + width - x - 1] = src[srcIndex + x];
+ 240              		.loc 1 381 9 view .LVU71
+ 241              	.LBE11:
+ 242              	.LBE12:
+ 243              	.LBE8:
+ 383:Drivers/lvgl/src/draw/lv_draw_utils.c ****         }
+ 384:Drivers/lvgl/src/draw/lv_draw_utils.c ****     }
+ 385:Drivers/lvgl/src/draw/lv_draw_utils.c **** }
+ 244              		.loc 1 385 1 view .LVU72
+ 245 0056 BDE8F083 		pop	{r4, r5, r6, r7, r8, r9, pc}
+ 246              		.loc 1 385 1 view .LVU73
+ 247              		.cfi_endproc
+ 248              	.LFE35:
+ 250              		.section	.text.rotate90_argb8888,"ax",%progbits
+ 251              		.align	1
+ 252              		.syntax unified
+ 253              		.thumb
+ 254              		.thumb_func
+ 256              	rotate90_argb8888:
+ 257              	.LVL22:
+ 258              	.LFB36:
+ 386:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 387:Drivers/lvgl/src/draw/lv_draw_utils.c **** static void rotate90_argb8888(const uint32_t * src, uint32_t * dst, int32_t src_width, int32_t src_
+ 388:Drivers/lvgl/src/draw/lv_draw_utils.c ****                               int32_t src_stride, int32_t dst_stride)
+ 389:Drivers/lvgl/src/draw/lv_draw_utils.c **** {
+ 259              		.loc 1 389 1 is_stmt 1 view -0
+ 260              		.cfi_startproc
+ 261              		@ args = 8, pretend = 0, frame = 0
+ 262              		@ frame_needed = 0, uses_anonymous_args = 0
+ 263              		.loc 1 389 1 is_stmt 0 view .LVU75
+ 264 0000 2DE9F043 		push	{r4, r5, r6, r7, r8, r9, lr}
+ 265              	.LCFI2:
+ 266              		.cfi_def_cfa_offset 28
+ 267              		.cfi_offset 4, -28
+ 268              		.cfi_offset 5, -24
+ 269              		.cfi_offset 6, -20
+ 270              		.cfi_offset 7, -16
+ARM GAS  /tmp/ccMRemNS.s 			page 13
+
+
+ 271              		.cfi_offset 8, -12
+ 272              		.cfi_offset 9, -8
+ 273              		.cfi_offset 14, -4
+ 274 0004 0546     		mov	r5, r0
+ 275 0006 0E46     		mov	r6, r1
+ 276 0008 9146     		mov	r9, r2
+ 277 000a 1946     		mov	r1, r3
+ 278              	.LVL23:
+ 390:Drivers/lvgl/src/draw/lv_draw_utils.c ****     if(LV_RESULT_OK == LV_DRAW_ROTATE90_ARGB8888(src, dst, src_width, src_height, src_stride, dst_s
+ 279              		.loc 1 390 5 is_stmt 1 view .LVU76
+ 391:Drivers/lvgl/src/draw/lv_draw_utils.c ****         return ;
+ 392:Drivers/lvgl/src/draw/lv_draw_utils.c ****     }
+ 393:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 394:Drivers/lvgl/src/draw/lv_draw_utils.c ****     src_stride /= sizeof(uint32_t);
+ 280              		.loc 1 394 5 view .LVU77
+ 281              		.loc 1 394 16 is_stmt 0 view .LVU78
+ 282 000c 079C     		ldr	r4, [sp, #28]
+ 283 000e A408     		lsrs	r4, r4, #2
+ 284              	.LVL24:
+ 395:Drivers/lvgl/src/draw/lv_draw_utils.c ****     dst_stride /= sizeof(uint32_t);
+ 285              		.loc 1 395 5 is_stmt 1 view .LVU79
+ 286              		.loc 1 395 16 is_stmt 0 view .LVU80
+ 287 0010 089B     		ldr	r3, [sp, #32]
+ 288              	.LVL25:
+ 289              		.loc 1 395 16 view .LVU81
+ 290 0012 9808     		lsrs	r0, r3, #2
+ 291              	.LVL26:
+ 396:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 397:Drivers/lvgl/src/draw/lv_draw_utils.c ****     for(int32_t x = 0; x < src_width; ++x) {
+ 292              		.loc 1 397 5 is_stmt 1 view .LVU82
+ 293              	.LBB13:
+ 294              		.loc 1 397 9 view .LVU83
+ 295              		.loc 1 397 17 is_stmt 0 view .LVU84
+ 296 0014 4FF00008 		mov	r8, #0
+ 297              		.loc 1 397 5 view .LVU85
+ 298 0018 0CE0     		b	.L16
+ 299              	.LVL27:
+ 300              	.L18:
+ 301              	.LBB14:
+ 302              	.LBB15:
+ 398:Drivers/lvgl/src/draw/lv_draw_utils.c ****         int32_t dstIndex = (src_width - x - 1);
+ 399:Drivers/lvgl/src/draw/lv_draw_utils.c ****         int32_t srcIndex = x;
+ 400:Drivers/lvgl/src/draw/lv_draw_utils.c ****         for(int32_t y = 0; y < src_height; ++y) {
+ 401:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex * dst_stride + y] = src[srcIndex];
+ 303              		.loc 1 401 13 is_stmt 1 view .LVU86
+ 304              		.loc 1 401 39 is_stmt 0 view .LVU87
+ 305 001a 02FB00C3 		mla	r3, r2, r0, ip
+ 306              		.loc 1 401 44 view .LVU88
+ 307 001e 55F82E70 		ldr	r7, [r5, lr, lsl #2]
+ 308 0022 46F82370 		str	r7, [r6, r3, lsl #2]
+ 402:Drivers/lvgl/src/draw/lv_draw_utils.c ****             srcIndex += src_stride;
+ 309              		.loc 1 402 13 is_stmt 1 view .LVU89
+ 310              		.loc 1 402 22 is_stmt 0 view .LVU90
+ 311 0026 A644     		add	lr, lr, r4
+ 312              	.LVL28:
+ 400:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex * dst_stride + y] = src[srcIndex];
+ 313              		.loc 1 400 44 is_stmt 1 discriminator 1 view .LVU91
+ARM GAS  /tmp/ccMRemNS.s 			page 14
+
+
+ 314 0028 0CF1010C 		add	ip, ip, #1
+ 315              	.LVL29:
+ 316              	.L17:
+ 400:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex * dst_stride + y] = src[srcIndex];
+ 317              		.loc 1 400 30 discriminator 2 view .LVU92
+ 318 002c 8C45     		cmp	ip, r1
+ 319 002e F4DB     		blt	.L18
+ 400:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex * dst_stride + y] = src[srcIndex];
+ 320              		.loc 1 400 30 is_stmt 0 discriminator 2 view .LVU93
+ 321              	.LBE15:
+ 322              	.LBE14:
+ 397:Drivers/lvgl/src/draw/lv_draw_utils.c ****         int32_t dstIndex = (src_width - x - 1);
+ 323              		.loc 1 397 39 is_stmt 1 discriminator 1 view .LVU94
+ 324 0030 08F10108 		add	r8, r8, #1
+ 325              	.LVL30:
+ 326              	.L16:
+ 397:Drivers/lvgl/src/draw/lv_draw_utils.c ****         int32_t dstIndex = (src_width - x - 1);
+ 327              		.loc 1 397 26 discriminator 2 view .LVU95
+ 328 0034 C845     		cmp	r8, r9
+ 329 0036 06DA     		bge	.L21
+ 330              	.LBB18:
+ 398:Drivers/lvgl/src/draw/lv_draw_utils.c ****         int32_t srcIndex = x;
+ 331              		.loc 1 398 9 view .LVU96
+ 398:Drivers/lvgl/src/draw/lv_draw_utils.c ****         int32_t srcIndex = x;
+ 332              		.loc 1 398 39 is_stmt 0 view .LVU97
+ 333 0038 A9EB0802 		sub	r2, r9, r8
+ 398:Drivers/lvgl/src/draw/lv_draw_utils.c ****         int32_t srcIndex = x;
+ 334              		.loc 1 398 17 view .LVU98
+ 335 003c 013A     		subs	r2, r2, #1
+ 336              	.LVL31:
+ 399:Drivers/lvgl/src/draw/lv_draw_utils.c ****         for(int32_t y = 0; y < src_height; ++y) {
+ 337              		.loc 1 399 9 is_stmt 1 view .LVU99
+ 400:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex * dst_stride + y] = src[srcIndex];
+ 338              		.loc 1 400 9 view .LVU100
+ 339              	.LBB16:
+ 400:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex * dst_stride + y] = src[srcIndex];
+ 340              		.loc 1 400 13 view .LVU101
+ 400:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex * dst_stride + y] = src[srcIndex];
+ 341              		.loc 1 400 13 is_stmt 0 view .LVU102
+ 342              	.LBE16:
+ 399:Drivers/lvgl/src/draw/lv_draw_utils.c ****         for(int32_t y = 0; y < src_height; ++y) {
+ 343              		.loc 1 399 17 view .LVU103
+ 344 003e C646     		mov	lr, r8
+ 345              	.LBB17:
+ 400:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex * dst_stride + y] = src[srcIndex];
+ 346              		.loc 1 400 21 view .LVU104
+ 347 0040 4FF0000C 		mov	ip, #0
+ 400:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex * dst_stride + y] = src[srcIndex];
+ 348              		.loc 1 400 9 view .LVU105
+ 349 0044 F2E7     		b	.L17
+ 350              	.LVL32:
+ 351              	.L21:
+ 400:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex * dst_stride + y] = src[srcIndex];
+ 352              		.loc 1 400 9 view .LVU106
+ 353              	.LBE17:
+ 354              	.LBE18:
+ 355              	.LBE13:
+ARM GAS  /tmp/ccMRemNS.s 			page 15
+
+
+ 403:Drivers/lvgl/src/draw/lv_draw_utils.c ****         }
+ 404:Drivers/lvgl/src/draw/lv_draw_utils.c ****     }
+ 405:Drivers/lvgl/src/draw/lv_draw_utils.c **** }
+ 356              		.loc 1 405 1 view .LVU107
+ 357 0046 BDE8F083 		pop	{r4, r5, r6, r7, r8, r9, pc}
+ 358              		.loc 1 405 1 view .LVU108
+ 359              		.cfi_endproc
+ 360              	.LFE36:
+ 362              		.section	.text.rotate90_rgb888,"ax",%progbits
+ 363              		.align	1
+ 364              		.syntax unified
+ 365              		.thumb
+ 366              		.thumb_func
+ 368              	rotate90_rgb888:
+ 369              	.LVL33:
+ 370              	.LFB37:
+ 406:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 407:Drivers/lvgl/src/draw/lv_draw_utils.c **** static void rotate90_rgb888(const uint8_t * src, uint8_t * dst, int32_t src_width, int32_t src_heig
+ 408:Drivers/lvgl/src/draw/lv_draw_utils.c ****                             int32_t src_stride,
+ 409:Drivers/lvgl/src/draw/lv_draw_utils.c ****                             int32_t dst_stride)
+ 410:Drivers/lvgl/src/draw/lv_draw_utils.c **** {
+ 371              		.loc 1 410 1 is_stmt 1 view -0
+ 372              		.cfi_startproc
+ 373              		@ args = 8, pretend = 0, frame = 0
+ 374              		@ frame_needed = 0, uses_anonymous_args = 0
+ 375              		.loc 1 410 1 is_stmt 0 view .LVU110
+ 376 0000 2DE9F043 		push	{r4, r5, r6, r7, r8, r9, lr}
+ 377              	.LCFI3:
+ 378              		.cfi_def_cfa_offset 28
+ 379              		.cfi_offset 4, -28
+ 380              		.cfi_offset 5, -24
+ 381              		.cfi_offset 6, -20
+ 382              		.cfi_offset 7, -16
+ 383              		.cfi_offset 8, -12
+ 384              		.cfi_offset 9, -8
+ 385              		.cfi_offset 14, -4
+ 386 0004 0446     		mov	r4, r0
+ 387 0006 0846     		mov	r0, r1
+ 388              	.LVL34:
+ 389              		.loc 1 410 1 view .LVU111
+ 390 0008 1546     		mov	r5, r2
+ 391 000a 1E46     		mov	r6, r3
+ 392 000c DDF81C80 		ldr	r8, [sp, #28]
+ 393 0010 089F     		ldr	r7, [sp, #32]
+ 411:Drivers/lvgl/src/draw/lv_draw_utils.c ****     if(LV_RESULT_OK == LV_DRAW_ROTATE90_RGB888(src, dst, src_width, src_height, src_stride, dst_str
+ 394              		.loc 1 411 5 is_stmt 1 view .LVU112
+ 412:Drivers/lvgl/src/draw/lv_draw_utils.c ****         return ;
+ 413:Drivers/lvgl/src/draw/lv_draw_utils.c ****     }
+ 414:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 415:Drivers/lvgl/src/draw/lv_draw_utils.c ****     for(int32_t x = 0; x < src_width; ++x) {
+ 395              		.loc 1 415 5 view .LVU113
+ 396              	.LBB19:
+ 397              		.loc 1 415 9 view .LVU114
+ 398              	.LVL35:
+ 399              		.loc 1 415 17 is_stmt 0 view .LVU115
+ 400 0012 0021     		movs	r1, #0
+ 401              	.LVL36:
+ARM GAS  /tmp/ccMRemNS.s 			page 16
+
+
+ 402              		.loc 1 415 5 view .LVU116
+ 403 0014 21E0     		b	.L23
+ 404              	.LVL37:
+ 405              	.L24:
+ 406              	.LBB20:
+ 407              	.LBB21:
+ 416:Drivers/lvgl/src/draw/lv_draw_utils.c ****         for(int32_t y = 0; y < src_height; ++y) {
+ 417:Drivers/lvgl/src/draw/lv_draw_utils.c ****             int32_t srcIndex = y * src_stride + x * 3;
+ 408              		.loc 1 417 13 is_stmt 1 view .LVU117
+ 409              		.loc 1 417 51 is_stmt 0 view .LVU118
+ 410 0016 01EB410E 		add	lr, r1, r1, lsl #1
+ 411              		.loc 1 417 21 view .LVU119
+ 412 001a 08FB03EE 		mla	lr, r8, r3, lr
+ 413              	.LVL38:
+ 418:Drivers/lvgl/src/draw/lv_draw_utils.c ****             int32_t dstIndex = (src_width - x - 1) * dst_stride + y * 3;
+ 414              		.loc 1 418 13 is_stmt 1 view .LVU120
+ 415              		.loc 1 418 43 is_stmt 0 view .LVU121
+ 416 001e 6A1A     		subs	r2, r5, r1
+ 417              		.loc 1 418 47 view .LVU122
+ 418 0020 013A     		subs	r2, r2, #1
+ 419              		.loc 1 418 69 view .LVU123
+ 420 0022 03EB430C 		add	ip, r3, r3, lsl #1
+ 421              		.loc 1 418 21 view .LVU124
+ 422 0026 07FB02CC 		mla	ip, r7, r2, ip
+ 423              	.LVL39:
+ 419:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex] = src[srcIndex];       /*Red*/
+ 424              		.loc 1 419 13 is_stmt 1 view .LVU125
+ 425              		.loc 1 419 32 is_stmt 0 view .LVU126
+ 426 002a 14F80E20 		ldrb	r2, [r4, lr]	@ zero_extendqisi2
+ 427              		.loc 1 419 27 view .LVU127
+ 428 002e 00F80C20 		strb	r2, [r0, ip]
+ 420:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex + 1] = src[srcIndex + 1]; /*Green*/
+ 429              		.loc 1 420 13 is_stmt 1 view .LVU128
+ 430              		.loc 1 420 46 is_stmt 0 view .LVU129
+ 431 0032 0EF10109 		add	r9, lr, #1
+ 432              		.loc 1 420 26 view .LVU130
+ 433 0036 0CF10102 		add	r2, ip, #1
+ 434              		.loc 1 420 36 view .LVU131
+ 435 003a 14F80990 		ldrb	r9, [r4, r9]	@ zero_extendqisi2
+ 436              		.loc 1 420 31 view .LVU132
+ 437 003e 00F80290 		strb	r9, [r0, r2]
+ 421:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex + 2] = src[srcIndex + 2]; /*Blue*/
+ 438              		.loc 1 421 13 is_stmt 1 view .LVU133
+ 439              		.loc 1 421 46 is_stmt 0 view .LVU134
+ 440 0042 0EF1020E 		add	lr, lr, #2
+ 441              	.LVL40:
+ 442              		.loc 1 421 26 view .LVU135
+ 443 0046 0CF1020C 		add	ip, ip, #2
+ 444              	.LVL41:
+ 445              		.loc 1 421 36 view .LVU136
+ 446 004a 14F80E20 		ldrb	r2, [r4, lr]	@ zero_extendqisi2
+ 447              		.loc 1 421 31 view .LVU137
+ 448 004e 00F80C20 		strb	r2, [r0, ip]
+ 449              	.LBE21:
+ 416:Drivers/lvgl/src/draw/lv_draw_utils.c ****             int32_t srcIndex = y * src_stride + x * 3;
+ 450              		.loc 1 416 44 is_stmt 1 discriminator 1 view .LVU138
+ 451 0052 0133     		adds	r3, r3, #1
+ARM GAS  /tmp/ccMRemNS.s 			page 17
+
+
+ 452              	.LVL42:
+ 453              	.L25:
+ 416:Drivers/lvgl/src/draw/lv_draw_utils.c ****             int32_t srcIndex = y * src_stride + x * 3;
+ 454              		.loc 1 416 30 discriminator 2 view .LVU139
+ 455 0054 B342     		cmp	r3, r6
+ 456 0056 DEDB     		blt	.L24
+ 457              	.LBE20:
+ 415:Drivers/lvgl/src/draw/lv_draw_utils.c ****         for(int32_t y = 0; y < src_height; ++y) {
+ 458              		.loc 1 415 39 discriminator 1 view .LVU140
+ 459 0058 0131     		adds	r1, r1, #1
+ 460              	.LVL43:
+ 461              	.L23:
+ 415:Drivers/lvgl/src/draw/lv_draw_utils.c ****         for(int32_t y = 0; y < src_height; ++y) {
+ 462              		.loc 1 415 26 discriminator 2 view .LVU141
+ 463 005a A942     		cmp	r1, r5
+ 464 005c 01DA     		bge	.L28
+ 465              	.LBB22:
+ 416:Drivers/lvgl/src/draw/lv_draw_utils.c ****             int32_t srcIndex = y * src_stride + x * 3;
+ 466              		.loc 1 416 21 is_stmt 0 view .LVU142
+ 467 005e 0023     		movs	r3, #0
+ 468 0060 F8E7     		b	.L25
+ 469              	.L28:
+ 470              	.LBE22:
+ 471              	.LBE19:
+ 422:Drivers/lvgl/src/draw/lv_draw_utils.c ****         }
+ 423:Drivers/lvgl/src/draw/lv_draw_utils.c ****     }
+ 424:Drivers/lvgl/src/draw/lv_draw_utils.c **** }
+ 472              		.loc 1 424 1 view .LVU143
+ 473 0062 BDE8F083 		pop	{r4, r5, r6, r7, r8, r9, pc}
+ 474              		.loc 1 424 1 view .LVU144
+ 475              		.cfi_endproc
+ 476              	.LFE37:
+ 478              		.section	.text.rotate180_rgb888,"ax",%progbits
+ 479              		.align	1
+ 480              		.syntax unified
+ 481              		.thumb
+ 482              		.thumb_func
+ 484              	rotate180_rgb888:
+ 485              	.LVL44:
+ 486              	.LFB38:
+ 425:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 426:Drivers/lvgl/src/draw/lv_draw_utils.c **** static void rotate180_rgb888(const uint8_t * src, uint8_t * dst, int32_t width, int32_t height, int
+ 427:Drivers/lvgl/src/draw/lv_draw_utils.c ****                              int32_t dest_stride)
+ 428:Drivers/lvgl/src/draw/lv_draw_utils.c **** {
+ 487              		.loc 1 428 1 is_stmt 1 view -0
+ 488              		.cfi_startproc
+ 489              		@ args = 8, pretend = 0, frame = 0
+ 490              		@ frame_needed = 0, uses_anonymous_args = 0
+ 491              		.loc 1 428 1 is_stmt 0 view .LVU146
+ 492 0000 2DE9F043 		push	{r4, r5, r6, r7, r8, r9, lr}
+ 493              	.LCFI4:
+ 494              		.cfi_def_cfa_offset 28
+ 495              		.cfi_offset 4, -28
+ 496              		.cfi_offset 5, -24
+ 497              		.cfi_offset 6, -20
+ 498              		.cfi_offset 7, -16
+ 499              		.cfi_offset 8, -12
+ARM GAS  /tmp/ccMRemNS.s 			page 18
+
+
+ 500              		.cfi_offset 9, -8
+ 501              		.cfi_offset 14, -4
+ 502 0004 1446     		mov	r4, r2
+ 503 0006 1D46     		mov	r5, r3
+ 504 0008 079F     		ldr	r7, [sp, #28]
+ 505 000a 089E     		ldr	r6, [sp, #32]
+ 429:Drivers/lvgl/src/draw/lv_draw_utils.c ****     if(LV_RESULT_OK == LV_DRAW_ROTATE180_RGB888(src, dst, src_width, src_height, src_stride, dst_st
+ 506              		.loc 1 429 5 is_stmt 1 view .LVU147
+ 430:Drivers/lvgl/src/draw/lv_draw_utils.c ****         return ;
+ 431:Drivers/lvgl/src/draw/lv_draw_utils.c ****     }
+ 432:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 433:Drivers/lvgl/src/draw/lv_draw_utils.c ****     for(int32_t y = 0; y < height; ++y) {
+ 507              		.loc 1 433 5 view .LVU148
+ 508              	.LBB23:
+ 509              		.loc 1 433 9 view .LVU149
+ 510              	.LVL45:
+ 511              		.loc 1 433 17 is_stmt 0 view .LVU150
+ 512 000c 0022     		movs	r2, #0
+ 513              	.LVL46:
+ 514              		.loc 1 433 5 view .LVU151
+ 515 000e 27E0     		b	.L30
+ 516              	.LVL47:
+ 517              	.L31:
+ 518              	.LBB24:
+ 519              	.LBB25:
+ 434:Drivers/lvgl/src/draw/lv_draw_utils.c ****         for(int32_t x = 0; x < width; ++x) {
+ 435:Drivers/lvgl/src/draw/lv_draw_utils.c ****             int32_t srcIndex = y * src_stride + x * 3;
+ 520              		.loc 1 435 13 is_stmt 1 view .LVU152
+ 521              		.loc 1 435 51 is_stmt 0 view .LVU153
+ 522 0010 03EB430E 		add	lr, r3, r3, lsl #1
+ 523              		.loc 1 435 21 view .LVU154
+ 524 0014 07FB02EE 		mla	lr, r7, r2, lr
+ 525              	.LVL48:
+ 436:Drivers/lvgl/src/draw/lv_draw_utils.c ****             int32_t dstIndex = (height - y - 1) * dest_stride + (width - x - 1) * 3;
+ 526              		.loc 1 436 13 is_stmt 1 view .LVU155
+ 527              		.loc 1 436 40 is_stmt 0 view .LVU156
+ 528 0018 A5EB0208 		sub	r8, r5, r2
+ 529              		.loc 1 436 44 view .LVU157
+ 530 001c 08F1FF38 		add	r8, r8, #-1
+ 531              		.loc 1 436 72 view .LVU158
+ 532 0020 A4EB030C 		sub	ip, r4, r3
+ 533              		.loc 1 436 76 view .LVU159
+ 534 0024 0CF1FF3C 		add	ip, ip, #-1
+ 535              		.loc 1 436 81 view .LVU160
+ 536 0028 0CEB4C0C 		add	ip, ip, ip, lsl #1
+ 537              		.loc 1 436 21 view .LVU161
+ 538 002c 06FB08CC 		mla	ip, r6, r8, ip
+ 539              	.LVL49:
+ 437:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex] = src[srcIndex];
+ 540              		.loc 1 437 13 is_stmt 1 view .LVU162
+ 541              		.loc 1 437 32 is_stmt 0 view .LVU163
+ 542 0030 10F80E80 		ldrb	r8, [r0, lr]	@ zero_extendqisi2
+ 543              		.loc 1 437 27 view .LVU164
+ 544 0034 01F80C80 		strb	r8, [r1, ip]
+ 438:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex + 1] = src[srcIndex + 1];
+ 545              		.loc 1 438 13 is_stmt 1 view .LVU165
+ 546              		.loc 1 438 46 is_stmt 0 view .LVU166
+ARM GAS  /tmp/ccMRemNS.s 			page 19
+
+
+ 547 0038 0EF10109 		add	r9, lr, #1
+ 548              		.loc 1 438 26 view .LVU167
+ 549 003c 0CF10108 		add	r8, ip, #1
+ 550              		.loc 1 438 36 view .LVU168
+ 551 0040 10F80990 		ldrb	r9, [r0, r9]	@ zero_extendqisi2
+ 552              		.loc 1 438 31 view .LVU169
+ 553 0044 01F80890 		strb	r9, [r1, r8]
+ 439:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex + 2] = src[srcIndex + 2];
+ 554              		.loc 1 439 13 is_stmt 1 view .LVU170
+ 555              		.loc 1 439 46 is_stmt 0 view .LVU171
+ 556 0048 0EF1020E 		add	lr, lr, #2
+ 557              	.LVL50:
+ 558              		.loc 1 439 26 view .LVU172
+ 559 004c 0CF1020C 		add	ip, ip, #2
+ 560              	.LVL51:
+ 561              		.loc 1 439 36 view .LVU173
+ 562 0050 10F80EE0 		ldrb	lr, [r0, lr]	@ zero_extendqisi2
+ 563              	.LVL52:
+ 564              		.loc 1 439 31 view .LVU174
+ 565 0054 01F80CE0 		strb	lr, [r1, ip]
+ 566              	.LBE25:
+ 434:Drivers/lvgl/src/draw/lv_draw_utils.c ****             int32_t srcIndex = y * src_stride + x * 3;
+ 567              		.loc 1 434 39 is_stmt 1 discriminator 1 view .LVU175
+ 568 0058 0133     		adds	r3, r3, #1
+ 569              	.LVL53:
+ 570              	.L32:
+ 434:Drivers/lvgl/src/draw/lv_draw_utils.c ****             int32_t srcIndex = y * src_stride + x * 3;
+ 571              		.loc 1 434 30 discriminator 2 view .LVU176
+ 572 005a A342     		cmp	r3, r4
+ 573 005c D8DB     		blt	.L31
+ 574              	.LBE24:
+ 433:Drivers/lvgl/src/draw/lv_draw_utils.c ****         for(int32_t x = 0; x < width; ++x) {
+ 575              		.loc 1 433 36 discriminator 1 view .LVU177
+ 576 005e 0132     		adds	r2, r2, #1
+ 577              	.LVL54:
+ 578              	.L30:
+ 433:Drivers/lvgl/src/draw/lv_draw_utils.c ****         for(int32_t x = 0; x < width; ++x) {
+ 579              		.loc 1 433 26 discriminator 2 view .LVU178
+ 580 0060 AA42     		cmp	r2, r5
+ 581 0062 01DA     		bge	.L35
+ 582              	.LBB26:
+ 434:Drivers/lvgl/src/draw/lv_draw_utils.c ****             int32_t srcIndex = y * src_stride + x * 3;
+ 583              		.loc 1 434 21 is_stmt 0 view .LVU179
+ 584 0064 0023     		movs	r3, #0
+ 585 0066 F8E7     		b	.L32
+ 586              	.L35:
+ 587              	.LBE26:
+ 588              	.LBE23:
+ 440:Drivers/lvgl/src/draw/lv_draw_utils.c ****         }
+ 441:Drivers/lvgl/src/draw/lv_draw_utils.c ****     }
+ 442:Drivers/lvgl/src/draw/lv_draw_utils.c **** }
+ 589              		.loc 1 442 1 view .LVU180
+ 590 0068 BDE8F083 		pop	{r4, r5, r6, r7, r8, r9, pc}
+ 591              		.loc 1 442 1 view .LVU181
+ 592              		.cfi_endproc
+ 593              	.LFE38:
+ 595              		.section	.text.rotate270_rgb888,"ax",%progbits
+ARM GAS  /tmp/ccMRemNS.s 			page 20
+
+
+ 596              		.align	1
+ 597              		.syntax unified
+ 598              		.thumb
+ 599              		.thumb_func
+ 601              	rotate270_rgb888:
+ 602              	.LVL55:
+ 603              	.LFB39:
+ 443:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 444:Drivers/lvgl/src/draw/lv_draw_utils.c **** static void rotate270_rgb888(const uint8_t * src, uint8_t * dst, int32_t width, int32_t height, int
+ 445:Drivers/lvgl/src/draw/lv_draw_utils.c ****                              int32_t dst_stride)
+ 446:Drivers/lvgl/src/draw/lv_draw_utils.c **** {
+ 604              		.loc 1 446 1 is_stmt 1 view -0
+ 605              		.cfi_startproc
+ 606              		@ args = 8, pretend = 0, frame = 0
+ 607              		@ frame_needed = 0, uses_anonymous_args = 0
+ 608              		.loc 1 446 1 is_stmt 0 view .LVU183
+ 609 0000 2DE9F043 		push	{r4, r5, r6, r7, r8, r9, lr}
+ 610              	.LCFI5:
+ 611              		.cfi_def_cfa_offset 28
+ 612              		.cfi_offset 4, -28
+ 613              		.cfi_offset 5, -24
+ 614              		.cfi_offset 6, -20
+ 615              		.cfi_offset 7, -16
+ 616              		.cfi_offset 8, -12
+ 617              		.cfi_offset 9, -8
+ 618              		.cfi_offset 14, -4
+ 619 0004 1646     		mov	r6, r2
+ 620 0006 1C46     		mov	r4, r3
+ 621 0008 079F     		ldr	r7, [sp, #28]
+ 622 000a 089D     		ldr	r5, [sp, #32]
+ 447:Drivers/lvgl/src/draw/lv_draw_utils.c ****     if(LV_RESULT_OK == LV_DRAW_ROTATE270_RGB888(src, dst, src_width, src_height, src_stride, dst_st
+ 623              		.loc 1 447 5 is_stmt 1 view .LVU184
+ 448:Drivers/lvgl/src/draw/lv_draw_utils.c ****         return ;
+ 449:Drivers/lvgl/src/draw/lv_draw_utils.c ****     }
+ 450:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 451:Drivers/lvgl/src/draw/lv_draw_utils.c ****     for(int32_t x = 0; x < width; ++x) {
+ 624              		.loc 1 451 5 view .LVU185
+ 625              	.LBB27:
+ 626              		.loc 1 451 9 view .LVU186
+ 627              	.LVL56:
+ 628              		.loc 1 451 17 is_stmt 0 view .LVU187
+ 629 000c 0022     		movs	r2, #0
+ 630              	.LVL57:
+ 631              		.loc 1 451 5 view .LVU188
+ 632 000e 23E0     		b	.L37
+ 633              	.LVL58:
+ 634              	.L38:
+ 635              	.LBB28:
+ 636              	.LBB29:
+ 452:Drivers/lvgl/src/draw/lv_draw_utils.c ****         for(int32_t y = 0; y < height; ++y) {
+ 453:Drivers/lvgl/src/draw/lv_draw_utils.c ****             int32_t srcIndex = y * src_stride + x * 3;
+ 637              		.loc 1 453 13 is_stmt 1 view .LVU189
+ 638              		.loc 1 453 51 is_stmt 0 view .LVU190
+ 639 0010 02EB420E 		add	lr, r2, r2, lsl #1
+ 640              		.loc 1 453 21 view .LVU191
+ 641 0014 07FB03EE 		mla	lr, r7, r3, lr
+ 642              	.LVL59:
+ARM GAS  /tmp/ccMRemNS.s 			page 21
+
+
+ 454:Drivers/lvgl/src/draw/lv_draw_utils.c ****             int32_t dstIndex = x * dst_stride + (height - y - 1) * 3;
+ 643              		.loc 1 454 13 is_stmt 1 view .LVU192
+ 644              		.loc 1 454 57 is_stmt 0 view .LVU193
+ 645 0018 A4EB030C 		sub	ip, r4, r3
+ 646              		.loc 1 454 61 view .LVU194
+ 647 001c 0CF1FF3C 		add	ip, ip, #-1
+ 648              		.loc 1 454 66 view .LVU195
+ 649 0020 0CEB4C0C 		add	ip, ip, ip, lsl #1
+ 650              		.loc 1 454 21 view .LVU196
+ 651 0024 05FB02CC 		mla	ip, r5, r2, ip
+ 652              	.LVL60:
+ 455:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex] = src[srcIndex];       /*Red*/
+ 653              		.loc 1 455 13 is_stmt 1 view .LVU197
+ 654              		.loc 1 455 32 is_stmt 0 view .LVU198
+ 655 0028 10F80E80 		ldrb	r8, [r0, lr]	@ zero_extendqisi2
+ 656              		.loc 1 455 27 view .LVU199
+ 657 002c 01F80C80 		strb	r8, [r1, ip]
+ 456:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex + 1] = src[srcIndex + 1]; /*Green*/
+ 658              		.loc 1 456 13 is_stmt 1 view .LVU200
+ 659              		.loc 1 456 46 is_stmt 0 view .LVU201
+ 660 0030 0EF10109 		add	r9, lr, #1
+ 661              		.loc 1 456 26 view .LVU202
+ 662 0034 0CF10108 		add	r8, ip, #1
+ 663              		.loc 1 456 36 view .LVU203
+ 664 0038 10F80990 		ldrb	r9, [r0, r9]	@ zero_extendqisi2
+ 665              		.loc 1 456 31 view .LVU204
+ 666 003c 01F80890 		strb	r9, [r1, r8]
+ 457:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex + 2] = src[srcIndex + 2]; /*Blue*/
+ 667              		.loc 1 457 13 is_stmt 1 view .LVU205
+ 668              		.loc 1 457 46 is_stmt 0 view .LVU206
+ 669 0040 0EF1020E 		add	lr, lr, #2
+ 670              	.LVL61:
+ 671              		.loc 1 457 26 view .LVU207
+ 672 0044 0CF1020C 		add	ip, ip, #2
+ 673              	.LVL62:
+ 674              		.loc 1 457 36 view .LVU208
+ 675 0048 10F80EE0 		ldrb	lr, [r0, lr]	@ zero_extendqisi2
+ 676              	.LVL63:
+ 677              		.loc 1 457 31 view .LVU209
+ 678 004c 01F80CE0 		strb	lr, [r1, ip]
+ 679              	.LBE29:
+ 452:Drivers/lvgl/src/draw/lv_draw_utils.c ****             int32_t srcIndex = y * src_stride + x * 3;
+ 680              		.loc 1 452 40 is_stmt 1 discriminator 1 view .LVU210
+ 681 0050 0133     		adds	r3, r3, #1
+ 682              	.LVL64:
+ 683              	.L39:
+ 452:Drivers/lvgl/src/draw/lv_draw_utils.c ****             int32_t srcIndex = y * src_stride + x * 3;
+ 684              		.loc 1 452 30 discriminator 2 view .LVU211
+ 685 0052 A342     		cmp	r3, r4
+ 686 0054 DCDB     		blt	.L38
+ 687              	.LBE28:
+ 451:Drivers/lvgl/src/draw/lv_draw_utils.c ****         for(int32_t y = 0; y < height; ++y) {
+ 688              		.loc 1 451 35 discriminator 1 view .LVU212
+ 689 0056 0132     		adds	r2, r2, #1
+ 690              	.LVL65:
+ 691              	.L37:
+ 451:Drivers/lvgl/src/draw/lv_draw_utils.c ****         for(int32_t y = 0; y < height; ++y) {
+ARM GAS  /tmp/ccMRemNS.s 			page 22
+
+
+ 692              		.loc 1 451 26 discriminator 2 view .LVU213
+ 693 0058 B242     		cmp	r2, r6
+ 694 005a 01DA     		bge	.L42
+ 695              	.LBB30:
+ 452:Drivers/lvgl/src/draw/lv_draw_utils.c ****             int32_t srcIndex = y * src_stride + x * 3;
+ 696              		.loc 1 452 21 is_stmt 0 view .LVU214
+ 697 005c 0023     		movs	r3, #0
+ 698 005e F8E7     		b	.L39
+ 699              	.L42:
+ 700              	.LBE30:
+ 701              	.LBE27:
+ 458:Drivers/lvgl/src/draw/lv_draw_utils.c ****         }
+ 459:Drivers/lvgl/src/draw/lv_draw_utils.c ****     }
+ 460:Drivers/lvgl/src/draw/lv_draw_utils.c **** }
+ 702              		.loc 1 460 1 view .LVU215
+ 703 0060 BDE8F083 		pop	{r4, r5, r6, r7, r8, r9, pc}
+ 704              		.loc 1 460 1 view .LVU216
+ 705              		.cfi_endproc
+ 706              	.LFE39:
+ 708              		.section	.text.rotate270_rgb565,"ax",%progbits
+ 709              		.align	1
+ 710              		.syntax unified
+ 711              		.thumb
+ 712              		.thumb_func
+ 714              	rotate270_rgb565:
+ 715              	.LVL66:
+ 716              	.LFB40:
+ 461:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 462:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 463:Drivers/lvgl/src/draw/lv_draw_utils.c **** static void rotate270_rgb565(const uint16_t * src, uint16_t * dst, int32_t src_width, int32_t src_h
+ 464:Drivers/lvgl/src/draw/lv_draw_utils.c ****                              int32_t src_stride,
+ 465:Drivers/lvgl/src/draw/lv_draw_utils.c ****                              int32_t dst_stride)
+ 466:Drivers/lvgl/src/draw/lv_draw_utils.c **** {
+ 717              		.loc 1 466 1 is_stmt 1 view -0
+ 718              		.cfi_startproc
+ 719              		@ args = 8, pretend = 0, frame = 0
+ 720              		@ frame_needed = 0, uses_anonymous_args = 0
+ 721              		.loc 1 466 1 is_stmt 0 view .LVU218
+ 722 0000 2DE9F043 		push	{r4, r5, r6, r7, r8, r9, lr}
+ 723              	.LCFI6:
+ 724              		.cfi_def_cfa_offset 28
+ 725              		.cfi_offset 4, -28
+ 726              		.cfi_offset 5, -24
+ 727              		.cfi_offset 6, -20
+ 728              		.cfi_offset 7, -16
+ 729              		.cfi_offset 8, -12
+ 730              		.cfi_offset 9, -8
+ 731              		.cfi_offset 14, -4
+ 732 0004 0646     		mov	r6, r0
+ 733 0006 0D46     		mov	r5, r1
+ 734 0008 9046     		mov	r8, r2
+ 735 000a 1A46     		mov	r2, r3
+ 736              	.LVL67:
+ 467:Drivers/lvgl/src/draw/lv_draw_utils.c ****     if(LV_RESULT_OK == LV_DRAW_ROTATE270_RGB565(src, dst, src_width, src_height, src_stride, dst_st
+ 737              		.loc 1 467 5 is_stmt 1 view .LVU219
+ 468:Drivers/lvgl/src/draw/lv_draw_utils.c ****         return ;
+ 469:Drivers/lvgl/src/draw/lv_draw_utils.c ****     }
+ARM GAS  /tmp/ccMRemNS.s 			page 23
+
+
+ 470:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 471:Drivers/lvgl/src/draw/lv_draw_utils.c ****     src_stride /= sizeof(uint16_t);
+ 738              		.loc 1 471 5 view .LVU220
+ 739              		.loc 1 471 16 is_stmt 0 view .LVU221
+ 740 000c 079C     		ldr	r4, [sp, #28]
+ 741 000e 6408     		lsrs	r4, r4, #1
+ 742              	.LVL68:
+ 472:Drivers/lvgl/src/draw/lv_draw_utils.c ****     dst_stride /= sizeof(uint16_t);
+ 743              		.loc 1 472 5 is_stmt 1 view .LVU222
+ 744              		.loc 1 472 16 is_stmt 0 view .LVU223
+ 745 0010 089B     		ldr	r3, [sp, #32]
+ 746              	.LVL69:
+ 747              		.loc 1 472 16 view .LVU224
+ 748 0012 4FEA5309 		lsr	r9, r3, #1
+ 749              	.LVL70:
+ 473:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 474:Drivers/lvgl/src/draw/lv_draw_utils.c ****     for(int32_t x = 0; x < src_width; ++x) {
+ 750              		.loc 1 474 5 is_stmt 1 view .LVU225
+ 751              	.LBB31:
+ 752              		.loc 1 474 9 view .LVU226
+ 753              		.loc 1 474 17 is_stmt 0 view .LVU227
+ 754 0016 0027     		movs	r7, #0
+ 755              		.loc 1 474 5 view .LVU228
+ 756 0018 0EE0     		b	.L44
+ 757              	.LVL71:
+ 758              	.L46:
+ 759              	.LBB32:
+ 760              	.LBB33:
+ 475:Drivers/lvgl/src/draw/lv_draw_utils.c ****         int32_t dstIndex = x * dst_stride;
+ 476:Drivers/lvgl/src/draw/lv_draw_utils.c ****         int32_t srcIndex = x;
+ 477:Drivers/lvgl/src/draw/lv_draw_utils.c ****         for(int32_t y = 0; y < src_height; ++y) {
+ 478:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex + (src_height - y - 1)] = src[srcIndex];
+ 761              		.loc 1 478 13 is_stmt 1 view .LVU229
+ 762              		.loc 1 478 40 is_stmt 0 view .LVU230
+ 763 001a A2EB0E0C 		sub	ip, r2, lr
+ 764              		.loc 1 478 44 view .LVU231
+ 765 001e 0CF1FF3C 		add	ip, ip, #-1
+ 766              		.loc 1 478 26 view .LVU232
+ 767 0022 8444     		add	ip, ip, r0
+ 768              		.loc 1 478 55 view .LVU233
+ 769 0024 36F81310 		ldrh	r1, [r6, r3, lsl #1]
+ 770              		.loc 1 478 50 view .LVU234
+ 771 0028 25F81C10 		strh	r1, [r5, ip, lsl #1]	@ movhi
+ 479:Drivers/lvgl/src/draw/lv_draw_utils.c ****             srcIndex += src_stride;
+ 772              		.loc 1 479 13 is_stmt 1 view .LVU235
+ 773              		.loc 1 479 22 is_stmt 0 view .LVU236
+ 774 002c 2344     		add	r3, r3, r4
+ 775              	.LVL72:
+ 477:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex + (src_height - y - 1)] = src[srcIndex];
+ 776              		.loc 1 477 44 is_stmt 1 discriminator 1 view .LVU237
+ 777 002e 0EF1010E 		add	lr, lr, #1
+ 778              	.LVL73:
+ 779              	.L45:
+ 477:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex + (src_height - y - 1)] = src[srcIndex];
+ 780              		.loc 1 477 30 discriminator 2 view .LVU238
+ 781 0032 9645     		cmp	lr, r2
+ 782 0034 F1DB     		blt	.L46
+ARM GAS  /tmp/ccMRemNS.s 			page 24
+
+
+ 477:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex + (src_height - y - 1)] = src[srcIndex];
+ 783              		.loc 1 477 30 is_stmt 0 discriminator 2 view .LVU239
+ 784              	.LBE33:
+ 785              	.LBE32:
+ 474:Drivers/lvgl/src/draw/lv_draw_utils.c ****         int32_t dstIndex = x * dst_stride;
+ 786              		.loc 1 474 39 is_stmt 1 discriminator 1 view .LVU240
+ 787 0036 0137     		adds	r7, r7, #1
+ 788              	.LVL74:
+ 789              	.L44:
+ 474:Drivers/lvgl/src/draw/lv_draw_utils.c ****         int32_t dstIndex = x * dst_stride;
+ 790              		.loc 1 474 26 discriminator 2 view .LVU241
+ 791 0038 4745     		cmp	r7, r8
+ 792 003a 05DA     		bge	.L49
+ 793              	.LBB36:
+ 475:Drivers/lvgl/src/draw/lv_draw_utils.c ****         int32_t srcIndex = x;
+ 794              		.loc 1 475 9 view .LVU242
+ 475:Drivers/lvgl/src/draw/lv_draw_utils.c ****         int32_t srcIndex = x;
+ 795              		.loc 1 475 17 is_stmt 0 view .LVU243
+ 796 003c 09FB07F0 		mul	r0, r9, r7
+ 797              	.LVL75:
+ 476:Drivers/lvgl/src/draw/lv_draw_utils.c ****         for(int32_t y = 0; y < src_height; ++y) {
+ 798              		.loc 1 476 9 is_stmt 1 view .LVU244
+ 477:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex + (src_height - y - 1)] = src[srcIndex];
+ 799              		.loc 1 477 9 view .LVU245
+ 800              	.LBB34:
+ 477:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex + (src_height - y - 1)] = src[srcIndex];
+ 801              		.loc 1 477 13 view .LVU246
+ 477:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex + (src_height - y - 1)] = src[srcIndex];
+ 802              		.loc 1 477 13 is_stmt 0 view .LVU247
+ 803              	.LBE34:
+ 476:Drivers/lvgl/src/draw/lv_draw_utils.c ****         for(int32_t y = 0; y < src_height; ++y) {
+ 804              		.loc 1 476 17 view .LVU248
+ 805 0040 3B46     		mov	r3, r7
+ 806              	.LBB35:
+ 477:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex + (src_height - y - 1)] = src[srcIndex];
+ 807              		.loc 1 477 21 view .LVU249
+ 808 0042 4FF0000E 		mov	lr, #0
+ 477:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex + (src_height - y - 1)] = src[srcIndex];
+ 809              		.loc 1 477 9 view .LVU250
+ 810 0046 F4E7     		b	.L45
+ 811              	.LVL76:
+ 812              	.L49:
+ 477:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex + (src_height - y - 1)] = src[srcIndex];
+ 813              		.loc 1 477 9 view .LVU251
+ 814              	.LBE35:
+ 815              	.LBE36:
+ 816              	.LBE31:
+ 480:Drivers/lvgl/src/draw/lv_draw_utils.c ****         }
+ 481:Drivers/lvgl/src/draw/lv_draw_utils.c ****     }
+ 482:Drivers/lvgl/src/draw/lv_draw_utils.c **** }
+ 817              		.loc 1 482 1 view .LVU252
+ 818 0048 BDE8F083 		pop	{r4, r5, r6, r7, r8, r9, pc}
+ 819              		.loc 1 482 1 view .LVU253
+ 820              		.cfi_endproc
+ 821              	.LFE40:
+ 823              		.section	.text.rotate180_rgb565,"ax",%progbits
+ 824              		.align	1
+ARM GAS  /tmp/ccMRemNS.s 			page 25
+
+
+ 825              		.syntax unified
+ 826              		.thumb
+ 827              		.thumb_func
+ 829              	rotate180_rgb565:
+ 830              	.LVL77:
+ 831              	.LFB41:
+ 483:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 484:Drivers/lvgl/src/draw/lv_draw_utils.c **** static void rotate180_rgb565(const uint16_t * src, uint16_t * dst, int32_t width, int32_t height, i
+ 485:Drivers/lvgl/src/draw/lv_draw_utils.c ****                              int32_t dest_stride)
+ 486:Drivers/lvgl/src/draw/lv_draw_utils.c **** {
+ 832              		.loc 1 486 1 is_stmt 1 view -0
+ 833              		.cfi_startproc
+ 834              		@ args = 8, pretend = 0, frame = 0
+ 835              		@ frame_needed = 0, uses_anonymous_args = 0
+ 836              		.loc 1 486 1 is_stmt 0 view .LVU255
+ 837 0000 2DE9F043 		push	{r4, r5, r6, r7, r8, r9, lr}
+ 838              	.LCFI7:
+ 839              		.cfi_def_cfa_offset 28
+ 840              		.cfi_offset 4, -28
+ 841              		.cfi_offset 5, -24
+ 842              		.cfi_offset 6, -20
+ 843              		.cfi_offset 7, -16
+ 844              		.cfi_offset 8, -12
+ 845              		.cfi_offset 9, -8
+ 846              		.cfi_offset 14, -4
+ 847 0004 0546     		mov	r5, r0
+ 848 0006 0C46     		mov	r4, r1
+ 849 0008 1F46     		mov	r7, r3
+ 487:Drivers/lvgl/src/draw/lv_draw_utils.c ****     if(LV_RESULT_OK == LV_DRAW_ROTATE180_RGB565(src, dst, width, height, src_stride)) {
+ 850              		.loc 1 487 5 is_stmt 1 view .LVU256
+ 488:Drivers/lvgl/src/draw/lv_draw_utils.c ****         return ;
+ 489:Drivers/lvgl/src/draw/lv_draw_utils.c ****     }
+ 490:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 491:Drivers/lvgl/src/draw/lv_draw_utils.c ****     src_stride /= sizeof(uint16_t);
+ 851              		.loc 1 491 5 view .LVU257
+ 852              		.loc 1 491 16 is_stmt 0 view .LVU258
+ 853 000a 079B     		ldr	r3, [sp, #28]
+ 854              	.LVL78:
+ 855              		.loc 1 491 16 view .LVU259
+ 856 000c 4FEA5309 		lsr	r9, r3, #1
+ 857              	.LVL79:
+ 492:Drivers/lvgl/src/draw/lv_draw_utils.c ****     dest_stride /= sizeof(uint16_t);
+ 858              		.loc 1 492 5 is_stmt 1 view .LVU260
+ 859              		.loc 1 492 17 is_stmt 0 view .LVU261
+ 860 0010 089B     		ldr	r3, [sp, #32]
+ 861 0012 4FEA5308 		lsr	r8, r3, #1
+ 862              	.LVL80:
+ 493:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 494:Drivers/lvgl/src/draw/lv_draw_utils.c ****     for(int32_t y = 0; y < height; ++y) {
+ 863              		.loc 1 494 5 is_stmt 1 view .LVU262
+ 864              	.LBB37:
+ 865              		.loc 1 494 9 view .LVU263
+ 866              		.loc 1 494 17 is_stmt 0 view .LVU264
+ 867 0016 0026     		movs	r6, #0
+ 868              		.loc 1 494 5 view .LVU265
+ 869 0018 12E0     		b	.L51
+ 870              	.LVL81:
+ARM GAS  /tmp/ccMRemNS.s 			page 26
+
+
+ 871              	.L53:
+ 872              	.LBB38:
+ 873              	.LBB39:
+ 495:Drivers/lvgl/src/draw/lv_draw_utils.c ****         int32_t dstIndex = (height - y - 1) * dest_stride;
+ 496:Drivers/lvgl/src/draw/lv_draw_utils.c ****         int32_t srcIndex = y * src_stride;
+ 497:Drivers/lvgl/src/draw/lv_draw_utils.c ****         for(int32_t x = 0; x < width; ++x) {
+ 498:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex + width - x - 1] = src[srcIndex + x];
+ 874              		.loc 1 498 13 is_stmt 1 view .LVU266
+ 875              		.loc 1 498 58 is_stmt 0 view .LVU267
+ 876 001a 0EEB0003 		add	r3, lr, r0
+ 877              		.loc 1 498 26 view .LVU268
+ 878 001e 01EB020C 		add	ip, r1, r2
+ 879              		.loc 1 498 34 view .LVU269
+ 880 0022 ACEB0E0C 		sub	ip, ip, lr
+ 881              		.loc 1 498 38 view .LVU270
+ 882 0026 0CF1004C 		add	ip, ip, #-2147483648
+ 883 002a 0CF1FF3C 		add	ip, ip, #-1
+ 884              		.loc 1 498 48 view .LVU271
+ 885 002e 35F81330 		ldrh	r3, [r5, r3, lsl #1]
+ 886              		.loc 1 498 43 view .LVU272
+ 887 0032 24F81C30 		strh	r3, [r4, ip, lsl #1]	@ movhi
+ 497:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex + width - x - 1] = src[srcIndex + x];
+ 888              		.loc 1 497 39 is_stmt 1 discriminator 1 view .LVU273
+ 889 0036 0EF1010E 		add	lr, lr, #1
+ 890              	.LVL82:
+ 891              	.L52:
+ 497:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex + width - x - 1] = src[srcIndex + x];
+ 892              		.loc 1 497 30 discriminator 2 view .LVU274
+ 893 003a 9645     		cmp	lr, r2
+ 894 003c EDDB     		blt	.L53
+ 895              	.LBE39:
+ 896              	.LBE38:
+ 494:Drivers/lvgl/src/draw/lv_draw_utils.c ****         int32_t dstIndex = (height - y - 1) * dest_stride;
+ 897              		.loc 1 494 36 discriminator 1 view .LVU275
+ 898 003e 0136     		adds	r6, r6, #1
+ 899              	.LVL83:
+ 900              	.L51:
+ 494:Drivers/lvgl/src/draw/lv_draw_utils.c ****         int32_t dstIndex = (height - y - 1) * dest_stride;
+ 901              		.loc 1 494 26 discriminator 2 view .LVU276
+ 902 0040 BE42     		cmp	r6, r7
+ 903 0042 08DA     		bge	.L56
+ 904              	.LBB41:
+ 495:Drivers/lvgl/src/draw/lv_draw_utils.c ****         int32_t dstIndex = (height - y - 1) * dest_stride;
+ 905              		.loc 1 495 9 view .LVU277
+ 495:Drivers/lvgl/src/draw/lv_draw_utils.c ****         int32_t dstIndex = (height - y - 1) * dest_stride;
+ 906              		.loc 1 495 36 is_stmt 0 view .LVU278
+ 907 0044 B91B     		subs	r1, r7, r6
+ 495:Drivers/lvgl/src/draw/lv_draw_utils.c ****         int32_t dstIndex = (height - y - 1) * dest_stride;
+ 908              		.loc 1 495 40 view .LVU279
+ 909 0046 0139     		subs	r1, r1, #1
+ 495:Drivers/lvgl/src/draw/lv_draw_utils.c ****         int32_t dstIndex = (height - y - 1) * dest_stride;
+ 910              		.loc 1 495 17 view .LVU280
+ 911 0048 08FB01F1 		mul	r1, r8, r1
+ 912              	.LVL84:
+ 496:Drivers/lvgl/src/draw/lv_draw_utils.c ****         for(int32_t x = 0; x < width; ++x) {
+ 913              		.loc 1 496 9 is_stmt 1 view .LVU281
+ 496:Drivers/lvgl/src/draw/lv_draw_utils.c ****         for(int32_t x = 0; x < width; ++x) {
+ARM GAS  /tmp/ccMRemNS.s 			page 27
+
+
+ 914              		.loc 1 496 17 is_stmt 0 view .LVU282
+ 915 004c 09FB06F0 		mul	r0, r9, r6
+ 916              	.LVL85:
+ 497:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex + width - x - 1] = src[srcIndex + x];
+ 917              		.loc 1 497 9 is_stmt 1 view .LVU283
+ 918              	.LBB40:
+ 497:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex + width - x - 1] = src[srcIndex + x];
+ 919              		.loc 1 497 13 view .LVU284
+ 497:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex + width - x - 1] = src[srcIndex + x];
+ 920              		.loc 1 497 21 is_stmt 0 view .LVU285
+ 921 0050 4FF0000E 		mov	lr, #0
+ 497:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex + width - x - 1] = src[srcIndex + x];
+ 922              		.loc 1 497 9 view .LVU286
+ 923 0054 F1E7     		b	.L52
+ 924              	.LVL86:
+ 925              	.L56:
+ 497:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex + width - x - 1] = src[srcIndex + x];
+ 926              		.loc 1 497 9 view .LVU287
+ 927              	.LBE40:
+ 928              	.LBE41:
+ 929              	.LBE37:
+ 499:Drivers/lvgl/src/draw/lv_draw_utils.c ****         }
+ 500:Drivers/lvgl/src/draw/lv_draw_utils.c ****     }
+ 501:Drivers/lvgl/src/draw/lv_draw_utils.c **** }
+ 930              		.loc 1 501 1 view .LVU288
+ 931 0056 BDE8F083 		pop	{r4, r5, r6, r7, r8, r9, pc}
+ 932              		.loc 1 501 1 view .LVU289
+ 933              		.cfi_endproc
+ 934              	.LFE41:
+ 936              		.section	.text.rotate90_rgb565,"ax",%progbits
+ 937              		.align	1
+ 938              		.syntax unified
+ 939              		.thumb
+ 940              		.thumb_func
+ 942              	rotate90_rgb565:
+ 943              	.LVL87:
+ 944              	.LFB42:
+ 502:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 503:Drivers/lvgl/src/draw/lv_draw_utils.c **** static void rotate90_rgb565(const uint16_t * src, uint16_t * dst, int32_t src_width, int32_t src_he
+ 504:Drivers/lvgl/src/draw/lv_draw_utils.c ****                             int32_t src_stride,
+ 505:Drivers/lvgl/src/draw/lv_draw_utils.c ****                             int32_t dst_stride)
+ 506:Drivers/lvgl/src/draw/lv_draw_utils.c **** {
+ 945              		.loc 1 506 1 is_stmt 1 view -0
+ 946              		.cfi_startproc
+ 947              		@ args = 8, pretend = 0, frame = 0
+ 948              		@ frame_needed = 0, uses_anonymous_args = 0
+ 949              		.loc 1 506 1 is_stmt 0 view .LVU291
+ 950 0000 2DE9F043 		push	{r4, r5, r6, r7, r8, r9, lr}
+ 951              	.LCFI8:
+ 952              		.cfi_def_cfa_offset 28
+ 953              		.cfi_offset 4, -28
+ 954              		.cfi_offset 5, -24
+ 955              		.cfi_offset 6, -20
+ 956              		.cfi_offset 7, -16
+ 957              		.cfi_offset 8, -12
+ 958              		.cfi_offset 9, -8
+ 959              		.cfi_offset 14, -4
+ARM GAS  /tmp/ccMRemNS.s 			page 28
+
+
+ 960 0004 0646     		mov	r6, r0
+ 961 0006 0F46     		mov	r7, r1
+ 962 0008 9046     		mov	r8, r2
+ 963 000a 1846     		mov	r0, r3
+ 964              	.LVL88:
+ 507:Drivers/lvgl/src/draw/lv_draw_utils.c ****     if(LV_RESULT_OK == LV_DRAW_ROTATE90_RGB565(src, dst, src_width, src_height, src_stride, dst_str
+ 965              		.loc 1 507 5 is_stmt 1 view .LVU292
+ 508:Drivers/lvgl/src/draw/lv_draw_utils.c ****         return ;
+ 509:Drivers/lvgl/src/draw/lv_draw_utils.c ****     }
+ 510:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 511:Drivers/lvgl/src/draw/lv_draw_utils.c ****     src_stride /= sizeof(uint16_t);
+ 966              		.loc 1 511 5 view .LVU293
+ 967              		.loc 1 511 16 is_stmt 0 view .LVU294
+ 968 000c 079D     		ldr	r5, [sp, #28]
+ 969 000e 6D08     		lsrs	r5, r5, #1
+ 970              	.LVL89:
+ 512:Drivers/lvgl/src/draw/lv_draw_utils.c ****     dst_stride /= sizeof(uint16_t);
+ 971              		.loc 1 512 5 is_stmt 1 view .LVU295
+ 972              		.loc 1 512 16 is_stmt 0 view .LVU296
+ 973 0010 089C     		ldr	r4, [sp, #32]
+ 974 0012 6408     		lsrs	r4, r4, #1
+ 975              	.LVL90:
+ 513:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 514:Drivers/lvgl/src/draw/lv_draw_utils.c ****     for(int32_t x = 0; x < src_width; ++x) {
+ 976              		.loc 1 514 5 is_stmt 1 view .LVU297
+ 977              	.LBB42:
+ 978              		.loc 1 514 9 view .LVU298
+ 979              		.loc 1 514 17 is_stmt 0 view .LVU299
+ 980 0014 4FF00009 		mov	r9, #0
+ 981              		.loc 1 514 5 view .LVU300
+ 982 0018 0CE0     		b	.L58
+ 983              	.LVL91:
+ 984              	.L60:
+ 985              	.LBB43:
+ 986              	.LBB44:
+ 515:Drivers/lvgl/src/draw/lv_draw_utils.c ****         int32_t dstIndex = (src_width - x - 1);
+ 516:Drivers/lvgl/src/draw/lv_draw_utils.c ****         int32_t srcIndex = x;
+ 517:Drivers/lvgl/src/draw/lv_draw_utils.c ****         for(int32_t y = 0; y < src_height; ++y) {
+ 518:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex * dst_stride + y] = src[srcIndex];
+ 987              		.loc 1 518 13 is_stmt 1 view .LVU301
+ 988              		.loc 1 518 39 is_stmt 0 view .LVU302
+ 989 001a 01FB04C3 		mla	r3, r1, r4, ip
+ 990              		.loc 1 518 49 view .LVU303
+ 991 001e 36F81E20 		ldrh	r2, [r6, lr, lsl #1]
+ 992              		.loc 1 518 44 view .LVU304
+ 993 0022 27F81320 		strh	r2, [r7, r3, lsl #1]	@ movhi
+ 519:Drivers/lvgl/src/draw/lv_draw_utils.c ****             srcIndex += src_stride;
+ 994              		.loc 1 519 13 is_stmt 1 view .LVU305
+ 995              		.loc 1 519 22 is_stmt 0 view .LVU306
+ 996 0026 AE44     		add	lr, lr, r5
+ 997              	.LVL92:
+ 517:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex * dst_stride + y] = src[srcIndex];
+ 998              		.loc 1 517 44 is_stmt 1 discriminator 1 view .LVU307
+ 999 0028 0CF1010C 		add	ip, ip, #1
+ 1000              	.LVL93:
+ 1001              	.L59:
+ 517:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex * dst_stride + y] = src[srcIndex];
+ARM GAS  /tmp/ccMRemNS.s 			page 29
+
+
+ 1002              		.loc 1 517 30 discriminator 2 view .LVU308
+ 1003 002c 8445     		cmp	ip, r0
+ 1004 002e F4DB     		blt	.L60
+ 517:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex * dst_stride + y] = src[srcIndex];
+ 1005              		.loc 1 517 30 is_stmt 0 discriminator 2 view .LVU309
+ 1006              	.LBE44:
+ 1007              	.LBE43:
+ 514:Drivers/lvgl/src/draw/lv_draw_utils.c ****         int32_t dstIndex = (src_width - x - 1);
+ 1008              		.loc 1 514 39 is_stmt 1 discriminator 1 view .LVU310
+ 1009 0030 09F10109 		add	r9, r9, #1
+ 1010              	.LVL94:
+ 1011              	.L58:
+ 514:Drivers/lvgl/src/draw/lv_draw_utils.c ****         int32_t dstIndex = (src_width - x - 1);
+ 1012              		.loc 1 514 26 discriminator 2 view .LVU311
+ 1013 0034 C145     		cmp	r9, r8
+ 1014 0036 06DA     		bge	.L63
+ 1015              	.LBB47:
+ 515:Drivers/lvgl/src/draw/lv_draw_utils.c ****         int32_t srcIndex = x;
+ 1016              		.loc 1 515 9 view .LVU312
+ 515:Drivers/lvgl/src/draw/lv_draw_utils.c ****         int32_t srcIndex = x;
+ 1017              		.loc 1 515 39 is_stmt 0 view .LVU313
+ 1018 0038 A8EB0901 		sub	r1, r8, r9
+ 515:Drivers/lvgl/src/draw/lv_draw_utils.c ****         int32_t srcIndex = x;
+ 1019              		.loc 1 515 17 view .LVU314
+ 1020 003c 0139     		subs	r1, r1, #1
+ 1021              	.LVL95:
+ 516:Drivers/lvgl/src/draw/lv_draw_utils.c ****         for(int32_t y = 0; y < src_height; ++y) {
+ 1022              		.loc 1 516 9 is_stmt 1 view .LVU315
+ 517:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex * dst_stride + y] = src[srcIndex];
+ 1023              		.loc 1 517 9 view .LVU316
+ 1024              	.LBB45:
+ 517:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex * dst_stride + y] = src[srcIndex];
+ 1025              		.loc 1 517 13 view .LVU317
+ 517:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex * dst_stride + y] = src[srcIndex];
+ 1026              		.loc 1 517 13 is_stmt 0 view .LVU318
+ 1027              	.LBE45:
+ 516:Drivers/lvgl/src/draw/lv_draw_utils.c ****         for(int32_t y = 0; y < src_height; ++y) {
+ 1028              		.loc 1 516 17 view .LVU319
+ 1029 003e CE46     		mov	lr, r9
+ 1030              	.LBB46:
+ 517:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex * dst_stride + y] = src[srcIndex];
+ 1031              		.loc 1 517 21 view .LVU320
+ 1032 0040 4FF0000C 		mov	ip, #0
+ 517:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex * dst_stride + y] = src[srcIndex];
+ 1033              		.loc 1 517 9 view .LVU321
+ 1034 0044 F2E7     		b	.L59
+ 1035              	.LVL96:
+ 1036              	.L63:
+ 517:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex * dst_stride + y] = src[srcIndex];
+ 1037              		.loc 1 517 9 view .LVU322
+ 1038              	.LBE46:
+ 1039              	.LBE47:
+ 1040              	.LBE42:
+ 520:Drivers/lvgl/src/draw/lv_draw_utils.c ****         }
+ 521:Drivers/lvgl/src/draw/lv_draw_utils.c ****     }
+ 522:Drivers/lvgl/src/draw/lv_draw_utils.c **** }
+ 1041              		.loc 1 522 1 view .LVU323
+ARM GAS  /tmp/ccMRemNS.s 			page 30
+
+
+ 1042 0046 BDE8F083 		pop	{r4, r5, r6, r7, r8, r9, pc}
+ 1043              		.loc 1 522 1 view .LVU324
+ 1044              		.cfi_endproc
+ 1045              	.LFE42:
+ 1047              		.section	.text.rotate90_l8,"ax",%progbits
+ 1048              		.align	1
+ 1049              		.syntax unified
+ 1050              		.thumb
+ 1051              		.thumb_func
+ 1053              	rotate90_l8:
+ 1054              	.LVL97:
+ 1055              	.LFB43:
+ 523:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 524:Drivers/lvgl/src/draw/lv_draw_utils.c **** static void rotate90_l8(const uint8_t * src, uint8_t * dst, int32_t src_width, int32_t src_height,
+ 525:Drivers/lvgl/src/draw/lv_draw_utils.c ****                         int32_t src_stride,
+ 526:Drivers/lvgl/src/draw/lv_draw_utils.c ****                         int32_t dst_stride)
+ 527:Drivers/lvgl/src/draw/lv_draw_utils.c **** {
+ 1056              		.loc 1 527 1 is_stmt 1 view -0
+ 1057              		.cfi_startproc
+ 1058              		@ args = 8, pretend = 0, frame = 0
+ 1059              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1060              		.loc 1 527 1 is_stmt 0 view .LVU326
+ 1061 0000 2DE9F043 		push	{r4, r5, r6, r7, r8, r9, lr}
+ 1062              	.LCFI9:
+ 1063              		.cfi_def_cfa_offset 28
+ 1064              		.cfi_offset 4, -28
+ 1065              		.cfi_offset 5, -24
+ 1066              		.cfi_offset 6, -20
+ 1067              		.cfi_offset 7, -16
+ 1068              		.cfi_offset 8, -12
+ 1069              		.cfi_offset 9, -8
+ 1070              		.cfi_offset 14, -4
+ 1071 0004 0546     		mov	r5, r0
+ 1072 0006 0C46     		mov	r4, r1
+ 1073 0008 9046     		mov	r8, r2
+ 1074 000a 079F     		ldr	r7, [sp, #28]
+ 1075 000c 089E     		ldr	r6, [sp, #32]
+ 528:Drivers/lvgl/src/draw/lv_draw_utils.c ****     if(LV_RESULT_OK == LV_DRAW_ROTATE90_L8(src, dst, src_width, src_height, src_stride, dst_stride)
+ 1076              		.loc 1 528 5 is_stmt 1 view .LVU327
+ 529:Drivers/lvgl/src/draw/lv_draw_utils.c ****         return ;
+ 530:Drivers/lvgl/src/draw/lv_draw_utils.c ****     }
+ 531:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 532:Drivers/lvgl/src/draw/lv_draw_utils.c ****     for(int32_t x = 0; x < src_width; ++x) {
+ 1077              		.loc 1 532 5 view .LVU328
+ 1078              	.LBB48:
+ 1079              		.loc 1 532 9 view .LVU329
+ 1080              	.LVL98:
+ 1081              		.loc 1 532 17 is_stmt 0 view .LVU330
+ 1082 000e 4FF00009 		mov	r9, #0
+ 1083              		.loc 1 532 5 view .LVU331
+ 1084 0012 0BE0     		b	.L65
+ 1085              	.LVL99:
+ 1086              	.L67:
+ 1087              	.LBB49:
+ 1088              	.LBB50:
+ 533:Drivers/lvgl/src/draw/lv_draw_utils.c ****         int32_t dstIndex = (src_width - x - 1);
+ 534:Drivers/lvgl/src/draw/lv_draw_utils.c ****         int32_t srcIndex = x;
+ARM GAS  /tmp/ccMRemNS.s 			page 31
+
+
+ 535:Drivers/lvgl/src/draw/lv_draw_utils.c ****         for(int32_t y = 0; y < src_height; ++y) {
+ 536:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex * dst_stride + y] = src[srcIndex];
+ 1089              		.loc 1 536 13 is_stmt 1 view .LVU332
+ 1090              		.loc 1 536 39 is_stmt 0 view .LVU333
+ 1091 0014 06FB00C2 		mla	r2, r6, r0, ip
+ 1092              		.loc 1 536 49 view .LVU334
+ 1093 0018 15F80E10 		ldrb	r1, [r5, lr]	@ zero_extendqisi2
+ 1094              		.loc 1 536 44 view .LVU335
+ 1095 001c A154     		strb	r1, [r4, r2]
+ 537:Drivers/lvgl/src/draw/lv_draw_utils.c ****             srcIndex += src_stride;
+ 1096              		.loc 1 537 13 is_stmt 1 view .LVU336
+ 1097              		.loc 1 537 22 is_stmt 0 view .LVU337
+ 1098 001e BE44     		add	lr, lr, r7
+ 1099              	.LVL100:
+ 535:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex * dst_stride + y] = src[srcIndex];
+ 1100              		.loc 1 535 44 is_stmt 1 discriminator 1 view .LVU338
+ 1101 0020 0CF1010C 		add	ip, ip, #1
+ 1102              	.LVL101:
+ 1103              	.L66:
+ 535:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex * dst_stride + y] = src[srcIndex];
+ 1104              		.loc 1 535 30 discriminator 2 view .LVU339
+ 1105 0024 9C45     		cmp	ip, r3
+ 1106 0026 F5DB     		blt	.L67
+ 535:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex * dst_stride + y] = src[srcIndex];
+ 1107              		.loc 1 535 30 is_stmt 0 discriminator 2 view .LVU340
+ 1108              	.LBE50:
+ 1109              	.LBE49:
+ 532:Drivers/lvgl/src/draw/lv_draw_utils.c ****         int32_t dstIndex = (src_width - x - 1);
+ 1110              		.loc 1 532 39 is_stmt 1 discriminator 1 view .LVU341
+ 1111 0028 09F10109 		add	r9, r9, #1
+ 1112              	.LVL102:
+ 1113              	.L65:
+ 532:Drivers/lvgl/src/draw/lv_draw_utils.c ****         int32_t dstIndex = (src_width - x - 1);
+ 1114              		.loc 1 532 26 discriminator 2 view .LVU342
+ 1115 002c C145     		cmp	r9, r8
+ 1116 002e 06DA     		bge	.L70
+ 1117              	.LBB53:
+ 533:Drivers/lvgl/src/draw/lv_draw_utils.c ****         int32_t srcIndex = x;
+ 1118              		.loc 1 533 9 view .LVU343
+ 533:Drivers/lvgl/src/draw/lv_draw_utils.c ****         int32_t srcIndex = x;
+ 1119              		.loc 1 533 39 is_stmt 0 view .LVU344
+ 1120 0030 A8EB0900 		sub	r0, r8, r9
+ 533:Drivers/lvgl/src/draw/lv_draw_utils.c ****         int32_t srcIndex = x;
+ 1121              		.loc 1 533 17 view .LVU345
+ 1122 0034 0138     		subs	r0, r0, #1
+ 1123              	.LVL103:
+ 534:Drivers/lvgl/src/draw/lv_draw_utils.c ****         for(int32_t y = 0; y < src_height; ++y) {
+ 1124              		.loc 1 534 9 is_stmt 1 view .LVU346
+ 535:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex * dst_stride + y] = src[srcIndex];
+ 1125              		.loc 1 535 9 view .LVU347
+ 1126              	.LBB51:
+ 535:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex * dst_stride + y] = src[srcIndex];
+ 1127              		.loc 1 535 13 view .LVU348
+ 535:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex * dst_stride + y] = src[srcIndex];
+ 1128              		.loc 1 535 13 is_stmt 0 view .LVU349
+ 1129              	.LBE51:
+ 534:Drivers/lvgl/src/draw/lv_draw_utils.c ****         for(int32_t y = 0; y < src_height; ++y) {
+ARM GAS  /tmp/ccMRemNS.s 			page 32
+
+
+ 1130              		.loc 1 534 17 view .LVU350
+ 1131 0036 CE46     		mov	lr, r9
+ 1132              	.LBB52:
+ 535:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex * dst_stride + y] = src[srcIndex];
+ 1133              		.loc 1 535 21 view .LVU351
+ 1134 0038 4FF0000C 		mov	ip, #0
+ 535:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex * dst_stride + y] = src[srcIndex];
+ 1135              		.loc 1 535 9 view .LVU352
+ 1136 003c F2E7     		b	.L66
+ 1137              	.LVL104:
+ 1138              	.L70:
+ 535:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex * dst_stride + y] = src[srcIndex];
+ 1139              		.loc 1 535 9 view .LVU353
+ 1140              	.LBE52:
+ 1141              	.LBE53:
+ 1142              	.LBE48:
+ 538:Drivers/lvgl/src/draw/lv_draw_utils.c ****         }
+ 539:Drivers/lvgl/src/draw/lv_draw_utils.c ****     }
+ 540:Drivers/lvgl/src/draw/lv_draw_utils.c **** }
+ 1143              		.loc 1 540 1 view .LVU354
+ 1144 003e BDE8F083 		pop	{r4, r5, r6, r7, r8, r9, pc}
+ 1145              		.loc 1 540 1 view .LVU355
+ 1146              		.cfi_endproc
+ 1147              	.LFE43:
+ 1149              		.section	.text.rotate180_l8,"ax",%progbits
+ 1150              		.align	1
+ 1151              		.syntax unified
+ 1152              		.thumb
+ 1153              		.thumb_func
+ 1155              	rotate180_l8:
+ 1156              	.LVL105:
+ 1157              	.LFB44:
+ 541:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 542:Drivers/lvgl/src/draw/lv_draw_utils.c **** static void rotate180_l8(const uint8_t * src, uint8_t * dst, int32_t width, int32_t height, int32_t
+ 543:Drivers/lvgl/src/draw/lv_draw_utils.c ****                          int32_t dest_stride)
+ 544:Drivers/lvgl/src/draw/lv_draw_utils.c **** {
+ 1158              		.loc 1 544 1 is_stmt 1 view -0
+ 1159              		.cfi_startproc
+ 1160              		@ args = 8, pretend = 0, frame = 0
+ 1161              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1162              		.loc 1 544 1 is_stmt 0 view .LVU357
+ 1163 0000 2DE9F043 		push	{r4, r5, r6, r7, r8, r9, lr}
+ 1164              	.LCFI10:
+ 1165              		.cfi_def_cfa_offset 28
+ 1166              		.cfi_offset 4, -28
+ 1167              		.cfi_offset 5, -24
+ 1168              		.cfi_offset 6, -20
+ 1169              		.cfi_offset 7, -16
+ 1170              		.cfi_offset 8, -12
+ 1171              		.cfi_offset 9, -8
+ 1172              		.cfi_offset 14, -4
+ 1173 0004 0546     		mov	r5, r0
+ 1174 0006 0C46     		mov	r4, r1
+ 1175 0008 1F46     		mov	r7, r3
+ 1176 000a DDF81C90 		ldr	r9, [sp, #28]
+ 1177 000e DDF82080 		ldr	r8, [sp, #32]
+ 545:Drivers/lvgl/src/draw/lv_draw_utils.c ****     if(LV_RESULT_OK == LV_DRAW_ROTATE180_L8(src, dst, width, height, src_stride)) {
+ARM GAS  /tmp/ccMRemNS.s 			page 33
+
+
+ 1178              		.loc 1 545 5 is_stmt 1 view .LVU358
+ 546:Drivers/lvgl/src/draw/lv_draw_utils.c ****         return ;
+ 547:Drivers/lvgl/src/draw/lv_draw_utils.c ****     }
+ 548:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 549:Drivers/lvgl/src/draw/lv_draw_utils.c ****     for(int32_t y = 0; y < height; ++y) {
+ 1179              		.loc 1 549 5 view .LVU359
+ 1180              	.LBB54:
+ 1181              		.loc 1 549 9 view .LVU360
+ 1182              	.LVL106:
+ 1183              		.loc 1 549 17 is_stmt 0 view .LVU361
+ 1184 0012 0026     		movs	r6, #0
+ 1185              		.loc 1 549 5 view .LVU362
+ 1186 0014 0FE0     		b	.L72
+ 1187              	.LVL107:
+ 1188              	.L74:
+ 1189              	.LBB55:
+ 1190              	.LBB56:
+ 550:Drivers/lvgl/src/draw/lv_draw_utils.c ****         int32_t dstIndex = (height - y - 1) * dest_stride;
+ 551:Drivers/lvgl/src/draw/lv_draw_utils.c ****         int32_t srcIndex = y * src_stride;
+ 552:Drivers/lvgl/src/draw/lv_draw_utils.c ****         for(int32_t x = 0; x < width; ++x) {
+ 553:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex + width - x - 1] = src[srcIndex + x];
+ 1191              		.loc 1 553 13 is_stmt 1 view .LVU363
+ 1192              		.loc 1 553 58 is_stmt 0 view .LVU364
+ 1193 0016 0EEB0003 		add	r3, lr, r0
+ 1194              		.loc 1 553 26 view .LVU365
+ 1195 001a 01EB020C 		add	ip, r1, r2
+ 1196              		.loc 1 553 34 view .LVU366
+ 1197 001e ACEB0E0C 		sub	ip, ip, lr
+ 1198              		.loc 1 553 38 view .LVU367
+ 1199 0022 0CF1FF3C 		add	ip, ip, #-1
+ 1200              		.loc 1 553 48 view .LVU368
+ 1201 0026 EB5C     		ldrb	r3, [r5, r3]	@ zero_extendqisi2
+ 1202              		.loc 1 553 43 view .LVU369
+ 1203 0028 04F80C30 		strb	r3, [r4, ip]
+ 552:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex + width - x - 1] = src[srcIndex + x];
+ 1204              		.loc 1 552 39 is_stmt 1 discriminator 1 view .LVU370
+ 1205 002c 0EF1010E 		add	lr, lr, #1
+ 1206              	.LVL108:
+ 1207              	.L73:
+ 552:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex + width - x - 1] = src[srcIndex + x];
+ 1208              		.loc 1 552 30 discriminator 2 view .LVU371
+ 1209 0030 9645     		cmp	lr, r2
+ 1210 0032 F0DB     		blt	.L74
+ 1211              	.LBE56:
+ 1212              	.LBE55:
+ 549:Drivers/lvgl/src/draw/lv_draw_utils.c ****         int32_t dstIndex = (height - y - 1) * dest_stride;
+ 1213              		.loc 1 549 36 discriminator 1 view .LVU372
+ 1214 0034 0136     		adds	r6, r6, #1
+ 1215              	.LVL109:
+ 1216              	.L72:
+ 549:Drivers/lvgl/src/draw/lv_draw_utils.c ****         int32_t dstIndex = (height - y - 1) * dest_stride;
+ 1217              		.loc 1 549 26 discriminator 2 view .LVU373
+ 1218 0036 BE42     		cmp	r6, r7
+ 1219 0038 08DA     		bge	.L77
+ 1220              	.LBB58:
+ 550:Drivers/lvgl/src/draw/lv_draw_utils.c ****         int32_t dstIndex = (height - y - 1) * dest_stride;
+ 1221              		.loc 1 550 9 view .LVU374
+ARM GAS  /tmp/ccMRemNS.s 			page 34
+
+
+ 550:Drivers/lvgl/src/draw/lv_draw_utils.c ****         int32_t dstIndex = (height - y - 1) * dest_stride;
+ 1222              		.loc 1 550 36 is_stmt 0 view .LVU375
+ 1223 003a B91B     		subs	r1, r7, r6
+ 550:Drivers/lvgl/src/draw/lv_draw_utils.c ****         int32_t dstIndex = (height - y - 1) * dest_stride;
+ 1224              		.loc 1 550 40 view .LVU376
+ 1225 003c 0139     		subs	r1, r1, #1
+ 550:Drivers/lvgl/src/draw/lv_draw_utils.c ****         int32_t dstIndex = (height - y - 1) * dest_stride;
+ 1226              		.loc 1 550 17 view .LVU377
+ 1227 003e 08FB01F1 		mul	r1, r8, r1
+ 1228              	.LVL110:
+ 551:Drivers/lvgl/src/draw/lv_draw_utils.c ****         for(int32_t x = 0; x < width; ++x) {
+ 1229              		.loc 1 551 9 is_stmt 1 view .LVU378
+ 551:Drivers/lvgl/src/draw/lv_draw_utils.c ****         for(int32_t x = 0; x < width; ++x) {
+ 1230              		.loc 1 551 17 is_stmt 0 view .LVU379
+ 1231 0042 09FB06F0 		mul	r0, r9, r6
+ 1232              	.LVL111:
+ 552:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex + width - x - 1] = src[srcIndex + x];
+ 1233              		.loc 1 552 9 is_stmt 1 view .LVU380
+ 1234              	.LBB57:
+ 552:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex + width - x - 1] = src[srcIndex + x];
+ 1235              		.loc 1 552 13 view .LVU381
+ 552:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex + width - x - 1] = src[srcIndex + x];
+ 1236              		.loc 1 552 21 is_stmt 0 view .LVU382
+ 1237 0046 4FF0000E 		mov	lr, #0
+ 552:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex + width - x - 1] = src[srcIndex + x];
+ 1238              		.loc 1 552 9 view .LVU383
+ 1239 004a F1E7     		b	.L73
+ 1240              	.LVL112:
+ 1241              	.L77:
+ 552:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex + width - x - 1] = src[srcIndex + x];
+ 1242              		.loc 1 552 9 view .LVU384
+ 1243              	.LBE57:
+ 1244              	.LBE58:
+ 1245              	.LBE54:
+ 554:Drivers/lvgl/src/draw/lv_draw_utils.c ****         }
+ 555:Drivers/lvgl/src/draw/lv_draw_utils.c ****     }
+ 556:Drivers/lvgl/src/draw/lv_draw_utils.c **** }
+ 1246              		.loc 1 556 1 view .LVU385
+ 1247 004c BDE8F083 		pop	{r4, r5, r6, r7, r8, r9, pc}
+ 1248              		.loc 1 556 1 view .LVU386
+ 1249              		.cfi_endproc
+ 1250              	.LFE44:
+ 1252              		.section	.text.rotate270_l8,"ax",%progbits
+ 1253              		.align	1
+ 1254              		.syntax unified
+ 1255              		.thumb
+ 1256              		.thumb_func
+ 1258              	rotate270_l8:
+ 1259              	.LVL113:
+ 1260              	.LFB45:
+ 557:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 558:Drivers/lvgl/src/draw/lv_draw_utils.c **** static void rotate270_l8(const uint8_t * src, uint8_t * dst, int32_t src_width, int32_t src_height,
+ 559:Drivers/lvgl/src/draw/lv_draw_utils.c ****                          int32_t src_stride,
+ 560:Drivers/lvgl/src/draw/lv_draw_utils.c ****                          int32_t dst_stride)
+ 561:Drivers/lvgl/src/draw/lv_draw_utils.c **** {
+ 1261              		.loc 1 561 1 is_stmt 1 view -0
+ 1262              		.cfi_startproc
+ARM GAS  /tmp/ccMRemNS.s 			page 35
+
+
+ 1263              		@ args = 8, pretend = 0, frame = 0
+ 1264              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1265              		.loc 1 561 1 is_stmt 0 view .LVU388
+ 1266 0000 2DE9F043 		push	{r4, r5, r6, r7, r8, r9, lr}
+ 1267              	.LCFI11:
+ 1268              		.cfi_def_cfa_offset 28
+ 1269              		.cfi_offset 4, -28
+ 1270              		.cfi_offset 5, -24
+ 1271              		.cfi_offset 6, -20
+ 1272              		.cfi_offset 7, -16
+ 1273              		.cfi_offset 8, -12
+ 1274              		.cfi_offset 9, -8
+ 1275              		.cfi_offset 14, -4
+ 1276 0004 0546     		mov	r5, r0
+ 1277 0006 0C46     		mov	r4, r1
+ 1278 0008 1746     		mov	r7, r2
+ 1279 000a 079E     		ldr	r6, [sp, #28]
+ 1280 000c DDF82090 		ldr	r9, [sp, #32]
+ 562:Drivers/lvgl/src/draw/lv_draw_utils.c ****     if(LV_RESULT_OK == LV_DRAW_ROTATE270_L8(src, dst, src_width, src_height, src_stride, dst_stride
+ 1281              		.loc 1 562 5 is_stmt 1 view .LVU389
+ 563:Drivers/lvgl/src/draw/lv_draw_utils.c ****         return ;
+ 564:Drivers/lvgl/src/draw/lv_draw_utils.c ****     }
+ 565:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 566:Drivers/lvgl/src/draw/lv_draw_utils.c ****     for(int32_t x = 0; x < src_width; ++x) {
+ 1282              		.loc 1 566 5 view .LVU390
+ 1283              	.LBB59:
+ 1284              		.loc 1 566 9 view .LVU391
+ 1285              	.LVL114:
+ 1286              		.loc 1 566 17 is_stmt 0 view .LVU392
+ 1287 0010 4FF00008 		mov	r8, #0
+ 1288              		.loc 1 566 5 view .LVU393
+ 1289 0014 0EE0     		b	.L79
+ 1290              	.LVL115:
+ 1291              	.L81:
+ 1292              	.LBB60:
+ 1293              	.LBB61:
+ 567:Drivers/lvgl/src/draw/lv_draw_utils.c ****         int32_t dstIndex = x * dst_stride;
+ 568:Drivers/lvgl/src/draw/lv_draw_utils.c ****         int32_t srcIndex = x;
+ 569:Drivers/lvgl/src/draw/lv_draw_utils.c ****         for(int32_t y = 0; y < src_height; ++y) {
+ 570:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex + (src_height - y - 1)] = src[srcIndex];
+ 1294              		.loc 1 570 13 is_stmt 1 view .LVU394
+ 1295              		.loc 1 570 40 is_stmt 0 view .LVU395
+ 1296 0016 A3EB0E0C 		sub	ip, r3, lr
+ 1297              		.loc 1 570 44 view .LVU396
+ 1298 001a 0CF1FF3C 		add	ip, ip, #-1
+ 1299              		.loc 1 570 26 view .LVU397
+ 1300 001e 8444     		add	ip, ip, r0
+ 1301              		.loc 1 570 55 view .LVU398
+ 1302 0020 A95C     		ldrb	r1, [r5, r2]	@ zero_extendqisi2
+ 1303              		.loc 1 570 50 view .LVU399
+ 1304 0022 04F80C10 		strb	r1, [r4, ip]
+ 571:Drivers/lvgl/src/draw/lv_draw_utils.c ****             srcIndex += src_stride;
+ 1305              		.loc 1 571 13 is_stmt 1 view .LVU400
+ 1306              		.loc 1 571 22 is_stmt 0 view .LVU401
+ 1307 0026 3244     		add	r2, r2, r6
+ 1308              	.LVL116:
+ 569:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex + (src_height - y - 1)] = src[srcIndex];
+ARM GAS  /tmp/ccMRemNS.s 			page 36
+
+
+ 1309              		.loc 1 569 44 is_stmt 1 discriminator 1 view .LVU402
+ 1310 0028 0EF1010E 		add	lr, lr, #1
+ 1311              	.LVL117:
+ 1312              	.L80:
+ 569:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex + (src_height - y - 1)] = src[srcIndex];
+ 1313              		.loc 1 569 30 discriminator 2 view .LVU403
+ 1314 002c 9E45     		cmp	lr, r3
+ 1315 002e F2DB     		blt	.L81
+ 569:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex + (src_height - y - 1)] = src[srcIndex];
+ 1316              		.loc 1 569 30 is_stmt 0 discriminator 2 view .LVU404
+ 1317              	.LBE61:
+ 1318              	.LBE60:
+ 566:Drivers/lvgl/src/draw/lv_draw_utils.c ****         int32_t dstIndex = x * dst_stride;
+ 1319              		.loc 1 566 39 is_stmt 1 discriminator 1 view .LVU405
+ 1320 0030 08F10108 		add	r8, r8, #1
+ 1321              	.LVL118:
+ 1322              	.L79:
+ 566:Drivers/lvgl/src/draw/lv_draw_utils.c ****         int32_t dstIndex = x * dst_stride;
+ 1323              		.loc 1 566 26 discriminator 2 view .LVU406
+ 1324 0034 B845     		cmp	r8, r7
+ 1325 0036 05DA     		bge	.L84
+ 1326              	.LBB64:
+ 567:Drivers/lvgl/src/draw/lv_draw_utils.c ****         int32_t srcIndex = x;
+ 1327              		.loc 1 567 9 view .LVU407
+ 567:Drivers/lvgl/src/draw/lv_draw_utils.c ****         int32_t srcIndex = x;
+ 1328              		.loc 1 567 17 is_stmt 0 view .LVU408
+ 1329 0038 09FB08F0 		mul	r0, r9, r8
+ 1330              	.LVL119:
+ 568:Drivers/lvgl/src/draw/lv_draw_utils.c ****         for(int32_t y = 0; y < src_height; ++y) {
+ 1331              		.loc 1 568 9 is_stmt 1 view .LVU409
+ 569:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex + (src_height - y - 1)] = src[srcIndex];
+ 1332              		.loc 1 569 9 view .LVU410
+ 1333              	.LBB62:
+ 569:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex + (src_height - y - 1)] = src[srcIndex];
+ 1334              		.loc 1 569 13 view .LVU411
+ 569:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex + (src_height - y - 1)] = src[srcIndex];
+ 1335              		.loc 1 569 13 is_stmt 0 view .LVU412
+ 1336              	.LBE62:
+ 568:Drivers/lvgl/src/draw/lv_draw_utils.c ****         for(int32_t y = 0; y < src_height; ++y) {
+ 1337              		.loc 1 568 17 view .LVU413
+ 1338 003c 4246     		mov	r2, r8
+ 1339              	.LBB63:
+ 569:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex + (src_height - y - 1)] = src[srcIndex];
+ 1340              		.loc 1 569 21 view .LVU414
+ 1341 003e 4FF0000E 		mov	lr, #0
+ 569:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex + (src_height - y - 1)] = src[srcIndex];
+ 1342              		.loc 1 569 9 view .LVU415
+ 1343 0042 F3E7     		b	.L80
+ 1344              	.LVL120:
+ 1345              	.L84:
+ 569:Drivers/lvgl/src/draw/lv_draw_utils.c ****             dst[dstIndex + (src_height - y - 1)] = src[srcIndex];
+ 1346              		.loc 1 569 9 view .LVU416
+ 1347              	.LBE63:
+ 1348              	.LBE64:
+ 1349              	.LBE59:
+ 572:Drivers/lvgl/src/draw/lv_draw_utils.c ****         }
+ 573:Drivers/lvgl/src/draw/lv_draw_utils.c ****     }
+ARM GAS  /tmp/ccMRemNS.s 			page 37
+
+
+ 574:Drivers/lvgl/src/draw/lv_draw_utils.c **** }
+ 1350              		.loc 1 574 1 view .LVU417
+ 1351 0044 BDE8F083 		pop	{r4, r5, r6, r7, r8, r9, pc}
+ 1352              		.loc 1 574 1 view .LVU418
+ 1353              		.cfi_endproc
+ 1354              	.LFE45:
+ 1356              		.section	.text.lv_draw_i1_to_argb8888,"ax",%progbits
+ 1357              		.align	1
+ 1358              		.global	lv_draw_i1_to_argb8888
+ 1359              		.syntax unified
+ 1360              		.thumb
+ 1361              		.thumb_func
+ 1363              	lv_draw_i1_to_argb8888:
+ 1364              	.LVL121:
+ 1365              	.LFB29:
+ 137:Drivers/lvgl/src/draw/lv_draw_utils.c ****     LV_CHECK_ARG(buf_i1 != NULL, return);
+ 1366              		.loc 1 137 1 is_stmt 1 view -0
+ 1367              		.cfi_startproc
+ 1368              		@ args = 16, pretend = 0, frame = 0
+ 1369              		@ frame_needed = 0, uses_anonymous_args = 0
+ 137:Drivers/lvgl/src/draw/lv_draw_utils.c ****     LV_CHECK_ARG(buf_i1 != NULL, return);
+ 1370              		.loc 1 137 1 is_stmt 0 view .LVU420
+ 1371 0000 2DE9F04F 		push	{r4, r5, r6, r7, r8, r9, r10, fp, lr}
+ 1372              	.LCFI12:
+ 1373              		.cfi_def_cfa_offset 36
+ 1374              		.cfi_offset 4, -36
+ 1375              		.cfi_offset 5, -32
+ 1376              		.cfi_offset 6, -28
+ 1377              		.cfi_offset 7, -24
+ 1378              		.cfi_offset 8, -20
+ 1379              		.cfi_offset 9, -16
+ 1380              		.cfi_offset 10, -12
+ 1381              		.cfi_offset 11, -8
+ 1382              		.cfi_offset 14, -4
+ 1383 0004 8B46     		mov	fp, r1
+ 1384 0006 DDF82490 		ldr	r9, [sp, #36]
+ 1385 000a DDF828A0 		ldr	r10, [sp, #40]
+ 1386 000e 0B99     		ldr	r1, [sp, #44]
+ 1387              	.LVL122:
+ 137:Drivers/lvgl/src/draw/lv_draw_utils.c ****     LV_CHECK_ARG(buf_i1 != NULL, return);
+ 1388              		.loc 1 137 1 view .LVU421
+ 1389 0010 0C9C     		ldr	r4, [sp, #48]
+ 138:Drivers/lvgl/src/draw/lv_draw_utils.c ****     LV_CHECK_ARG(buf_argb8888 != NULL, return);
+ 1390              		.loc 1 138 5 is_stmt 1 view .LVU422
+ 138:Drivers/lvgl/src/draw/lv_draw_utils.c ****     LV_CHECK_ARG(buf_argb8888 != NULL, return);
+ 1391              		.loc 1 138 5 is_stmt 0 discriminator 1 view .LVU423
+ 1392 0012 38B3     		cbz	r0, .L85
+ 1393 0014 9846     		mov	r8, r3
+ 1394 0016 0346     		mov	r3, r0
+ 1395              	.LVL123:
+ 138:Drivers/lvgl/src/draw/lv_draw_utils.c ****     LV_CHECK_ARG(buf_argb8888 != NULL, return);
+ 1396              		.loc 1 138 5 is_stmt 1 discriminator 3 view .LVU424
+ 138:Drivers/lvgl/src/draw/lv_draw_utils.c ****     LV_CHECK_ARG(buf_argb8888 != NULL, return);
+ 1397              		.loc 1 138 41 discriminator 3 view .LVU425
+ 139:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 1398              		.loc 1 139 5 view .LVU426
+ 139:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ARM GAS  /tmp/ccMRemNS.s 			page 38
+
+
+ 1399              		.loc 1 139 5 is_stmt 0 discriminator 1 view .LVU427
+ 1400 0018 BBF1000F 		cmp	fp, #0
+ 1401 001c 22D0     		beq	.L85
+ 139:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 1402              		.loc 1 139 5 is_stmt 1 discriminator 3 view .LVU428
+ 139:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 1403              		.loc 1 139 47 discriminator 3 view .LVU429
+ 142:Drivers/lvgl/src/draw/lv_draw_utils.c ****     uint32_t * dst = buf_argb8888;
+ 1404              		.loc 1 142 5 view .LVU430
+ 1405              	.LVL124:
+ 143:Drivers/lvgl/src/draw/lv_draw_utils.c ****     uint32_t i1_row_byte_count = width / 8;
+ 1406              		.loc 1 143 5 view .LVU431
+ 144:Drivers/lvgl/src/draw/lv_draw_utils.c ****     for(uint32_t row = 0; row < height; row++) {
+ 1407              		.loc 1 144 5 view .LVU432
+ 144:Drivers/lvgl/src/draw/lv_draw_utils.c ****     for(uint32_t row = 0; row < height; row++) {
+ 1408              		.loc 1 144 14 is_stmt 0 view .LVU433
+ 1409 001e D508     		lsrs	r5, r2, #3
+ 1410              	.LVL125:
+ 145:Drivers/lvgl/src/draw/lv_draw_utils.c ****         uint32_t * dst_p = dst;
+ 1411              		.loc 1 145 5 is_stmt 1 view .LVU434
+ 1412              	.LBB65:
+ 145:Drivers/lvgl/src/draw/lv_draw_utils.c ****         uint32_t * dst_p = dst;
+ 1413              		.loc 1 145 9 view .LVU435
+ 145:Drivers/lvgl/src/draw/lv_draw_utils.c ****         uint32_t * dst_p = dst;
+ 1414              		.loc 1 145 18 is_stmt 0 view .LVU436
+ 1415 0020 0027     		movs	r7, #0
+ 145:Drivers/lvgl/src/draw/lv_draw_utils.c ****         uint32_t * dst_p = dst;
+ 1416              		.loc 1 145 5 view .LVU437
+ 1417 0022 19E0     		b	.L87
+ 1418              	.LVL126:
+ 1419              	.L92:
+ 1420              	.LBB66:
+ 1421              	.LBB67:
+ 1422              	.LBB68:
+ 150:Drivers/lvgl/src/draw/lv_draw_utils.c ****             }
+ 1423              		.loc 1 150 65 discriminator 2 view .LVU438
+ 1424 0024 0E46     		mov	r6, r1
+ 1425              	.L88:
+ 1426              	.LVL127:
+ 150:Drivers/lvgl/src/draw/lv_draw_utils.c ****             }
+ 1427              		.loc 1 150 26 discriminator 3 view .LVU439
+ 1428 0026 42F8046B 		str	r6, [r2], #4
+ 1429              	.LVL128:
+ 149:Drivers/lvgl/src/draw/lv_draw_utils.c ****                 *dst_p++ = ((src[i] >> bit) & 1) ? index1_color : index0_color;
+ 1430              		.loc 1 149 47 is_stmt 1 discriminator 1 view .LVU440
+ 1431 002a 0138     		subs	r0, r0, #1
+ 1432              	.LVL129:
+ 1433              	.L90:
+ 149:Drivers/lvgl/src/draw/lv_draw_utils.c ****                 *dst_p++ = ((src[i] >> bit) & 1) ? index1_color : index0_color;
+ 1434              		.loc 1 149 38 discriminator 2 view .LVU441
+ 1435 002c 0028     		cmp	r0, #0
+ 1436 002e 08DB     		blt	.L96
+ 150:Drivers/lvgl/src/draw/lv_draw_utils.c ****             }
+ 1437              		.loc 1 150 17 view .LVU442
+ 150:Drivers/lvgl/src/draw/lv_draw_utils.c ****             }
+ 1438              		.loc 1 150 33 is_stmt 0 view .LVU443
+ 1439 0030 13F80EC0 		ldrb	ip, [r3, lr]	@ zero_extendqisi2
+ARM GAS  /tmp/ccMRemNS.s 			page 39
+
+
+ 150:Drivers/lvgl/src/draw/lv_draw_utils.c ****             }
+ 1440              		.loc 1 150 37 view .LVU444
+ 1441 0034 4CFA00FC 		asr	ip, ip, r0
+ 150:Drivers/lvgl/src/draw/lv_draw_utils.c ****             }
+ 1442              		.loc 1 150 65 view .LVU445
+ 1443 0038 1CF0010F 		tst	ip, #1
+ 1444 003c F2D0     		beq	.L92
+ 150:Drivers/lvgl/src/draw/lv_draw_utils.c ****             }
+ 1445              		.loc 1 150 65 discriminator 1 view .LVU446
+ 1446 003e 2646     		mov	r6, r4
+ 1447 0040 F1E7     		b	.L88
+ 1448              	.L96:
+ 150:Drivers/lvgl/src/draw/lv_draw_utils.c ****             }
+ 1449              		.loc 1 150 65 discriminator 1 view .LVU447
+ 1450              	.LBE68:
+ 147:Drivers/lvgl/src/draw/lv_draw_utils.c ****             /*From MSB to LSB (pixel 0 to pixel 7 in a byte)*/
+ 1451              		.loc 1 147 53 is_stmt 1 discriminator 1 view .LVU448
+ 1452 0042 0EF1010E 		add	lr, lr, #1
+ 1453              	.LVL130:
+ 1454              	.L91:
+ 147:Drivers/lvgl/src/draw/lv_draw_utils.c ****             /*From MSB to LSB (pixel 0 to pixel 7 in a byte)*/
+ 1455              		.loc 1 147 31 discriminator 2 view .LVU449
+ 1456 0046 AE45     		cmp	lr, r5
+ 1457 0048 01D2     		bcs	.L97
+ 1458              	.LBB69:
+ 149:Drivers/lvgl/src/draw/lv_draw_utils.c ****                 *dst_p++ = ((src[i] >> bit) & 1) ? index1_color : index0_color;
+ 1459              		.loc 1 149 25 is_stmt 0 view .LVU450
+ 1460 004a 0720     		movs	r0, #7
+ 1461 004c EEE7     		b	.L90
+ 1462              	.L97:
+ 1463              	.LBE69:
+ 1464              	.LBE67:
+ 153:Drivers/lvgl/src/draw/lv_draw_utils.c ****         dst += buf_argb8888_stride / 4;
+ 1465              		.loc 1 153 9 is_stmt 1 view .LVU451
+ 153:Drivers/lvgl/src/draw/lv_draw_utils.c ****         dst += buf_argb8888_stride / 4;
+ 1466              		.loc 1 153 13 is_stmt 0 view .LVU452
+ 1467 004e 4B44     		add	r3, r3, r9
+ 1468              	.LVL131:
+ 154:Drivers/lvgl/src/draw/lv_draw_utils.c ****     }
+ 1469              		.loc 1 154 9 is_stmt 1 view .LVU453
+ 154:Drivers/lvgl/src/draw/lv_draw_utils.c ****     }
+ 1470              		.loc 1 154 13 is_stmt 0 view .LVU454
+ 1471 0050 2AF00302 		bic	r2, r10, #3
+ 1472              	.LVL132:
+ 154:Drivers/lvgl/src/draw/lv_draw_utils.c ****     }
+ 1473              		.loc 1 154 13 view .LVU455
+ 1474 0054 9344     		add	fp, fp, r2
+ 1475              	.LVL133:
+ 154:Drivers/lvgl/src/draw/lv_draw_utils.c ****     }
+ 1476              		.loc 1 154 13 view .LVU456
+ 1477              	.LBE66:
+ 145:Drivers/lvgl/src/draw/lv_draw_utils.c ****         uint32_t * dst_p = dst;
+ 1478              		.loc 1 145 44 is_stmt 1 discriminator 1 view .LVU457
+ 1479 0056 0137     		adds	r7, r7, #1
+ 1480              	.LVL134:
+ 1481              	.L87:
+ 145:Drivers/lvgl/src/draw/lv_draw_utils.c ****         uint32_t * dst_p = dst;
+ARM GAS  /tmp/ccMRemNS.s 			page 40
+
+
+ 1482              		.loc 1 145 31 discriminator 2 view .LVU458
+ 1483 0058 4745     		cmp	r7, r8
+ 1484 005a 03D2     		bcs	.L85
+ 1485              	.LBB71:
+ 146:Drivers/lvgl/src/draw/lv_draw_utils.c ****         for(uint32_t i = 0; i < i1_row_byte_count; i++) {
+ 1486              		.loc 1 146 20 is_stmt 0 view .LVU459
+ 1487 005c 5A46     		mov	r2, fp
+ 1488              	.LBB70:
+ 147:Drivers/lvgl/src/draw/lv_draw_utils.c ****             /*From MSB to LSB (pixel 0 to pixel 7 in a byte)*/
+ 1489              		.loc 1 147 22 view .LVU460
+ 1490 005e 4FF0000E 		mov	lr, #0
+ 1491 0062 F0E7     		b	.L91
+ 1492              	.LVL135:
+ 1493              	.L85:
+ 147:Drivers/lvgl/src/draw/lv_draw_utils.c ****             /*From MSB to LSB (pixel 0 to pixel 7 in a byte)*/
+ 1494              		.loc 1 147 22 view .LVU461
+ 1495              	.LBE70:
+ 1496              	.LBE71:
+ 1497              	.LBE65:
+ 156:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 1498              		.loc 1 156 1 view .LVU462
+ 1499 0064 BDE8F08F 		pop	{r4, r5, r6, r7, r8, r9, r10, fp, pc}
+ 156:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 1500              		.loc 1 156 1 view .LVU463
+ 1501              		.cfi_endproc
+ 1502              	.LFE29:
+ 1504              		.section	.text.lv_draw_rgb565_swap,"ax",%progbits
+ 1505              		.align	1
+ 1506              		.global	lv_draw_rgb565_swap
+ 1507              		.syntax unified
+ 1508              		.thumb
+ 1509              		.thumb_func
+ 1511              	lv_draw_rgb565_swap:
+ 1512              	.LVL136:
+ 1513              	.LFB30:
+ 159:Drivers/lvgl/src/draw/lv_draw_utils.c ****     LV_CHECK_ARG(buf != NULL, return);
+ 1514              		.loc 1 159 1 is_stmt 1 view -0
+ 1515              		.cfi_startproc
+ 1516              		@ args = 0, pretend = 0, frame = 0
+ 1517              		@ frame_needed = 0, uses_anonymous_args = 0
+ 160:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 1518              		.loc 1 160 5 view .LVU465
+ 160:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 1519              		.loc 1 160 5 is_stmt 0 discriminator 1 view .LVU466
+ 1520 0000 0028     		cmp	r0, #0
+ 1521 0002 00F08380 		beq	.L106
+ 159:Drivers/lvgl/src/draw/lv_draw_utils.c ****     LV_CHECK_ARG(buf != NULL, return);
+ 1522              		.loc 1 159 1 view .LVU467
+ 1523 0006 00B5     		push	{lr}
+ 1524              	.LCFI13:
+ 1525              		.cfi_def_cfa_offset 4
+ 1526              		.cfi_offset 14, -4
+ 1527 0008 8446     		mov	ip, r0
+ 160:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 1528              		.loc 1 160 5 is_stmt 1 discriminator 3 view .LVU468
+ 160:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 1529              		.loc 1 160 38 discriminator 3 view .LVU469
+ARM GAS  /tmp/ccMRemNS.s 			page 41
+
+
+ 162:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 1530              		.loc 1 162 5 view .LVU470
+ 164:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 1531              		.loc 1 164 5 view .LVU471
+ 1532              	.LVL137:
+ 167:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf16[0] = ((buf16[0] & 0xff00) >> 8) | ((buf16[0] & 0x00ff) << 8);
+ 1533              		.loc 1 167 5 view .LVU472
+ 167:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf16[0] = ((buf16[0] & 0xff00) >> 8) | ((buf16[0] & 0x00ff) << 8);
+ 1534              		.loc 1 167 7 is_stmt 0 view .LVU473
+ 1535 000a 10F0020F 		tst	r0, #2
+ 1536 000e 04D0     		beq	.L100
+ 168:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf16++;
+ 1537              		.loc 1 168 9 is_stmt 1 view .LVU474
+ 168:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf16++;
+ 1538              		.loc 1 168 27 is_stmt 0 view .LVU475
+ 1539 0010 0388     		ldrh	r3, [r0]
+ 168:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf16++;
+ 1540              		.loc 1 168 47 view .LVU476
+ 1541 0012 5BBA     		rev16	r3, r3
+ 168:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf16++;
+ 1542              		.loc 1 168 18 view .LVU477
+ 1543 0014 2CF8023B 		strh	r3, [ip], #2	@ movhi
+ 169:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf_size_px--;
+ 1544              		.loc 1 169 9 is_stmt 1 view .LVU478
+ 1545              	.LVL138:
+ 170:Drivers/lvgl/src/draw/lv_draw_utils.c ****     }
+ 1546              		.loc 1 170 9 view .LVU479
+ 170:Drivers/lvgl/src/draw/lv_draw_utils.c ****     }
+ 1547              		.loc 1 170 20 is_stmt 0 view .LVU480
+ 1548 0018 0139     		subs	r1, r1, #1
+ 1549              	.LVL139:
+ 1550              	.L100:
+ 173:Drivers/lvgl/src/draw/lv_draw_utils.c ****     uint32_t u32_cnt = buf_size_px / 2;
+ 1551              		.loc 1 173 5 is_stmt 1 view .LVU481
+ 174:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 1552              		.loc 1 174 5 view .LVU482
+ 174:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 1553              		.loc 1 174 14 is_stmt 0 view .LVU483
+ 1554 001a 4808     		lsrs	r0, r1, #1
+ 1555              	.LVL140:
+ 176:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf32[0] = ((buf32[0] & 0xff00ff00) >> 8) | ((buf32[0] & 0x00ff00ff) << 8);
+ 1556              		.loc 1 176 5 is_stmt 1 view .LVU484
+ 173:Drivers/lvgl/src/draw/lv_draw_utils.c ****     uint32_t u32_cnt = buf_size_px / 2;
+ 1557              		.loc 1 173 16 is_stmt 0 view .LVU485
+ 1558 001c 6346     		mov	r3, ip
+ 176:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf32[0] = ((buf32[0] & 0xff00ff00) >> 8) | ((buf32[0] & 0x00ff00ff) << 8);
+ 1559              		.loc 1 176 10 view .LVU486
+ 1560 001e 59E0     		b	.L101
+ 1561              	.LVL141:
+ 1562              	.L102:
+ 177:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf32[1] = ((buf32[1] & 0xff00ff00) >> 8) | ((buf32[1] & 0x00ff00ff) << 8);
+ 1563              		.loc 1 177 9 is_stmt 1 view .LVU487
+ 177:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf32[1] = ((buf32[1] & 0xff00ff00) >> 8) | ((buf32[1] & 0x00ff00ff) << 8);
+ 1564              		.loc 1 177 27 is_stmt 0 view .LVU488
+ 1565 0020 1A68     		ldr	r2, [r3]
+ 177:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf32[1] = ((buf32[1] & 0xff00ff00) >> 8) | ((buf32[1] & 0x00ff00ff) << 8);
+ 1566              		.loc 1 177 45 view .LVU489
+ARM GAS  /tmp/ccMRemNS.s 			page 42
+
+
+ 1567 0022 4FEA122E 		lsr	lr, r2, #8
+ 1568 0026 0EF0FF1E 		and	lr, lr, #16711935
+ 177:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf32[1] = ((buf32[1] & 0xff00ff00) >> 8) | ((buf32[1] & 0x00ff00ff) << 8);
+ 1569              		.loc 1 177 78 view .LVU490
+ 1570 002a 1202     		lsls	r2, r2, #8
+ 1571 002c 02F0FF22 		and	r2, r2, #-16711936
+ 177:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf32[1] = ((buf32[1] & 0xff00ff00) >> 8) | ((buf32[1] & 0x00ff00ff) << 8);
+ 1572              		.loc 1 177 51 view .LVU491
+ 1573 0030 4EEA0202 		orr	r2, lr, r2
+ 177:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf32[1] = ((buf32[1] & 0xff00ff00) >> 8) | ((buf32[1] & 0x00ff00ff) << 8);
+ 1574              		.loc 1 177 18 view .LVU492
+ 1575 0034 1A60     		str	r2, [r3]
+ 178:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf32[2] = ((buf32[2] & 0xff00ff00) >> 8) | ((buf32[2] & 0x00ff00ff) << 8);
+ 1576              		.loc 1 178 9 is_stmt 1 view .LVU493
+ 178:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf32[2] = ((buf32[2] & 0xff00ff00) >> 8) | ((buf32[2] & 0x00ff00ff) << 8);
+ 1577              		.loc 1 178 27 is_stmt 0 view .LVU494
+ 1578 0036 5A68     		ldr	r2, [r3, #4]
+ 178:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf32[2] = ((buf32[2] & 0xff00ff00) >> 8) | ((buf32[2] & 0x00ff00ff) << 8);
+ 1579              		.loc 1 178 45 view .LVU495
+ 1580 0038 4FEA122E 		lsr	lr, r2, #8
+ 1581 003c 0EF0FF1E 		and	lr, lr, #16711935
+ 178:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf32[2] = ((buf32[2] & 0xff00ff00) >> 8) | ((buf32[2] & 0x00ff00ff) << 8);
+ 1582              		.loc 1 178 78 view .LVU496
+ 1583 0040 1202     		lsls	r2, r2, #8
+ 1584 0042 02F0FF22 		and	r2, r2, #-16711936
+ 178:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf32[2] = ((buf32[2] & 0xff00ff00) >> 8) | ((buf32[2] & 0x00ff00ff) << 8);
+ 1585              		.loc 1 178 51 view .LVU497
+ 1586 0046 4EEA0202 		orr	r2, lr, r2
+ 178:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf32[2] = ((buf32[2] & 0xff00ff00) >> 8) | ((buf32[2] & 0x00ff00ff) << 8);
+ 1587              		.loc 1 178 18 view .LVU498
+ 1588 004a 5A60     		str	r2, [r3, #4]
+ 179:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf32[3] = ((buf32[3] & 0xff00ff00) >> 8) | ((buf32[3] & 0x00ff00ff) << 8);
+ 1589              		.loc 1 179 9 is_stmt 1 view .LVU499
+ 179:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf32[3] = ((buf32[3] & 0xff00ff00) >> 8) | ((buf32[3] & 0x00ff00ff) << 8);
+ 1590              		.loc 1 179 27 is_stmt 0 view .LVU500
+ 1591 004c 9A68     		ldr	r2, [r3, #8]
+ 179:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf32[3] = ((buf32[3] & 0xff00ff00) >> 8) | ((buf32[3] & 0x00ff00ff) << 8);
+ 1592              		.loc 1 179 45 view .LVU501
+ 1593 004e 4FEA122E 		lsr	lr, r2, #8
+ 1594 0052 0EF0FF1E 		and	lr, lr, #16711935
+ 179:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf32[3] = ((buf32[3] & 0xff00ff00) >> 8) | ((buf32[3] & 0x00ff00ff) << 8);
+ 1595              		.loc 1 179 78 view .LVU502
+ 1596 0056 1202     		lsls	r2, r2, #8
+ 1597 0058 02F0FF22 		and	r2, r2, #-16711936
+ 179:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf32[3] = ((buf32[3] & 0xff00ff00) >> 8) | ((buf32[3] & 0x00ff00ff) << 8);
+ 1598              		.loc 1 179 51 view .LVU503
+ 1599 005c 4EEA0202 		orr	r2, lr, r2
+ 179:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf32[3] = ((buf32[3] & 0xff00ff00) >> 8) | ((buf32[3] & 0x00ff00ff) << 8);
+ 1600              		.loc 1 179 18 view .LVU504
+ 1601 0060 9A60     		str	r2, [r3, #8]
+ 180:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf32[4] = ((buf32[4] & 0xff00ff00) >> 8) | ((buf32[4] & 0x00ff00ff) << 8);
+ 1602              		.loc 1 180 9 is_stmt 1 view .LVU505
+ 180:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf32[4] = ((buf32[4] & 0xff00ff00) >> 8) | ((buf32[4] & 0x00ff00ff) << 8);
+ 1603              		.loc 1 180 27 is_stmt 0 view .LVU506
+ 1604 0062 DA68     		ldr	r2, [r3, #12]
+ 180:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf32[4] = ((buf32[4] & 0xff00ff00) >> 8) | ((buf32[4] & 0x00ff00ff) << 8);
+ 1605              		.loc 1 180 45 view .LVU507
+ARM GAS  /tmp/ccMRemNS.s 			page 43
+
+
+ 1606 0064 4FEA122E 		lsr	lr, r2, #8
+ 1607 0068 0EF0FF1E 		and	lr, lr, #16711935
+ 180:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf32[4] = ((buf32[4] & 0xff00ff00) >> 8) | ((buf32[4] & 0x00ff00ff) << 8);
+ 1608              		.loc 1 180 78 view .LVU508
+ 1609 006c 1202     		lsls	r2, r2, #8
+ 1610 006e 02F0FF22 		and	r2, r2, #-16711936
+ 180:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf32[4] = ((buf32[4] & 0xff00ff00) >> 8) | ((buf32[4] & 0x00ff00ff) << 8);
+ 1611              		.loc 1 180 51 view .LVU509
+ 1612 0072 4EEA0202 		orr	r2, lr, r2
+ 180:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf32[4] = ((buf32[4] & 0xff00ff00) >> 8) | ((buf32[4] & 0x00ff00ff) << 8);
+ 1613              		.loc 1 180 18 view .LVU510
+ 1614 0076 DA60     		str	r2, [r3, #12]
+ 181:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf32[5] = ((buf32[5] & 0xff00ff00) >> 8) | ((buf32[5] & 0x00ff00ff) << 8);
+ 1615              		.loc 1 181 9 is_stmt 1 view .LVU511
+ 181:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf32[5] = ((buf32[5] & 0xff00ff00) >> 8) | ((buf32[5] & 0x00ff00ff) << 8);
+ 1616              		.loc 1 181 27 is_stmt 0 view .LVU512
+ 1617 0078 1A69     		ldr	r2, [r3, #16]
+ 181:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf32[5] = ((buf32[5] & 0xff00ff00) >> 8) | ((buf32[5] & 0x00ff00ff) << 8);
+ 1618              		.loc 1 181 45 view .LVU513
+ 1619 007a 4FEA122E 		lsr	lr, r2, #8
+ 1620 007e 0EF0FF1E 		and	lr, lr, #16711935
+ 181:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf32[5] = ((buf32[5] & 0xff00ff00) >> 8) | ((buf32[5] & 0x00ff00ff) << 8);
+ 1621              		.loc 1 181 78 view .LVU514
+ 1622 0082 1202     		lsls	r2, r2, #8
+ 1623 0084 02F0FF22 		and	r2, r2, #-16711936
+ 181:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf32[5] = ((buf32[5] & 0xff00ff00) >> 8) | ((buf32[5] & 0x00ff00ff) << 8);
+ 1624              		.loc 1 181 51 view .LVU515
+ 1625 0088 4EEA0202 		orr	r2, lr, r2
+ 181:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf32[5] = ((buf32[5] & 0xff00ff00) >> 8) | ((buf32[5] & 0x00ff00ff) << 8);
+ 1626              		.loc 1 181 18 view .LVU516
+ 1627 008c 1A61     		str	r2, [r3, #16]
+ 182:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf32[6] = ((buf32[6] & 0xff00ff00) >> 8) | ((buf32[6] & 0x00ff00ff) << 8);
+ 1628              		.loc 1 182 9 is_stmt 1 view .LVU517
+ 182:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf32[6] = ((buf32[6] & 0xff00ff00) >> 8) | ((buf32[6] & 0x00ff00ff) << 8);
+ 1629              		.loc 1 182 27 is_stmt 0 view .LVU518
+ 1630 008e 5A69     		ldr	r2, [r3, #20]
+ 182:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf32[6] = ((buf32[6] & 0xff00ff00) >> 8) | ((buf32[6] & 0x00ff00ff) << 8);
+ 1631              		.loc 1 182 45 view .LVU519
+ 1632 0090 4FEA122E 		lsr	lr, r2, #8
+ 1633 0094 0EF0FF1E 		and	lr, lr, #16711935
+ 182:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf32[6] = ((buf32[6] & 0xff00ff00) >> 8) | ((buf32[6] & 0x00ff00ff) << 8);
+ 1634              		.loc 1 182 78 view .LVU520
+ 1635 0098 1202     		lsls	r2, r2, #8
+ 1636 009a 02F0FF22 		and	r2, r2, #-16711936
+ 182:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf32[6] = ((buf32[6] & 0xff00ff00) >> 8) | ((buf32[6] & 0x00ff00ff) << 8);
+ 1637              		.loc 1 182 51 view .LVU521
+ 1638 009e 4EEA0202 		orr	r2, lr, r2
+ 182:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf32[6] = ((buf32[6] & 0xff00ff00) >> 8) | ((buf32[6] & 0x00ff00ff) << 8);
+ 1639              		.loc 1 182 18 view .LVU522
+ 1640 00a2 5A61     		str	r2, [r3, #20]
+ 183:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf32[7] = ((buf32[7] & 0xff00ff00) >> 8) | ((buf32[7] & 0x00ff00ff) << 8);
+ 1641              		.loc 1 183 9 is_stmt 1 view .LVU523
+ 183:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf32[7] = ((buf32[7] & 0xff00ff00) >> 8) | ((buf32[7] & 0x00ff00ff) << 8);
+ 1642              		.loc 1 183 27 is_stmt 0 view .LVU524
+ 1643 00a4 9A69     		ldr	r2, [r3, #24]
+ 183:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf32[7] = ((buf32[7] & 0xff00ff00) >> 8) | ((buf32[7] & 0x00ff00ff) << 8);
+ 1644              		.loc 1 183 45 view .LVU525
+ARM GAS  /tmp/ccMRemNS.s 			page 44
+
+
+ 1645 00a6 4FEA122E 		lsr	lr, r2, #8
+ 1646 00aa 0EF0FF1E 		and	lr, lr, #16711935
+ 183:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf32[7] = ((buf32[7] & 0xff00ff00) >> 8) | ((buf32[7] & 0x00ff00ff) << 8);
+ 1647              		.loc 1 183 78 view .LVU526
+ 1648 00ae 1202     		lsls	r2, r2, #8
+ 1649 00b0 02F0FF22 		and	r2, r2, #-16711936
+ 183:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf32[7] = ((buf32[7] & 0xff00ff00) >> 8) | ((buf32[7] & 0x00ff00ff) << 8);
+ 1650              		.loc 1 183 51 view .LVU527
+ 1651 00b4 4EEA0202 		orr	r2, lr, r2
+ 183:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf32[7] = ((buf32[7] & 0xff00ff00) >> 8) | ((buf32[7] & 0x00ff00ff) << 8);
+ 1652              		.loc 1 183 18 view .LVU528
+ 1653 00b8 9A61     		str	r2, [r3, #24]
+ 184:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf32 += 8;
+ 1654              		.loc 1 184 9 is_stmt 1 view .LVU529
+ 184:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf32 += 8;
+ 1655              		.loc 1 184 27 is_stmt 0 view .LVU530
+ 1656 00ba DA69     		ldr	r2, [r3, #28]
+ 184:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf32 += 8;
+ 1657              		.loc 1 184 45 view .LVU531
+ 1658 00bc 4FEA122E 		lsr	lr, r2, #8
+ 1659 00c0 0EF0FF1E 		and	lr, lr, #16711935
+ 184:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf32 += 8;
+ 1660              		.loc 1 184 78 view .LVU532
+ 1661 00c4 1202     		lsls	r2, r2, #8
+ 1662 00c6 02F0FF22 		and	r2, r2, #-16711936
+ 184:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf32 += 8;
+ 1663              		.loc 1 184 51 view .LVU533
+ 1664 00ca 4EEA0202 		orr	r2, lr, r2
+ 184:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf32 += 8;
+ 1665              		.loc 1 184 18 view .LVU534
+ 1666 00ce DA61     		str	r2, [r3, #28]
+ 185:Drivers/lvgl/src/draw/lv_draw_utils.c ****         u32_cnt -= 8;
+ 1667              		.loc 1 185 9 is_stmt 1 view .LVU535
+ 185:Drivers/lvgl/src/draw/lv_draw_utils.c ****         u32_cnt -= 8;
+ 1668              		.loc 1 185 15 is_stmt 0 view .LVU536
+ 1669 00d0 2033     		adds	r3, r3, #32
+ 1670              	.LVL142:
+ 186:Drivers/lvgl/src/draw/lv_draw_utils.c ****     }
+ 1671              		.loc 1 186 9 is_stmt 1 view .LVU537
+ 186:Drivers/lvgl/src/draw/lv_draw_utils.c ****     }
+ 1672              		.loc 1 186 17 is_stmt 0 view .LVU538
+ 1673 00d2 0838     		subs	r0, r0, #8
+ 1674              	.LVL143:
+ 1675              	.L101:
+ 176:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf32[0] = ((buf32[0] & 0xff00ff00) >> 8) | ((buf32[0] & 0x00ff00ff) << 8);
+ 1676              		.loc 1 176 19 is_stmt 1 discriminator 1 view .LVU539
+ 1677 00d4 0728     		cmp	r0, #7
+ 1678 00d6 A3D8     		bhi	.L102
+ 176:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf32[0] = ((buf32[0] & 0xff00ff00) >> 8) | ((buf32[0] & 0x00ff00ff) << 8);
+ 1679              		.loc 1 176 19 is_stmt 0 discriminator 1 view .LVU540
+ 1680 00d8 0CE0     		b	.L103
+ 1681              	.L104:
+ 190:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf32++;
+ 1682              		.loc 1 190 9 is_stmt 1 view .LVU541
+ 190:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf32++;
+ 1683              		.loc 1 190 20 is_stmt 0 view .LVU542
+ 1684 00da 1A68     		ldr	r2, [r3]
+ARM GAS  /tmp/ccMRemNS.s 			page 45
+
+
+ 190:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf32++;
+ 1685              		.loc 1 190 41 view .LVU543
+ 1686 00dc 4FEA122E 		lsr	lr, r2, #8
+ 1687 00e0 0EF0FF1E 		and	lr, lr, #16711935
+ 190:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf32++;
+ 1688              		.loc 1 190 72 view .LVU544
+ 1689 00e4 1202     		lsls	r2, r2, #8
+ 1690 00e6 02F0FF22 		and	r2, r2, #-16711936
+ 190:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf32++;
+ 1691              		.loc 1 190 47 view .LVU545
+ 1692 00ea 4EEA0202 		orr	r2, lr, r2
+ 190:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf32++;
+ 1693              		.loc 1 190 16 view .LVU546
+ 1694 00ee 43F8042B 		str	r2, [r3], #4
+ 1695              	.LVL144:
+ 191:Drivers/lvgl/src/draw/lv_draw_utils.c ****         u32_cnt--;
+ 1696              		.loc 1 191 9 is_stmt 1 view .LVU547
+ 192:Drivers/lvgl/src/draw/lv_draw_utils.c ****     }
+ 1697              		.loc 1 192 9 view .LVU548
+ 192:Drivers/lvgl/src/draw/lv_draw_utils.c ****     }
+ 1698              		.loc 1 192 16 is_stmt 0 view .LVU549
+ 1699 00f2 0138     		subs	r0, r0, #1
+ 1700              	.LVL145:
+ 1701              	.L103:
+ 189:Drivers/lvgl/src/draw/lv_draw_utils.c ****         *buf32 = ((*buf32 & 0xff00ff00) >> 8) | ((*buf32 & 0x00ff00ff) << 8);
+ 1702              		.loc 1 189 11 is_stmt 1 discriminator 1 view .LVU550
+ 1703 00f4 0028     		cmp	r0, #0
+ 1704 00f6 F0D1     		bne	.L104
+ 196:Drivers/lvgl/src/draw/lv_draw_utils.c ****         uint32_t e = buf_size_px - 1;
+ 1705              		.loc 1 196 5 view .LVU551
+ 196:Drivers/lvgl/src/draw/lv_draw_utils.c ****         uint32_t e = buf_size_px - 1;
+ 1706              		.loc 1 196 7 is_stmt 0 view .LVU552
+ 1707 00f8 11F0010F 		tst	r1, #1
+ 1708 00fc 05D0     		beq	.L98
+ 1709              	.LBB72:
+ 197:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf16[e] = ((buf16[e] & 0xff00) >> 8) | ((buf16[e] & 0x00ff) << 8);
+ 1710              		.loc 1 197 9 is_stmt 1 view .LVU553
+ 197:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf16[e] = ((buf16[e] & 0xff00) >> 8) | ((buf16[e] & 0x00ff) << 8);
+ 1711              		.loc 1 197 18 is_stmt 0 view .LVU554
+ 1712 00fe 0139     		subs	r1, r1, #1
+ 1713              	.LVL146:
+ 198:Drivers/lvgl/src/draw/lv_draw_utils.c ****     }
+ 1714              		.loc 1 198 9 is_stmt 1 view .LVU555
+ 198:Drivers/lvgl/src/draw/lv_draw_utils.c ****     }
+ 1715              		.loc 1 198 27 is_stmt 0 view .LVU556
+ 1716 0100 3CF81130 		ldrh	r3, [ip, r1, lsl #1]
+ 1717              	.LVL147:
+ 198:Drivers/lvgl/src/draw/lv_draw_utils.c ****     }
+ 1718              		.loc 1 198 47 view .LVU557
+ 1719 0104 5BBA     		rev16	r3, r3
+ 198:Drivers/lvgl/src/draw/lv_draw_utils.c ****     }
+ 1720              		.loc 1 198 18 view .LVU558
+ 1721 0106 2CF81130 		strh	r3, [ip, r1, lsl #1]	@ movhi
+ 1722              	.LVL148:
+ 1723              	.L98:
+ 198:Drivers/lvgl/src/draw/lv_draw_utils.c ****     }
+ 1724              		.loc 1 198 18 view .LVU559
+ARM GAS  /tmp/ccMRemNS.s 			page 46
+
+
+ 1725              	.LBE72:
+ 201:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 1726              		.loc 1 201 1 view .LVU560
+ 1727 010a 00BD     		pop	{pc}
+ 1728              	.LVL149:
+ 1729              	.L106:
+ 1730              	.LCFI14:
+ 1731              		.cfi_def_cfa_offset 0
+ 1732              		.cfi_restore 14
+ 201:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 1733              		.loc 1 201 1 view .LVU561
+ 1734 010c 7047     		bx	lr
+ 1735              		.cfi_endproc
+ 1736              	.LFE30:
+ 1738              		.section	.text.lv_draw_i1_invert,"ax",%progbits
+ 1739              		.align	1
+ 1740              		.global	lv_draw_i1_invert
+ 1741              		.syntax unified
+ 1742              		.thumb
+ 1743              		.thumb_func
+ 1745              	lv_draw_i1_invert:
+ 1746              	.LVL150:
+ 1747              	.LFB31:
+ 204:Drivers/lvgl/src/draw/lv_draw_utils.c ****     LV_CHECK_ARG(buf != NULL, return);
+ 1748              		.loc 1 204 1 is_stmt 1 view -0
+ 1749              		.cfi_startproc
+ 1750              		@ args = 0, pretend = 0, frame = 0
+ 1751              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1752              		@ link register save eliminated.
+ 205:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 1753              		.loc 1 205 5 view .LVU563
+ 205:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 1754              		.loc 1 205 5 is_stmt 0 discriminator 1 view .LVU564
+ 1755 0000 0346     		mov	r3, r0
+ 1756 0002 28B9     		cbnz	r0, .L111
+ 1757 0004 7047     		bx	lr
+ 1758              	.LVL151:
+ 1759              	.L113:
+ 212:Drivers/lvgl/src/draw/lv_draw_utils.c ****         byte_buf++;
+ 1760              		.loc 1 212 9 is_stmt 1 view .LVU565
+ 212:Drivers/lvgl/src/draw/lv_draw_utils.c ****         byte_buf++;
+ 1761              		.loc 1 212 23 is_stmt 0 view .LVU566
+ 1762 0006 1A78     		ldrb	r2, [r3]	@ zero_extendqisi2
+ 212:Drivers/lvgl/src/draw/lv_draw_utils.c ****         byte_buf++;
+ 1763              		.loc 1 212 19 view .LVU567
+ 1764 0008 D243     		mvns	r2, r2
+ 1765 000a 03F8012B 		strb	r2, [r3], #1
+ 1766              	.LVL152:
+ 213:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf_size--;
+ 1767              		.loc 1 213 9 is_stmt 1 view .LVU568
+ 214:Drivers/lvgl/src/draw/lv_draw_utils.c ****     }
+ 1768              		.loc 1 214 9 view .LVU569
+ 214:Drivers/lvgl/src/draw/lv_draw_utils.c ****     }
+ 1769              		.loc 1 214 17 is_stmt 0 view .LVU570
+ 1770 000e 0139     		subs	r1, r1, #1
+ 1771              	.LVL153:
+ 1772              	.L111:
+ARM GAS  /tmp/ccMRemNS.s 			page 47
+
+
+ 211:Drivers/lvgl/src/draw/lv_draw_utils.c ****         *byte_buf = ~(*byte_buf);
+ 1773              		.loc 1 211 55 is_stmt 1 discriminator 1 view .LVU571
+ 1774 0010 13F0030F 		tst	r3, #3
+ 1775 0014 01D0     		beq	.L112
+ 211:Drivers/lvgl/src/draw/lv_draw_utils.c ****         *byte_buf = ~(*byte_buf);
+ 1776              		.loc 1 211 55 is_stmt 0 discriminator 2 view .LVU572
+ 1777 0016 0029     		cmp	r1, #0
+ 1778 0018 F5D1     		bne	.L113
+ 1779              	.L112:
+ 217:Drivers/lvgl/src/draw/lv_draw_utils.c ****         uint32_t * aligned_addr = (uint32_t *)byte_buf;
+ 1780              		.loc 1 217 5 is_stmt 1 view .LVU573
+ 217:Drivers/lvgl/src/draw/lv_draw_utils.c ****         uint32_t * aligned_addr = (uint32_t *)byte_buf;
+ 1781              		.loc 1 217 7 is_stmt 0 view .LVU574
+ 1782 001a 0329     		cmp	r1, #3
+ 1783 001c 0FD9     		bls	.L114
+ 1784              	.LBB73:
+ 218:Drivers/lvgl/src/draw/lv_draw_utils.c ****         uint32_t word_count = buf_size / 4;
+ 1785              		.loc 1 218 9 is_stmt 1 view .LVU575
+ 1786              	.LVL154:
+ 219:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 1787              		.loc 1 219 9 view .LVU576
+ 219:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 1788              		.loc 1 219 18 is_stmt 0 view .LVU577
+ 1789 001e 4FEA910C 		lsr	ip, r1, #2
+ 1790              	.LVL155:
+ 221:Drivers/lvgl/src/draw/lv_draw_utils.c ****             aligned_addr[i] = ~aligned_addr[i];
+ 1791              		.loc 1 221 9 is_stmt 1 view .LVU578
+ 221:Drivers/lvgl/src/draw/lv_draw_utils.c ****             aligned_addr[i] = ~aligned_addr[i];
+ 1792              		.loc 1 221 15 is_stmt 0 view .LVU579
+ 1793 0022 0022     		movs	r2, #0
+ 221:Drivers/lvgl/src/draw/lv_draw_utils.c ****             aligned_addr[i] = ~aligned_addr[i];
+ 1794              		.loc 1 221 9 view .LVU580
+ 1795 0024 05E0     		b	.L115
+ 1796              	.LVL156:
+ 1797              	.L116:
+ 222:Drivers/lvgl/src/draw/lv_draw_utils.c ****         }
+ 1798              		.loc 1 222 13 is_stmt 1 view .LVU581
+ 222:Drivers/lvgl/src/draw/lv_draw_utils.c ****         }
+ 1799              		.loc 1 222 44 is_stmt 0 view .LVU582
+ 1800 0026 53F82200 		ldr	r0, [r3, r2, lsl #2]
+ 222:Drivers/lvgl/src/draw/lv_draw_utils.c ****         }
+ 1801              		.loc 1 222 31 view .LVU583
+ 1802 002a C043     		mvns	r0, r0
+ 222:Drivers/lvgl/src/draw/lv_draw_utils.c ****         }
+ 1803              		.loc 1 222 29 view .LVU584
+ 1804 002c 43F82200 		str	r0, [r3, r2, lsl #2]
+ 221:Drivers/lvgl/src/draw/lv_draw_utils.c ****             aligned_addr[i] = ~aligned_addr[i];
+ 1805              		.loc 1 221 36 is_stmt 1 discriminator 1 view .LVU585
+ 1806 0030 0132     		adds	r2, r2, #1
+ 1807              	.LVL157:
+ 1808              	.L115:
+ 221:Drivers/lvgl/src/draw/lv_draw_utils.c ****             aligned_addr[i] = ~aligned_addr[i];
+ 1809              		.loc 1 221 22 discriminator 2 view .LVU586
+ 1810 0032 6245     		cmp	r2, ip
+ 1811 0034 F7D3     		bcc	.L116
+ 225:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf_size = buf_size % sizeof(uint32_t);
+ 1812              		.loc 1 225 9 view .LVU587
+ARM GAS  /tmp/ccMRemNS.s 			page 48
+
+
+ 225:Drivers/lvgl/src/draw/lv_draw_utils.c ****         buf_size = buf_size % sizeof(uint32_t);
+ 1813              		.loc 1 225 18 is_stmt 0 view .LVU588
+ 1814 0036 03EB8C03 		add	r3, r3, ip, lsl #2
+ 1815              	.LVL158:
+ 226:Drivers/lvgl/src/draw/lv_draw_utils.c ****     }
+ 1816              		.loc 1 226 9 is_stmt 1 view .LVU589
+ 226:Drivers/lvgl/src/draw/lv_draw_utils.c ****     }
+ 1817              		.loc 1 226 18 is_stmt 0 view .LVU590
+ 1818 003a 01F00301 		and	r1, r1, #3
+ 1819              	.LVL159:
+ 1820              	.L114:
+ 226:Drivers/lvgl/src/draw/lv_draw_utils.c ****     }
+ 1821              		.loc 1 226 18 view .LVU591
+ 1822              	.LBE73:
+ 229:Drivers/lvgl/src/draw/lv_draw_utils.c ****         byte_buf[i] = ~byte_buf[i];
+ 1823              		.loc 1 229 5 is_stmt 1 view .LVU592
+ 229:Drivers/lvgl/src/draw/lv_draw_utils.c ****         byte_buf[i] = ~byte_buf[i];
+ 1824              		.loc 1 229 11 is_stmt 0 view .LVU593
+ 1825 003e 0022     		movs	r2, #0
+ 229:Drivers/lvgl/src/draw/lv_draw_utils.c ****         byte_buf[i] = ~byte_buf[i];
+ 1826              		.loc 1 229 5 view .LVU594
+ 1827 0040 03E0     		b	.L117
+ 1828              	.LVL160:
+ 1829              	.L118:
+ 230:Drivers/lvgl/src/draw/lv_draw_utils.c ****     }
+ 1830              		.loc 1 230 9 is_stmt 1 view .LVU595
+ 230:Drivers/lvgl/src/draw/lv_draw_utils.c ****     }
+ 1831              		.loc 1 230 32 is_stmt 0 view .LVU596
+ 1832 0042 985C     		ldrb	r0, [r3, r2]	@ zero_extendqisi2
+ 230:Drivers/lvgl/src/draw/lv_draw_utils.c ****     }
+ 1833              		.loc 1 230 21 view .LVU597
+ 1834 0044 C043     		mvns	r0, r0
+ 1835 0046 9854     		strb	r0, [r3, r2]
+ 229:Drivers/lvgl/src/draw/lv_draw_utils.c ****         byte_buf[i] = ~byte_buf[i];
+ 1836              		.loc 1 229 30 is_stmt 1 discriminator 1 view .LVU598
+ 1837 0048 0132     		adds	r2, r2, #1
+ 1838              	.LVL161:
+ 1839              	.L117:
+ 229:Drivers/lvgl/src/draw/lv_draw_utils.c ****         byte_buf[i] = ~byte_buf[i];
+ 1840              		.loc 1 229 18 discriminator 2 view .LVU599
+ 1841 004a 9142     		cmp	r1, r2
+ 1842 004c F9D8     		bhi	.L118
+ 232:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 1843              		.loc 1 232 1 is_stmt 0 view .LVU600
+ 1844 004e 7047     		bx	lr
+ 1845              		.cfi_endproc
+ 1846              	.LFE31:
+ 1848              		.section	.text.lv_draw_i1_convert_to_vtiled,"ax",%progbits
+ 1849              		.align	1
+ 1850              		.global	lv_draw_i1_convert_to_vtiled
+ 1851              		.syntax unified
+ 1852              		.thumb
+ 1853              		.thumb_func
+ 1855              	lv_draw_i1_convert_to_vtiled:
+ 1856              	.LVL162:
+ 1857              	.LFB32:
+ 237:Drivers/lvgl/src/draw/lv_draw_utils.c ****     LV_CHECK_ARG(buf != NULL, return);
+ARM GAS  /tmp/ccMRemNS.s 			page 49
+
+
+ 1858              		.loc 1 237 1 is_stmt 1 view -0
+ 1859              		.cfi_startproc
+ 1860              		@ args = 12, pretend = 0, frame = 8
+ 1861              		@ frame_needed = 0, uses_anonymous_args = 0
+ 237:Drivers/lvgl/src/draw/lv_draw_utils.c ****     LV_CHECK_ARG(buf != NULL, return);
+ 1862              		.loc 1 237 1 is_stmt 0 view .LVU602
+ 1863 0000 2DE9F041 		push	{r4, r5, r6, r7, r8, lr}
+ 1864              	.LCFI15:
+ 1865              		.cfi_def_cfa_offset 24
+ 1866              		.cfi_offset 4, -24
+ 1867              		.cfi_offset 5, -20
+ 1868              		.cfi_offset 6, -16
+ 1869              		.cfi_offset 7, -12
+ 1870              		.cfi_offset 8, -8
+ 1871              		.cfi_offset 14, -4
+ 1872 0004 82B0     		sub	sp, sp, #8
+ 1873              	.LCFI16:
+ 1874              		.cfi_def_cfa_offset 32
+ 1875 0006 1446     		mov	r4, r2
+ 1876 0008 089D     		ldr	r5, [sp, #32]
+ 1877 000a 099A     		ldr	r2, [sp, #36]
+ 1878              	.LVL163:
+ 237:Drivers/lvgl/src/draw/lv_draw_utils.c ****     LV_CHECK_ARG(buf != NULL, return);
+ 1879              		.loc 1 237 1 view .LVU603
+ 1880 000c 9DF82880 		ldrb	r8, [sp, #40]	@ zero_extendqisi2
+ 238:Drivers/lvgl/src/draw/lv_draw_utils.c ****     LV_CHECK_ARG(out_buf != NULL, return);
+ 1881              		.loc 1 238 5 is_stmt 1 view .LVU604
+ 238:Drivers/lvgl/src/draw/lv_draw_utils.c ****     LV_CHECK_ARG(out_buf != NULL, return);
+ 1882              		.loc 1 238 5 is_stmt 0 discriminator 1 view .LVU605
+ 1883 0010 0028     		cmp	r0, #0
+ 1884 0012 48D0     		beq	.L119
+ 1885 0014 1E46     		mov	r6, r3
+ 1886 0016 0746     		mov	r7, r0
+ 238:Drivers/lvgl/src/draw/lv_draw_utils.c ****     LV_CHECK_ARG(out_buf != NULL, return);
+ 1887              		.loc 1 238 5 is_stmt 1 discriminator 3 view .LVU606
+ 238:Drivers/lvgl/src/draw/lv_draw_utils.c ****     LV_CHECK_ARG(out_buf != NULL, return);
+ 1888              		.loc 1 238 38 discriminator 3 view .LVU607
+ 239:Drivers/lvgl/src/draw/lv_draw_utils.c ****     LV_CHECK_ARG(width % 8 == 0 && height % 8 == 0, return);
+ 1889              		.loc 1 239 5 view .LVU608
+ 239:Drivers/lvgl/src/draw/lv_draw_utils.c ****     LV_CHECK_ARG(width % 8 == 0 && height % 8 == 0, return);
+ 1890              		.loc 1 239 5 is_stmt 0 discriminator 1 view .LVU609
+ 1891 0018 002D     		cmp	r5, #0
+ 1892 001a 44D0     		beq	.L119
+ 239:Drivers/lvgl/src/draw/lv_draw_utils.c ****     LV_CHECK_ARG(width % 8 == 0 && height % 8 == 0, return);
+ 1893              		.loc 1 239 5 is_stmt 1 discriminator 3 view .LVU610
+ 239:Drivers/lvgl/src/draw/lv_draw_utils.c ****     LV_CHECK_ARG(width % 8 == 0 && height % 8 == 0, return);
+ 1894              		.loc 1 239 42 discriminator 3 view .LVU611
+ 240:Drivers/lvgl/src/draw/lv_draw_utils.c ****     LV_CHECK_ARG(buf_size >= (width / 8) * height, return);
+ 1895              		.loc 1 240 5 view .LVU612
+ 240:Drivers/lvgl/src/draw/lv_draw_utils.c ****     LV_CHECK_ARG(buf_size >= (width / 8) * height, return);
+ 1896              		.loc 1 240 5 is_stmt 0 discriminator 1 view .LVU613
+ 1897 001c 14F0070F 		tst	r4, #7
+ 1898 0020 41D1     		bne	.L119
+ 240:Drivers/lvgl/src/draw/lv_draw_utils.c ****     LV_CHECK_ARG(buf_size >= (width / 8) * height, return);
+ 1899              		.loc 1 240 5 discriminator 3 view .LVU614
+ 1900 0022 13F00703 		ands	r3, r3, #7
+ 1901              	.LVL164:
+ARM GAS  /tmp/ccMRemNS.s 			page 50
+
+
+ 240:Drivers/lvgl/src/draw/lv_draw_utils.c ****     LV_CHECK_ARG(buf_size >= (width / 8) * height, return);
+ 1902              		.loc 1 240 5 discriminator 3 view .LVU615
+ 1903 0026 0193     		str	r3, [sp, #4]
+ 1904 0028 3DD1     		bne	.L119
+ 240:Drivers/lvgl/src/draw/lv_draw_utils.c ****     LV_CHECK_ARG(buf_size >= (width / 8) * height, return);
+ 1905              		.loc 1 240 60 is_stmt 1 discriminator 5 view .LVU616
+ 241:Drivers/lvgl/src/draw/lv_draw_utils.c ****     LV_CHECK_ARG(out_buf_size >= buf_size, return);
+ 1906              		.loc 1 241 5 view .LVU617
+ 1907 002a E308     		lsrs	r3, r4, #3
+ 1908 002c 06FB03F3 		mul	r3, r6, r3
+ 241:Drivers/lvgl/src/draw/lv_draw_utils.c ****     LV_CHECK_ARG(out_buf_size >= buf_size, return);
+ 1909              		.loc 1 241 5 is_stmt 0 discriminator 1 view .LVU618
+ 1910 0030 8B42     		cmp	r3, r1
+ 1911 0032 38D8     		bhi	.L119
+ 241:Drivers/lvgl/src/draw/lv_draw_utils.c ****     LV_CHECK_ARG(out_buf_size >= buf_size, return);
+ 1912              		.loc 1 241 5 is_stmt 1 discriminator 3 view .LVU619
+ 241:Drivers/lvgl/src/draw/lv_draw_utils.c ****     LV_CHECK_ARG(out_buf_size >= buf_size, return);
+ 1913              		.loc 1 241 59 discriminator 3 view .LVU620
+ 242:Drivers/lvgl/src/draw/lv_draw_utils.c ****     LV_UNUSED(buf_size);
+ 1914              		.loc 1 242 5 view .LVU621
+ 242:Drivers/lvgl/src/draw/lv_draw_utils.c ****     LV_UNUSED(buf_size);
+ 1915              		.loc 1 242 5 is_stmt 0 discriminator 1 view .LVU622
+ 1916 0034 9142     		cmp	r1, r2
+ 1917 0036 36D8     		bhi	.L119
+ 242:Drivers/lvgl/src/draw/lv_draw_utils.c ****     LV_UNUSED(buf_size);
+ 1918              		.loc 1 242 5 is_stmt 1 discriminator 3 view .LVU623
+ 242:Drivers/lvgl/src/draw/lv_draw_utils.c ****     LV_UNUSED(buf_size);
+ 1919              		.loc 1 242 51 discriminator 3 view .LVU624
+ 243:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 1920              		.loc 1 243 5 view .LVU625
+ 245:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 1921              		.loc 1 245 5 view .LVU626
+ 1922 0038 0021     		movs	r1, #0
+ 1923              	.LVL165:
+ 245:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 1924              		.loc 1 245 5 is_stmt 0 view .LVU627
+ 1925 003a 2846     		mov	r0, r5
+ 1926              	.LVL166:
+ 245:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 1927              		.loc 1 245 5 view .LVU628
+ 1928 003c FFF7FEFF 		bl	lv_memset
+ 1929              	.LVL167:
+ 247:Drivers/lvgl/src/draw/lv_draw_utils.c ****     uint8_t * dst_buf = (uint8_t *)out_buf;
+ 1930              		.loc 1 247 5 is_stmt 1 view .LVU629
+ 248:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 1931              		.loc 1 248 5 view .LVU630
+ 250:Drivers/lvgl/src/draw/lv_draw_utils.c ****         for(uint32_t x = 0; x < width; x++) {
+ 1932              		.loc 1 250 5 view .LVU631
+ 1933              	.LBB74:
+ 250:Drivers/lvgl/src/draw/lv_draw_utils.c ****         for(uint32_t x = 0; x < width; x++) {
+ 1934              		.loc 1 250 9 view .LVU632
+ 250:Drivers/lvgl/src/draw/lv_draw_utils.c ****         for(uint32_t x = 0; x < width; x++) {
+ 1935              		.loc 1 250 18 is_stmt 0 view .LVU633
+ 1936 0040 DDF804C0 		ldr	ip, [sp, #4]
+ 250:Drivers/lvgl/src/draw/lv_draw_utils.c ****         for(uint32_t x = 0; x < width; x++) {
+ 1937              		.loc 1 250 5 view .LVU634
+ 1938 0044 2BE0     		b	.L121
+ARM GAS  /tmp/ccMRemNS.s 			page 51
+
+
+ 1939              	.LVL168:
+ 1940              	.L122:
+ 1941              	.LBB75:
+ 1942              	.LBB76:
+ 259:Drivers/lvgl/src/draw/lv_draw_utils.c ****             }
+ 1943              		.loc 1 259 17 is_stmt 1 view .LVU635
+ 259:Drivers/lvgl/src/draw/lv_draw_utils.c ****             }
+ 1944              		.loc 1 259 35 is_stmt 0 view .LVU636
+ 1945 0046 4FEAD20E 		lsr	lr, r2, #3
+ 259:Drivers/lvgl/src/draw/lv_draw_utils.c ****             }
+ 1946              		.loc 1 259 24 view .LVU637
+ 1947 004a 15F80E10 		ldrb	r1, [r5, lr]	@ zero_extendqisi2
+ 259:Drivers/lvgl/src/draw/lv_draw_utils.c ****             }
+ 1948              		.loc 1 259 54 view .LVU638
+ 1949 004e D243     		mvns	r2, r2
+ 1950              	.LVL169:
+ 259:Drivers/lvgl/src/draw/lv_draw_utils.c ****             }
+ 1951              		.loc 1 259 54 view .LVU639
+ 1952 0050 02F00702 		and	r2, r2, #7
+ 1953              	.LVL170:
+ 259:Drivers/lvgl/src/draw/lv_draw_utils.c ****             }
+ 1954              		.loc 1 259 48 view .LVU640
+ 1955 0054 9340     		lsls	r3, r3, r2
+ 1956              	.LVL171:
+ 259:Drivers/lvgl/src/draw/lv_draw_utils.c ****             }
+ 1957              		.loc 1 259 40 view .LVU641
+ 1958 0056 1943     		orrs	r1, r1, r3
+ 1959 0058 05F80E10 		strb	r1, [r5, lr]
+ 1960              	.LVL172:
+ 1961              	.L123:
+ 259:Drivers/lvgl/src/draw/lv_draw_utils.c ****             }
+ 1962              		.loc 1 259 40 view .LVU642
+ 1963              	.LBE76:
+ 251:Drivers/lvgl/src/draw/lv_draw_utils.c ****             uint32_t src_index = y * width + x;
+ 1964              		.loc 1 251 41 is_stmt 1 discriminator 1 view .LVU643
+ 1965 005c 0130     		adds	r0, r0, #1
+ 1966              	.LVL173:
+ 1967              	.L125:
+ 251:Drivers/lvgl/src/draw/lv_draw_utils.c ****             uint32_t src_index = y * width + x;
+ 1968              		.loc 1 251 31 discriminator 2 view .LVU644
+ 1969 005e A042     		cmp	r0, r4
+ 1970 0060 1BD2     		bcs	.L128
+ 1971              	.LBB77:
+ 252:Drivers/lvgl/src/draw/lv_draw_utils.c ****             uint32_t dst_index = x * height + y;
+ 1972              		.loc 1 252 13 view .LVU645
+ 252:Drivers/lvgl/src/draw/lv_draw_utils.c ****             uint32_t dst_index = x * height + y;
+ 1973              		.loc 1 252 22 is_stmt 0 view .LVU646
+ 1974 0062 04FB0C01 		mla	r1, r4, ip, r0
+ 253:Drivers/lvgl/src/draw/lv_draw_utils.c ****             uint8_t bit = (src_buf[src_index / 8] >> (7 - (src_index % 8))) & 0x01;
+ 1975              		.loc 1 253 13 is_stmt 1 view .LVU647
+ 253:Drivers/lvgl/src/draw/lv_draw_utils.c ****             uint8_t bit = (src_buf[src_index / 8] >> (7 - (src_index % 8))) & 0x01;
+ 1976              		.loc 1 253 22 is_stmt 0 view .LVU648
+ 1977 0066 06FB00C2 		mla	r2, r6, r0, ip
+ 1978              	.LVL174:
+ 254:Drivers/lvgl/src/draw/lv_draw_utils.c ****             if(bit_order_lsb) {
+ 1979              		.loc 1 254 13 is_stmt 1 view .LVU649
+ 254:Drivers/lvgl/src/draw/lv_draw_utils.c ****             if(bit_order_lsb) {
+ARM GAS  /tmp/ccMRemNS.s 			page 52
+
+
+ 1980              		.loc 1 254 46 is_stmt 0 view .LVU650
+ 1981 006a CB08     		lsrs	r3, r1, #3
+ 254:Drivers/lvgl/src/draw/lv_draw_utils.c ****             if(bit_order_lsb) {
+ 1982              		.loc 1 254 35 view .LVU651
+ 1983 006c FB5C     		ldrb	r3, [r7, r3]	@ zero_extendqisi2
+ 254:Drivers/lvgl/src/draw/lv_draw_utils.c ****             if(bit_order_lsb) {
+ 1984              		.loc 1 254 57 view .LVU652
+ 1985 006e C943     		mvns	r1, r1
+ 1986 0070 01F00701 		and	r1, r1, #7
+ 254:Drivers/lvgl/src/draw/lv_draw_utils.c ****             if(bit_order_lsb) {
+ 1987              		.loc 1 254 51 view .LVU653
+ 1988 0074 0B41     		asrs	r3, r3, r1
+ 254:Drivers/lvgl/src/draw/lv_draw_utils.c ****             if(bit_order_lsb) {
+ 1989              		.loc 1 254 21 view .LVU654
+ 1990 0076 03F00103 		and	r3, r3, #1
+ 1991              	.LVL175:
+ 255:Drivers/lvgl/src/draw/lv_draw_utils.c ****                 dst_buf[dst_index / 8] |= (bit << (dst_index % 8));
+ 1992              		.loc 1 255 13 is_stmt 1 view .LVU655
+ 255:Drivers/lvgl/src/draw/lv_draw_utils.c ****                 dst_buf[dst_index / 8] |= (bit << (dst_index % 8));
+ 1993              		.loc 1 255 15 is_stmt 0 view .LVU656
+ 1994 007a B8F1000F 		cmp	r8, #0
+ 1995 007e E2D0     		beq	.L122
+ 256:Drivers/lvgl/src/draw/lv_draw_utils.c ****             }
+ 1996              		.loc 1 256 17 is_stmt 1 view .LVU657
+ 256:Drivers/lvgl/src/draw/lv_draw_utils.c ****             }
+ 1997              		.loc 1 256 35 is_stmt 0 view .LVU658
+ 1998 0080 4FEAD20E 		lsr	lr, r2, #3
+ 256:Drivers/lvgl/src/draw/lv_draw_utils.c ****             }
+ 1999              		.loc 1 256 24 view .LVU659
+ 2000 0084 15F80E10 		ldrb	r1, [r5, lr]	@ zero_extendqisi2
+ 256:Drivers/lvgl/src/draw/lv_draw_utils.c ****             }
+ 2001              		.loc 1 256 62 view .LVU660
+ 2002 0088 02F00702 		and	r2, r2, #7
+ 2003              	.LVL176:
+ 256:Drivers/lvgl/src/draw/lv_draw_utils.c ****             }
+ 2004              		.loc 1 256 48 view .LVU661
+ 2005 008c 03FA02F2 		lsl	r2, r3, r2
+ 256:Drivers/lvgl/src/draw/lv_draw_utils.c ****             }
+ 2006              		.loc 1 256 40 view .LVU662
+ 2007 0090 41EA0203 		orr	r3, r1, r2
+ 2008              	.LVL177:
+ 256:Drivers/lvgl/src/draw/lv_draw_utils.c ****             }
+ 2009              		.loc 1 256 40 view .LVU663
+ 2010 0094 05F80E30 		strb	r3, [r5, lr]
+ 2011              	.LVL178:
+ 256:Drivers/lvgl/src/draw/lv_draw_utils.c ****             }
+ 2012              		.loc 1 256 40 view .LVU664
+ 2013 0098 E0E7     		b	.L123
+ 2014              	.LVL179:
+ 2015              	.L128:
+ 256:Drivers/lvgl/src/draw/lv_draw_utils.c ****             }
+ 2016              		.loc 1 256 40 view .LVU665
+ 2017              	.LBE77:
+ 2018              	.LBE75:
+ 250:Drivers/lvgl/src/draw/lv_draw_utils.c ****         for(uint32_t x = 0; x < width; x++) {
+ 2019              		.loc 1 250 38 is_stmt 1 discriminator 1 view .LVU666
+ 2020 009a 0CF1010C 		add	ip, ip, #1
+ARM GAS  /tmp/ccMRemNS.s 			page 53
+
+
+ 2021              	.LVL180:
+ 2022              	.L121:
+ 250:Drivers/lvgl/src/draw/lv_draw_utils.c ****         for(uint32_t x = 0; x < width; x++) {
+ 2023              		.loc 1 250 27 discriminator 2 view .LVU667
+ 2024 009e B445     		cmp	ip, r6
+ 2025 00a0 01D2     		bcs	.L119
+ 2026              	.LBB78:
+ 251:Drivers/lvgl/src/draw/lv_draw_utils.c ****             uint32_t src_index = y * width + x;
+ 2027              		.loc 1 251 22 is_stmt 0 view .LVU668
+ 2028 00a2 0198     		ldr	r0, [sp, #4]
+ 2029 00a4 DBE7     		b	.L125
+ 2030              	.LVL181:
+ 2031              	.L119:
+ 251:Drivers/lvgl/src/draw/lv_draw_utils.c ****             uint32_t src_index = y * width + x;
+ 2032              		.loc 1 251 22 view .LVU669
+ 2033              	.LBE78:
+ 2034              	.LBE74:
+ 263:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 2035              		.loc 1 263 1 view .LVU670
+ 2036 00a6 02B0     		add	sp, sp, #8
+ 2037              	.LCFI17:
+ 2038              		.cfi_def_cfa_offset 24
+ 2039              		@ sp needed
+ 2040 00a8 BDE8F081 		pop	{r4, r5, r6, r7, r8, pc}
+ 263:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 2041              		.loc 1 263 1 view .LVU671
+ 2042              		.cfi_endproc
+ 2043              	.LFE32:
+ 2045              		.section	.text.lv_draw_rotate,"ax",%progbits
+ 2046              		.align	1
+ 2047              		.global	lv_draw_rotate
+ 2048              		.syntax unified
+ 2049              		.thumb
+ 2050              		.thumb_func
+ 2052              	lv_draw_rotate:
+ 2053              	.LVL182:
+ 2054              	.LFB33:
+ 267:Drivers/lvgl/src/draw/lv_draw_utils.c ****     LV_CHECK_ARG(src != NULL, return);
+ 2055              		.loc 1 267 1 is_stmt 1 view -0
+ 2056              		.cfi_startproc
+ 2057              		@ args = 16, pretend = 0, frame = 0
+ 2058              		@ frame_needed = 0, uses_anonymous_args = 0
+ 267:Drivers/lvgl/src/draw/lv_draw_utils.c ****     LV_CHECK_ARG(src != NULL, return);
+ 2059              		.loc 1 267 1 is_stmt 0 view .LVU673
+ 2060 0000 10B5     		push	{r4, lr}
+ 2061              	.LCFI18:
+ 2062              		.cfi_def_cfa_offset 8
+ 2063              		.cfi_offset 4, -8
+ 2064              		.cfi_offset 14, -4
+ 2065 0002 82B0     		sub	sp, sp, #8
+ 2066              	.LCFI19:
+ 2067              		.cfi_def_cfa_offset 16
+ 2068 0004 9DF818C0 		ldrb	ip, [sp, #24]	@ zero_extendqisi2
+ 2069 0008 9DF81CE0 		ldrb	lr, [sp, #28]	@ zero_extendqisi2
+ 268:Drivers/lvgl/src/draw/lv_draw_utils.c ****     LV_CHECK_ARG(dest != NULL, return);
+ 2070              		.loc 1 268 5 is_stmt 1 view .LVU674
+ 268:Drivers/lvgl/src/draw/lv_draw_utils.c ****     LV_CHECK_ARG(dest != NULL, return);
+ARM GAS  /tmp/ccMRemNS.s 			page 54
+
+
+ 2071              		.loc 1 268 5 is_stmt 0 discriminator 1 view .LVU675
+ 2072 000c 58B1     		cbz	r0, .L129
+ 2073 000e 0446     		mov	r4, r0
+ 268:Drivers/lvgl/src/draw/lv_draw_utils.c ****     LV_CHECK_ARG(dest != NULL, return);
+ 2074              		.loc 1 268 5 is_stmt 1 discriminator 3 view .LVU676
+ 268:Drivers/lvgl/src/draw/lv_draw_utils.c ****     LV_CHECK_ARG(dest != NULL, return);
+ 2075              		.loc 1 268 38 discriminator 3 view .LVU677
+ 269:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 2076              		.loc 1 269 5 view .LVU678
+ 269:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 2077              		.loc 1 269 5 is_stmt 0 discriminator 1 view .LVU679
+ 2078 0010 49B1     		cbz	r1, .L129
+ 269:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 2079              		.loc 1 269 5 is_stmt 1 discriminator 3 view .LVU680
+ 269:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 2080              		.loc 1 269 39 discriminator 3 view .LVU681
+ 271:Drivers/lvgl/src/draw/lv_draw_utils.c ****         switch(color_format) {
+ 2081              		.loc 1 271 5 view .LVU682
+ 271:Drivers/lvgl/src/draw/lv_draw_utils.c ****         switch(color_format) {
+ 2082              		.loc 1 271 7 is_stmt 0 view .LVU683
+ 2083 0012 BCF1010F 		cmp	ip, #1
+ 2084 0016 08D0     		beq	.L152
+ 294:Drivers/lvgl/src/draw/lv_draw_utils.c ****         switch(color_format) {
+ 2085              		.loc 1 294 5 is_stmt 1 view .LVU684
+ 294:Drivers/lvgl/src/draw/lv_draw_utils.c ****         switch(color_format) {
+ 2086              		.loc 1 294 7 is_stmt 0 view .LVU685
+ 2087 0018 BCF1020F 		cmp	ip, #2
+ 2088 001c 58D0     		beq	.L153
+ 317:Drivers/lvgl/src/draw/lv_draw_utils.c ****         switch(color_format) {
+ 2089              		.loc 1 317 5 is_stmt 1 view .LVU686
+ 317:Drivers/lvgl/src/draw/lv_draw_utils.c ****         switch(color_format) {
+ 2090              		.loc 1 317 7 is_stmt 0 view .LVU687
+ 2091 001e BCF1030F 		cmp	ip, #3
+ 2092 0022 00F0A780 		beq	.L154
+ 2093              	.LVL183:
+ 2094              	.L129:
+ 339:Drivers/lvgl/src/draw/lv_draw_utils.c **** 
+ 2095              		.loc 1 339 1 view .LVU688
+ 2096 0026 02B0     		add	sp, sp, #8
+ 2097              	.LCFI20:
+ 2098              		.cfi_remember_state
+ 2099              		.cfi_def_cfa_offset 8
+ 2100              		@ sp needed
+ 2101 0028 10BD     		pop	{r4, pc}
+ 2102              	.LVL184:
+ 2103              	.L152:
+ 2104              	.LCFI21:
+ 2105              		.cfi_restore_state
+ 272:Drivers/lvgl/src/draw/lv_draw_utils.c ****             case LV_COLOR_FORMAT_L8:
+ 2106              		.loc 1 272 9 is_stmt 1 view .LVU689
+ 2107 002a AEF1060E 		sub	lr, lr, #6
+ 2108 002e BEF1140F 		cmp	lr, #20
+ 2109 0032 F8D8     		bhi	.L129
+ 2110 0034 01A0     		adr	r0, .L133
+ 2111 0036 50F82EF0 		ldr	pc, [r0, lr, lsl #2]
+ 2112              	.LVL185:
+ 2113 003a 00BF     		.p2align 2
+ARM GAS  /tmp/ccMRemNS.s 			page 55
+
+
+ 2114              	.L133:
+ 2115 003c 91000000 		.word	.L136+1
+ 2116 0040 27000000 		.word	.L129+1
+ 2117 0044 27000000 		.word	.L129+1
+ 2118 0048 27000000 		.word	.L129+1
+ 2119 004c 27000000 		.word	.L129+1
+ 2120 0050 27000000 		.word	.L129+1
+ 2121 0054 27000000 		.word	.L129+1
+ 2122 0058 27000000 		.word	.L129+1
+ 2123 005c 27000000 		.word	.L129+1
+ 2124 0060 B1000000 		.word	.L135+1
+ 2125 0064 C1000000 		.word	.L132+1
+ 2126 0068 C1000000 		.word	.L132+1
+ 2127 006c A1000000 		.word	.L134+1
+ 2128 0070 27000000 		.word	.L129+1
+ 2129 0074 27000000 		.word	.L129+1
+ 2130 0078 27000000 		.word	.L129+1
+ 2131 007c 27000000 		.word	.L129+1
+ 2132 0080 27000000 		.word	.L129+1
+ 2133 0084 27000000 		.word	.L129+1
+ 2134 0088 27000000 		.word	.L129+1
+ 2135 008c C1000000 		.word	.L132+1
+ 2136              		.p2align 1
+ 2137              	.L136:
+ 274:Drivers/lvgl/src/draw/lv_draw_utils.c ****                 break;
+ 2138              		.loc 1 274 17 view .LVU690
+ 2139 0090 0598     		ldr	r0, [sp, #20]
+ 2140 0092 0190     		str	r0, [sp, #4]
+ 2141 0094 0498     		ldr	r0, [sp, #16]
+ 2142 0096 0090     		str	r0, [sp]
+ 2143 0098 2046     		mov	r0, r4
+ 2144 009a FFF7FEFF 		bl	rotate90_l8
+ 2145              	.LVL186:
+ 275:Drivers/lvgl/src/draw/lv_draw_utils.c ****             case LV_COLOR_FORMAT_RGB565:
+ 2146              		.loc 1 275 17 view .LVU691
+ 2147 009e C2E7     		b	.L129
+ 2148              	.LVL187:
+ 2149              	.L134:
+ 277:Drivers/lvgl/src/draw/lv_draw_utils.c ****                 break;
+ 2150              		.loc 1 277 17 view .LVU692
+ 2151 00a0 0598     		ldr	r0, [sp, #20]
+ 2152 00a2 0190     		str	r0, [sp, #4]
+ 2153 00a4 0498     		ldr	r0, [sp, #16]
+ 2154 00a6 0090     		str	r0, [sp]
+ 2155 00a8 2046     		mov	r0, r4
+ 2156 00aa FFF7FEFF 		bl	rotate90_rgb565
+ 2157              	.LVL188:
+ 278:Drivers/lvgl/src/draw/lv_draw_utils.c ****             case LV_COLOR_FORMAT_RGB888:
+ 2158              		.loc 1 278 17 view .LVU693
+ 2159 00ae BAE7     		b	.L129
+ 2160              	.LVL189:
+ 2161              	.L135:
+ 280:Drivers/lvgl/src/draw/lv_draw_utils.c ****                 break;
+ 2162              		.loc 1 280 17 view .LVU694
+ 2163 00b0 0598     		ldr	r0, [sp, #20]
+ 2164 00b2 0190     		str	r0, [sp, #4]
+ 2165 00b4 0498     		ldr	r0, [sp, #16]
+ARM GAS  /tmp/ccMRemNS.s 			page 56
+
+
+ 2166 00b6 0090     		str	r0, [sp]
+ 2167 00b8 2046     		mov	r0, r4
+ 2168 00ba FFF7FEFF 		bl	rotate90_rgb888
+ 2169              	.LVL190:
+ 281:Drivers/lvgl/src/draw/lv_draw_utils.c ****             case LV_COLOR_FORMAT_XRGB8888:
+ 2170              		.loc 1 281 17 view .LVU695
+ 2171 00be B2E7     		b	.L129
+ 2172              	.LVL191:
+ 2173              	.L132:
+ 285:Drivers/lvgl/src/draw/lv_draw_utils.c ****                 break;
+ 2174              		.loc 1 285 17 view .LVU696
+ 2175 00c0 0598     		ldr	r0, [sp, #20]
+ 2176 00c2 0190     		str	r0, [sp, #4]
+ 2177 00c4 0498     		ldr	r0, [sp, #16]
+ 2178 00c6 0090     		str	r0, [sp]
+ 2179 00c8 2046     		mov	r0, r4
+ 2180 00ca FFF7FEFF 		bl	rotate90_argb8888
+ 2181              	.LVL192:
+ 286:Drivers/lvgl/src/draw/lv_draw_utils.c ****             default:
+ 2182              		.loc 1 286 17 view .LVU697
+ 2183 00ce AAE7     		b	.L129
+ 2184              	.LVL193:
+ 2185              	.L153:
+ 295:Drivers/lvgl/src/draw/lv_draw_utils.c ****             case LV_COLOR_FORMAT_L8:
+ 2186              		.loc 1 295 9 view .LVU698
+ 2187 00d0 AEF1060E 		sub	lr, lr, #6
+ 2188 00d4 BEF1140F 		cmp	lr, #20
+ 2189 00d8 A5D8     		bhi	.L129
+ 2190 00da 01A0     		adr	r0, .L139
+ 2191 00dc 50F82EF0 		ldr	pc, [r0, lr, lsl #2]
+ 2192              	.LVL194:
+ 2193              		.p2align 2
+ 2194              	.L139:
+ 2195 00e0 35010000 		.word	.L142+1
+ 2196 00e4 27000000 		.word	.L129+1
+ 2197 00e8 27000000 		.word	.L129+1
+ 2198 00ec 27000000 		.word	.L129+1
+ 2199 00f0 27000000 		.word	.L129+1
+ 2200 00f4 27000000 		.word	.L129+1
+ 2201 00f8 27000000 		.word	.L129+1
+ 2202 00fc 27000000 		.word	.L129+1
+ 2203 0100 27000000 		.word	.L129+1
+ 2204 0104 55010000 		.word	.L141+1
+ 2205 0108 65010000 		.word	.L138+1
+ 2206 010c 65010000 		.word	.L138+1
+ 2207 0110 45010000 		.word	.L140+1
+ 2208 0114 27000000 		.word	.L129+1
+ 2209 0118 27000000 		.word	.L129+1
+ 2210 011c 27000000 		.word	.L129+1
+ 2211 0120 27000000 		.word	.L129+1
+ 2212 0124 27000000 		.word	.L129+1
+ 2213 0128 27000000 		.word	.L129+1
+ 2214 012c 27000000 		.word	.L129+1
+ 2215 0130 65010000 		.word	.L138+1
+ 2216              		.p2align 1
+ 2217              	.L142:
+ 297:Drivers/lvgl/src/draw/lv_draw_utils.c ****                 break;
+ARM GAS  /tmp/ccMRemNS.s 			page 57
+
+
+ 2218              		.loc 1 297 17 view .LVU699
+ 2219 0134 0598     		ldr	r0, [sp, #20]
+ 2220 0136 0190     		str	r0, [sp, #4]
+ 2221 0138 0498     		ldr	r0, [sp, #16]
+ 2222 013a 0090     		str	r0, [sp]
+ 2223 013c 2046     		mov	r0, r4
+ 2224 013e FFF7FEFF 		bl	rotate180_l8
+ 2225              	.LVL195:
+ 298:Drivers/lvgl/src/draw/lv_draw_utils.c ****             case LV_COLOR_FORMAT_RGB565:
+ 2226              		.loc 1 298 17 view .LVU700
+ 2227 0142 70E7     		b	.L129
+ 2228              	.LVL196:
+ 2229              	.L140:
+ 300:Drivers/lvgl/src/draw/lv_draw_utils.c ****                 break;
+ 2230              		.loc 1 300 17 view .LVU701
+ 2231 0144 0598     		ldr	r0, [sp, #20]
+ 2232 0146 0190     		str	r0, [sp, #4]
+ 2233 0148 0498     		ldr	r0, [sp, #16]
+ 2234 014a 0090     		str	r0, [sp]
+ 2235 014c 2046     		mov	r0, r4
+ 2236 014e FFF7FEFF 		bl	rotate180_rgb565
+ 2237              	.LVL197:
+ 301:Drivers/lvgl/src/draw/lv_draw_utils.c ****             case LV_COLOR_FORMAT_RGB888:
+ 2238              		.loc 1 301 17 view .LVU702
+ 2239 0152 68E7     		b	.L129
+ 2240              	.LVL198:
+ 2241              	.L141:
+ 303:Drivers/lvgl/src/draw/lv_draw_utils.c ****                 break;
+ 2242              		.loc 1 303 17 view .LVU703
+ 2243 0154 0598     		ldr	r0, [sp, #20]
+ 2244 0156 0190     		str	r0, [sp, #4]
+ 2245 0158 0498     		ldr	r0, [sp, #16]
+ 2246 015a 0090     		str	r0, [sp]
+ 2247 015c 2046     		mov	r0, r4
+ 2248 015e FFF7FEFF 		bl	rotate180_rgb888
+ 2249              	.LVL199:
+ 304:Drivers/lvgl/src/draw/lv_draw_utils.c ****             case LV_COLOR_FORMAT_XRGB8888:
+ 2250              		.loc 1 304 17 view .LVU704
+ 2251 0162 60E7     		b	.L129
+ 2252              	.LVL200:
+ 2253              	.L138:
+ 308:Drivers/lvgl/src/draw/lv_draw_utils.c ****                 break;
+ 2254              		.loc 1 308 17 view .LVU705
+ 2255 0164 0598     		ldr	r0, [sp, #20]
+ 2256 0166 0190     		str	r0, [sp, #4]
+ 2257 0168 0498     		ldr	r0, [sp, #16]
+ 2258 016a 0090     		str	r0, [sp]
+ 2259 016c 2046     		mov	r0, r4
+ 2260 016e FFF7FEFF 		bl	rotate180_argb8888
+ 2261              	.LVL201:
+ 309:Drivers/lvgl/src/draw/lv_draw_utils.c ****             default:
+ 2262              		.loc 1 309 17 view .LVU706
+ 2263 0172 58E7     		b	.L129
+ 2264              	.LVL202:
+ 2265              	.L154:
+ 318:Drivers/lvgl/src/draw/lv_draw_utils.c ****             case LV_COLOR_FORMAT_L8:
+ 2266              		.loc 1 318 9 view .LVU707
+ARM GAS  /tmp/ccMRemNS.s 			page 58
+
+
+ 2267 0174 AEF1060E 		sub	lr, lr, #6
+ 2268 0178 BEF1140F 		cmp	lr, #20
+ 2269 017c 3FF653AF 		bhi	.L129
+ 2270 0180 01A0     		adr	r0, .L144
+ 2271 0182 50F82EF0 		ldr	pc, [r0, lr, lsl #2]
+ 2272              	.LVL203:
+ 2273 0186 00BF     		.p2align 2
+ 2274              	.L144:
+ 2275 0188 DD010000 		.word	.L147+1
+ 2276 018c 27000000 		.word	.L129+1
+ 2277 0190 27000000 		.word	.L129+1
+ 2278 0194 27000000 		.word	.L129+1
+ 2279 0198 27000000 		.word	.L129+1
+ 2280 019c 27000000 		.word	.L129+1
+ 2281 01a0 27000000 		.word	.L129+1
+ 2282 01a4 27000000 		.word	.L129+1
+ 2283 01a8 27000000 		.word	.L129+1
+ 2284 01ac FD010000 		.word	.L146+1
+ 2285 01b0 0D020000 		.word	.L143+1
+ 2286 01b4 0D020000 		.word	.L143+1
+ 2287 01b8 ED010000 		.word	.L145+1
+ 2288 01bc 27000000 		.word	.L129+1
+ 2289 01c0 27000000 		.word	.L129+1
+ 2290 01c4 27000000 		.word	.L129+1
+ 2291 01c8 27000000 		.word	.L129+1
+ 2292 01cc 27000000 		.word	.L129+1
+ 2293 01d0 27000000 		.word	.L129+1
+ 2294 01d4 27000000 		.word	.L129+1
+ 2295 01d8 0D020000 		.word	.L143+1
+ 2296              		.p2align 1
+ 2297              	.L147:
+ 320:Drivers/lvgl/src/draw/lv_draw_utils.c ****                 break;
+ 2298              		.loc 1 320 17 view .LVU708
+ 2299 01dc 0598     		ldr	r0, [sp, #20]
+ 2300 01de 0190     		str	r0, [sp, #4]
+ 2301 01e0 0498     		ldr	r0, [sp, #16]
+ 2302 01e2 0090     		str	r0, [sp]
+ 2303 01e4 2046     		mov	r0, r4
+ 2304 01e6 FFF7FEFF 		bl	rotate270_l8
+ 2305              	.LVL204:
+ 321:Drivers/lvgl/src/draw/lv_draw_utils.c ****             case LV_COLOR_FORMAT_RGB565:
+ 2306              		.loc 1 321 17 view .LVU709
+ 2307 01ea 1CE7     		b	.L129
+ 2308              	.LVL205:
+ 2309              	.L145:
+ 323:Drivers/lvgl/src/draw/lv_draw_utils.c ****                 break;
+ 2310              		.loc 1 323 17 view .LVU710
+ 2311 01ec 0598     		ldr	r0, [sp, #20]
+ 2312 01ee 0190     		str	r0, [sp, #4]
+ 2313 01f0 0498     		ldr	r0, [sp, #16]
+ 2314 01f2 0090     		str	r0, [sp]
+ 2315 01f4 2046     		mov	r0, r4
+ 2316 01f6 FFF7FEFF 		bl	rotate270_rgb565
+ 2317              	.LVL206:
+ 324:Drivers/lvgl/src/draw/lv_draw_utils.c ****             case LV_COLOR_FORMAT_RGB888:
+ 2318              		.loc 1 324 17 view .LVU711
+ 2319 01fa 14E7     		b	.L129
+ARM GAS  /tmp/ccMRemNS.s 			page 59
+
+
+ 2320              	.LVL207:
+ 2321              	.L146:
+ 326:Drivers/lvgl/src/draw/lv_draw_utils.c ****                 break;
+ 2322              		.loc 1 326 17 view .LVU712
+ 2323 01fc 0598     		ldr	r0, [sp, #20]
+ 2324 01fe 0190     		str	r0, [sp, #4]
+ 2325 0200 0498     		ldr	r0, [sp, #16]
+ 2326 0202 0090     		str	r0, [sp]
+ 2327 0204 2046     		mov	r0, r4
+ 2328 0206 FFF7FEFF 		bl	rotate270_rgb888
+ 2329              	.LVL208:
+ 327:Drivers/lvgl/src/draw/lv_draw_utils.c ****             case LV_COLOR_FORMAT_XRGB8888:
+ 2330              		.loc 1 327 17 view .LVU713
+ 2331 020a 0CE7     		b	.L129
+ 2332              	.LVL209:
+ 2333              	.L143:
+ 331:Drivers/lvgl/src/draw/lv_draw_utils.c ****                 break;
+ 2334              		.loc 1 331 17 view .LVU714
+ 2335 020c 0598     		ldr	r0, [sp, #20]
+ 2336 020e 0190     		str	r0, [sp, #4]
+ 2337 0210 0498     		ldr	r0, [sp, #16]
+ 2338 0212 0090     		str	r0, [sp]
+ 2339 0214 2046     		mov	r0, r4
+ 2340 0216 FFF7FEFF 		bl	rotate270_argb8888
+ 2341              	.LVL210:
+ 332:Drivers/lvgl/src/draw/lv_draw_utils.c ****             default:
+ 2342              		.loc 1 332 17 view .LVU715
+ 2343 021a 04E7     		b	.L129
+ 2344              		.cfi_endproc
+ 2345              	.LFE33:
+ 2347              		.text
+ 2348              	.Letext0:
+ 2349              		.file 2 "/usr/arm-none-eabi/include/machine/_default_types.h"
+ 2350              		.file 3 "/usr/arm-none-eabi/include/sys/_stdint.h"
+ 2351              		.file 4 "/usr/lib/gcc/arm-none-eabi/16.2.0/include/stddef.h"
+ 2352              		.file 5 "Drivers/lvgl/src/draw/../../include/lvgl/core/../lv_types.h"
+ 2353              		.file 6 "Drivers/lvgl/src/draw/../../include/lvgl/core/lv_area.h"
+ 2354              		.file 7 "Drivers/lvgl/src/draw/../../include/lvgl/core/../font/../draw/lv_color.h"
+ 2355              		.file 8 "Drivers/lvgl/src/draw/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h"
+ARM GAS  /tmp/ccMRemNS.s 			page 60
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 lv_draw_utils.c
+     /tmp/ccMRemNS.s:21     .text.rotate270_argb8888:00000000 $t
+     /tmp/ccMRemNS.s:26     .text.rotate270_argb8888:00000000 rotate270_argb8888
+     /tmp/ccMRemNS.s:137    .text.rotate180_argb8888:00000000 $t
+     /tmp/ccMRemNS.s:142    .text.rotate180_argb8888:00000000 rotate180_argb8888
+     /tmp/ccMRemNS.s:251    .text.rotate90_argb8888:00000000 $t
+     /tmp/ccMRemNS.s:256    .text.rotate90_argb8888:00000000 rotate90_argb8888
+     /tmp/ccMRemNS.s:363    .text.rotate90_rgb888:00000000 $t
+     /tmp/ccMRemNS.s:368    .text.rotate90_rgb888:00000000 rotate90_rgb888
+     /tmp/ccMRemNS.s:479    .text.rotate180_rgb888:00000000 $t
+     /tmp/ccMRemNS.s:484    .text.rotate180_rgb888:00000000 rotate180_rgb888
+     /tmp/ccMRemNS.s:596    .text.rotate270_rgb888:00000000 $t
+     /tmp/ccMRemNS.s:601    .text.rotate270_rgb888:00000000 rotate270_rgb888
+     /tmp/ccMRemNS.s:709    .text.rotate270_rgb565:00000000 $t
+     /tmp/ccMRemNS.s:714    .text.rotate270_rgb565:00000000 rotate270_rgb565
+     /tmp/ccMRemNS.s:824    .text.rotate180_rgb565:00000000 $t
+     /tmp/ccMRemNS.s:829    .text.rotate180_rgb565:00000000 rotate180_rgb565
+     /tmp/ccMRemNS.s:937    .text.rotate90_rgb565:00000000 $t
+     /tmp/ccMRemNS.s:942    .text.rotate90_rgb565:00000000 rotate90_rgb565
+     /tmp/ccMRemNS.s:1048   .text.rotate90_l8:00000000 $t
+     /tmp/ccMRemNS.s:1053   .text.rotate90_l8:00000000 rotate90_l8
+     /tmp/ccMRemNS.s:1150   .text.rotate180_l8:00000000 $t
+     /tmp/ccMRemNS.s:1155   .text.rotate180_l8:00000000 rotate180_l8
+     /tmp/ccMRemNS.s:1253   .text.rotate270_l8:00000000 $t
+     /tmp/ccMRemNS.s:1258   .text.rotate270_l8:00000000 rotate270_l8
+     /tmp/ccMRemNS.s:1357   .text.lv_draw_i1_to_argb8888:00000000 $t
+     /tmp/ccMRemNS.s:1363   .text.lv_draw_i1_to_argb8888:00000000 lv_draw_i1_to_argb8888
+     /tmp/ccMRemNS.s:1505   .text.lv_draw_rgb565_swap:00000000 $t
+     /tmp/ccMRemNS.s:1511   .text.lv_draw_rgb565_swap:00000000 lv_draw_rgb565_swap
+     /tmp/ccMRemNS.s:1739   .text.lv_draw_i1_invert:00000000 $t
+     /tmp/ccMRemNS.s:1745   .text.lv_draw_i1_invert:00000000 lv_draw_i1_invert
+     /tmp/ccMRemNS.s:1849   .text.lv_draw_i1_convert_to_vtiled:00000000 $t
+     /tmp/ccMRemNS.s:1855   .text.lv_draw_i1_convert_to_vtiled:00000000 lv_draw_i1_convert_to_vtiled
+     /tmp/ccMRemNS.s:2046   .text.lv_draw_rotate:00000000 $t
+     /tmp/ccMRemNS.s:2052   .text.lv_draw_rotate:00000000 lv_draw_rotate
+     /tmp/ccMRemNS.s:2115   .text.lv_draw_rotate:0000003c $d
+     /tmp/ccMRemNS.s:2136   .text.lv_draw_rotate:00000090 $t
+     /tmp/ccMRemNS.s:2195   .text.lv_draw_rotate:000000e0 $d
+     /tmp/ccMRemNS.s:2216   .text.lv_draw_rotate:00000134 $t
+     /tmp/ccMRemNS.s:2275   .text.lv_draw_rotate:00000188 $d
+     /tmp/ccMRemNS.s:2296   .text.lv_draw_rotate:000001dc $t
+
+UNDEFINED SYMBOLS
+lv_memset

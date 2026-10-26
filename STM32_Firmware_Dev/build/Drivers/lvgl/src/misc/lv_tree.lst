@@ -1,0 +1,1062 @@
+ARM GAS  /tmp/ccZThIHT.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.arch armv7e-m
+   3              		.fpu fpv4-sp-d16
+   4              		.eabi_attribute 27, 1
+   5              		.eabi_attribute 28, 1
+   6              		.eabi_attribute 20, 1
+   7              		.eabi_attribute 21, 1
+   8              		.eabi_attribute 23, 3
+   9              		.eabi_attribute 24, 1
+  10              		.eabi_attribute 25, 1
+  11              		.eabi_attribute 26, 1
+  12              		.eabi_attribute 30, 1
+  13              		.eabi_attribute 34, 1
+  14              		.eabi_attribute 18, 4
+  15              		.file	"lv_tree.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.file 1 "Drivers/lvgl/src/misc/lv_tree.c"
+  20              		.section	.text._lv_tree_node_construct,"ax",%progbits
+  21              		.align	1
+  22              		.syntax unified
+  23              		.thumb
+  24              		.thumb_func
+  26              	_lv_tree_node_construct:
+  27              	.LVL0:
+  28              	.LFB17:
+   1:Drivers/lvgl/src/misc/lv_tree.c **** /**
+   2:Drivers/lvgl/src/misc/lv_tree.c ****  * @file lv_tree.c
+   3:Drivers/lvgl/src/misc/lv_tree.c ****  */
+   4:Drivers/lvgl/src/misc/lv_tree.c **** 
+   5:Drivers/lvgl/src/misc/lv_tree.c **** /*********************
+   6:Drivers/lvgl/src/misc/lv_tree.c ****  *      INCLUDES
+   7:Drivers/lvgl/src/misc/lv_tree.c ****  *********************/
+   8:Drivers/lvgl/src/misc/lv_tree.c **** 
+   9:Drivers/lvgl/src/misc/lv_tree.c **** #include "../lvgl_public.h"
+  10:Drivers/lvgl/src/misc/lv_tree.c **** #include "lv_tree.h"
+  11:Drivers/lvgl/src/misc/lv_tree.c **** 
+  12:Drivers/lvgl/src/misc/lv_tree.c **** /*********************
+  13:Drivers/lvgl/src/misc/lv_tree.c ****  *      DEFINES
+  14:Drivers/lvgl/src/misc/lv_tree.c ****  *********************/
+  15:Drivers/lvgl/src/misc/lv_tree.c **** #define INIT_CHILDREN_CAP 4
+  16:Drivers/lvgl/src/misc/lv_tree.c **** 
+  17:Drivers/lvgl/src/misc/lv_tree.c **** /**********************
+  18:Drivers/lvgl/src/misc/lv_tree.c ****  *      TYPEDEFS
+  19:Drivers/lvgl/src/misc/lv_tree.c ****  **********************/
+  20:Drivers/lvgl/src/misc/lv_tree.c **** 
+  21:Drivers/lvgl/src/misc/lv_tree.c **** /**********************
+  22:Drivers/lvgl/src/misc/lv_tree.c ****  *  STATIC PROTOTYPES
+  23:Drivers/lvgl/src/misc/lv_tree.c ****  **********************/
+  24:Drivers/lvgl/src/misc/lv_tree.c **** 
+  25:Drivers/lvgl/src/misc/lv_tree.c **** /**********************
+  26:Drivers/lvgl/src/misc/lv_tree.c ****  *  STATIC VARIABLES
+  27:Drivers/lvgl/src/misc/lv_tree.c ****  **********************/
+  28:Drivers/lvgl/src/misc/lv_tree.c **** 
+  29:Drivers/lvgl/src/misc/lv_tree.c **** const lv_tree_class_t lv_tree_node_class = {
+  30:Drivers/lvgl/src/misc/lv_tree.c ****     .base_class = NULL,
+ARM GAS  /tmp/ccZThIHT.s 			page 2
+
+
+  31:Drivers/lvgl/src/misc/lv_tree.c ****     .instance_size = sizeof(lv_tree_node_t),
+  32:Drivers/lvgl/src/misc/lv_tree.c ****     .constructor_cb = NULL,
+  33:Drivers/lvgl/src/misc/lv_tree.c ****     .destructor_cb = NULL,
+  34:Drivers/lvgl/src/misc/lv_tree.c **** };
+  35:Drivers/lvgl/src/misc/lv_tree.c **** 
+  36:Drivers/lvgl/src/misc/lv_tree.c **** /**********************
+  37:Drivers/lvgl/src/misc/lv_tree.c ****  *      MACROS
+  38:Drivers/lvgl/src/misc/lv_tree.c ****  **********************/
+  39:Drivers/lvgl/src/misc/lv_tree.c **** 
+  40:Drivers/lvgl/src/misc/lv_tree.c **** /**********************
+  41:Drivers/lvgl/src/misc/lv_tree.c ****  *   GLOBAL FUNCTIONS
+  42:Drivers/lvgl/src/misc/lv_tree.c ****  **********************/
+  43:Drivers/lvgl/src/misc/lv_tree.c **** 
+  44:Drivers/lvgl/src/misc/lv_tree.c **** static void _lv_tree_node_construct(const lv_tree_class_t * class_p, lv_tree_node_t * node)
+  45:Drivers/lvgl/src/misc/lv_tree.c **** {
+  29              		.loc 1 45 1 view -0
+  30              		.cfi_startproc
+  31              		@ args = 0, pretend = 0, frame = 0
+  32              		@ frame_needed = 0, uses_anonymous_args = 0
+  33              		.loc 1 45 1 is_stmt 0 view .LVU1
+  34 0000 70B5     		push	{r4, r5, r6, lr}
+  35              	.LCFI0:
+  36              		.cfi_def_cfa_offset 16
+  37              		.cfi_offset 4, -16
+  38              		.cfi_offset 5, -12
+  39              		.cfi_offset 6, -8
+  40              		.cfi_offset 14, -4
+  41 0002 0646     		mov	r6, r0
+  42 0004 0C46     		mov	r4, r1
+  46:Drivers/lvgl/src/misc/lv_tree.c ****     if(node->class_p->base_class) {
+  43              		.loc 1 46 5 is_stmt 1 view .LVU2
+  44              		.loc 1 46 12 is_stmt 0 view .LVU3
+  45 0006 0D69     		ldr	r5, [r1, #16]
+  46              		.loc 1 46 21 view .LVU4
+  47 0008 2B68     		ldr	r3, [r5]
+  48              		.loc 1 46 7 view .LVU5
+  49 000a 1BB1     		cbz	r3, .L2
+  50              	.LBB4:
+  47:Drivers/lvgl/src/misc/lv_tree.c ****         const lv_tree_class_t * original_class_p = node->class_p;
+  51              		.loc 1 47 9 is_stmt 1 view .LVU6
+  52              	.LVL1:
+  48:Drivers/lvgl/src/misc/lv_tree.c **** 
+  49:Drivers/lvgl/src/misc/lv_tree.c ****         node->class_p = node->class_p->base_class;
+  53              		.loc 1 49 9 view .LVU7
+  54              		.loc 1 49 23 is_stmt 0 view .LVU8
+  55 000c 0B61     		str	r3, [r1, #16]
+  50:Drivers/lvgl/src/misc/lv_tree.c **** 
+  51:Drivers/lvgl/src/misc/lv_tree.c ****         _lv_tree_node_construct(class_p, node);
+  56              		.loc 1 51 9 is_stmt 1 view .LVU9
+  57 000e FFF7F7FF 		bl	_lv_tree_node_construct
+  58              	.LVL2:
+  52:Drivers/lvgl/src/misc/lv_tree.c **** 
+  53:Drivers/lvgl/src/misc/lv_tree.c ****         node->class_p = original_class_p;
+  59              		.loc 1 53 9 view .LVU10
+  60              		.loc 1 53 23 is_stmt 0 view .LVU11
+  61 0012 2561     		str	r5, [r4, #16]
+  62              	.LVL3:
+ARM GAS  /tmp/ccZThIHT.s 			page 3
+
+
+  63              	.L2:
+  64              		.loc 1 53 23 view .LVU12
+  65              	.LBE4:
+  54:Drivers/lvgl/src/misc/lv_tree.c ****     }
+  55:Drivers/lvgl/src/misc/lv_tree.c **** 
+  56:Drivers/lvgl/src/misc/lv_tree.c ****     if(node->class_p->constructor_cb) node->class_p->constructor_cb(class_p, node);
+  66              		.loc 1 56 5 is_stmt 1 view .LVU13
+  67              		.loc 1 56 12 is_stmt 0 view .LVU14
+  68 0014 2369     		ldr	r3, [r4, #16]
+  69              		.loc 1 56 21 view .LVU15
+  70 0016 9B68     		ldr	r3, [r3, #8]
+  71              		.loc 1 56 7 view .LVU16
+  72 0018 13B1     		cbz	r3, .L1
+  73              		.loc 1 56 39 is_stmt 1 discriminator 1 view .LVU17
+  74 001a 2146     		mov	r1, r4
+  75 001c 3046     		mov	r0, r6
+  76 001e 9847     		blx	r3
+  77              	.LVL4:
+  78              	.L1:
+  57:Drivers/lvgl/src/misc/lv_tree.c **** }
+  79              		.loc 1 57 1 is_stmt 0 view .LVU18
+  80 0020 70BD     		pop	{r4, r5, r6, pc}
+  81              		.loc 1 57 1 view .LVU19
+  82              		.cfi_endproc
+  83              	.LFE17:
+  85              		.section	.text._lv_tree_node_destruct,"ax",%progbits
+  86              		.align	1
+  87              		.syntax unified
+  88              		.thumb
+  89              		.thumb_func
+  91              	_lv_tree_node_destruct:
+  92              	.LVL5:
+  93              	.LFB18:
+  58:Drivers/lvgl/src/misc/lv_tree.c **** 
+  59:Drivers/lvgl/src/misc/lv_tree.c **** static void _lv_tree_node_destruct(lv_tree_node_t * node)
+  60:Drivers/lvgl/src/misc/lv_tree.c **** {
+  94              		.loc 1 60 1 is_stmt 1 view -0
+  95              		.cfi_startproc
+  96              		@ args = 0, pretend = 0, frame = 0
+  97              		@ frame_needed = 0, uses_anonymous_args = 0
+  98              		.loc 1 60 1 is_stmt 0 view .LVU21
+  99 0000 10B5     		push	{r4, lr}
+ 100              	.LCFI1:
+ 101              		.cfi_def_cfa_offset 8
+ 102              		.cfi_offset 4, -8
+ 103              		.cfi_offset 14, -4
+ 104 0002 0446     		mov	r4, r0
+  61:Drivers/lvgl/src/misc/lv_tree.c ****     if(node->class_p->destructor_cb) node->class_p->destructor_cb(node->class_p, node);
+ 105              		.loc 1 61 5 is_stmt 1 view .LVU22
+ 106              		.loc 1 61 12 is_stmt 0 view .LVU23
+ 107 0004 0069     		ldr	r0, [r0, #16]
+ 108              	.LVL6:
+ 109              		.loc 1 61 21 view .LVU24
+ 110 0006 C368     		ldr	r3, [r0, #12]
+ 111              		.loc 1 61 7 view .LVU25
+ 112 0008 0BB1     		cbz	r3, .L6
+ 113              		.loc 1 61 38 is_stmt 1 discriminator 1 view .LVU26
+ARM GAS  /tmp/ccZThIHT.s 			page 4
+
+
+ 114 000a 2146     		mov	r1, r4
+ 115 000c 9847     		blx	r3
+ 116              	.LVL7:
+ 117              	.L6:
+  62:Drivers/lvgl/src/misc/lv_tree.c **** 
+  63:Drivers/lvgl/src/misc/lv_tree.c ****     if(node->class_p->base_class) {
+ 118              		.loc 1 63 5 view .LVU27
+ 119              		.loc 1 63 12 is_stmt 0 view .LVU28
+ 120 000e 2369     		ldr	r3, [r4, #16]
+ 121              		.loc 1 63 21 view .LVU29
+ 122 0010 1B68     		ldr	r3, [r3]
+ 123              		.loc 1 63 7 view .LVU30
+ 124 0012 1BB1     		cbz	r3, .L5
+  64:Drivers/lvgl/src/misc/lv_tree.c ****         node->class_p = node->class_p->base_class;
+ 125              		.loc 1 64 9 is_stmt 1 view .LVU31
+ 126              		.loc 1 64 23 is_stmt 0 view .LVU32
+ 127 0014 2361     		str	r3, [r4, #16]
+  65:Drivers/lvgl/src/misc/lv_tree.c **** 
+  66:Drivers/lvgl/src/misc/lv_tree.c ****         _lv_tree_node_destruct(node);
+ 128              		.loc 1 66 9 is_stmt 1 view .LVU33
+ 129 0016 2046     		mov	r0, r4
+ 130 0018 FFF7F2FF 		bl	_lv_tree_node_destruct
+ 131              	.LVL8:
+ 132              	.L5:
+  67:Drivers/lvgl/src/misc/lv_tree.c ****     }
+  68:Drivers/lvgl/src/misc/lv_tree.c **** }
+ 133              		.loc 1 68 1 is_stmt 0 view .LVU34
+ 134 001c 10BD     		pop	{r4, pc}
+ 135              		.loc 1 68 1 view .LVU35
+ 136              		.cfi_endproc
+ 137              	.LFE18:
+ 139              		.section	.text.get_instance_size,"ax",%progbits
+ 140              		.align	1
+ 141              		.syntax unified
+ 142              		.thumb
+ 143              		.thumb_func
+ 145              	get_instance_size:
+ 146              	.LVL9:
+ 147              	.LFB19:
+  69:Drivers/lvgl/src/misc/lv_tree.c **** 
+  70:Drivers/lvgl/src/misc/lv_tree.c **** static uint32_t get_instance_size(const lv_tree_class_t * class_p)
+  71:Drivers/lvgl/src/misc/lv_tree.c **** {
+ 148              		.loc 1 71 1 is_stmt 1 view -0
+ 149              		.cfi_startproc
+ 150              		@ args = 0, pretend = 0, frame = 0
+ 151              		@ frame_needed = 0, uses_anonymous_args = 0
+ 152              		@ link register save eliminated.
+  72:Drivers/lvgl/src/misc/lv_tree.c ****     const lv_tree_class_t * base = class_p;
+ 153              		.loc 1 72 5 view .LVU37
+  73:Drivers/lvgl/src/misc/lv_tree.c ****     while(base && base->instance_size == 0)
+ 154              		.loc 1 73 5 view .LVU38
+ 155              		.loc 1 73 10 is_stmt 0 view .LVU39
+ 156 0000 00E0     		b	.L10
+ 157              	.LVL10:
+ 158              	.L12:
+  74:Drivers/lvgl/src/misc/lv_tree.c ****         base = base->base_class;
+ 159              		.loc 1 74 9 is_stmt 1 view .LVU40
+ARM GAS  /tmp/ccZThIHT.s 			page 5
+
+
+ 160              		.loc 1 74 14 is_stmt 0 view .LVU41
+ 161 0002 0068     		ldr	r0, [r0]
+ 162              	.LVL11:
+ 163              	.L10:
+  73:Drivers/lvgl/src/misc/lv_tree.c ****     while(base && base->instance_size == 0)
+ 164              		.loc 1 73 16 is_stmt 1 discriminator 1 view .LVU42
+ 165 0004 10B1     		cbz	r0, .L11
+  73:Drivers/lvgl/src/misc/lv_tree.c ****     while(base && base->instance_size == 0)
+ 166              		.loc 1 73 23 is_stmt 0 discriminator 2 view .LVU43
+ 167 0006 4368     		ldr	r3, [r0, #4]
+  73:Drivers/lvgl/src/misc/lv_tree.c ****     while(base && base->instance_size == 0)
+ 168              		.loc 1 73 16 discriminator 2 view .LVU44
+ 169 0008 002B     		cmp	r3, #0
+ 170 000a FAD0     		beq	.L12
+ 171              	.L11:
+  75:Drivers/lvgl/src/misc/lv_tree.c **** 
+  76:Drivers/lvgl/src/misc/lv_tree.c ****     LV_ASSERT_NULL(base);
+ 172              		.loc 1 76 25 is_stmt 1 view .LVU45
+  77:Drivers/lvgl/src/misc/lv_tree.c **** 
+  78:Drivers/lvgl/src/misc/lv_tree.c ****     return base->instance_size;
+ 173              		.loc 1 78 5 view .LVU46
+  79:Drivers/lvgl/src/misc/lv_tree.c **** }
+ 174              		.loc 1 79 1 is_stmt 0 view .LVU47
+ 175 000c 4068     		ldr	r0, [r0, #4]
+ 176              	.LVL12:
+ 177              		.loc 1 79 1 view .LVU48
+ 178 000e 7047     		bx	lr
+ 179              		.cfi_endproc
+ 180              	.LFE19:
+ 182              		.section	.text._lv_tree_class_create_node,"ax",%progbits
+ 183              		.align	1
+ 184              		.syntax unified
+ 185              		.thumb
+ 186              		.thumb_func
+ 188              	_lv_tree_class_create_node:
+ 189              	.LVL13:
+ 190              	.LFB20:
+  80:Drivers/lvgl/src/misc/lv_tree.c **** 
+  81:Drivers/lvgl/src/misc/lv_tree.c **** static lv_tree_node_t * _lv_tree_class_create_node(const lv_tree_class_t * class_p, lv_tree_node_t 
+  82:Drivers/lvgl/src/misc/lv_tree.c **** {
+ 191              		.loc 1 82 1 is_stmt 1 view -0
+ 192              		.cfi_startproc
+ 193              		@ args = 0, pretend = 0, frame = 0
+ 194              		@ frame_needed = 0, uses_anonymous_args = 0
+ 195              		.loc 1 82 1 is_stmt 0 view .LVU50
+ 196 0000 F8B5     		push	{r3, r4, r5, r6, r7, lr}
+ 197              	.LCFI2:
+ 198              		.cfi_def_cfa_offset 24
+ 199              		.cfi_offset 3, -24
+ 200              		.cfi_offset 4, -20
+ 201              		.cfi_offset 5, -16
+ 202              		.cfi_offset 6, -12
+ 203              		.cfi_offset 7, -8
+ 204              		.cfi_offset 14, -4
+ 205 0002 0746     		mov	r7, r0
+ 206 0004 0C46     		mov	r4, r1
+  83:Drivers/lvgl/src/misc/lv_tree.c ****     uint32_t s = get_instance_size(class_p);
+ARM GAS  /tmp/ccZThIHT.s 			page 6
+
+
+ 207              		.loc 1 83 5 is_stmt 1 view .LVU51
+ 208              		.loc 1 83 18 is_stmt 0 view .LVU52
+ 209 0006 FFF7FEFF 		bl	get_instance_size
+ 210              	.LVL14:
+ 211              		.loc 1 83 18 view .LVU53
+ 212 000a 0646     		mov	r6, r0
+ 213              	.LVL15:
+  84:Drivers/lvgl/src/misc/lv_tree.c ****     lv_tree_node_t * node = lv_malloc(s);
+ 214              		.loc 1 84 5 is_stmt 1 view .LVU54
+ 215              		.loc 1 84 29 is_stmt 0 view .LVU55
+ 216 000c FFF7FEFF 		bl	lv_malloc
+ 217              	.LVL16:
+  85:Drivers/lvgl/src/misc/lv_tree.c ****     if(node == NULL) return NULL;
+ 218              		.loc 1 85 5 is_stmt 1 view .LVU56
+ 219              		.loc 1 85 7 is_stmt 0 view .LVU57
+ 220 0010 0546     		mov	r5, r0
+ 221 0012 C8B1     		cbz	r0, .L13
+  86:Drivers/lvgl/src/misc/lv_tree.c ****     lv_memzero(node, s);
+ 222              		.loc 1 86 5 is_stmt 1 view .LVU58
+ 223              	.LVL17:
+ 224              	.LBB5:
+ 225              	.LBI5:
+ 226              		.file 2 "Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h"
+   1:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** /**
+   2:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @file lv_string.h
+   3:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  *
+   4:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  */
+   5:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** 
+   6:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** #ifndef LV_STRING_H
+   7:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** #define LV_STRING_H
+   8:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** 
+   9:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** #ifdef __cplusplus
+  10:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** extern "C" {
+  11:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** #endif
+  12:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** 
+  13:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** /*********************
+  14:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  *      INCLUDES
+  15:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  *********************/
+  16:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** #include "../config/lv_conf_internal.h"
+  17:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** #include "../lv_types.h"
+  18:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** 
+  19:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** /*********************
+  20:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  *      DEFINES
+  21:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  *********************/
+  22:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** 
+  23:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** /**********************
+  24:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  *      TYPEDEFS
+  25:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  **********************/
+  26:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** 
+  27:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** /**********************
+  28:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * GLOBAL PROTOTYPES
+  29:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  **********************/
+  30:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** 
+  31:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** /**
+  32:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @brief Copies a block of memory from a source address to a destination address.
+  33:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @param dst Pointer to the destination array where the content is to be copied.
+  34:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @param src Pointer to the source of data to be copied.
+ARM GAS  /tmp/ccZThIHT.s 			page 7
+
+
+  35:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @param len Number of bytes to copy.
+  36:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @return Pointer to the destination array.
+  37:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @note The function does not check for any overlapping of the source and destination memory block
+  38:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  */
+  39:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** void * lv_memcpy(void * dst, const void * src, size_t len);
+  40:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** 
+  41:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** /**
+  42:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @brief Fills a block of memory with a specified value.
+  43:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @param dst Pointer to the destination array to fill with the specified value.
+  44:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @param v Value to be set. The value is passed as an int, but the function fills
+  45:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  *          the block of memory using the unsigned char conversion of this value.
+  46:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @param len Number of bytes to be set to the value.
+  47:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  */
+  48:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** void lv_memset(void * dst, uint8_t v, size_t len);
+  49:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** 
+  50:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** /**
+  51:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @brief Move a block of memory from source to destination
+  52:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @param dst Pointer to the destination array where the content is to be copied.
+  53:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @param src Pointer to the source of data to be copied.
+  54:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @param len Number of bytes to copy
+  55:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @return Pointer to the destination array.
+  56:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  */
+  57:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** void * lv_memmove(void * dst, const void * src, size_t len);
+  58:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** 
+  59:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** /**
+  60:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @brief This function will compare two memory blocks
+  61:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @param p1 Pointer to the first memory block
+  62:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @param p2 Pointer to the second memory block
+  63:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @param len Number of bytes to compare
+  64:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @return The difference between the value of the first unmatching byte.
+  65:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  */
+  66:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** int lv_memcmp(const void * p1, const void * p2, size_t len);
+  67:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** 
+  68:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** /**
+  69:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * Same as `memset(dst, 0x00, len)`.
+  70:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @param dst pointer to the destination buffer
+  71:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @param len number of byte to set
+  72:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  */
+  73:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** static inline void lv_memzero(void * dst, size_t len)
+ 227              		.loc 2 73 20 view .LVU59
+ 228              	.LBB6:
+  74:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** {
+  75:Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****     lv_memset(dst, 0x00, len);
+ 229              		.loc 2 75 5 view .LVU60
+ 230 0014 3246     		mov	r2, r6
+ 231 0016 0021     		movs	r1, #0
+ 232 0018 FFF7FEFF 		bl	lv_memset
+ 233              	.LVL18:
+ 234              		.loc 2 75 5 is_stmt 0 view .LVU61
+ 235              	.LBE6:
+ 236              	.LBE5:
+  87:Drivers/lvgl/src/misc/lv_tree.c ****     node->class_p = class_p;
+ 237              		.loc 1 87 5 is_stmt 1 view .LVU62
+ 238              		.loc 1 87 19 is_stmt 0 view .LVU63
+ 239 001c 2F61     		str	r7, [r5, #16]
+  88:Drivers/lvgl/src/misc/lv_tree.c ****     node->parent = parent;
+ 240              		.loc 1 88 5 is_stmt 1 view .LVU64
+ARM GAS  /tmp/ccZThIHT.s 			page 8
+
+
+ 241              		.loc 1 88 18 is_stmt 0 view .LVU65
+ 242 001e 2C60     		str	r4, [r5]
+  89:Drivers/lvgl/src/misc/lv_tree.c ****     node->child_cap = INIT_CHILDREN_CAP;
+ 243              		.loc 1 89 5 is_stmt 1 view .LVU66
+ 244              		.loc 1 89 21 is_stmt 0 view .LVU67
+ 245 0020 0423     		movs	r3, #4
+ 246 0022 EB60     		str	r3, [r5, #12]
+  90:Drivers/lvgl/src/misc/lv_tree.c ****     node->children = lv_malloc(sizeof(lv_tree_node_t *) * node->child_cap);
+ 247              		.loc 1 90 5 is_stmt 1 view .LVU68
+ 248              		.loc 1 90 22 is_stmt 0 view .LVU69
+ 249 0024 1020     		movs	r0, #16
+ 250 0026 FFF7FEFF 		bl	lv_malloc
+ 251              	.LVL19:
+ 252              		.loc 1 90 20 discriminator 1 view .LVU70
+ 253 002a 6860     		str	r0, [r5, #4]
+  91:Drivers/lvgl/src/misc/lv_tree.c ****     if(parent != NULL) {
+ 254              		.loc 1 91 5 is_stmt 1 view .LVU71
+ 255              		.loc 1 91 7 is_stmt 0 view .LVU72
+ 256 002c 64B1     		cbz	r4, .L13
+  92:Drivers/lvgl/src/misc/lv_tree.c ****         parent->child_cnt++;
+ 257              		.loc 1 92 9 is_stmt 1 view .LVU73
+ 258              		.loc 1 92 15 is_stmt 0 view .LVU74
+ 259 002e A368     		ldr	r3, [r4, #8]
+ 260              		.loc 1 92 26 view .LVU75
+ 261 0030 0133     		adds	r3, r3, #1
+ 262 0032 A360     		str	r3, [r4, #8]
+  93:Drivers/lvgl/src/misc/lv_tree.c ****         if(parent->child_cnt == parent->child_cap) {
+ 263              		.loc 1 93 9 is_stmt 1 view .LVU76
+ 264              		.loc 1 93 39 is_stmt 0 view .LVU77
+ 265 0034 E168     		ldr	r1, [r4, #12]
+ 266              		.loc 1 93 11 view .LVU78
+ 267 0036 8B42     		cmp	r3, r1
+ 268 0038 08D0     		beq	.L17
+ 269              	.L15:
+  94:Drivers/lvgl/src/misc/lv_tree.c ****             parent->child_cap <<= 1;
+  95:Drivers/lvgl/src/misc/lv_tree.c ****             parent->children = lv_realloc(parent->children, sizeof(lv_tree_node_t *) * parent->chil
+  96:Drivers/lvgl/src/misc/lv_tree.c ****         }
+  97:Drivers/lvgl/src/misc/lv_tree.c ****         parent->children[parent->child_cnt - 1] = node;
+ 270              		.loc 1 97 9 is_stmt 1 view .LVU79
+ 271              		.loc 1 97 15 is_stmt 0 view .LVU80
+ 272 003a 6268     		ldr	r2, [r4, #4]
+ 273              		.loc 1 97 32 view .LVU81
+ 274 003c A368     		ldr	r3, [r4, #8]
+ 275              		.loc 1 97 44 view .LVU82
+ 276 003e 03F18043 		add	r3, r3, #1073741824
+ 277 0042 013B     		subs	r3, r3, #1
+ 278              		.loc 1 97 49 view .LVU83
+ 279 0044 42F82350 		str	r5, [r2, r3, lsl #2]
+ 280              	.L13:
+  98:Drivers/lvgl/src/misc/lv_tree.c ****     }
+  99:Drivers/lvgl/src/misc/lv_tree.c ****     return node;
+ 100:Drivers/lvgl/src/misc/lv_tree.c **** }
+ 281              		.loc 1 100 1 view .LVU84
+ 282 0048 2846     		mov	r0, r5
+ 283 004a F8BD     		pop	{r3, r4, r5, r6, r7, pc}
+ 284              	.LVL20:
+ 285              	.L17:
+ARM GAS  /tmp/ccZThIHT.s 			page 9
+
+
+  94:Drivers/lvgl/src/misc/lv_tree.c ****             parent->child_cap <<= 1;
+ 286              		.loc 1 94 13 is_stmt 1 view .LVU85
+  94:Drivers/lvgl/src/misc/lv_tree.c ****             parent->child_cap <<= 1;
+ 287              		.loc 1 94 31 is_stmt 0 view .LVU86
+ 288 004c 4B00     		lsls	r3, r1, #1
+ 289 004e E360     		str	r3, [r4, #12]
+  95:Drivers/lvgl/src/misc/lv_tree.c ****         }
+ 290              		.loc 1 95 13 is_stmt 1 view .LVU87
+  95:Drivers/lvgl/src/misc/lv_tree.c ****         }
+ 291              		.loc 1 95 32 is_stmt 0 view .LVU88
+ 292 0050 C900     		lsls	r1, r1, #3
+ 293 0052 6068     		ldr	r0, [r4, #4]
+ 294 0054 FFF7FEFF 		bl	lv_realloc
+ 295              	.LVL21:
+  95:Drivers/lvgl/src/misc/lv_tree.c ****         }
+ 296              		.loc 1 95 30 discriminator 1 view .LVU89
+ 297 0058 6060     		str	r0, [r4, #4]
+ 298 005a EEE7     		b	.L15
+ 299              		.cfi_endproc
+ 300              	.LFE20:
+ 302              		.section	.text._lv_tree_node_destructor_cb,"ax",%progbits
+ 303              		.align	1
+ 304              		.syntax unified
+ 305              		.thumb
+ 306              		.thumb_func
+ 308              	_lv_tree_node_destructor_cb:
+ 309              	.LVL22:
+ 310              	.LFB22:
+ 101:Drivers/lvgl/src/misc/lv_tree.c **** 
+ 102:Drivers/lvgl/src/misc/lv_tree.c **** lv_tree_node_t * lv_tree_node_create(const lv_tree_class_t * class_p, lv_tree_node_t * parent)
+ 103:Drivers/lvgl/src/misc/lv_tree.c **** {
+ 104:Drivers/lvgl/src/misc/lv_tree.c ****     LV_ASSERT_NULL(class_p);
+ 105:Drivers/lvgl/src/misc/lv_tree.c ****     lv_tree_node_t * node = _lv_tree_class_create_node(class_p, parent);
+ 106:Drivers/lvgl/src/misc/lv_tree.c ****     LV_ASSERT_NULL(node);
+ 107:Drivers/lvgl/src/misc/lv_tree.c ****     _lv_tree_node_construct(node->class_p, node);
+ 108:Drivers/lvgl/src/misc/lv_tree.c ****     return node;
+ 109:Drivers/lvgl/src/misc/lv_tree.c **** }
+ 110:Drivers/lvgl/src/misc/lv_tree.c **** 
+ 111:Drivers/lvgl/src/misc/lv_tree.c **** static bool _lv_tree_node_destructor_cb(const lv_tree_node_t * n, void * user_data)
+ 112:Drivers/lvgl/src/misc/lv_tree.c **** {
+ 311              		.loc 1 112 1 is_stmt 1 view -0
+ 312              		.cfi_startproc
+ 313              		@ args = 0, pretend = 0, frame = 0
+ 314              		@ frame_needed = 0, uses_anonymous_args = 0
+ 113:Drivers/lvgl/src/misc/lv_tree.c ****     LV_UNUSED(user_data);
+ 315              		.loc 1 113 5 view .LVU91
+ 114:Drivers/lvgl/src/misc/lv_tree.c ****     if(n) {
+ 316              		.loc 1 114 5 view .LVU92
+ 317              		.loc 1 114 7 is_stmt 0 view .LVU93
+ 318 0000 58B1     		cbz	r0, .L21
+ 112:Drivers/lvgl/src/misc/lv_tree.c ****     LV_UNUSED(user_data);
+ 319              		.loc 1 112 1 view .LVU94
+ 320 0002 10B5     		push	{r4, lr}
+ 321              	.LCFI3:
+ 322              		.cfi_def_cfa_offset 8
+ 323              		.cfi_offset 4, -8
+ 324              		.cfi_offset 14, -4
+ARM GAS  /tmp/ccZThIHT.s 			page 10
+
+
+ 325 0004 0446     		mov	r4, r0
+ 326              	.LBB7:
+ 115:Drivers/lvgl/src/misc/lv_tree.c ****         lv_tree_node_t * node = (lv_tree_node_t *)n;
+ 327              		.loc 1 115 9 is_stmt 1 view .LVU95
+ 328              	.LVL23:
+ 116:Drivers/lvgl/src/misc/lv_tree.c ****         _lv_tree_node_destruct(node);
+ 329              		.loc 1 116 9 view .LVU96
+ 330 0006 FFF7FEFF 		bl	_lv_tree_node_destruct
+ 331              	.LVL24:
+ 117:Drivers/lvgl/src/misc/lv_tree.c ****         lv_free(node->children);
+ 332              		.loc 1 117 9 view .LVU97
+ 333 000a 6068     		ldr	r0, [r4, #4]
+ 334 000c FFF7FEFF 		bl	lv_free
+ 335              	.LVL25:
+ 118:Drivers/lvgl/src/misc/lv_tree.c ****         lv_free(node);
+ 336              		.loc 1 118 9 view .LVU98
+ 337 0010 2046     		mov	r0, r4
+ 338 0012 FFF7FEFF 		bl	lv_free
+ 339              	.LVL26:
+ 340              	.LBE7:
+ 119:Drivers/lvgl/src/misc/lv_tree.c ****     }
+ 120:Drivers/lvgl/src/misc/lv_tree.c ****     return true;
+ 341              		.loc 1 120 5 view .LVU99
+ 121:Drivers/lvgl/src/misc/lv_tree.c **** }
+ 342              		.loc 1 121 1 is_stmt 0 view .LVU100
+ 343 0016 0120     		movs	r0, #1
+ 344 0018 10BD     		pop	{r4, pc}
+ 345              	.LVL27:
+ 346              	.L21:
+ 347              	.LCFI4:
+ 348              		.cfi_def_cfa_offset 0
+ 349              		.cfi_restore 4
+ 350              		.cfi_restore 14
+ 120:Drivers/lvgl/src/misc/lv_tree.c **** }
+ 351              		.loc 1 120 5 is_stmt 1 view .LVU101
+ 352              		.loc 1 121 1 is_stmt 0 view .LVU102
+ 353 001a 0120     		movs	r0, #1
+ 354              	.LVL28:
+ 355              		.loc 1 121 1 view .LVU103
+ 356 001c 7047     		bx	lr
+ 357              		.cfi_endproc
+ 358              	.LFE22:
+ 360              		.section	.text.lv_tree_node_create,"ax",%progbits
+ 361              		.align	1
+ 362              		.global	lv_tree_node_create
+ 363              		.syntax unified
+ 364              		.thumb
+ 365              		.thumb_func
+ 367              	lv_tree_node_create:
+ 368              	.LVL29:
+ 369              	.LFB21:
+ 103:Drivers/lvgl/src/misc/lv_tree.c ****     LV_ASSERT_NULL(class_p);
+ 370              		.loc 1 103 1 is_stmt 1 view -0
+ 371              		.cfi_startproc
+ 372              		@ args = 0, pretend = 0, frame = 0
+ 373              		@ frame_needed = 0, uses_anonymous_args = 0
+ 103:Drivers/lvgl/src/misc/lv_tree.c ****     LV_ASSERT_NULL(class_p);
+ARM GAS  /tmp/ccZThIHT.s 			page 11
+
+
+ 374              		.loc 1 103 1 is_stmt 0 view .LVU105
+ 375 0000 10B5     		push	{r4, lr}
+ 376              	.LCFI5:
+ 377              		.cfi_def_cfa_offset 8
+ 378              		.cfi_offset 4, -8
+ 379              		.cfi_offset 14, -4
+ 104:Drivers/lvgl/src/misc/lv_tree.c ****     lv_tree_node_t * node = _lv_tree_class_create_node(class_p, parent);
+ 380              		.loc 1 104 28 is_stmt 1 view .LVU106
+ 105:Drivers/lvgl/src/misc/lv_tree.c ****     LV_ASSERT_NULL(node);
+ 381              		.loc 1 105 5 view .LVU107
+ 105:Drivers/lvgl/src/misc/lv_tree.c ****     LV_ASSERT_NULL(node);
+ 382              		.loc 1 105 29 is_stmt 0 view .LVU108
+ 383 0002 FFF7FEFF 		bl	_lv_tree_class_create_node
+ 384              	.LVL30:
+ 105:Drivers/lvgl/src/misc/lv_tree.c ****     LV_ASSERT_NULL(node);
+ 385              		.loc 1 105 29 view .LVU109
+ 386 0006 0446     		mov	r4, r0
+ 387              	.LVL31:
+ 106:Drivers/lvgl/src/misc/lv_tree.c ****     _lv_tree_node_construct(node->class_p, node);
+ 388              		.loc 1 106 25 is_stmt 1 view .LVU110
+ 107:Drivers/lvgl/src/misc/lv_tree.c ****     return node;
+ 389              		.loc 1 107 5 view .LVU111
+ 390 0008 0146     		mov	r1, r0
+ 391 000a 0069     		ldr	r0, [r0, #16]
+ 392              	.LVL32:
+ 107:Drivers/lvgl/src/misc/lv_tree.c ****     return node;
+ 393              		.loc 1 107 5 is_stmt 0 view .LVU112
+ 394 000c FFF7FEFF 		bl	_lv_tree_node_construct
+ 395              	.LVL33:
+ 108:Drivers/lvgl/src/misc/lv_tree.c **** }
+ 396              		.loc 1 108 5 is_stmt 1 view .LVU113
+ 109:Drivers/lvgl/src/misc/lv_tree.c **** 
+ 397              		.loc 1 109 1 is_stmt 0 view .LVU114
+ 398 0010 2046     		mov	r0, r4
+ 399 0012 10BD     		pop	{r4, pc}
+ 109:Drivers/lvgl/src/misc/lv_tree.c **** 
+ 400              		.loc 1 109 1 view .LVU115
+ 401              		.cfi_endproc
+ 402              	.LFE21:
+ 404              		.section	.text.lv_tree_walk,"ax",%progbits
+ 405              		.align	1
+ 406              		.global	lv_tree_walk
+ 407              		.syntax unified
+ 408              		.thumb
+ 409              		.thumb_func
+ 411              	lv_tree_walk:
+ 412              	.LVL34:
+ 413              	.LFB24:
+ 122:Drivers/lvgl/src/misc/lv_tree.c **** 
+ 123:Drivers/lvgl/src/misc/lv_tree.c **** void lv_tree_node_delete(lv_tree_node_t * node)
+ 124:Drivers/lvgl/src/misc/lv_tree.c **** {
+ 125:Drivers/lvgl/src/misc/lv_tree.c ****     if(node) {
+ 126:Drivers/lvgl/src/misc/lv_tree.c ****         if(node->parent) {
+ 127:Drivers/lvgl/src/misc/lv_tree.c ****             /* Remove from parent */
+ 128:Drivers/lvgl/src/misc/lv_tree.c ****             lv_tree_node_t * parent = node->parent;
+ 129:Drivers/lvgl/src/misc/lv_tree.c ****             for(uint32_t i = 0; i < parent->child_cnt; i++) {
+ 130:Drivers/lvgl/src/misc/lv_tree.c ****                 if(parent->children[i] == node) {
+ARM GAS  /tmp/ccZThIHT.s 			page 12
+
+
+ 131:Drivers/lvgl/src/misc/lv_tree.c ****                     parent->children[i] = NULL;
+ 132:Drivers/lvgl/src/misc/lv_tree.c ****                 }
+ 133:Drivers/lvgl/src/misc/lv_tree.c ****             }
+ 134:Drivers/lvgl/src/misc/lv_tree.c ****         }
+ 135:Drivers/lvgl/src/misc/lv_tree.c ****         lv_tree_walk(node, LV_TREE_WALK_POST_ORDER, _lv_tree_node_destructor_cb, NULL, NULL, NULL);
+ 136:Drivers/lvgl/src/misc/lv_tree.c ****     }
+ 137:Drivers/lvgl/src/misc/lv_tree.c **** }
+ 138:Drivers/lvgl/src/misc/lv_tree.c **** 
+ 139:Drivers/lvgl/src/misc/lv_tree.c **** bool lv_tree_walk(const lv_tree_node_t * node,
+ 140:Drivers/lvgl/src/misc/lv_tree.c ****                   lv_tree_walk_mode_t mode,
+ 141:Drivers/lvgl/src/misc/lv_tree.c ****                   lv_tree_traverse_cb_t cb,
+ 142:Drivers/lvgl/src/misc/lv_tree.c ****                   lv_tree_before_cb_t bcb,
+ 143:Drivers/lvgl/src/misc/lv_tree.c ****                   lv_tree_after_cb_t acb,
+ 144:Drivers/lvgl/src/misc/lv_tree.c ****                   void * user_data)
+ 145:Drivers/lvgl/src/misc/lv_tree.c **** {
+ 414              		.loc 1 145 1 is_stmt 1 view -0
+ 415              		.cfi_startproc
+ 416              		@ args = 8, pretend = 0, frame = 0
+ 417              		@ frame_needed = 0, uses_anonymous_args = 0
+ 418              		.loc 1 145 1 is_stmt 0 view .LVU117
+ 419 0000 2DE9F043 		push	{r4, r5, r6, r7, r8, r9, lr}
+ 420              	.LCFI6:
+ 421              		.cfi_def_cfa_offset 28
+ 422              		.cfi_offset 4, -28
+ 423              		.cfi_offset 5, -24
+ 424              		.cfi_offset 6, -20
+ 425              		.cfi_offset 7, -16
+ 426              		.cfi_offset 8, -12
+ 427              		.cfi_offset 9, -8
+ 428              		.cfi_offset 14, -4
+ 429 0004 83B0     		sub	sp, sp, #12
+ 430              	.LCFI7:
+ 431              		.cfi_def_cfa_offset 40
+ 146:Drivers/lvgl/src/misc/lv_tree.c ****     if(node && cb) {
+ 432              		.loc 1 146 5 is_stmt 1 view .LVU118
+ 433              		.loc 1 146 7 is_stmt 0 view .LVU119
+ 434 0006 0028     		cmp	r0, #0
+ 435 0008 42D0     		beq	.L27
+ 436 000a 0E46     		mov	r6, r1
+ 437 000c 1746     		mov	r7, r2
+ 438 000e 9946     		mov	r9, r3
+ 439 0010 0546     		mov	r5, r0
+ 440              		.loc 1 146 13 discriminator 1 view .LVU120
+ 441 0012 002A     		cmp	r2, #0
+ 442 0014 3CD0     		beq	.L27
+ 147:Drivers/lvgl/src/misc/lv_tree.c ****         if(mode == LV_TREE_WALK_PRE_ORDER) {
+ 443              		.loc 1 147 9 is_stmt 1 view .LVU121
+ 444              		.loc 1 147 11 is_stmt 0 view .LVU122
+ 445 0016 59B9     		cbnz	r1, .L28
+ 148:Drivers/lvgl/src/misc/lv_tree.c ****             if(bcb && !bcb(node, user_data)) {
+ 446              		.loc 1 148 13 is_stmt 1 view .LVU123
+ 447              		.loc 1 148 15 is_stmt 0 view .LVU124
+ 448 0018 23B1     		cbz	r3, .L29
+ 449              		.loc 1 148 24 discriminator 1 view .LVU125
+ 450 001a 0B99     		ldr	r1, [sp, #44]
+ 451              	.LVL35:
+ 452              		.loc 1 148 24 discriminator 1 view .LVU126
+ARM GAS  /tmp/ccZThIHT.s 			page 13
+
+
+ 453 001c 9847     		blx	r3
+ 454              	.LVL36:
+ 455              		.loc 1 148 20 discriminator 2 view .LVU127
+ 456 001e 8046     		mov	r8, r0
+ 457 0020 0028     		cmp	r0, #0
+ 458 0022 37D0     		beq	.L30
+ 459              	.L29:
+ 149:Drivers/lvgl/src/misc/lv_tree.c ****                 return false;
+ 150:Drivers/lvgl/src/misc/lv_tree.c ****             }
+ 151:Drivers/lvgl/src/misc/lv_tree.c ****             if(!cb(node, user_data)) {
+ 460              		.loc 1 151 13 is_stmt 1 view .LVU128
+ 461              		.loc 1 151 17 is_stmt 0 view .LVU129
+ 462 0024 0B99     		ldr	r1, [sp, #44]
+ 463 0026 2846     		mov	r0, r5
+ 464 0028 B847     		blx	r7
+ 465              	.LVL37:
+ 466              		.loc 1 151 15 discriminator 1 view .LVU130
+ 467 002a 8046     		mov	r8, r0
+ 468 002c 0028     		cmp	r0, #0
+ 469 002e 31D0     		beq	.L30
+ 470              	.L28:
+ 152:Drivers/lvgl/src/misc/lv_tree.c ****                 return false;
+ 153:Drivers/lvgl/src/misc/lv_tree.c ****             }
+ 154:Drivers/lvgl/src/misc/lv_tree.c ****         }
+ 155:Drivers/lvgl/src/misc/lv_tree.c ****         for(uint32_t i = 0; i < node->child_cnt; i++) {
+ 471              		.loc 1 155 9 is_stmt 1 view .LVU131
+ 472              	.LBB8:
+ 473              		.loc 1 155 13 view .LVU132
+ 474              	.LVL38:
+ 475              		.loc 1 155 22 is_stmt 0 view .LVU133
+ 476 0030 0024     		movs	r4, #0
+ 477              		.loc 1 155 9 view .LVU134
+ 478 0032 00E0     		b	.L31
+ 479              	.LVL39:
+ 480              	.L39:
+ 481              		.loc 1 155 51 is_stmt 1 discriminator 1 view .LVU135
+ 482 0034 0134     		adds	r4, r4, #1
+ 483              	.LVL40:
+ 484              	.L31:
+ 485              		.loc 1 155 31 discriminator 2 view .LVU136
+ 486              		.loc 1 155 37 is_stmt 0 discriminator 2 view .LVU137
+ 487 0036 AA68     		ldr	r2, [r5, #8]
+ 488              		.loc 1 155 31 discriminator 2 view .LVU138
+ 489 0038 A242     		cmp	r2, r4
+ 490 003a 0FD9     		bls	.L38
+ 156:Drivers/lvgl/src/misc/lv_tree.c ****             if(!lv_tree_walk(node->children[i], mode, cb, bcb, acb, user_data)) {
+ 491              		.loc 1 156 13 is_stmt 1 view .LVU139
+ 492              		.loc 1 156 34 is_stmt 0 view .LVU140
+ 493 003c 6B68     		ldr	r3, [r5, #4]
+ 494              		.loc 1 156 17 view .LVU141
+ 495 003e 53F82400 		ldr	r0, [r3, r4, lsl #2]
+ 496 0042 0B9B     		ldr	r3, [sp, #44]
+ 497 0044 0193     		str	r3, [sp, #4]
+ 498 0046 0A9B     		ldr	r3, [sp, #40]
+ 499 0048 0093     		str	r3, [sp]
+ 500 004a 4B46     		mov	r3, r9
+ 501 004c 3A46     		mov	r2, r7
+ARM GAS  /tmp/ccZThIHT.s 			page 14
+
+
+ 502 004e 3146     		mov	r1, r6
+ 503 0050 FFF7FEFF 		bl	lv_tree_walk
+ 504              	.LVL41:
+ 505              		.loc 1 156 15 discriminator 1 view .LVU142
+ 506 0054 8046     		mov	r8, r0
+ 507 0056 0028     		cmp	r0, #0
+ 508 0058 ECD1     		bne	.L39
+ 509 005a 1BE0     		b	.L30
+ 510              	.L38:
+ 511              		.loc 1 156 15 discriminator 1 view .LVU143
+ 512              	.LBE8:
+ 157:Drivers/lvgl/src/misc/lv_tree.c ****                 return false;
+ 158:Drivers/lvgl/src/misc/lv_tree.c ****             }
+ 159:Drivers/lvgl/src/misc/lv_tree.c ****         }
+ 160:Drivers/lvgl/src/misc/lv_tree.c ****         if(mode == LV_TREE_WALK_PRE_ORDER) {
+ 513              		.loc 1 160 9 is_stmt 1 view .LVU144
+ 514              		.loc 1 160 11 is_stmt 0 view .LVU145
+ 515 005c 26B9     		cbnz	r6, .L33
+ 161:Drivers/lvgl/src/misc/lv_tree.c ****             if(acb) {
+ 516              		.loc 1 161 13 is_stmt 1 view .LVU146
+ 517              		.loc 1 161 15 is_stmt 0 view .LVU147
+ 518 005e 0A9B     		ldr	r3, [sp, #40]
+ 519 0060 13B1     		cbz	r3, .L33
+ 162:Drivers/lvgl/src/misc/lv_tree.c ****                 acb(node, user_data);
+ 520              		.loc 1 162 17 is_stmt 1 view .LVU148
+ 521 0062 0B99     		ldr	r1, [sp, #44]
+ 522 0064 2846     		mov	r0, r5
+ 523 0066 9847     		blx	r3
+ 524              	.LVL42:
+ 525              	.L33:
+ 163:Drivers/lvgl/src/misc/lv_tree.c ****             }
+ 164:Drivers/lvgl/src/misc/lv_tree.c ****         }
+ 165:Drivers/lvgl/src/misc/lv_tree.c **** 
+ 166:Drivers/lvgl/src/misc/lv_tree.c ****         if(mode == LV_TREE_WALK_POST_ORDER) {
+ 526              		.loc 1 166 9 view .LVU149
+ 527              		.loc 1 166 11 is_stmt 0 view .LVU150
+ 528 0068 012E     		cmp	r6, #1
+ 529 006a 11D1     		bne	.L27
+ 167:Drivers/lvgl/src/misc/lv_tree.c ****             if(bcb && !bcb(node, user_data)) {
+ 530              		.loc 1 167 13 is_stmt 1 view .LVU151
+ 531              		.loc 1 167 15 is_stmt 0 view .LVU152
+ 532 006c 4B46     		mov	r3, r9
+ 533 006e 23B1     		cbz	r3, .L34
+ 534              	.LVL43:
+ 535              		.loc 1 167 24 discriminator 1 view .LVU153
+ 536 0070 0B99     		ldr	r1, [sp, #44]
+ 537 0072 2846     		mov	r0, r5
+ 538 0074 C847     		blx	r9
+ 539              	.LVL44:
+ 540              		.loc 1 167 20 discriminator 2 view .LVU154
+ 541 0076 8046     		mov	r8, r0
+ 542 0078 60B1     		cbz	r0, .L30
+ 543              	.L34:
+ 168:Drivers/lvgl/src/misc/lv_tree.c ****                 return false;
+ 169:Drivers/lvgl/src/misc/lv_tree.c ****             }
+ 170:Drivers/lvgl/src/misc/lv_tree.c ****             if(!cb(node, user_data)) {
+ 544              		.loc 1 170 13 is_stmt 1 view .LVU155
+ARM GAS  /tmp/ccZThIHT.s 			page 15
+
+
+ 545              		.loc 1 170 17 is_stmt 0 view .LVU156
+ 546 007a 0B99     		ldr	r1, [sp, #44]
+ 547 007c 2846     		mov	r0, r5
+ 548 007e B847     		blx	r7
+ 549              	.LVL45:
+ 550              		.loc 1 170 15 discriminator 1 view .LVU157
+ 551 0080 8046     		mov	r8, r0
+ 552 0082 38B1     		cbz	r0, .L30
+ 171:Drivers/lvgl/src/misc/lv_tree.c ****                 return false;
+ 172:Drivers/lvgl/src/misc/lv_tree.c ****             }
+ 173:Drivers/lvgl/src/misc/lv_tree.c ****             if(acb) {
+ 553              		.loc 1 173 13 is_stmt 1 view .LVU158
+ 554              		.loc 1 173 15 is_stmt 0 view .LVU159
+ 555 0084 0A9B     		ldr	r3, [sp, #40]
+ 556 0086 2BB1     		cbz	r3, .L30
+ 174:Drivers/lvgl/src/misc/lv_tree.c ****                 acb(node, user_data);
+ 557              		.loc 1 174 17 is_stmt 1 view .LVU160
+ 558 0088 0B99     		ldr	r1, [sp, #44]
+ 559 008a 2846     		mov	r0, r5
+ 560 008c 9847     		blx	r3
+ 561              	.LVL46:
+ 562 008e 01E0     		b	.L30
+ 563              	.LVL47:
+ 564              	.L27:
+ 175:Drivers/lvgl/src/misc/lv_tree.c ****             }
+ 176:Drivers/lvgl/src/misc/lv_tree.c ****             return true;
+ 177:Drivers/lvgl/src/misc/lv_tree.c ****         }
+ 178:Drivers/lvgl/src/misc/lv_tree.c ****         else {
+ 179:Drivers/lvgl/src/misc/lv_tree.c ****             return true;
+ 565              		.loc 1 179 20 is_stmt 0 view .LVU161
+ 566 0090 0123     		movs	r3, #1
+ 567 0092 9846     		mov	r8, r3
+ 568              	.L30:
+ 180:Drivers/lvgl/src/misc/lv_tree.c ****         }
+ 181:Drivers/lvgl/src/misc/lv_tree.c ****     }
+ 182:Drivers/lvgl/src/misc/lv_tree.c ****     else {
+ 183:Drivers/lvgl/src/misc/lv_tree.c ****         return true;
+ 184:Drivers/lvgl/src/misc/lv_tree.c ****     }
+ 185:Drivers/lvgl/src/misc/lv_tree.c **** }
+ 569              		.loc 1 185 1 view .LVU162
+ 570 0094 4046     		mov	r0, r8
+ 571 0096 03B0     		add	sp, sp, #12
+ 572              	.LCFI8:
+ 573              		.cfi_def_cfa_offset 28
+ 574              		@ sp needed
+ 575 0098 BDE8F083 		pop	{r4, r5, r6, r7, r8, r9, pc}
+ 576              		.loc 1 185 1 view .LVU163
+ 577              		.cfi_endproc
+ 578              	.LFE24:
+ 580              		.section	.text.lv_tree_node_delete,"ax",%progbits
+ 581              		.align	1
+ 582              		.global	lv_tree_node_delete
+ 583              		.syntax unified
+ 584              		.thumb
+ 585              		.thumb_func
+ 587              	lv_tree_node_delete:
+ 588              	.LVL48:
+ARM GAS  /tmp/ccZThIHT.s 			page 16
+
+
+ 589              	.LFB23:
+ 124:Drivers/lvgl/src/misc/lv_tree.c ****     if(node) {
+ 590              		.loc 1 124 1 is_stmt 1 view -0
+ 591              		.cfi_startproc
+ 592              		@ args = 0, pretend = 0, frame = 0
+ 593              		@ frame_needed = 0, uses_anonymous_args = 0
+ 125:Drivers/lvgl/src/misc/lv_tree.c ****         if(node->parent) {
+ 594              		.loc 1 125 5 view .LVU165
+ 125:Drivers/lvgl/src/misc/lv_tree.c ****         if(node->parent) {
+ 595              		.loc 1 125 7 is_stmt 0 view .LVU166
+ 596 0000 E8B1     		cbz	r0, .L48
+ 124:Drivers/lvgl/src/misc/lv_tree.c ****     if(node) {
+ 597              		.loc 1 124 1 view .LVU167
+ 598 0002 00B5     		push	{lr}
+ 599              	.LCFI9:
+ 600              		.cfi_def_cfa_offset 4
+ 601              		.cfi_offset 14, -4
+ 602 0004 83B0     		sub	sp, sp, #12
+ 603              	.LCFI10:
+ 604              		.cfi_def_cfa_offset 16
+ 605 0006 8446     		mov	ip, r0
+ 126:Drivers/lvgl/src/misc/lv_tree.c ****             /* Remove from parent */
+ 606              		.loc 1 126 9 is_stmt 1 view .LVU168
+ 126:Drivers/lvgl/src/misc/lv_tree.c ****             /* Remove from parent */
+ 607              		.loc 1 126 16 is_stmt 0 view .LVU169
+ 608 0008 0268     		ldr	r2, [r0]
+ 126:Drivers/lvgl/src/misc/lv_tree.c ****             /* Remove from parent */
+ 609              		.loc 1 126 11 view .LVU170
+ 610 000a 72B1     		cbz	r2, .L43
+ 611              	.LBB9:
+ 612              	.LBB10:
+ 129:Drivers/lvgl/src/misc/lv_tree.c ****                 if(parent->children[i] == node) {
+ 613              		.loc 1 129 26 view .LVU171
+ 614 000c 0023     		movs	r3, #0
+ 615 000e 00E0     		b	.L42
+ 616              	.LVL49:
+ 617              	.L44:
+ 129:Drivers/lvgl/src/misc/lv_tree.c ****                 if(parent->children[i] == node) {
+ 618              		.loc 1 129 57 is_stmt 1 discriminator 1 view .LVU172
+ 619 0010 0133     		adds	r3, r3, #1
+ 620              	.LVL50:
+ 621              	.L42:
+ 129:Drivers/lvgl/src/misc/lv_tree.c ****                 if(parent->children[i] == node) {
+ 622              		.loc 1 129 35 discriminator 2 view .LVU173
+ 129:Drivers/lvgl/src/misc/lv_tree.c ****                 if(parent->children[i] == node) {
+ 623              		.loc 1 129 43 is_stmt 0 discriminator 2 view .LVU174
+ 624 0012 9168     		ldr	r1, [r2, #8]
+ 129:Drivers/lvgl/src/misc/lv_tree.c ****                 if(parent->children[i] == node) {
+ 625              		.loc 1 129 35 discriminator 2 view .LVU175
+ 626 0014 9942     		cmp	r1, r3
+ 627 0016 08D9     		bls	.L43
+ 130:Drivers/lvgl/src/misc/lv_tree.c ****                     parent->children[i] = NULL;
+ 628              		.loc 1 130 17 is_stmt 1 view .LVU176
+ 130:Drivers/lvgl/src/misc/lv_tree.c ****                     parent->children[i] = NULL;
+ 629              		.loc 1 130 26 is_stmt 0 view .LVU177
+ 630 0018 5168     		ldr	r1, [r2, #4]
+ 130:Drivers/lvgl/src/misc/lv_tree.c ****                     parent->children[i] = NULL;
+ARM GAS  /tmp/ccZThIHT.s 			page 17
+
+
+ 631              		.loc 1 130 19 view .LVU178
+ 632 001a 51F82300 		ldr	r0, [r1, r3, lsl #2]
+ 633 001e 6045     		cmp	r0, ip
+ 634 0020 F6D1     		bne	.L44
+ 131:Drivers/lvgl/src/misc/lv_tree.c ****                 }
+ 635              		.loc 1 131 21 is_stmt 1 view .LVU179
+ 131:Drivers/lvgl/src/misc/lv_tree.c ****                 }
+ 636              		.loc 1 131 41 is_stmt 0 view .LVU180
+ 637 0022 0020     		movs	r0, #0
+ 638 0024 41F82300 		str	r0, [r1, r3, lsl #2]
+ 639 0028 F2E7     		b	.L44
+ 640              	.LVL51:
+ 641              	.L43:
+ 131:Drivers/lvgl/src/misc/lv_tree.c ****                 }
+ 642              		.loc 1 131 41 view .LVU181
+ 643              	.LBE10:
+ 644              	.LBE9:
+ 135:Drivers/lvgl/src/misc/lv_tree.c ****     }
+ 645              		.loc 1 135 9 is_stmt 1 view .LVU182
+ 646 002a 0023     		movs	r3, #0
+ 647 002c 0193     		str	r3, [sp, #4]
+ 648 002e 0093     		str	r3, [sp]
+ 649 0030 034A     		ldr	r2, .L51
+ 650 0032 0121     		movs	r1, #1
+ 651 0034 6046     		mov	r0, ip
+ 652 0036 FFF7FEFF 		bl	lv_tree_walk
+ 653              	.LVL52:
+ 137:Drivers/lvgl/src/misc/lv_tree.c **** 
+ 654              		.loc 1 137 1 is_stmt 0 view .LVU183
+ 655 003a 03B0     		add	sp, sp, #12
+ 656              	.LCFI11:
+ 657              		.cfi_def_cfa_offset 4
+ 658              		@ sp needed
+ 659 003c 00BD     		pop	{pc}
+ 660              	.LVL53:
+ 661              	.L48:
+ 662              	.LCFI12:
+ 663              		.cfi_def_cfa_offset 0
+ 664              		.cfi_restore 14
+ 137:Drivers/lvgl/src/misc/lv_tree.c **** 
+ 665              		.loc 1 137 1 view .LVU184
+ 666 003e 7047     		bx	lr
+ 667              	.L52:
+ 668              		.align	2
+ 669              	.L51:
+ 670 0040 00000000 		.word	_lv_tree_node_destructor_cb
+ 671              		.cfi_endproc
+ 672              	.LFE23:
+ 674              		.global	lv_tree_node_class
+ 675              		.section	.rodata.lv_tree_node_class,"a"
+ 676              		.align	2
+ 679              	lv_tree_node_class:
+ 680 0000 00000000 		.word	0
+ 681 0004 14000000 		.word	20
+ 682 0008 00000000 		.word	0
+ 683 000c 00000000 		.word	0
+ 684              		.text
+ARM GAS  /tmp/ccZThIHT.s 			page 18
+
+
+ 685              	.Letext0:
+ 686              		.file 3 "/usr/arm-none-eabi/include/machine/_default_types.h"
+ 687              		.file 4 "/usr/arm-none-eabi/include/sys/_stdint.h"
+ 688              		.file 5 "/usr/lib/gcc/arm-none-eabi/16.2.0/include/stddef.h"
+ 689              		.file 6 "Drivers/lvgl/src/misc/../../include/lvgl/core/../lv_types.h"
+ 690              		.file 7 "Drivers/lvgl/src/misc/lv_tree.h"
+ 691              		.file 8 "Drivers/lvgl/src/misc/../../include/lvgl/core/../indev/lv_indev.h"
+ 692              		.file 9 "Drivers/lvgl/src/misc/../../include/lvgl/widgets/lv_bar.h"
+ 693              		.file 10 "Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../debugging/../stdlib/lv_
+ARM GAS  /tmp/ccZThIHT.s 			page 19
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 lv_tree.c
+     /tmp/ccZThIHT.s:21     .text._lv_tree_node_construct:00000000 $t
+     /tmp/ccZThIHT.s:26     .text._lv_tree_node_construct:00000000 _lv_tree_node_construct
+     /tmp/ccZThIHT.s:86     .text._lv_tree_node_destruct:00000000 $t
+     /tmp/ccZThIHT.s:91     .text._lv_tree_node_destruct:00000000 _lv_tree_node_destruct
+     /tmp/ccZThIHT.s:140    .text.get_instance_size:00000000 $t
+     /tmp/ccZThIHT.s:145    .text.get_instance_size:00000000 get_instance_size
+     /tmp/ccZThIHT.s:183    .text._lv_tree_class_create_node:00000000 $t
+     /tmp/ccZThIHT.s:188    .text._lv_tree_class_create_node:00000000 _lv_tree_class_create_node
+     /tmp/ccZThIHT.s:303    .text._lv_tree_node_destructor_cb:00000000 $t
+     /tmp/ccZThIHT.s:308    .text._lv_tree_node_destructor_cb:00000000 _lv_tree_node_destructor_cb
+     /tmp/ccZThIHT.s:361    .text.lv_tree_node_create:00000000 $t
+     /tmp/ccZThIHT.s:367    .text.lv_tree_node_create:00000000 lv_tree_node_create
+     /tmp/ccZThIHT.s:405    .text.lv_tree_walk:00000000 $t
+     /tmp/ccZThIHT.s:411    .text.lv_tree_walk:00000000 lv_tree_walk
+     /tmp/ccZThIHT.s:581    .text.lv_tree_node_delete:00000000 $t
+     /tmp/ccZThIHT.s:587    .text.lv_tree_node_delete:00000000 lv_tree_node_delete
+     /tmp/ccZThIHT.s:670    .text.lv_tree_node_delete:00000040 $d
+     /tmp/ccZThIHT.s:679    .rodata.lv_tree_node_class:00000000 lv_tree_node_class
+     /tmp/ccZThIHT.s:676    .rodata.lv_tree_node_class:00000000 $d
+
+UNDEFINED SYMBOLS
+lv_malloc
+lv_memset
+lv_realloc
+lv_free

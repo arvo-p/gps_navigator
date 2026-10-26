@@ -1,0 +1,934 @@
+================================================================================
+  EMBEDDED GPS NAVIGATION & PATHFINDING LIBRARY — FUNCTION CALL HIERARCHY
+================================================================================
+Target Platform: Embedded Microcontrollers (ARM Cortex-M0/M3/M4/M7, ESP32, STM32)
+Arithmetic:      100% Fixed-Point Integer (Zero float, Zero double)
+Memory Model:    100% Static Allocation in .bss / .data (Zero malloc, Zero free)
+Standard:        ISO C99 (<stdint.h>, <stdbool.h>)
+
+This document catalogues all functions in the core embedded library, organized
+in strict hierarchical order: starting with the most complex high-level
+orchestrators (which call multiple subsystems) down to the elementary atomic
+leaf functions (which perform direct bitwise/arithmetic operations with zero
+or near-zero function calls).
+
+--------------------------------------------------------------------------------
+TABLE OF CONTENTS & COMPLEXITY LAYERS
+--------------------------------------------------------------------------------
+  LEVEL 5: Strategic System Orchestrator (Highest Complexity)
+  LEVEL 4: Multi-Phase & Multi-Tile Algorithmic Search Engines
+  LEVEL 3: Subsystem Managers (Spatial Cache, Graph Queries, Viewport)
+  LEVEL 2: Specialized Data Structures, Fixed-Point Math & Coordinate Projections
+  LEVEL 1: Elementary / Atomic Leaf Functions (Zero or Minimal Function Calls)
+
+================================================================================
+LEVEL 5: STRATEGIC SYSTEM ORCHESTRATOR (HIGHEST COMPLEXITY)
+================================================================================
+
+[5.1] pathfinder_find_route
+--------------------------------------------------------------------------------
+File:        src/pathfinder.c / include/pathfinder.h
+Signature:   bool pathfinder_find_route(Pathfinder *pf, GeoCoord start,
+                                        GeoCoord goal, RouteResult *out_route)
+Description:
+  The master public entry point for navigation routing. It acts as the brain
+  of the pathfinding system by evaluating the trip scale and selecting the
+  optimal routing strategy:
+    - Analyzes Euclidean distance and spatial grid tile adjacency.
+    - If distance < 15 km or origin/destination are in the same or adjacent
+      0.1° grid cells: executes Mode A (Local Multi-Tile A*).
+    - If distance >= 15 km across distant regions: executes Mode B
+      (Hierarchical 3-Phase A* using Local -> Highway Backbone -> Local).
+    - If hierarchical routing fails (e.g. disconnected local tiles), attempts
+      a direct snap onto the high-speed backbone network.
+    - If a valid route is discovered, immediately invokes geometry expansion
+      to pull detailed road curve points into memory.
+Calls:
+  - pathfinder_free_route
+  - geo_coord_to_grid
+  - geo_distance_m
+  - is_adjacent_grid
+  - run_local_astar
+  - run_hierarchical_astar
+  - tile_graph_cache_get_backbone
+  - tile_graph_snap_node
+  - run_backbone_astar
+  - pathfinder_load_geometry
+Called By:
+  - User application / UI navigation controller / Embedded trip executive
+
+
+================================================================================
+LEVEL 4: MULTI-PHASE & MULTI-TILE ALGORITHMIC SEARCH ENGINES
+================================================================================
+
+[4.1] run_hierarchical_astar
+--------------------------------------------------------------------------------
+File:        src/pathfinder.c (internal static)
+Signature:   static bool run_hierarchical_astar(Pathfinder *pf,
+                 GeoCoord start, GeoCoord goal,
+                 int32_t start_glat, int32_t start_glon,
+                 int32_t goal_glat, int32_t goal_glon,
+                 RouteResult *out_route)
+Description:
+  Orchestrates the 3-Phase Long-Distance Hierarchical A* algorithm:
+    Phase 1: Identifies the best local entry gateway node (tagged with
+             FLAG_BACKBONE_LINK) in the origin tile and executes local A*
+             from start coordinate to the entry gateway.
+    Phase 2: Translates the local gateway to the global backbone highway
+             network and executes fast Dijkstra/A* transit along motorways
+             and primary trunk routes.
+    Phase 3: Connects the exit highway gateway node to the local destination
+             tile and performs a final local A* run to the exact goal pin.
+    Stitches all three route legs together into a contiguous RouteResult.
+    Pins origin, destination, and backbone graphs in RAM throughout the
+    search to prevent LRU eviction, unpinning them upon completion.
+Calls:
+  - tile_graph_cache_get_tile
+  - tile_graph_cache_get_backbone
+  - tile_graph_pin
+  - tile_graph_unpin
+  - tile_graph_find_gateway
+  - tile_graph_snap_node
+  - tile_graph_find_matching_node
+  - geo_coord_make
+  - run_local_astar
+  - run_backbone_astar
+Called By:
+  - pathfinder_find_route
+
+
+[4.2] run_local_astar
+--------------------------------------------------------------------------------
+File:        src/pathfinder.c (internal static)
+Signature:   static bool run_local_astar(Pathfinder *pf,
+                 GeoCoord start, GeoCoord goal,
+                 int32_t start_glat, int32_t start_glon,
+                 int32_t goal_glat, int32_t goal_glon,
+                 RouteResult *out_route)
+Description:
+  Executes A* search across one or multiple adjacent 0.1° local tiles:
+    - Snaps start and goal GPS coordinates to nearest drivable road nodes.
+    - Sets up session slots for active tiles, resetting static g-score tables.
+    - Uses a 32-bit composite node key (upper 4 bits = tile cache slot, lower
+      20 bits = node index within tile) to search across tile boundaries.
+    - Drives the binary min-heap priority queue with integer admissible
+      under-estimate heuristics (geo_distance_m / 25 m/s).
+    - Traverses outgoing edge records, updating tentative g-scores.
+    - Reconstructs the complete linked path in reverse from destination to
+      origin, accumulating road segment attributes, lengths, and times.
+Calls:
+  - tile_graph_cache_get_tile
+  - tile_graph_snap_node
+  - tile_graph_pin
+  - tile_graph_unpin
+  - make_node_key
+  - astar_heap_init
+  - geo_distance_m
+  - astar_heap_push
+  - astar_heap_is_empty
+  - astar_heap_pop
+  - key_to_slot
+  - key_to_idx
+  - geo_coord_make
+  - route_add_segment
+  - memset
+Called By:
+  - pathfinder_find_route
+  - run_hierarchical_astar (Phase 1 and Phase 3)
+
+
+[4.3] run_backbone_astar
+--------------------------------------------------------------------------------
+File:        src/pathfinder.c (internal static)
+Signature:   static bool run_backbone_astar(Pathfinder *pf,
+                 int32_t start_bb_node, int32_t goal_bb_node,
+                 RouteResult *out_route)
+Description:
+  Executes high-speed A* search on the nationwide backbone network:
+    - Operates exclusively over the pre-loaded global backbone graph
+      (highways, expressways, national arterials).
+    - Uses pre-allocated static arrays (s_bb_g_scores, s_bb_came_from_nodes,
+      s_bb_came_from_edges) to ensure zero dynamic RAM allocation.
+    - Uses aggressive highway heuristic scaling (geo_distance_m / 33 m/s,
+      reflecting ~120 km/h top travel speed).
+    - Backtracks and appends backbone transit segments into out_route.
+Calls:
+  - tile_graph_cache_get_backbone
+  - geo_coord_make
+  - astar_heap_init
+  - geo_distance_m
+  - astar_heap_push
+  - astar_heap_is_empty
+  - astar_heap_pop
+  - route_add_segment
+  - memset
+Called By:
+  - pathfinder_find_route (direct fallback)
+  - run_hierarchical_astar (Phase 2)
+
+
+[4.4] pathfinder_load_geometry
+--------------------------------------------------------------------------------
+File:        src/pathfinder.c / include/pathfinder.h
+Signature:   bool pathfinder_load_geometry(Pathfinder *pf, RouteResult *out_route)
+Description:
+  Resolves intermediate road curves and curvature geometry for an active route:
+    - Iterates over all synthesized RouteSegments.
+    - Stores the segment start point in out_route->geom_points.
+    - For curved edges (geom_count > 0), inspects seg->geom_path, manages the
+      open file handle to the binary geometry file (*_geom.bin), seeks to
+      geom_offset, and streams binary GeomPoint records (lat_scaled, lon_scaled)
+      directly into the static geom_points array.
+    - Appends the segment end point, ensuring a 100% continuous polyline
+      ready for visual rendering or navigation heading tracking.
+Calls:
+  - fopen
+  - fclose
+  - fseek
+  - fread
+  - strcmp
+Called By:
+  - pathfinder_find_route
+
+
+================================================================================
+LEVEL 3: SUBSYSTEM MANAGERS (SPATIAL CACHE, GRAPH QUERIES, VIEWPORT)
+================================================================================
+
+[3.1] tile_graph_cache_get_tile
+--------------------------------------------------------------------------------
+File:        src/tile_graph_cache.c / include/tile_graph_cache.h
+Signature:   TileGraph* tile_graph_cache_get_tile(TileGraphCache *cache,
+                                                  int32_t grid_lat,
+                                                  int32_t grid_lon)
+Description:
+  Retrieves a local spatial grid tile (0.1° x 0.1°) from memory:
+    - Checks all local cache slots to see if the requested grid cell is loaded.
+    - On cache hit: increments LRU clock counter and returns pointer.
+    - On cache miss: scans slots to select an unpinned, least-recently-used slot.
+    - Builds file paths for nodes, edges, and curve geometry.
+    - Invokes load_graph_files to read binary data from disk/flash storage.
+    - Tags the slot with grid coordinates and sets initial LRU timestamp.
+Calls:
+  - load_graph_files
+  - snprintf
+Called By:
+  - tile_graph_cache_get_by_coord
+  - run_local_astar
+  - run_hierarchical_astar
+
+
+[3.2] tile_graph_cache_get_backbone
+--------------------------------------------------------------------------------
+File:        src/tile_graph_cache.c / include/tile_graph_cache.h
+Signature:   TileGraph* tile_graph_cache_get_backbone(TileGraphCache *cache)
+Description:
+  Retrieves or loads the global nationwide backbone network:
+    - If backbone is already loaded in static RAM, returns it immediately.
+    - Otherwise, formats file paths (backbone_nodes.bin, backbone_edges.bin,
+      backbone_geom.bin) and loads the complete highway graph into the
+      dedicated static backbone pool.
+Calls:
+  - load_graph_files
+  - snprintf
+Called By:
+  - pathfinder_find_route
+  - run_backbone_astar
+  - run_hierarchical_astar
+
+
+[3.3] tile_graph_snap_node
+--------------------------------------------------------------------------------
+File:        src/tile_graph_cache.c / include/tile_graph_cache.h
+Signature:   bool tile_graph_snap_node(const TileGraph *graph,
+                                       int32_t lat_e7, int32_t lon_e7,
+                                       int32_t min_edges,
+                                       int32_t *out_node_idx,
+                                       uint32_t *out_dist_m)
+Description:
+  Projects an arbitrary GPS coordinate (e.g. GPS sensor fix or user click)
+  onto the closest drivable road node in the graph:
+    - Primary pass: ignores non-drivable barrier gates (FLAG_BARRIER_GATE)
+      and requires outgoing edge count >= min_edges to avoid dead ends.
+    - Computes integer surface distance via geo_distance_m.
+    - Secondary fallback pass: relaxes edge count constraint if primary
+      pass found no candidate.
+    - Returns best node index and distance in meters.
+Calls:
+  - geo_coord_make
+  - geo_distance_m
+Called By:
+  - run_local_astar
+  - run_hierarchical_astar
+  - pathfinder_find_route
+
+
+[3.4] tile_graph_find_gateway
+--------------------------------------------------------------------------------
+File:        src/tile_graph_cache.c / include/tile_graph_cache.h
+Signature:   bool tile_graph_find_gateway(const TileGraph *graph,
+                                          int32_t lat_e7, int32_t lon_e7,
+                                          int32_t *out_node_idx,
+                                          uint32_t *out_dist_m)
+Description:
+  Finds the closest highway entry/exit ramp or gateway interchange node
+  inside a local tile:
+    - Scans node records for the FLAG_BACKBONE_LINK bit flag.
+    - Compares distance using geo_distance_m.
+    - Returns the nearest gateway node index connecting local roads to highways.
+Calls:
+  - geo_coord_make
+  - geo_distance_m
+Called By:
+  - run_hierarchical_astar
+
+
+[3.5] tile_graph_find_matching_node
+--------------------------------------------------------------------------------
+File:        src/tile_graph_cache.c / include/tile_graph_cache.h
+Signature:   bool tile_graph_find_matching_node(const TileGraph *graph,
+                                                int32_t lat_e7, int32_t lon_e7,
+                                                int32_t *out_node_idx)
+Description:
+  Locates the equivalent node in another graph (e.g. matching a local gateway
+  node to its identical peer in the global backbone network):
+    - Pass 1: exact matching of lat_scaled and lon_scaled (with edges > 0).
+    - Pass 2: relaxed exact coordinate matching.
+    - Pass 3: spatial proximity matching within a tight 25-meter tolerance.
+Calls:
+  - geo_coord_make
+  - geo_distance_m
+Called By:
+  - run_hierarchical_astar
+
+
+[3.6] load_graph_files
+--------------------------------------------------------------------------------
+File:        src/tile_graph_cache.c (internal static)
+Signature:   static bool load_graph_files(TileGraph *g,
+                                          const char *nodes_path,
+                                          const char *edges_path,
+                                          const char *geom_path)
+Description:
+  Low-level binary graph loader:
+    - Clears target graph structure via free_graph.
+    - Opens and validates nodes_path; checks file size against static capacity.
+    - Streams NodeRecords directly into pre-allocated static node memory pool.
+    - Opens edges_path and streams EdgeRecords into static edge memory pool.
+    - Stores geometry path and opens file handle for on-demand curve reading.
+Calls:
+  - free_graph
+  - fopen
+  - fseek
+  - ftell
+  - fread
+  - fclose
+  - strncpy
+Called By:
+  - tile_graph_cache_get_tile
+  - tile_graph_cache_get_backbone
+
+
+[3.7] map_camera_get_visible_tiles
+--------------------------------------------------------------------------------
+File:        src/map_camera.c / include/map_camera.h
+Signature:   void map_camera_get_visible_tiles(const MapCamera *cam,
+                                               VisibleTileList *out_list)
+Description:
+  Computes the complete discrete grid of Slippy map tiles currently intersecting
+  the display screen:
+    - Calculates viewport boundary coordinates in 32-bit world pixel space.
+    - Derives min/max tile columns (X) and tile rows (Y) at the active zoom level.
+    - Clamps vertical tile rows [0 .. 2^zoom - 1] and wraps longitude tiles.
+    - Populates out_list->tiles with tile indices and screen pixel offsets.
+Calls:
+  - (Arithmetic / bit shifts only)
+Called By:
+  - Display rendering pipeline / simulation main loop
+
+
+[3.8] map_camera_get_visible_bbox
+--------------------------------------------------------------------------------
+File:        src/map_camera.c / include/map_camera.h
+Signature:   void map_camera_get_visible_bbox(const MapCamera *cam,
+                                              GeoBBox *out_bbox)
+Description:
+  Computes the minimum and maximum geographic bounding box (WGS84 lat/lon)
+  encompassing the entire visible screen viewport.
+Calls:
+  - map_camera_screen_to_latlon
+Called By:
+  - Spatial culling / tile feature filtering engines
+
+
+[3.9] map_camera_move_direction
+--------------------------------------------------------------------------------
+File:        src/map_camera.c / include/map_camera.h
+Signature:   void map_camera_move_direction(MapCamera *cam,
+                                            int32_t dir_x, int32_t dir_y,
+                                            int32_t dt_ms,
+                                            int32_t speed_multiplier)
+Description:
+  Moves the camera smoothly in normalized 2D direction vectors (e.g. from
+  hardware joystick, physical D-pad, or arrow keys):
+    - Computes travel distance from elapsed frame time (dt_ms).
+    - Normalizes diagonal speed using fixed-point factor (724 / 1024 ≈ 1/√2).
+    - Delegates final coordinate translation to map_camera_pan_pixels.
+Calls:
+  - map_camera_pan_pixels
+Called By:
+  - User input loop / hardware button handler
+
+
+[3.10] map_camera_pan_pixels
+--------------------------------------------------------------------------------
+File:        src/map_camera.c / include/map_camera.h
+Signature:   void map_camera_pan_pixels(MapCamera *cam,
+                                        int32_t dx_px, int32_t dy_px)
+Description:
+  Shifts camera focal center by pixel deltas:
+    - Translates screen pixel delta to 32-bit Mercator world coordinate delta.
+    - Handles horizontal wrap-around at ±180° meridian.
+    - Clamps vertical latitude inside Mercator boundary (±85.051°).
+    - Updates camera focal GPS coordinate via inverse projection.
+Calls:
+  - geo_world_point32_to_latlon
+Called By:
+  - map_camera_move_direction
+  - Drag-to-pan input handlers
+
+
+================================================================================
+LEVEL 2: SPECIALIZED DATA STRUCTURES, FIXED-POINT MATH & PROJECTIONS
+================================================================================
+
+[2.1] map_camera_screen_to_latlon
+--------------------------------------------------------------------------------
+File:        src/map_camera.c / include/map_camera.h
+Signature:   void map_camera_screen_to_latlon(const MapCamera *cam,
+                                              int32_t sx, int32_t sy,
+                                              GeoCoord *out_coord)
+Description:
+  Converts screen pixel position (sx, sy) to geographic coordinates (WGS84):
+    - Offsets screen point relative to camera viewport center.
+    - Scales into 32-bit normalized world coordinate space.
+    - Performs inverse Mercator conversion.
+Calls:
+  - geo_world_point32_to_latlon
+Called By:
+  - map_camera_get_visible_bbox
+  - Map click / touch screen event handlers
+
+
+[2.2] map_camera_latlon_to_screen
+--------------------------------------------------------------------------------
+File:        src/map_camera.c / include/map_camera.h
+Signature:   void map_camera_latlon_to_screen(const MapCamera *cam,
+                                              GeoCoord coord,
+                                              int32_t *out_sx, int32_t *out_sy)
+Description:
+  Converts geographic coordinate (lat_e7, lon_e7) to screen pixel position:
+    - Forward-projects coordinate to 32-bit world point.
+    - Offsets relative to camera center and screen dimensions.
+Calls:
+  - geo_latlon_to_world_point32
+Called By:
+  - Route polyline renderer
+  - Landmark / location pin renderer
+
+
+[2.3] geo_latlon_to_tile
+--------------------------------------------------------------------------------
+File:        src/geo_math.c / include/geo_math.h
+Signature:   void geo_latlon_to_tile(GeoCoord coord, int32_t zoom,
+                                     TileCoord *out_tile,
+                                     WorldPixel *out_subtile_px)
+Description:
+  Determines discrete Slippy tile coordinates (X, Y) and intra-tile subpixel
+  offset [0..255] for any GPS coordinate:
+    - Projects GPS coordinate to 32-bit world space.
+    - Extracts high bits for tile indices (wp.x >> (32 - zoom)).
+    - Extracts mid bits for intra-tile pixel position.
+Calls:
+  - geo_latlon_to_world_point32
+Called By:
+  - Tile fetching / telemetry HUD display
+
+
+[2.4] geo_tile_to_bbox
+--------------------------------------------------------------------------------
+File:        src/geo_math.c / include/geo_math.h
+Signature:   void geo_tile_to_bbox(TileCoord tile, GeoBBox *out_bbox)
+Description:
+  Calculates the geographic bounding box (min/max lat/lon in 10^-7 degrees)
+  enclosed by a discrete Slippy map tile.
+Calls:
+  - geo_world_point32_to_latlon
+Called By:
+  - Tile spatial boundary verification
+
+
+[2.5] geo_tile_to_top_left_latlon
+--------------------------------------------------------------------------------
+File:        src/geo_math.c / include/geo_math.h
+Signature:   void geo_tile_to_top_left_latlon(TileCoord tile, GeoCoord *out_coord)
+Description:
+  Computes the exact Northwest (top-left) geographic coordinate of a Slippy tile.
+Calls:
+  - geo_world_point32_to_latlon
+Called By:
+  - Tile map rendering alignments
+
+
+[2.6] geo_latlon_to_world_point32
+--------------------------------------------------------------------------------
+File:        src/geo_math.c / include/geo_math.h
+Signature:   void geo_latlon_to_world_point32(GeoCoord coord, WorldPoint32 *out_wp)
+Description:
+  Forward Web Mercator projection using pure fixed-point integer math:
+    - X axis: linear shift from [-180°..+180°] to [0..2^32 - 1].
+    - Y axis: lookup in 1024-entry GEO_MERCATOR_FORWARD_LUT with fixed-point
+      quadratic Newton-Gregory interpolation:
+        y = y0 + t * delta1 + (t * (t - 1) / 2) * delta2
+    - Symmetrically reflects southern hemisphere coordinates across equator.
+Calls:
+  - geo_wrap_longitude_e7
+  - geo_clamp_latitude_e7
+Called By:
+  - map_camera_init
+  - map_camera_set_zoom
+  - map_camera_set_center
+  - map_camera_latlon_to_screen
+  - geo_latlon_to_tile
+
+
+[2.7] geo_world_point32_to_latlon
+--------------------------------------------------------------------------------
+File:        src/geo_math.c / include/geo_math.h
+Signature:   void geo_world_point32_to_latlon(WorldPoint32 wp, GeoCoord *out_coord)
+Description:
+  Inverse Web Mercator projection using pure fixed-point integer math:
+    - X axis: scales 32-bit integer back to [-180°..+180°] in 10^-7 micro-degrees.
+    - Y axis: lookup in 1024-entry GEO_MERCATOR_INVERSE_LUT with fixed-point
+      quadratic interpolation, returning micro-degrees.
+Calls:
+  - geo_wrap_longitude_e7
+  - geo_clamp_latitude_e7
+Called By:
+  - map_camera_pan_pixels
+  - map_camera_screen_to_latlon
+  - geo_tile_to_top_left_latlon
+  - geo_tile_to_bbox
+
+
+[2.8] geo_distance_m
+--------------------------------------------------------------------------------
+File:        src/geo_math.c / include/geo_math.h
+Signature:   uint32_t geo_distance_m(GeoCoord a, GeoCoord b)
+Description:
+  Fast equirectangular surface distance calculation in meters:
+    - Computes delta latitude (dlat) and delta longitude (dlon).
+    - Scales dlon by the cosine of the mean latitude using GEO_COS_LUT_Q15
+      (fixed-point Q15 cosine lookup).
+    - Solves hypotenuse via 64-bit integer square root (geo_isqrt64).
+    - Converts micro-degrees to meters via integer constant factor (111139/10000000).
+Calls:
+  - geo_isqrt64
+Called By:
+  - pathfinder_find_route
+  - run_local_astar (heuristic)
+  - run_backbone_astar (heuristic)
+  - tile_graph_snap_node
+  - tile_graph_find_gateway
+  - tile_graph_find_matching_node
+
+
+[2.9] geo_bearing_deg
+--------------------------------------------------------------------------------
+File:        src/geo_math.c / include/geo_math.h
+Signature:   int32_t geo_bearing_deg(GeoCoord from, GeoCoord to)
+Description:
+  Calculates integer navigational bearing (0° to 359° clockwise from True North):
+    - Projects coordinate deltas onto local tangent plane using cosine LUT.
+    - Evaluates arctangent using 64-entry GEO_ATAN_TENTHS_LUT.
+    - Resolves full 360-degree quadrant logic and rounds to nearest whole degree.
+Calls:
+  - (LUT lookups and integer arithmetic only)
+Called By:
+  - Turn-by-turn navigation engine / compass heading display
+
+
+[2.10] astar_heap_pop
+--------------------------------------------------------------------------------
+File:        src/astar_heap.c / include/astar_heap.h
+Signature:   bool astar_heap_pop(AstarHeap *heap, HeapEntry *out_entry)
+Description:
+  Pops the lowest-cost node (minimum f_score) from the priority queue:
+    - Extracts top element at index 0.
+    - Moves last entry to root and executes sift-down loop comparing left and
+      right children until min-heap property is restored.
+Calls:
+  - (Direct memory and array index operations only)
+Called By:
+  - run_local_astar
+  - run_backbone_astar
+
+
+[2.11] astar_heap_push
+--------------------------------------------------------------------------------
+File:        src/astar_heap.c / include/astar_heap.h
+Signature:   bool astar_heap_push(AstarHeap *heap, uint32_t node_key,
+                                  uint32_t g_cost, uint32_t f_score)
+Description:
+  Inserts a new candidate node into the priority queue:
+    - Places new HeapEntry at bottom leaf position.
+    - Executes sift-up loop comparing element against parent ((idx - 1) / 2)
+      until min-heap invariant is satisfied.
+Calls:
+  - (Direct memory and array index operations only)
+Called By:
+  - run_local_astar
+  - run_backbone_astar
+
+
+[2.12] tile_graph_cache_get_by_coord
+--------------------------------------------------------------------------------
+File:        src/tile_graph_cache.c / include/tile_graph_cache.h
+Signature:   TileGraph* tile_graph_cache_get_by_coord(TileGraphCache *cache,
+                                                      int32_t lat_e7,
+                                                      int32_t lon_e7)
+Description:
+  Converts geographic coordinates directly into grid cell coordinates and
+  calls tile_graph_cache_get_tile.
+Calls:
+  - geo_coord_to_grid
+  - tile_graph_cache_get_tile
+Called By:
+  - External location queries
+
+
+[2.13] map_camera_init
+--------------------------------------------------------------------------------
+File:        src/map_camera.c / include/map_camera.h
+Signature:   void map_camera_init(MapCamera *cam, GeoCoord center,
+                                  int32_t zoom, int32_t vp_w, int32_t vp_h)
+Description:
+  Initializes camera viewport, pan speeds, zoom bounds, and calculates
+  initial 32-bit world focal coordinate.
+Calls:
+  - geo_coord_make
+  - geo_latlon_to_world_point32
+Called By:
+  - Simulation / Application setup
+
+
+[2.14] map_camera_set_zoom
+--------------------------------------------------------------------------------
+File:        src/map_camera.c / include/map_camera.h
+Signature:   void map_camera_set_zoom(MapCamera *cam, int32_t new_zoom)
+Description:
+  Clamps and updates zoom level while maintaining invariant focal center.
+Calls:
+  - geo_latlon_to_world_point32
+Called By:
+  - Zoom controls / button handlers
+
+
+[2.15] map_camera_set_center
+--------------------------------------------------------------------------------
+File:        src/map_camera.c / include/map_camera.h
+Signature:   void map_camera_set_center(MapCamera *cam, GeoCoord new_center)
+Description:
+  Recenters map camera on a specific GPS coordinate and reprojects to 32-bit space.
+Calls:
+  - geo_coord_make
+  - geo_latlon_to_world_point32
+Called By:
+  - Location jump / search / vehicle tracking updates
+
+
+[2.16] tile_graph_cache_destroy
+--------------------------------------------------------------------------------
+File:        src/tile_graph_cache.c / include/tile_graph_cache.h
+Signature:   void tile_graph_cache_destroy(TileGraphCache *cache)
+Description:
+  Iterates through all local graph slots and backbone network, invoking
+  free_graph to release open file handles.
+Calls:
+  - free_graph
+Called By:
+  - System shutdown
+
+
+[2.17] free_graph
+--------------------------------------------------------------------------------
+File:        src/tile_graph_cache.c (internal static)
+Signature:   static void free_graph(TileGraph *g)
+Description:
+  Closes open curve geometry file handles (geom_file) and marks graph slot
+  as unloaded and empty.
+Calls:
+  - fclose
+Called By:
+  - load_graph_files
+  - tile_graph_cache_destroy
+
+
+[2.18] route_add_segment
+--------------------------------------------------------------------------------
+File:        src/pathfinder.c (internal static)
+Signature:   static bool route_add_segment(RouteResult *route,
+                                           const RouteSegment *seg)
+Description:
+  Appends a single road segment into the route array and updates running totals
+  for distance and travel time.
+Calls:
+  - (Direct struct copy and integer addition only)
+Called By:
+  - run_local_astar
+  - run_backbone_astar
+
+
+================================================================================
+LEVEL 1: ELEMENTARY / ATOMIC LEAF FUNCTIONS (ZERO OR MINIMAL CALLS)
+================================================================================
+
+[1.1] geo_isqrt64
+--------------------------------------------------------------------------------
+File:        src/geo_math.c / include/geo_math.h
+Signature:   uint32_t geo_isqrt64(uint64_t n)
+Description:
+  Computes integer square root of 64-bit unsigned integer using digit-by-digit
+  binary restoring square root algorithm.
+Calls:       None (pure bitwise shifts and subtractions)
+Called By:   geo_distance_m
+
+
+[1.2] geo_clamp_latitude_e7
+--------------------------------------------------------------------------------
+File:        src/geo_math.c / include/geo_math.h
+Signature:   int32_t geo_clamp_latitude_e7(int32_t lat_e7)
+Description:
+  Clamps latitude to Mercator limits [-850511287 .. +850511287].
+Calls:       None
+Called By:   geo_coord_make, geo_latlon_to_world_point32, geo_world_point32_to_latlon
+
+
+[1.3] geo_wrap_longitude_e7
+--------------------------------------------------------------------------------
+File:        src/geo_math.c / include/geo_math.h
+Signature:   int32_t geo_wrap_longitude_e7(int32_t lon_e7)
+Description:
+  Wraps longitude within valid [-1800000000 .. +1800000000] range.
+Calls:       None
+Called By:   geo_coord_make, geo_latlon_to_world_point32, geo_world_point32_to_latlon
+
+
+[1.4] geo_coord_make
+--------------------------------------------------------------------------------
+File:        src/geo_math.c / include/geo_math.h
+Signature:   GeoCoord geo_coord_make(int32_t lat_e7, int32_t lon_e7)
+Description:
+  Constructs a clamped, valid GeoCoord struct.
+Calls:       geo_clamp_latitude_e7, geo_wrap_longitude_e7
+Called By:   Almost all high-level modules
+
+
+[1.5] geo_coord_is_in_bbox
+--------------------------------------------------------------------------------
+File:        src/geo_math.c / include/geo_math.h
+Signature:   bool geo_coord_is_in_bbox(GeoCoord coord, GeoBBox bbox)
+Description:
+  Checks if a coordinate falls inside a geographic bounding box.
+Calls:       None
+Called By:   Boundary check routines
+
+
+[1.6] geo_tile_coord_make
+--------------------------------------------------------------------------------
+File:        src/geo_math.c / include/geo_math.h
+Signature:   TileCoord geo_tile_coord_make(int32_t x, int32_t y, int32_t zoom)
+Description:
+  Constructs a TileCoord struct.
+Calls:       None
+Called By:   Tile routines
+
+
+[1.7] geo_bbox_make
+--------------------------------------------------------------------------------
+File:        src/geo_math.c / include/geo_math.h
+Signature:   GeoBBox geo_bbox_make(int32_t min_lat_e7, int32_t min_lon_e7,
+                                   int32_t max_lat_e7, int32_t max_lon_e7)
+Description:
+  Constructs a GeoBBox struct.
+Calls:       None
+Called By:   Spatial query routines
+
+
+[1.8] map_camera_set_viewport
+--------------------------------------------------------------------------------
+File:        src/map_camera.c / include/map_camera.h
+Signature:   void map_camera_set_viewport(MapCamera *cam, int32_t vp_w, int32_t vp_h)
+Description:
+  Updates screen viewport pixel width and height.
+Calls:       None
+Called By:   Display initialization and resize
+
+
+[1.9] geo_coord_to_grid
+--------------------------------------------------------------------------------
+File:        include/tile_graph_cache.h (inline)
+Signature:   static inline void geo_coord_to_grid(int32_t lat_e7, int32_t lon_e7,
+                                                  int32_t *out_glat, int32_t *out_glon)
+Description:
+  Converts 10^-7 GPS coordinates to 0.1° integer spatial grid cell coordinates.
+Calls:       None (integer division / 1000000)
+Called By:   pathfinder_find_route, tile_graph_cache_get_by_coord
+
+
+[1.10] is_adjacent_grid
+--------------------------------------------------------------------------------
+File:        include/tile_graph_cache.h (inline)
+Signature:   static inline bool is_adjacent_grid(int32_t lat1, int32_t lon1,
+                                                 int32_t lat2, int32_t lon2)
+Description:
+  Checks if two 0.1° spatial grid cells are immediate neighbors (Chebyshev dist <= 1).
+Calls:       None
+Called By:   pathfinder_find_route
+
+
+[1.11] make_node_key
+--------------------------------------------------------------------------------
+File:        src/pathfinder.c (inline)
+Signature:   static inline uint32_t make_node_key(int32_t slot, uint32_t local_idx)
+Description:
+  Packs tile slot (upper 4 bits) and node index (lower 20 bits) into a 32-bit ID.
+Calls:       None
+Called By:   run_local_astar
+
+
+[1.12] key_to_slot
+--------------------------------------------------------------------------------
+File:        src/pathfinder.c (inline)
+Signature:   static inline int32_t key_to_slot(uint32_t key)
+Description:
+  Unpacks tile slot index from composite 32-bit node key.
+Calls:       None
+Called By:   run_local_astar
+
+
+[1.13] key_to_idx
+--------------------------------------------------------------------------------
+File:        src/pathfinder.c (inline)
+Signature:   static inline uint32_t key_to_idx(uint32_t key)
+Description:
+  Unpacks local node index from composite 32-bit node key.
+Calls:       None
+Called By:   run_local_astar
+
+
+[1.14] tile_graph_pin
+--------------------------------------------------------------------------------
+File:        src/tile_graph_cache.c / include/tile_graph_cache.h
+Signature:   void tile_graph_pin(TileGraph *graph)
+Description:
+  Increments pin counter on a graph to prevent LRU cache eviction during A*.
+Calls:       None
+Called By:   run_local_astar, run_hierarchical_astar
+
+
+[1.15] tile_graph_unpin
+--------------------------------------------------------------------------------
+File:        src/tile_graph_cache.c / include/tile_graph_cache.h
+Signature:   void tile_graph_unpin(TileGraph *graph)
+Description:
+  Decrements pin counter on a graph, allowing eviction once pin count reaches 0.
+Calls:       None
+Called By:   run_local_astar, run_hierarchical_astar
+
+
+[1.16] tile_graph_cache_init
+--------------------------------------------------------------------------------
+File:        src/tile_graph_cache.c / include/tile_graph_cache.h
+Signature:   bool tile_graph_cache_init(TileGraphCache *cache,
+                                        const char *base_dir,
+                                        int32_t local_capacity)
+Description:
+  Sets up graph cache structure and links static memory pools.
+Calls:       memset, strncpy, strcpy
+Called By:   System initialization
+
+
+[1.17] astar_heap_init
+--------------------------------------------------------------------------------
+File:        src/astar_heap.c / include/astar_heap.h
+Signature:   void astar_heap_init(AstarHeap *heap)
+Description:
+  Initializes binary min-heap by setting size to 0.
+Calls:       None
+Called By:   run_local_astar, run_backbone_astar
+
+
+[1.18] astar_heap_clear
+--------------------------------------------------------------------------------
+File:        src/astar_heap.c / include/astar_heap.h
+Signature:   void astar_heap_clear(AstarHeap *heap)
+Description:
+  Resets binary min-heap size to 0.
+Calls:       None
+Called By:   Priority queue reset
+
+
+[1.19] astar_heap_is_empty
+--------------------------------------------------------------------------------
+File:        src/astar_heap.c / include/astar_heap.h
+Signature:   bool astar_heap_is_empty(const AstarHeap *heap)
+Description:
+  Returns true if binary min-heap contains 0 entries.
+Calls:       None
+Called By:   run_local_astar, run_backbone_astar
+
+
+[1.20] astar_heap_destroy
+--------------------------------------------------------------------------------
+File:        src/astar_heap.c / include/astar_heap.h
+Signature:   void astar_heap_destroy(AstarHeap *heap)
+Description:
+  Resets heap state.
+Calls:       None
+Called By:   Heap cleanup
+
+
+[1.21] pathfinder_init
+--------------------------------------------------------------------------------
+File:        src/pathfinder.c / include/pathfinder.h
+Signature:   bool pathfinder_init(Pathfinder *pf, TileGraphCache *cache)
+Description:
+  Binds the pathfinder engine to a tile graph cache.
+Calls:       None
+Called By:   System initialization
+
+
+[1.22] pathfinder_destroy
+--------------------------------------------------------------------------------
+File:        src/pathfinder.c / include/pathfinder.h
+Signature:   void pathfinder_destroy(Pathfinder *pf)
+Description:
+  Resets pathfinder cache pointer.
+Calls:       None
+Called By:   System shutdown
+
+
+[1.23] pathfinder_free_route
+--------------------------------------------------------------------------------
+File:        src/pathfinder.c / include/pathfinder.h
+Signature:   void pathfinder_free_route(RouteResult *route)
+Description:
+  Clears all segment and geometry point counters in a RouteResult struct.
+Calls:       None
+Called By:   pathfinder_find_route, route cleanup
+
+================================================================================
+END OF FUNCTION CALL HIERARCHY
+================================================================================

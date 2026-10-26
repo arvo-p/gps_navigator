@@ -1,0 +1,265 @@
+ARM GAS  /tmp/cc1dzl89.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.arch armv7e-m
+   3              		.fpu fpv4-sp-d16
+   4              		.eabi_attribute 27, 1
+   5              		.eabi_attribute 28, 1
+   6              		.eabi_attribute 20, 1
+   7              		.eabi_attribute 21, 1
+   8              		.eabi_attribute 23, 3
+   9              		.eabi_attribute 24, 1
+  10              		.eabi_attribute 25, 1
+  11              		.eabi_attribute 26, 1
+  12              		.eabi_attribute 30, 1
+  13              		.eabi_attribute 34, 1
+  14              		.eabi_attribute 18, 4
+  15              		.file	"lv_button.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.file 1 "Drivers/lvgl/src/widgets/button/lv_button.c"
+  20              		.section	.text.lv_button_constructor,"ax",%progbits
+  21              		.align	1
+  22              		.syntax unified
+  23              		.thumb
+  24              		.thumb_func
+  26              	lv_button_constructor:
+  27              	.LVL0:
+  28              	.LFB25:
+   1:Drivers/lvgl/src/widgets/button/lv_button.c **** /**
+   2:Drivers/lvgl/src/widgets/button/lv_button.c ****  * @file lv_button.c
+   3:Drivers/lvgl/src/widgets/button/lv_button.c ****  *
+   4:Drivers/lvgl/src/widgets/button/lv_button.c ****  */
+   5:Drivers/lvgl/src/widgets/button/lv_button.c **** 
+   6:Drivers/lvgl/src/widgets/button/lv_button.c **** /*********************
+   7:Drivers/lvgl/src/widgets/button/lv_button.c ****  *      INCLUDES
+   8:Drivers/lvgl/src/widgets/button/lv_button.c ****  *********************/
+   9:Drivers/lvgl/src/widgets/button/lv_button.c **** 
+  10:Drivers/lvgl/src/widgets/button/lv_button.c **** #include "lv_button_private.h"
+  11:Drivers/lvgl/src/widgets/button/lv_button.c **** #include "../../core/lv_obj_class_private.h"
+  12:Drivers/lvgl/src/widgets/button/lv_button.c **** 
+  13:Drivers/lvgl/src/widgets/button/lv_button.c **** #if LV_USE_BUTTON
+  14:Drivers/lvgl/src/widgets/button/lv_button.c **** 
+  15:Drivers/lvgl/src/widgets/button/lv_button.c **** /*********************
+  16:Drivers/lvgl/src/widgets/button/lv_button.c ****  *      DEFINES
+  17:Drivers/lvgl/src/widgets/button/lv_button.c ****  *********************/
+  18:Drivers/lvgl/src/widgets/button/lv_button.c **** #define MY_CLASS (&lv_button_class)
+  19:Drivers/lvgl/src/widgets/button/lv_button.c **** 
+  20:Drivers/lvgl/src/widgets/button/lv_button.c **** /**********************
+  21:Drivers/lvgl/src/widgets/button/lv_button.c ****  *      TYPEDEFS
+  22:Drivers/lvgl/src/widgets/button/lv_button.c ****  **********************/
+  23:Drivers/lvgl/src/widgets/button/lv_button.c **** 
+  24:Drivers/lvgl/src/widgets/button/lv_button.c **** /**********************
+  25:Drivers/lvgl/src/widgets/button/lv_button.c ****  *  STATIC PROTOTYPES
+  26:Drivers/lvgl/src/widgets/button/lv_button.c ****  **********************/
+  27:Drivers/lvgl/src/widgets/button/lv_button.c **** static void lv_button_constructor(const lv_obj_class_t * class_p, lv_obj_t * obj);
+  28:Drivers/lvgl/src/widgets/button/lv_button.c **** 
+  29:Drivers/lvgl/src/widgets/button/lv_button.c **** /**********************
+  30:Drivers/lvgl/src/widgets/button/lv_button.c ****  *  STATIC VARIABLES
+ARM GAS  /tmp/cc1dzl89.s 			page 2
+
+
+  31:Drivers/lvgl/src/widgets/button/lv_button.c ****  **********************/
+  32:Drivers/lvgl/src/widgets/button/lv_button.c **** const lv_obj_class_t lv_button_class  = {
+  33:Drivers/lvgl/src/widgets/button/lv_button.c ****     .constructor_cb = lv_button_constructor,
+  34:Drivers/lvgl/src/widgets/button/lv_button.c ****     .width_def = LV_SIZE_CONTENT,
+  35:Drivers/lvgl/src/widgets/button/lv_button.c ****     .height_def = LV_SIZE_CONTENT,
+  36:Drivers/lvgl/src/widgets/button/lv_button.c ****     .group_def = LV_OBJ_CLASS_GROUP_DEF_TRUE,
+  37:Drivers/lvgl/src/widgets/button/lv_button.c ****     .instance_size = sizeof(lv_button_t),
+  38:Drivers/lvgl/src/widgets/button/lv_button.c ****     .base_class = &lv_obj_class,
+  39:Drivers/lvgl/src/widgets/button/lv_button.c ****     .name = "lv_button",
+  40:Drivers/lvgl/src/widgets/button/lv_button.c **** };
+  41:Drivers/lvgl/src/widgets/button/lv_button.c **** 
+  42:Drivers/lvgl/src/widgets/button/lv_button.c **** /**********************
+  43:Drivers/lvgl/src/widgets/button/lv_button.c ****  *      MACROS
+  44:Drivers/lvgl/src/widgets/button/lv_button.c ****  **********************/
+  45:Drivers/lvgl/src/widgets/button/lv_button.c **** 
+  46:Drivers/lvgl/src/widgets/button/lv_button.c **** /**********************
+  47:Drivers/lvgl/src/widgets/button/lv_button.c ****  *   GLOBAL FUNCTIONS
+  48:Drivers/lvgl/src/widgets/button/lv_button.c ****  **********************/
+  49:Drivers/lvgl/src/widgets/button/lv_button.c **** 
+  50:Drivers/lvgl/src/widgets/button/lv_button.c **** lv_obj_t * lv_button_create(lv_obj_t * parent)
+  51:Drivers/lvgl/src/widgets/button/lv_button.c **** {
+  52:Drivers/lvgl/src/widgets/button/lv_button.c ****     LV_LOG_INFO("begin");
+  53:Drivers/lvgl/src/widgets/button/lv_button.c ****     lv_obj_t * obj = lv_obj_class_create_obj(MY_CLASS, parent);
+  54:Drivers/lvgl/src/widgets/button/lv_button.c ****     lv_obj_class_init_obj(obj);
+  55:Drivers/lvgl/src/widgets/button/lv_button.c ****     return obj;
+  56:Drivers/lvgl/src/widgets/button/lv_button.c **** }
+  57:Drivers/lvgl/src/widgets/button/lv_button.c **** 
+  58:Drivers/lvgl/src/widgets/button/lv_button.c **** /**********************
+  59:Drivers/lvgl/src/widgets/button/lv_button.c ****  *   STATIC FUNCTIONS
+  60:Drivers/lvgl/src/widgets/button/lv_button.c ****  **********************/
+  61:Drivers/lvgl/src/widgets/button/lv_button.c **** 
+  62:Drivers/lvgl/src/widgets/button/lv_button.c **** static void lv_button_constructor(const lv_obj_class_t * class_p, lv_obj_t * obj)
+  63:Drivers/lvgl/src/widgets/button/lv_button.c **** {
+  29              		.loc 1 63 1 view -0
+  30              		.cfi_startproc
+  31              		@ args = 0, pretend = 0, frame = 0
+  32              		@ frame_needed = 0, uses_anonymous_args = 0
+  33              		.loc 1 63 1 is_stmt 0 view .LVU1
+  34 0000 10B5     		push	{r4, lr}
+  35              	.LCFI0:
+  36              		.cfi_def_cfa_offset 8
+  37              		.cfi_offset 4, -8
+  38              		.cfi_offset 14, -4
+  39 0002 0C46     		mov	r4, r1
+  64:Drivers/lvgl/src/widgets/button/lv_button.c ****     LV_UNUSED(class_p);
+  40              		.loc 1 64 5 is_stmt 1 view .LVU2
+  65:Drivers/lvgl/src/widgets/button/lv_button.c ****     LV_TRACE_OBJ_CREATE("begin");
+  41              		.loc 1 65 33 view .LVU3
+  66:Drivers/lvgl/src/widgets/button/lv_button.c **** 
+  67:Drivers/lvgl/src/widgets/button/lv_button.c ****     lv_obj_set_scrollable(obj, false);
+  42              		.loc 1 67 5 view .LVU4
+  43 0004 0021     		movs	r1, #0
+  44              	.LVL1:
+  45              		.loc 1 67 5 is_stmt 0 view .LVU5
+  46 0006 2046     		mov	r0, r4
+  47              	.LVL2:
+  48              		.loc 1 67 5 view .LVU6
+ARM GAS  /tmp/cc1dzl89.s 			page 3
+
+
+  49 0008 FFF7FEFF 		bl	lv_obj_set_scrollable
+  50              	.LVL3:
+  68:Drivers/lvgl/src/widgets/button/lv_button.c ****     lv_obj_set_scroll_on_focus(obj, true);
+  51              		.loc 1 68 5 is_stmt 1 view .LVU7
+  52 000c 0121     		movs	r1, #1
+  53 000e 2046     		mov	r0, r4
+  54 0010 FFF7FEFF 		bl	lv_obj_set_scroll_on_focus
+  55              	.LVL4:
+  69:Drivers/lvgl/src/widgets/button/lv_button.c **** 
+  70:Drivers/lvgl/src/widgets/button/lv_button.c ****     LV_TRACE_OBJ_CREATE("finished");
+  56              		.loc 1 70 36 view .LVU8
+  71:Drivers/lvgl/src/widgets/button/lv_button.c **** }
+  57              		.loc 1 71 1 is_stmt 0 view .LVU9
+  58 0014 10BD     		pop	{r4, pc}
+  59              		.loc 1 71 1 view .LVU10
+  60              		.cfi_endproc
+  61              	.LFE25:
+  63              		.section	.text.lv_button_create,"ax",%progbits
+  64              		.align	1
+  65              		.global	lv_button_create
+  66              		.syntax unified
+  67              		.thumb
+  68              		.thumb_func
+  70              	lv_button_create:
+  71              	.LVL5:
+  72              	.LFB24:
+  51:Drivers/lvgl/src/widgets/button/lv_button.c ****     LV_LOG_INFO("begin");
+  73              		.loc 1 51 1 is_stmt 1 view -0
+  74              		.cfi_startproc
+  75              		@ args = 0, pretend = 0, frame = 0
+  76              		@ frame_needed = 0, uses_anonymous_args = 0
+  51:Drivers/lvgl/src/widgets/button/lv_button.c ****     LV_LOG_INFO("begin");
+  77              		.loc 1 51 1 is_stmt 0 view .LVU12
+  78 0000 10B5     		push	{r4, lr}
+  79              	.LCFI1:
+  80              		.cfi_def_cfa_offset 8
+  81              		.cfi_offset 4, -8
+  82              		.cfi_offset 14, -4
+  83 0002 0146     		mov	r1, r0
+  52:Drivers/lvgl/src/widgets/button/lv_button.c ****     lv_obj_t * obj = lv_obj_class_create_obj(MY_CLASS, parent);
+  84              		.loc 1 52 5 is_stmt 1 view .LVU13
+  52:Drivers/lvgl/src/widgets/button/lv_button.c ****     lv_obj_t * obj = lv_obj_class_create_obj(MY_CLASS, parent);
+  85              		.loc 1 52 5 view .LVU14
+  52:Drivers/lvgl/src/widgets/button/lv_button.c ****     lv_obj_t * obj = lv_obj_class_create_obj(MY_CLASS, parent);
+  86              		.loc 1 52 5 view .LVU15
+  53:Drivers/lvgl/src/widgets/button/lv_button.c ****     lv_obj_class_init_obj(obj);
+  87              		.loc 1 53 5 view .LVU16
+  53:Drivers/lvgl/src/widgets/button/lv_button.c ****     lv_obj_class_init_obj(obj);
+  88              		.loc 1 53 22 is_stmt 0 view .LVU17
+  89 0004 0348     		ldr	r0, .L5
+  90              	.LVL6:
+  53:Drivers/lvgl/src/widgets/button/lv_button.c ****     lv_obj_class_init_obj(obj);
+  91              		.loc 1 53 22 view .LVU18
+  92 0006 FFF7FEFF 		bl	lv_obj_class_create_obj
+  93              	.LVL7:
+  53:Drivers/lvgl/src/widgets/button/lv_button.c ****     lv_obj_class_init_obj(obj);
+  94              		.loc 1 53 22 view .LVU19
+ARM GAS  /tmp/cc1dzl89.s 			page 4
+
+
+  95 000a 0446     		mov	r4, r0
+  96              	.LVL8:
+  54:Drivers/lvgl/src/widgets/button/lv_button.c ****     return obj;
+  97              		.loc 1 54 5 is_stmt 1 view .LVU20
+  98 000c FFF7FEFF 		bl	lv_obj_class_init_obj
+  99              	.LVL9:
+  55:Drivers/lvgl/src/widgets/button/lv_button.c **** }
+ 100              		.loc 1 55 5 view .LVU21
+  56:Drivers/lvgl/src/widgets/button/lv_button.c **** 
+ 101              		.loc 1 56 1 is_stmt 0 view .LVU22
+ 102 0010 2046     		mov	r0, r4
+ 103 0012 10BD     		pop	{r4, pc}
+ 104              	.LVL10:
+ 105              	.L6:
+  56:Drivers/lvgl/src/widgets/button/lv_button.c **** 
+ 106              		.loc 1 56 1 view .LVU23
+ 107              		.align	2
+ 108              	.L5:
+ 109 0014 00000000 		.word	lv_button_class
+ 110              		.cfi_endproc
+ 111              	.LFE24:
+ 113              		.global	lv_button_class
+ 114              		.section	.rodata.str1.4,"aMS",%progbits,1
+ 115              		.align	2
+ 116              	.LC0:
+ 117 0000 6C765F62 		.ascii	"lv_button\000"
+ 117      7574746F 
+ 117      6E00
+ 118              		.section	.rodata.lv_button_class,"a"
+ 119              		.align	2
+ 122              	lv_button_class:
+ 123 0000 00000000 		.word	lv_obj_class
+ 124 0004 00000000 		.word	lv_button_constructor
+ 125 0008 00000000 		.space	12
+ 125      00000000 
+ 125      00000000 
+ 126 0014 00000000 		.word	.LC0
+ 127 0018 FFFFFF3F 		.word	1073741823
+ 128 001c FFFFFF3F 		.word	1073741823
+ 129 0020 84       		.byte	132
+ 130 0021 03       		.byte	3
+ 131 0022 00       		.byte	0
+ 132 0023 00       		.space	1
+ 133              		.text
+ 134              	.Letext0:
+ 135              		.file 2 "/usr/arm-none-eabi/include/machine/_default_types.h"
+ 136              		.file 3 "/usr/arm-none-eabi/include/sys/_stdint.h"
+ 137              		.file 4 "Drivers/lvgl/src/widgets/button/../../core/../../include/lvgl/core/../lv_types.h"
+ 138              		.file 5 "Drivers/lvgl/src/widgets/button/../../core/lv_obj_private.h"
+ 139              		.file 6 "Drivers/lvgl/src/widgets/button/../../core/lv_obj_class_private.h"
+ 140              		.file 7 "Drivers/lvgl/src/widgets/button/../../core/../misc/lv_event_private.h"
+ 141              		.file 8 "Drivers/lvgl/src/widgets/button/../../core/../../include/lvgl/core/lv_area.h"
+ 142              		.file 9 "Drivers/lvgl/src/widgets/button/../../core/../../include/lvgl/core/lv_event.h"
+ 143              		.file 10 "Drivers/lvgl/src/widgets/button/../../core/../../include/lvgl/core/lv_obj_class.h"
+ 144              		.file 11 "Drivers/lvgl/src/widgets/button/../../core/../../include/lvgl/core/../indev/lv_indev.h"
+ 145              		.file 12 "Drivers/lvgl/src/widgets/button/../../core/../../include/lvgl/widgets/lv_bar.h"
+ 146              		.file 13 "Drivers/lvgl/src/widgets/button/../../core/../../include/lvgl/core/lv_obj.h"
+ARM GAS  /tmp/cc1dzl89.s 			page 5
+
+
+ 147              		.file 14 "Drivers/lvgl/src/widgets/button/../../core/../../include/lvgl/widgets/lv_button.h"
+ 148              		.file 15 "Drivers/lvgl/src/widgets/button/../../core/../misc/../misc/lv_array.h"
+ARM GAS  /tmp/cc1dzl89.s 			page 6
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 lv_button.c
+     /tmp/cc1dzl89.s:21     .text.lv_button_constructor:00000000 $t
+     /tmp/cc1dzl89.s:26     .text.lv_button_constructor:00000000 lv_button_constructor
+     /tmp/cc1dzl89.s:64     .text.lv_button_create:00000000 $t
+     /tmp/cc1dzl89.s:70     .text.lv_button_create:00000000 lv_button_create
+     /tmp/cc1dzl89.s:109    .text.lv_button_create:00000014 $d
+     /tmp/cc1dzl89.s:122    .rodata.lv_button_class:00000000 lv_button_class
+     /tmp/cc1dzl89.s:115    .rodata.str1.4:00000000 $d
+     /tmp/cc1dzl89.s:119    .rodata.lv_button_class:00000000 $d
+
+UNDEFINED SYMBOLS
+lv_obj_set_scrollable
+lv_obj_set_scroll_on_focus
+lv_obj_class_create_obj
+lv_obj_class_init_obj
+lv_obj_class

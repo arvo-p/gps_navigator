@@ -1,0 +1,4632 @@
+ARM GAS  /tmp/ccq1psjJ.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.arch armv7e-m
+   3              		.fpu fpv4-sp-d16
+   4              		.eabi_attribute 27, 1
+   5              		.eabi_attribute 28, 1
+   6              		.eabi_attribute 20, 1
+   7              		.eabi_attribute 21, 1
+   8              		.eabi_attribute 23, 3
+   9              		.eabi_attribute 24, 1
+  10              		.eabi_attribute 25, 1
+  11              		.eabi_attribute 26, 1
+  12              		.eabi_attribute 30, 1
+  13              		.eabi_attribute 34, 1
+  14              		.eabi_attribute 18, 4
+  15              		.file	"geo_math.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.file 1 "Core/Src/geo_math.c"
+  20              		.section	.text.geo_tile_coord_make,"ax",%progbits
+  21              		.align	1
+  22              		.global	geo_tile_coord_make
+  23              		.syntax unified
+  24              		.thumb
+  25              		.thumb_func
+  27              	geo_tile_coord_make:
+  28              	.LVL0:
+  29              	.LFB1:
+   1:Core/Src/geo_math.c **** /**
+   2:Core/Src/geo_math.c ****  * @file geo_math.c
+   3:Core/Src/geo_math.c ****  * @brief Pure fixed-point / integer geographic and Mercator projection algorithms.
+   4:Core/Src/geo_math.c ****  *
+   5:Core/Src/geo_math.c ****  * NOTE: Strictly zero float / double! Standard C99 integer math only.
+   6:Core/Src/geo_math.c ****  */
+   7:Core/Src/geo_math.c **** 
+   8:Core/Src/geo_math.c **** #include "geo_math.h"
+   9:Core/Src/geo_math.c **** #include "geo_lut.h"
+  10:Core/Src/geo_math.c **** 
+  11:Core/Src/geo_math.c **** GeoCoord geo_coord_make(int32_t lat_e7, int32_t lon_e7) {
+  12:Core/Src/geo_math.c ****     GeoCoord c;
+  13:Core/Src/geo_math.c ****     c.lat_e7 = geo_clamp_latitude_e7(lat_e7);
+  14:Core/Src/geo_math.c ****     c.lon_e7 = geo_wrap_longitude_e7(lon_e7);
+  15:Core/Src/geo_math.c ****     return c;
+  16:Core/Src/geo_math.c **** }
+  17:Core/Src/geo_math.c **** 
+  18:Core/Src/geo_math.c **** TileCoord geo_tile_coord_make(int32_t x, int32_t y, int32_t zoom) {
+  30              		.loc 1 18 67 view -0
+  31              		.cfi_startproc
+  32              		@ args = 0, pretend = 0, frame = 0
+  33              		@ frame_needed = 0, uses_anonymous_args = 0
+  34              		@ link register save eliminated.
+  19:Core/Src/geo_math.c ****     TileCoord t;
+  35              		.loc 1 19 5 view .LVU1
+  20:Core/Src/geo_math.c ****     t.x = x;
+  36              		.loc 1 20 5 view .LVU2
+  37              		.loc 1 20 9 is_stmt 0 view .LVU3
+  38 0000 0160     		str	r1, [r0]
+ARM GAS  /tmp/ccq1psjJ.s 			page 2
+
+
+  21:Core/Src/geo_math.c ****     t.y = y;
+  39              		.loc 1 21 5 is_stmt 1 view .LVU4
+  40              		.loc 1 21 9 is_stmt 0 view .LVU5
+  41 0002 4260     		str	r2, [r0, #4]
+  22:Core/Src/geo_math.c ****     t.zoom = zoom;
+  42              		.loc 1 22 5 is_stmt 1 view .LVU6
+  43              		.loc 1 22 12 is_stmt 0 view .LVU7
+  44 0004 8360     		str	r3, [r0, #8]
+  23:Core/Src/geo_math.c ****     return t;
+  45              		.loc 1 23 5 is_stmt 1 view .LVU8
+  24:Core/Src/geo_math.c **** }
+  46              		.loc 1 24 1 is_stmt 0 view .LVU9
+  47 0006 7047     		bx	lr
+  48              		.cfi_endproc
+  49              	.LFE1:
+  51              		.section	.text.geo_bbox_make,"ax",%progbits
+  52              		.align	1
+  53              		.global	geo_bbox_make
+  54              		.syntax unified
+  55              		.thumb
+  56              		.thumb_func
+  58              	geo_bbox_make:
+  59              	.LVL1:
+  60              	.LFB2:
+  25:Core/Src/geo_math.c **** 
+  26:Core/Src/geo_math.c **** GeoBBox geo_bbox_make(int32_t min_lat_e7, int32_t min_lon_e7, int32_t max_lat_e7, int32_t max_lon_e
+  61              		.loc 1 26 103 is_stmt 1 view -0
+  62              		.cfi_startproc
+  63              		@ args = 4, pretend = 0, frame = 0
+  64              		@ frame_needed = 0, uses_anonymous_args = 0
+  65              		@ link register save eliminated.
+  27:Core/Src/geo_math.c ****     GeoBBox b;
+  66              		.loc 1 27 5 view .LVU11
+  28:Core/Src/geo_math.c ****     b.min_lat_e7 = min_lat_e7;
+  67              		.loc 1 28 5 view .LVU12
+  68              		.loc 1 28 18 is_stmt 0 view .LVU13
+  69 0000 0160     		str	r1, [r0]
+  29:Core/Src/geo_math.c ****     b.min_lon_e7 = min_lon_e7;
+  70              		.loc 1 29 5 is_stmt 1 view .LVU14
+  71              		.loc 1 29 18 is_stmt 0 view .LVU15
+  72 0002 4260     		str	r2, [r0, #4]
+  30:Core/Src/geo_math.c ****     b.max_lat_e7 = max_lat_e7;
+  73              		.loc 1 30 5 is_stmt 1 view .LVU16
+  74              		.loc 1 30 18 is_stmt 0 view .LVU17
+  75 0004 8360     		str	r3, [r0, #8]
+  31:Core/Src/geo_math.c ****     b.max_lon_e7 = max_lon_e7;
+  76              		.loc 1 31 5 is_stmt 1 view .LVU18
+  77              		.loc 1 31 18 is_stmt 0 view .LVU19
+  78 0006 009B     		ldr	r3, [sp]
+  79              	.LVL2:
+  80              		.loc 1 31 18 view .LVU20
+  81 0008 C360     		str	r3, [r0, #12]
+  32:Core/Src/geo_math.c ****     return b;
+  82              		.loc 1 32 5 is_stmt 1 view .LVU21
+  33:Core/Src/geo_math.c **** }
+  83              		.loc 1 33 1 is_stmt 0 view .LVU22
+  84 000a 7047     		bx	lr
+ARM GAS  /tmp/ccq1psjJ.s 			page 3
+
+
+  85              		.cfi_endproc
+  86              	.LFE2:
+  88              		.section	.text.geo_clamp_latitude_e7,"ax",%progbits
+  89              		.align	1
+  90              		.global	geo_clamp_latitude_e7
+  91              		.syntax unified
+  92              		.thumb
+  93              		.thumb_func
+  95              	geo_clamp_latitude_e7:
+  96              	.LVL3:
+  97              	.LFB3:
+  34:Core/Src/geo_math.c **** 
+  35:Core/Src/geo_math.c **** int32_t geo_clamp_latitude_e7(int32_t lat_e7) {
+  98              		.loc 1 35 47 is_stmt 1 view -0
+  99              		.cfi_startproc
+ 100              		@ args = 0, pretend = 0, frame = 0
+ 101              		@ frame_needed = 0, uses_anonymous_args = 0
+ 102              		@ link register save eliminated.
+  36:Core/Src/geo_math.c ****     if (lat_e7 > GEO_LAT_MAX_E7) return GEO_LAT_MAX_E7;
+ 103              		.loc 1 36 5 view .LVU24
+ 104              		.loc 1 36 8 is_stmt 0 view .LVU25
+ 105 0000 054B     		ldr	r3, .L7
+ 106 0002 9842     		cmp	r0, r3
+ 107 0004 03DC     		bgt	.L5
+  37:Core/Src/geo_math.c ****     if (lat_e7 < GEO_LAT_MIN_E7) return GEO_LAT_MIN_E7;
+ 108              		.loc 1 37 5 is_stmt 1 view .LVU26
+ 109              		.loc 1 37 8 is_stmt 0 view .LVU27
+ 110 0006 054B     		ldr	r3, .L7+4
+ 111 0008 9842     		cmp	r0, r3
+ 112 000a 02DB     		blt	.L6
+ 113 000c 7047     		bx	lr
+ 114              	.L5:
+  36:Core/Src/geo_math.c ****     if (lat_e7 > GEO_LAT_MAX_E7) return GEO_LAT_MAX_E7;
+ 115              		.loc 1 36 41 discriminator 1 view .LVU28
+ 116 000e 0248     		ldr	r0, .L7
+ 117              	.LVL4:
+  36:Core/Src/geo_math.c ****     if (lat_e7 > GEO_LAT_MAX_E7) return GEO_LAT_MAX_E7;
+ 118              		.loc 1 36 41 discriminator 1 view .LVU29
+ 119 0010 7047     		bx	lr
+ 120              	.LVL5:
+ 121              	.L6:
+ 122              		.loc 1 37 41 discriminator 1 view .LVU30
+ 123 0012 0248     		ldr	r0, .L7+4
+ 124              	.LVL6:
+  38:Core/Src/geo_math.c ****     return lat_e7;
+  39:Core/Src/geo_math.c **** }
+ 125              		.loc 1 39 1 view .LVU31
+ 126 0014 7047     		bx	lr
+ 127              	.L8:
+ 128 0016 00BF     		.align	2
+ 129              	.L7:
+ 130 0018 B7C5B132 		.word	850511287
+ 131 001c 493A4ECD 		.word	-850511287
+ 132              		.cfi_endproc
+ 133              	.LFE3:
+ 135              		.section	.text.geo_wrap_longitude_e7,"ax",%progbits
+ 136              		.align	1
+ARM GAS  /tmp/ccq1psjJ.s 			page 4
+
+
+ 137              		.global	geo_wrap_longitude_e7
+ 138              		.syntax unified
+ 139              		.thumb
+ 140              		.thumb_func
+ 142              	geo_wrap_longitude_e7:
+ 143              	.LVL7:
+ 144              	.LFB4:
+  40:Core/Src/geo_math.c **** 
+  41:Core/Src/geo_math.c **** int32_t geo_wrap_longitude_e7(int32_t lon_e7) {
+ 145              		.loc 1 41 47 is_stmt 1 view -0
+ 146              		.cfi_startproc
+ 147              		@ args = 0, pretend = 0, frame = 0
+ 148              		@ frame_needed = 0, uses_anonymous_args = 0
+ 149              		@ link register save eliminated.
+  42:Core/Src/geo_math.c ****     while (lon_e7 > GEO_LON_MAX_E7) lon_e7 -= 3600000000LL;
+ 150              		.loc 1 42 5 view .LVU33
+ 151              	.L10:
+ 152              		.loc 1 42 19 discriminator 2 view .LVU34
+ 153 0000 0A4B     		ldr	r3, .L14
+ 154 0002 9842     		cmp	r0, r3
+ 155 0004 03DC     		bgt	.L11
+ 156              	.LVL8:
+ 157              	.L12:
+  43:Core/Src/geo_math.c ****     while (lon_e7 < GEO_LON_MIN_E7) lon_e7 += 3600000000LL;
+ 158              		.loc 1 43 19 discriminator 2 view .LVU35
+ 159 0006 0A4B     		ldr	r3, .L14+4
+ 160 0008 9842     		cmp	r0, r3
+ 161 000a 07DB     		blt	.L13
+  44:Core/Src/geo_math.c ****     return lon_e7;
+ 162              		.loc 1 44 5 view .LVU36
+  45:Core/Src/geo_math.c **** }
+ 163              		.loc 1 45 1 is_stmt 0 view .LVU37
+ 164 000c 7047     		bx	lr
+ 165              	.L11:
+  42:Core/Src/geo_math.c ****     while (lon_e7 < GEO_LON_MIN_E7) lon_e7 += 3600000000LL;
+ 166              		.loc 1 42 37 is_stmt 1 discriminator 1 view .LVU38
+  42:Core/Src/geo_math.c ****     while (lon_e7 < GEO_LON_MIN_E7) lon_e7 += 3600000000LL;
+ 167              		.loc 1 42 44 is_stmt 0 discriminator 1 view .LVU39
+ 168 000e 00F12550 		add	r0, r0, #692060160
+ 169              	.LVL9:
+  42:Core/Src/geo_math.c ****     while (lon_e7 < GEO_LON_MIN_E7) lon_e7 += 3600000000LL;
+ 170              		.loc 1 42 44 discriminator 1 view .LVU40
+ 171 0012 00F53110 		add	r0, r0, #2899968
+ 172              	.LVL10:
+  42:Core/Src/geo_math.c ****     while (lon_e7 < GEO_LON_MIN_E7) lon_e7 += 3600000000LL;
+ 173              		.loc 1 42 44 discriminator 1 view .LVU41
+ 174 0016 00F5E050 		add	r0, r0, #7168
+ 175              	.LVL11:
+  42:Core/Src/geo_math.c ****     while (lon_e7 < GEO_LON_MIN_E7) lon_e7 += 3600000000LL;
+ 176              		.loc 1 42 44 discriminator 1 view .LVU42
+ 177 001a F1E7     		b	.L10
+ 178              	.LVL12:
+ 179              	.L13:
+  43:Core/Src/geo_math.c ****     return lon_e7;
+ 180              		.loc 1 43 37 is_stmt 1 discriminator 1 view .LVU43
+  43:Core/Src/geo_math.c ****     return lon_e7;
+ 181              		.loc 1 43 44 is_stmt 0 discriminator 1 view .LVU44
+ARM GAS  /tmp/ccq1psjJ.s 			page 5
+
+
+ 182 001c 00F15640 		add	r0, r0, #-704643072
+ 183              	.LVL13:
+  43:Core/Src/geo_math.c ****     return lon_e7;
+ 184              		.loc 1 43 44 discriminator 1 view .LVU45
+ 185 0020 00F51300 		add	r0, r0, #9633792
+ 186              	.LVL14:
+  43:Core/Src/geo_math.c ****     return lon_e7;
+ 187              		.loc 1 43 44 discriminator 1 view .LVU46
+ 188 0024 00F52440 		add	r0, r0, #41984
+ 189              	.LVL15:
+  43:Core/Src/geo_math.c ****     return lon_e7;
+ 190              		.loc 1 43 44 discriminator 1 view .LVU47
+ 191 0028 EDE7     		b	.L12
+ 192              	.L15:
+ 193 002a 00BF     		.align	2
+ 194              	.L14:
+ 195 002c 00D2496B 		.word	1800000000
+ 196 0030 002EB694 		.word	-1800000000
+ 197              		.cfi_endproc
+ 198              	.LFE4:
+ 200              		.section	.text.geo_coord_make,"ax",%progbits
+ 201              		.align	1
+ 202              		.global	geo_coord_make
+ 203              		.syntax unified
+ 204              		.thumb
+ 205              		.thumb_func
+ 207              	geo_coord_make:
+ 208              	.LVL16:
+ 209              	.LFB0:
+  11:Core/Src/geo_math.c ****     GeoCoord c;
+ 210              		.loc 1 11 57 is_stmt 1 view -0
+ 211              		.cfi_startproc
+ 212              		@ args = 0, pretend = 0, frame = 0
+ 213              		@ frame_needed = 0, uses_anonymous_args = 0
+  11:Core/Src/geo_math.c ****     GeoCoord c;
+ 214              		.loc 1 11 57 is_stmt 0 view .LVU49
+ 215 0000 38B5     		push	{r3, r4, r5, lr}
+ 216              	.LCFI0:
+ 217              		.cfi_def_cfa_offset 16
+ 218              		.cfi_offset 3, -16
+ 219              		.cfi_offset 4, -12
+ 220              		.cfi_offset 5, -8
+ 221              		.cfi_offset 14, -4
+ 222 0002 0446     		mov	r4, r0
+ 223 0004 1546     		mov	r5, r2
+  12:Core/Src/geo_math.c ****     c.lat_e7 = geo_clamp_latitude_e7(lat_e7);
+ 224              		.loc 1 12 5 is_stmt 1 view .LVU50
+  13:Core/Src/geo_math.c ****     c.lon_e7 = geo_wrap_longitude_e7(lon_e7);
+ 225              		.loc 1 13 5 view .LVU51
+  13:Core/Src/geo_math.c ****     c.lon_e7 = geo_wrap_longitude_e7(lon_e7);
+ 226              		.loc 1 13 16 is_stmt 0 view .LVU52
+ 227 0006 0846     		mov	r0, r1
+ 228              	.LVL17:
+  13:Core/Src/geo_math.c ****     c.lon_e7 = geo_wrap_longitude_e7(lon_e7);
+ 229              		.loc 1 13 16 view .LVU53
+ 230 0008 FFF7FEFF 		bl	geo_clamp_latitude_e7
+ 231              	.LVL18:
+ARM GAS  /tmp/ccq1psjJ.s 			page 6
+
+
+  13:Core/Src/geo_math.c ****     c.lon_e7 = geo_wrap_longitude_e7(lon_e7);
+ 232              		.loc 1 13 14 discriminator 1 view .LVU54
+ 233 000c 2060     		str	r0, [r4]
+  14:Core/Src/geo_math.c ****     return c;
+ 234              		.loc 1 14 5 is_stmt 1 view .LVU55
+  14:Core/Src/geo_math.c ****     return c;
+ 235              		.loc 1 14 16 is_stmt 0 view .LVU56
+ 236 000e 2846     		mov	r0, r5
+ 237 0010 FFF7FEFF 		bl	geo_wrap_longitude_e7
+ 238              	.LVL19:
+  14:Core/Src/geo_math.c ****     return c;
+ 239              		.loc 1 14 14 discriminator 1 view .LVU57
+ 240 0014 6060     		str	r0, [r4, #4]
+  15:Core/Src/geo_math.c **** }
+ 241              		.loc 1 15 5 is_stmt 1 view .LVU58
+  16:Core/Src/geo_math.c **** 
+ 242              		.loc 1 16 1 is_stmt 0 view .LVU59
+ 243 0016 2046     		mov	r0, r4
+ 244 0018 38BD     		pop	{r3, r4, r5, pc}
+  16:Core/Src/geo_math.c **** 
+ 245              		.loc 1 16 1 view .LVU60
+ 246              		.cfi_endproc
+ 247              	.LFE0:
+ 249              		.section	.text.geo_coord_is_in_bbox,"ax",%progbits
+ 250              		.align	1
+ 251              		.global	geo_coord_is_in_bbox
+ 252              		.syntax unified
+ 253              		.thumb
+ 254              		.thumb_func
+ 256              	geo_coord_is_in_bbox:
+ 257              	.LFB5:
+  46:Core/Src/geo_math.c **** 
+  47:Core/Src/geo_math.c **** bool geo_coord_is_in_bbox(GeoCoord coord, GeoBBox bbox) {
+ 258              		.loc 1 47 57 is_stmt 1 view -0
+ 259              		.cfi_startproc
+ 260              		@ args = 16, pretend = 8, frame = 8
+ 261              		@ frame_needed = 0, uses_anonymous_args = 0
+ 262              		@ link register save eliminated.
+ 263 0000 82B0     		sub	sp, sp, #8
+ 264              	.LCFI1:
+ 265              		.cfi_def_cfa_offset 8
+ 266 0002 82B0     		sub	sp, sp, #8
+ 267              	.LCFI2:
+ 268              		.cfi_def_cfa_offset 16
+ 269 0004 0DF1080C 		add	ip, sp, #8
+ 270 0008 0CE90300 		stmdb	ip, {r0, r1}
+ 271 000c CCE90023 		strd	r2, r3, [ip]
+  48:Core/Src/geo_math.c ****     return (coord.lat_e7 >= bbox.min_lat_e7 && coord.lat_e7 <= bbox.max_lat_e7 &&
+ 272              		.loc 1 48 5 view .LVU62
+  49:Core/Src/geo_math.c ****             coord.lon_e7 >= bbox.min_lon_e7 && coord.lon_e7 <= bbox.max_lon_e7);
+ 273              		.loc 1 49 45 is_stmt 0 view .LVU63
+ 274 0010 9042     		cmp	r0, r2
+ 275 0012 02DB     		blt	.L19
+  48:Core/Src/geo_math.c ****     return (coord.lat_e7 >= bbox.min_lat_e7 && coord.lat_e7 <= bbox.max_lat_e7 &&
+ 276              		.loc 1 48 68 discriminator 1 view .LVU64
+ 277 0014 049A     		ldr	r2, [sp, #16]
+  48:Core/Src/geo_math.c ****     return (coord.lat_e7 >= bbox.min_lat_e7 && coord.lat_e7 <= bbox.max_lat_e7 &&
+ARM GAS  /tmp/ccq1psjJ.s 			page 7
+
+
+ 278              		.loc 1 48 45 discriminator 1 view .LVU65
+ 279 0016 9042     		cmp	r0, r2
+ 280 0018 03DD     		ble	.L20
+ 281              	.L19:
+ 282              		.loc 1 49 45 discriminator 4 view .LVU66
+ 283 001a 0020     		movs	r0, #0
+ 284              	.L21:
+  50:Core/Src/geo_math.c **** }
+ 285              		.loc 1 50 1 view .LVU67
+ 286 001c 02B0     		add	sp, sp, #8
+ 287              	.LCFI3:
+ 288              		.cfi_remember_state
+ 289              		.cfi_def_cfa_offset 8
+ 290              		@ sp needed
+ 291 001e 02B0     		add	sp, sp, #8
+ 292              	.LCFI4:
+ 293              		.cfi_def_cfa_offset 0
+ 294 0020 7047     		bx	lr
+ 295              	.L20:
+ 296              	.LCFI5:
+ 297              		.cfi_restore_state
+  49:Core/Src/geo_math.c ****             coord.lon_e7 >= bbox.min_lon_e7 && coord.lon_e7 <= bbox.max_lon_e7);
+ 298              		.loc 1 49 18 discriminator 1 view .LVU68
+ 299 0022 019B     		ldr	r3, [sp, #4]
+  49:Core/Src/geo_math.c ****             coord.lon_e7 >= bbox.min_lon_e7 && coord.lon_e7 <= bbox.max_lon_e7);
+ 300              		.loc 1 49 33 discriminator 1 view .LVU69
+ 301 0024 039A     		ldr	r2, [sp, #12]
+  48:Core/Src/geo_math.c ****     return (coord.lat_e7 >= bbox.min_lat_e7 && coord.lat_e7 <= bbox.max_lat_e7 &&
+ 302              		.loc 1 48 80 discriminator 2 view .LVU70
+ 303 0026 9342     		cmp	r3, r2
+ 304 0028 F7DB     		blt	.L19
+  49:Core/Src/geo_math.c ****             coord.lon_e7 >= bbox.min_lon_e7 && coord.lon_e7 <= bbox.max_lon_e7);
+ 305              		.loc 1 49 68 discriminator 2 view .LVU71
+ 306 002a 059A     		ldr	r2, [sp, #20]
+  49:Core/Src/geo_math.c ****             coord.lon_e7 >= bbox.min_lon_e7 && coord.lon_e7 <= bbox.max_lon_e7);
+ 307              		.loc 1 49 45 discriminator 2 view .LVU72
+ 308 002c 9342     		cmp	r3, r2
+ 309 002e 01DD     		ble	.L22
+  49:Core/Src/geo_math.c ****             coord.lon_e7 >= bbox.min_lon_e7 && coord.lon_e7 <= bbox.max_lon_e7);
+ 310              		.loc 1 49 45 discriminator 4 view .LVU73
+ 311 0030 0020     		movs	r0, #0
+ 312 0032 F3E7     		b	.L21
+ 313              	.L22:
+  49:Core/Src/geo_math.c ****             coord.lon_e7 >= bbox.min_lon_e7 && coord.lon_e7 <= bbox.max_lon_e7);
+ 314              		.loc 1 49 45 discriminator 3 view .LVU74
+ 315 0034 0120     		movs	r0, #1
+ 316 0036 F1E7     		b	.L21
+ 317              		.cfi_endproc
+ 318              	.LFE5:
+ 320              		.section	.text.geo_isqrt64,"ax",%progbits
+ 321              		.align	1
+ 322              		.global	geo_isqrt64
+ 323              		.syntax unified
+ 324              		.thumb
+ 325              		.thumb_func
+ 327              	geo_isqrt64:
+ 328              	.LVL20:
+ARM GAS  /tmp/ccq1psjJ.s 			page 8
+
+
+ 329              	.LFB6:
+  51:Core/Src/geo_math.c **** 
+  52:Core/Src/geo_math.c **** /**
+  53:Core/Src/geo_math.c ****  * @brief Fast 64-bit integer square root (binary restoring method).
+  54:Core/Src/geo_math.c ****  * 0 byte table overhead, ~16-32 instructions on ARM Cortex-M.
+  55:Core/Src/geo_math.c ****  */
+  56:Core/Src/geo_math.c **** uint32_t geo_isqrt64(uint64_t n) {
+ 330              		.loc 1 56 34 is_stmt 1 view -0
+ 331              		.cfi_startproc
+ 332              		@ args = 0, pretend = 0, frame = 0
+ 333              		@ frame_needed = 0, uses_anonymous_args = 0
+  57:Core/Src/geo_math.c ****     if (n == 0) return 0;
+ 334              		.loc 1 57 5 view .LVU76
+ 335              		.loc 1 57 8 is_stmt 0 view .LVU77
+ 336 0000 50EA0103 		orrs	r3, r0, r1
+ 337 0004 30D0     		beq	.L32
+  56:Core/Src/geo_math.c ****     if (n == 0) return 0;
+ 338              		.loc 1 56 34 view .LVU78
+ 339 0006 70B5     		push	{r4, r5, r6, lr}
+ 340              	.LCFI6:
+ 341              		.cfi_def_cfa_offset 16
+ 342              		.cfi_offset 4, -16
+ 343              		.cfi_offset 5, -12
+ 344              		.cfi_offset 6, -8
+ 345              		.cfi_offset 14, -4
+ 346 0008 8446     		mov	ip, r0
+ 347 000a 0C46     		mov	r4, r1
+  58:Core/Src/geo_math.c ****     uint64_t root = 0;
+  59:Core/Src/geo_math.c ****     uint64_t bit = 1ULL << 62;
+ 348              		.loc 1 59 14 view .LVU79
+ 349 000c 0023     		movs	r3, #0
+ 350 000e 4FF08042 		mov	r2, #1073741824
+ 351 0012 03E0     		b	.L26
+ 352              	.LVL21:
+ 353              	.L27:
+  60:Core/Src/geo_math.c **** 
+  61:Core/Src/geo_math.c ****     while (bit > n) {
+  62:Core/Src/geo_math.c ****         bit >>= 2;
+ 354              		.loc 1 62 9 is_stmt 1 view .LVU80
+ 355              		.loc 1 62 13 is_stmt 0 view .LVU81
+ 356 0014 9B08     		lsrs	r3, r3, #2
+ 357              	.LVL22:
+ 358              		.loc 1 62 13 view .LVU82
+ 359 0016 43EA8273 		orr	r3, r3, r2, lsl #30
+ 360 001a 9208     		lsrs	r2, r2, #2
+ 361              	.LVL23:
+ 362              	.L26:
+  61:Core/Src/geo_math.c ****         bit >>= 2;
+ 363              		.loc 1 61 16 is_stmt 1 discriminator 1 view .LVU83
+ 364 001c 9C45     		cmp	ip, r3
+ 365 001e 74EB0201 		sbcs	r1, r4, r2
+ 366 0022 F7D3     		bcc	.L27
+  58:Core/Src/geo_math.c ****     uint64_t root = 0;
+ 367              		.loc 1 58 14 is_stmt 0 view .LVU84
+ 368 0024 0020     		movs	r0, #0
+ 369              	.LVL24:
+  58:Core/Src/geo_math.c ****     uint64_t root = 0;
+ARM GAS  /tmp/ccq1psjJ.s 			page 9
+
+
+ 370              		.loc 1 58 14 view .LVU85
+ 371 0026 8646     		mov	lr, r0
+ 372 0028 08E0     		b	.L28
+ 373              	.LVL25:
+ 374              	.L29:
+  63:Core/Src/geo_math.c ****     }
+  64:Core/Src/geo_math.c **** 
+  65:Core/Src/geo_math.c ****     while (bit != 0) {
+  66:Core/Src/geo_math.c ****         if (n >= root + bit) {
+  67:Core/Src/geo_math.c ****             n -= root + bit;
+  68:Core/Src/geo_math.c ****             root = (root >> 1) + bit;
+  69:Core/Src/geo_math.c ****         } else {
+  70:Core/Src/geo_math.c ****             root >>= 1;
+ 375              		.loc 1 70 13 is_stmt 1 view .LVU86
+ 376              		.loc 1 70 18 is_stmt 0 view .LVU87
+ 377 002a 4008     		lsrs	r0, r0, #1
+ 378              	.LVL26:
+ 379              		.loc 1 70 18 view .LVU88
+ 380 002c 40EACE70 		orr	r0, r0, lr, lsl #31
+ 381 0030 4FEA5E0E 		lsr	lr, lr, #1
+ 382              	.LVL27:
+ 383              	.L30:
+  71:Core/Src/geo_math.c ****         }
+  72:Core/Src/geo_math.c ****         bit >>= 2;
+ 384              		.loc 1 72 9 is_stmt 1 view .LVU89
+ 385              		.loc 1 72 13 is_stmt 0 view .LVU90
+ 386 0034 9B08     		lsrs	r3, r3, #2
+ 387              	.LVL28:
+ 388              		.loc 1 72 13 view .LVU91
+ 389 0036 43EA8273 		orr	r3, r3, r2, lsl #30
+ 390 003a 9208     		lsrs	r2, r2, #2
+ 391              	.LVL29:
+ 392              	.L28:
+  65:Core/Src/geo_math.c ****         if (n >= root + bit) {
+ 393              		.loc 1 65 16 is_stmt 1 discriminator 1 view .LVU92
+ 394 003c 53EA0201 		orrs	r1, r3, r2
+ 395 0040 14D0     		beq	.L37
+  66:Core/Src/geo_math.c ****             n -= root + bit;
+ 396              		.loc 1 66 9 view .LVU93
+  66:Core/Src/geo_math.c ****             n -= root + bit;
+ 397              		.loc 1 66 23 is_stmt 0 view .LVU94
+ 398 0042 C118     		adds	r1, r0, r3
+ 399 0044 4EEB0205 		adc	r5, lr, r2
+  66:Core/Src/geo_math.c ****             n -= root + bit;
+ 400              		.loc 1 66 12 view .LVU95
+ 401 0048 8C45     		cmp	ip, r1
+ 402 004a 74EB0506 		sbcs	r6, r4, r5
+ 403 004e ECD3     		bcc	.L29
+  67:Core/Src/geo_math.c ****             root = (root >> 1) + bit;
+ 404              		.loc 1 67 13 is_stmt 1 view .LVU96
+  67:Core/Src/geo_math.c ****             root = (root >> 1) + bit;
+ 405              		.loc 1 67 15 is_stmt 0 view .LVU97
+ 406 0050 BCEB0101 		subs	r1, ip, r1
+ 407 0054 8C46     		mov	ip, r1
+ 408              	.LVL30:
+  67:Core/Src/geo_math.c ****             root = (root >> 1) + bit;
+ 409              		.loc 1 67 15 view .LVU98
+ARM GAS  /tmp/ccq1psjJ.s 			page 10
+
+
+ 410 0056 64EB0504 		sbc	r4, r4, r5
+ 411              	.LVL31:
+  68:Core/Src/geo_math.c ****         } else {
+ 412              		.loc 1 68 13 is_stmt 1 view .LVU99
+  68:Core/Src/geo_math.c ****         } else {
+ 413              		.loc 1 68 26 is_stmt 0 view .LVU100
+ 414 005a 4008     		lsrs	r0, r0, #1
+ 415              	.LVL32:
+  68:Core/Src/geo_math.c ****         } else {
+ 416              		.loc 1 68 26 view .LVU101
+ 417 005c 40EACE70 		orr	r0, r0, lr, lsl #31
+  68:Core/Src/geo_math.c ****         } else {
+ 418              		.loc 1 68 18 view .LVU102
+ 419 0060 C018     		adds	r0, r0, r3
+ 420 0062 42EB5E0E 		adc	lr, r2, lr, lsr #1
+ 421              	.LVL33:
+  68:Core/Src/geo_math.c ****         } else {
+ 422              		.loc 1 68 18 view .LVU103
+ 423 0066 E5E7     		b	.L30
+ 424              	.LVL34:
+ 425              	.L32:
+ 426              	.LCFI7:
+ 427              		.cfi_def_cfa_offset 0
+ 428              		.cfi_restore 4
+ 429              		.cfi_restore 5
+ 430              		.cfi_restore 6
+ 431              		.cfi_restore 14
+  57:Core/Src/geo_math.c ****     uint64_t root = 0;
+ 432              		.loc 1 57 24 discriminator 1 view .LVU104
+ 433 0068 0020     		movs	r0, #0
+ 434              	.LVL35:
+  73:Core/Src/geo_math.c ****     }
+  74:Core/Src/geo_math.c ****     return (uint32_t)root;
+  75:Core/Src/geo_math.c **** }
+ 435              		.loc 1 75 1 view .LVU105
+ 436 006a 7047     		bx	lr
+ 437              	.LVL36:
+ 438              	.L37:
+ 439              	.LCFI8:
+ 440              		.cfi_def_cfa_offset 16
+ 441              		.cfi_offset 4, -16
+ 442              		.cfi_offset 5, -12
+ 443              		.cfi_offset 6, -8
+ 444              		.cfi_offset 14, -4
+ 445              		.loc 1 75 1 view .LVU106
+ 446 006c 70BD     		pop	{r4, r5, r6, pc}
+ 447              		.loc 1 75 1 view .LVU107
+ 448              		.cfi_endproc
+ 449              	.LFE6:
+ 451              		.section	.text.geo_latlon_to_world_point32,"ax",%progbits
+ 452              		.align	1
+ 453              		.global	geo_latlon_to_world_point32
+ 454              		.syntax unified
+ 455              		.thumb
+ 456              		.thumb_func
+ 458              	geo_latlon_to_world_point32:
+ 459              	.LVL37:
+ARM GAS  /tmp/ccq1psjJ.s 			page 11
+
+
+ 460              	.LFB7:
+  76:Core/Src/geo_math.c **** 
+  77:Core/Src/geo_math.c **** void geo_latlon_to_world_point32(GeoCoord coord, WorldPoint32 *out_wp) {
+ 461              		.loc 1 77 72 is_stmt 1 view -0
+ 462              		.cfi_startproc
+ 463              		@ args = 0, pretend = 0, frame = 8
+ 464              		@ frame_needed = 0, uses_anonymous_args = 0
+ 465              		.loc 1 77 72 is_stmt 0 view .LVU109
+ 466 0000 2DE9F041 		push	{r4, r5, r6, r7, r8, lr}
+ 467              	.LCFI9:
+ 468              		.cfi_def_cfa_offset 24
+ 469              		.cfi_offset 4, -24
+ 470              		.cfi_offset 5, -20
+ 471              		.cfi_offset 6, -16
+ 472              		.cfi_offset 7, -12
+ 473              		.cfi_offset 8, -8
+ 474              		.cfi_offset 14, -4
+ 475 0004 82B0     		sub	sp, sp, #8
+ 476              	.LCFI10:
+ 477              		.cfi_def_cfa_offset 32
+ 478 0006 02AB     		add	r3, sp, #8
+ 479 0008 03E90300 		stmdb	r3, {r0, r1}
+  78:Core/Src/geo_math.c ****     if (!out_wp) return;
+ 480              		.loc 1 78 5 is_stmt 1 view .LVU110
+ 481              		.loc 1 78 8 is_stmt 0 view .LVU111
+ 482 000c 002A     		cmp	r2, #0
+ 483 000e 79D0     		beq	.L38
+ 484 0010 1646     		mov	r6, r2
+ 485 0012 1746     		mov	r7, r2
+  79:Core/Src/geo_math.c **** 
+  80:Core/Src/geo_math.c ****     int32_t lon = geo_wrap_longitude_e7(coord.lon_e7);
+ 486              		.loc 1 80 5 is_stmt 1 view .LVU112
+ 487              		.loc 1 80 19 is_stmt 0 view .LVU113
+ 488 0014 0846     		mov	r0, r1
+ 489 0016 FFF7FEFF 		bl	geo_wrap_longitude_e7
+ 490              	.LVL38:
+ 491              		.loc 1 80 19 view .LVU114
+ 492 001a 0546     		mov	r5, r0
+ 493              	.LVL39:
+  81:Core/Src/geo_math.c ****     int32_t lat = geo_clamp_latitude_e7(coord.lat_e7);
+ 494              		.loc 1 81 5 is_stmt 1 view .LVU115
+ 495              		.loc 1 81 19 is_stmt 0 view .LVU116
+ 496 001c 0098     		ldr	r0, [sp]
+ 497              	.LVL40:
+ 498              		.loc 1 81 19 view .LVU117
+ 499 001e FFF7FEFF 		bl	geo_clamp_latitude_e7
+ 500              	.LVL41:
+ 501 0022 0446     		mov	r4, r0
+ 502              	.LVL42:
+  82:Core/Src/geo_math.c **** 
+  83:Core/Src/geo_math.c ****     /* ------------------------------------------------------------- */
+  84:Core/Src/geo_math.c ****     /* 1. Longitude -> X32:                                          */
+  85:Core/Src/geo_math.c ****     /* Shift [-180..+180] deg to [0..360] deg.                       */
+  86:Core/Src/geo_math.c ****     /* (lon + 180e7) * 2^32 / 360e7 = (lon + 180e7) * 4194304 / 3515625 */
+  87:Core/Src/geo_math.c ****     /* ------------------------------------------------------------- */
+  88:Core/Src/geo_math.c ****     uint64_t lon_shifted = (uint64_t)((int64_t)lon + 1800000000LL);
+ 503              		.loc 1 88 5 is_stmt 1 view .LVU118
+ARM GAS  /tmp/ccq1psjJ.s 			page 12
+
+
+ 504              		.loc 1 88 39 is_stmt 0 view .LVU119
+ 505 0024 E917     		asrs	r1, r5, #31
+ 506              		.loc 1 88 52 view .LVU120
+ 507 0026 3E4B     		ldr	r3, .L47+8
+ 508 0028 ED18     		adds	r5, r5, r3
+ 509              	.LVL43:
+ 510              		.loc 1 88 52 view .LVU121
+ 511 002a 41F10001 		adc	r1, r1, #0
+ 512              	.LVL44:
+  89:Core/Src/geo_math.c ****     out_wp->x = (uint32_t)((lon_shifted * 4194304ULL) / 3515625ULL);
+ 513              		.loc 1 89 5 is_stmt 1 view .LVU122
+ 514              		.loc 1 89 41 is_stmt 0 view .LVU123
+ 515 002e 8905     		lsls	r1, r1, #22
+ 516              	.LVL45:
+ 517              		.loc 1 89 55 view .LVU124
+ 518 0030 39A3     		adr	r3, .L47
+ 519 0032 D3E90023 		ldrd	r2, [r3]
+ 520 0036 A805     		lsls	r0, r5, #22
+ 521              	.LVL46:
+ 522              		.loc 1 89 55 view .LVU125
+ 523 0038 41EA9521 		orr	r1, r1, r5, lsr #10
+ 524 003c FFF7FEFF 		bl	__aeabi_uldivmod
+ 525              	.LVL47:
+ 526              		.loc 1 89 15 view .LVU126
+ 527 0040 3060     		str	r0, [r6]
+  90:Core/Src/geo_math.c **** 
+  91:Core/Src/geo_math.c ****     /* ------------------------------------------------------------- */
+  92:Core/Src/geo_math.c ****     /* 2. Latitude -> Y32:                                           */
+  93:Core/Src/geo_math.c ****     /* Uses symmetric Forward LUT with fixed-point quadratic inter-  */
+  94:Core/Src/geo_math.c ****     /* polation.                                                     */
+  95:Core/Src/geo_math.c ****     /* ------------------------------------------------------------- */
+  96:Core/Src/geo_math.c ****     int is_south = 0;
+ 528              		.loc 1 96 5 is_stmt 1 view .LVU127
+ 529              	.LVL48:
+  97:Core/Src/geo_math.c ****     if (lat < 0) {
+ 530              		.loc 1 97 5 view .LVU128
+ 531              		.loc 1 97 8 is_stmt 0 view .LVU129
+ 532 0042 002C     		cmp	r4, #0
+ 533 0044 61DB     		blt	.L46
+  96:Core/Src/geo_math.c ****     if (lat < 0) {
+ 534              		.loc 1 96 9 view .LVU130
+ 535 0046 0023     		movs	r3, #0
+ 536 0048 9846     		mov	r8, r3
+ 537              	.LVL49:
+ 538              	.L40:
+  98:Core/Src/geo_math.c ****         is_south = 1;
+  99:Core/Src/geo_math.c ****         lat = -lat;
+ 100:Core/Src/geo_math.c ****     }
+ 101:Core/Src/geo_math.c **** 
+ 102:Core/Src/geo_math.c ****     int32_t idx = lat / GEO_LUT_STEP_LAT_E7;
+ 539              		.loc 1 102 5 is_stmt 1 view .LVU131
+ 540              		.loc 1 102 13 is_stmt 0 view .LVU132
+ 541 004a 364B     		ldr	r3, .L47+12
+ 542 004c 83FB0423 		smull	r2, r3, r3, r4
+ 543 0050 2344     		add	r3, r3, r4
+ 544 0052 E517     		asrs	r5, r4, #31
+ 545              	.LVL50:
+ARM GAS  /tmp/ccq1psjJ.s 			page 13
+
+
+ 546              		.loc 1 102 13 view .LVU133
+ 547 0054 C5EBE345 		rsb	r5, r5, r3, asr #19
+ 548              	.LVL51:
+ 103:Core/Src/geo_math.c ****     if (idx >= GEO_LUT_N) idx = GEO_LUT_N - 1;
+ 549              		.loc 1 103 5 is_stmt 1 view .LVU134
+ 550              		.loc 1 103 8 is_stmt 0 view .LVU135
+ 551 0058 334B     		ldr	r3, .L47+16
+ 552 005a 9C42     		cmp	r4, r3
+ 553 005c 01DD     		ble	.L41
+ 554              		.loc 1 103 31 discriminator 1 view .LVU136
+ 555 005e 40F2FF35 		movw	r5, #1023
+ 556              	.LVL52:
+ 557              	.L41:
+ 104:Core/Src/geo_math.c **** 
+ 105:Core/Src/geo_math.c ****     int64_t rem = (int64_t)(lat - idx * GEO_LUT_STEP_LAT_E7);
+ 558              		.loc 1 105 5 is_stmt 1 view .LVU137
+ 559              		.loc 1 105 33 is_stmt 0 view .LVU138
+ 560 0062 324B     		ldr	r3, .L47+20
+ 561 0064 03FB0544 		mla	r4, r3, r5, r4
+ 562              	.LVL53:
+ 563              		.loc 1 105 13 view .LVU139
+ 564 0068 E117     		asrs	r1, r4, #31
+ 565              	.LVL54:
+ 106:Core/Src/geo_math.c ****     int64_t t_q16 = (rem * 65536LL) / GEO_LUT_STEP_LAT_E7;
+ 566              		.loc 1 106 5 is_stmt 1 view .LVU140
+ 567              		.loc 1 106 26 is_stmt 0 view .LVU141
+ 568 006a 0904     		lsls	r1, r1, #16
+ 569              	.LVL55:
+ 570              		.loc 1 106 13 view .LVU142
+ 571 006c 304A     		ldr	r2, .L47+24
+ 572 006e 0023     		movs	r3, #0
+ 573 0070 2004     		lsls	r0, r4, #16
+ 574 0072 41EA1441 		orr	r1, r1, r4, lsr #16
+ 575 0076 FFF7FEFF 		bl	__aeabi_ldivmod
+ 576              	.LVL56:
+ 577 007a 8646     		mov	lr, r0
+ 578              	.LVL57:
+ 107:Core/Src/geo_math.c **** 
+ 108:Core/Src/geo_math.c ****     int64_t y0 = (int64_t)GEO_MERCATOR_FORWARD_LUT[idx];
+ 579              		.loc 1 108 5 is_stmt 1 view .LVU143
+ 580              		.loc 1 108 51 is_stmt 0 view .LVU144
+ 581 007c DFF8B4C0 		ldr	ip, .L47+28
+ 582 0080 5CF82520 		ldr	r2, [ip, r5, lsl #2]
+ 583              		.loc 1 108 13 view .LVU145
+ 584 0084 0024     		movs	r4, #0
+ 585              	.LVL58:
+ 109:Core/Src/geo_math.c ****     int64_t y1 = (int64_t)GEO_MERCATOR_FORWARD_LUT[idx + 1];
+ 586              		.loc 1 109 5 is_stmt 1 view .LVU146
+ 587              		.loc 1 109 56 is_stmt 0 view .LVU147
+ 588 0086 6B1C     		adds	r3, r5, #1
+ 589              		.loc 1 109 51 view .LVU148
+ 590 0088 5CF82330 		ldr	r3, [ip, r3, lsl #2]
+ 591              	.LVL59:
+ 110:Core/Src/geo_math.c ****     int64_t y2 = (int64_t)GEO_MERCATOR_FORWARD_LUT[idx + 2];
+ 592              		.loc 1 110 5 is_stmt 1 view .LVU149
+ 593              		.loc 1 110 56 is_stmt 0 view .LVU150
+ 594 008c 0235     		adds	r5, r5, #2
+ARM GAS  /tmp/ccq1psjJ.s 			page 14
+
+
+ 595              	.LVL60:
+ 596              		.loc 1 110 51 view .LVU151
+ 597 008e 5CF82560 		ldr	r6, [ip, r5, lsl #2]
+ 598              	.LVL61:
+ 111:Core/Src/geo_math.c **** 
+ 112:Core/Src/geo_math.c ****     int64_t delta1 = y1 - y0;
+ 599              		.loc 1 112 5 is_stmt 1 view .LVU152
+ 600              		.loc 1 112 13 is_stmt 0 view .LVU153
+ 601 0092 B3EB020C 		subs	ip, r3, r2
+ 602 0096 64EB0405 		sbc	r5, r4, r4
+ 603              	.LVL62:
+ 113:Core/Src/geo_math.c ****     int64_t delta2 = y2 - 2 * y1 + y0;
+ 604              		.loc 1 113 5 is_stmt 1 view .LVU154
+ 605              		.loc 1 113 29 is_stmt 0 view .LVU155
+ 606 009a DB18     		adds	r3, r3, r3
+ 607              	.LVL63:
+ 608              		.loc 1 113 29 view .LVU156
+ 609 009c 6441     		adcs	r4, r4, r4
+ 610              		.loc 1 113 25 view .LVU157
+ 611 009e F61A     		subs	r6, r6, r3
+ 612              	.LVL64:
+ 613              		.loc 1 113 25 view .LVU158
+ 614 00a0 64EB4403 		sbc	r3, r4, r4, lsl #1
+ 615              		.loc 1 113 13 view .LVU159
+ 616 00a4 B418     		adds	r4, r6, r2
+ 617 00a6 43F10003 		adc	r3, r3, #0
+ 618              	.LVL65:
+ 114:Core/Src/geo_math.c **** 
+ 115:Core/Src/geo_math.c ****     int64_t term1 = (t_q16 * delta1) >> 16;
+ 619              		.loc 1 115 5 is_stmt 1 view .LVU160
+ 620              		.loc 1 115 28 is_stmt 0 view .LVU161
+ 621 00aa 00FB05F5 		mul	r5, r0, r5
+ 622              	.LVL66:
+ 623              		.loc 1 115 28 view .LVU162
+ 624 00ae 0CFB0155 		mla	r5, ip, r1, r5
+ 625 00b2 A0FB0CC6 		umull	ip, r6, r0, ip
+ 626              		.loc 1 115 28 view .LVU163
+ 627 00b6 3544     		add	r5, r5, r6
+ 628              		.loc 1 115 13 view .LVU164
+ 629 00b8 4FEA1C4C 		lsr	ip, ip, #16
+ 630 00bc 4CEA054C 		orr	ip, ip, r5, lsl #16
+ 631              	.LVL67:
+ 116:Core/Src/geo_math.c ****     int64_t t_minus_1 = t_q16 - 65536LL;
+ 632              		.loc 1 116 5 is_stmt 1 view .LVU165
+ 633              		.loc 1 116 13 is_stmt 0 view .LVU166
+ 634 00c0 B0F58035 		subs	r5, r0, #65536
+ 635              	.LVL68:
+ 636              		.loc 1 116 13 view .LVU167
+ 637 00c4 61F10006 		sbc	r6, r1, #0
+ 638              	.LVL69:
+ 117:Core/Src/geo_math.c ****     int64_t term2 = (((t_q16 * t_minus_1) / 2LL) * delta2) >> 32;
+ 639              		.loc 1 117 5 is_stmt 1 view .LVU168
+ 640              		.loc 1 117 30 is_stmt 0 view .LVU169
+ 641 00c8 06FB00F0 		mul	r0, r6, r0
+ 642              	.LVL70:
+ 643              		.loc 1 117 30 view .LVU170
+ 644 00cc 05FB0100 		mla	r0, r5, r1, r0
+ARM GAS  /tmp/ccq1psjJ.s 			page 15
+
+
+ 645 00d0 AEFB05E5 		umull	lr, r5, lr, r5
+ 646              	.LVL71:
+ 647              		.loc 1 117 30 view .LVU171
+ 648 00d4 2844     		add	r0, r0, r5
+ 649              		.loc 1 117 43 view .LVU172
+ 650 00d6 C10F     		lsrs	r1, r0, #31
+ 651 00d8 11EB0E01 		adds	r1, r1, lr
+ 652 00dc 40F10000 		adc	r0, r0, #0
+ 653 00e0 4908     		lsrs	r1, r1, #1
+ 654 00e2 41EAC071 		orr	r1, r1, r0, lsl #31
+ 655 00e6 4010     		asrs	r0, r0, #1
+ 656              		.loc 1 117 50 view .LVU173
+ 657 00e8 01FB03F3 		mul	r3, r1, r3
+ 658              	.LVL72:
+ 659              		.loc 1 117 50 view .LVU174
+ 660 00ec 04FB0033 		mla	r3, r4, r0, r3
+ 661 00f0 A1FB0414 		umull	r1, r4, r1, r4
+ 662              		.loc 1 117 50 view .LVU175
+ 663 00f4 2344     		add	r3, r3, r4
+ 664              	.LVL73:
+ 118:Core/Src/geo_math.c **** 
+ 119:Core/Src/geo_math.c ****     int64_t y_north = y0 + term1 + term2;
+ 665              		.loc 1 119 5 is_stmt 1 view .LVU176
+ 666              		.loc 1 119 26 is_stmt 0 view .LVU177
+ 667 00f6 12EB0C02 		adds	r2, r2, ip
+ 668              	.LVL74:
+ 669              		.loc 1 119 13 view .LVU178
+ 670 00fa D218     		adds	r2, r2, r3
+ 671              	.LVL75:
+ 120:Core/Src/geo_math.c **** 
+ 121:Core/Src/geo_math.c ****     if (is_south) {
+ 672              		.loc 1 121 5 is_stmt 1 view .LVU179
+ 673              		.loc 1 121 8 is_stmt 0 view .LVU180
+ 674 00fc 4346     		mov	r3, r8
+ 675              	.LVL76:
+ 676              		.loc 1 121 8 view .LVU181
+ 677 00fe 43B1     		cbz	r3, .L42
+ 678              	.LVL77:
+ 122:Core/Src/geo_math.c ****         /* Reflect across equator (2^31) */
+ 123:Core/Src/geo_math.c ****         out_wp->y = (uint32_t)(4294967296ULL - (uint64_t)y_north);
+ 679              		.loc 1 123 9 is_stmt 1 view .LVU182
+ 680              		.loc 1 123 21 is_stmt 0 view .LVU183
+ 681 0100 5242     		rsbs	r2, r2, #0
+ 682              		.loc 1 123 19 view .LVU184
+ 683 0102 7A60     		str	r2, [r7, #4]
+ 684              	.LVL78:
+ 685              	.L38:
+ 124:Core/Src/geo_math.c ****     } else {
+ 125:Core/Src/geo_math.c ****         out_wp->y = (uint32_t)y_north;
+ 126:Core/Src/geo_math.c ****     }
+ 127:Core/Src/geo_math.c **** }
+ 686              		.loc 1 127 1 view .LVU185
+ 687 0104 02B0     		add	sp, sp, #8
+ 688              	.LCFI11:
+ 689              		.cfi_remember_state
+ 690              		.cfi_def_cfa_offset 24
+ 691              		@ sp needed
+ARM GAS  /tmp/ccq1psjJ.s 			page 16
+
+
+ 692 0106 BDE8F081 		pop	{r4, r5, r6, r7, r8, pc}
+ 693              	.LVL79:
+ 694              	.L46:
+ 695              	.LCFI12:
+ 696              		.cfi_restore_state
+  98:Core/Src/geo_math.c ****         lat = -lat;
+ 697              		.loc 1 98 9 is_stmt 1 view .LVU186
+  99:Core/Src/geo_math.c ****     }
+ 698              		.loc 1 99 9 view .LVU187
+  99:Core/Src/geo_math.c ****     }
+ 699              		.loc 1 99 13 is_stmt 0 view .LVU188
+ 700 010a 6442     		rsbs	r4, r4, #0
+ 701              	.LVL80:
+  98:Core/Src/geo_math.c ****         lat = -lat;
+ 702              		.loc 1 98 18 view .LVU189
+ 703 010c 0123     		movs	r3, #1
+ 704 010e 9846     		mov	r8, r3
+ 705 0110 9BE7     		b	.L40
+ 706              	.LVL81:
+ 707              	.L42:
+ 125:Core/Src/geo_math.c ****     }
+ 708              		.loc 1 125 9 is_stmt 1 view .LVU190
+ 125:Core/Src/geo_math.c ****     }
+ 709              		.loc 1 125 19 is_stmt 0 view .LVU191
+ 710 0112 7A60     		str	r2, [r7, #4]
+ 711 0114 F6E7     		b	.L38
+ 712              	.L48:
+ 713 0116 00BF     		.align	3
+ 714              	.L47:
+ 715 0118 E9A43500 		.word	3515625
+ 716 011c 00000000 		.word	0
+ 717 0120 00D2496B 		.word	1800000000
+ 718 0124 7D7798A1 		.word	-1583843459
+ 719 0128 FFC7B132 		.word	850511871
+ 720 012c 8E53F3FF 		.word	-830578
+ 721 0130 72AC0C00 		.word	830578
+ 722 0134 00000000 		.word	GEO_MERCATOR_FORWARD_LUT
+ 723              		.cfi_endproc
+ 724              	.LFE7:
+ 726              		.section	.text.geo_world_point32_to_latlon,"ax",%progbits
+ 727              		.align	1
+ 728              		.global	geo_world_point32_to_latlon
+ 729              		.syntax unified
+ 730              		.thumb
+ 731              		.thumb_func
+ 733              	geo_world_point32_to_latlon:
+ 734              	.LVL82:
+ 735              	.LFB8:
+ 128:Core/Src/geo_math.c **** 
+ 129:Core/Src/geo_math.c **** void geo_world_point32_to_latlon(WorldPoint32 wp, GeoCoord *out_coord) {
+ 736              		.loc 1 129 72 is_stmt 1 view -0
+ 737              		.cfi_startproc
+ 738              		@ args = 0, pretend = 0, frame = 8
+ 739              		@ frame_needed = 0, uses_anonymous_args = 0
+ 740              		.loc 1 129 72 is_stmt 0 view .LVU193
+ 741 0000 F0B5     		push	{r4, r5, r6, r7, lr}
+ 742              	.LCFI13:
+ARM GAS  /tmp/ccq1psjJ.s 			page 17
+
+
+ 743              		.cfi_def_cfa_offset 20
+ 744              		.cfi_offset 4, -20
+ 745              		.cfi_offset 5, -16
+ 746              		.cfi_offset 6, -12
+ 747              		.cfi_offset 7, -8
+ 748              		.cfi_offset 14, -4
+ 749 0002 83B0     		sub	sp, sp, #12
+ 750              	.LCFI14:
+ 751              		.cfi_def_cfa_offset 32
+ 752 0004 02AB     		add	r3, sp, #8
+ 753 0006 03E90300 		stmdb	r3, {r0, r1}
+ 130:Core/Src/geo_math.c ****     if (!out_coord) return;
+ 754              		.loc 1 130 5 is_stmt 1 view .LVU194
+ 755              		.loc 1 130 8 is_stmt 0 view .LVU195
+ 756 000a 002A     		cmp	r2, #0
+ 757 000c 5ED0     		beq	.L49
+ 758 000e 1446     		mov	r4, r2
+ 759 0010 1646     		mov	r6, r2
+ 131:Core/Src/geo_math.c **** 
+ 132:Core/Src/geo_math.c ****     /* ------------------------------------------------------------- */
+ 133:Core/Src/geo_math.c ****     /* 1. X32 -> Longitude:                                          */
+ 134:Core/Src/geo_math.c ****     /* lon_e7 = (X32 * 3515625 / 4194304) - 180e7                    */
+ 135:Core/Src/geo_math.c ****     /* ------------------------------------------------------------- */
+ 136:Core/Src/geo_math.c ****     uint64_t num = (uint64_t)wp.x * 3515625ULL + 2097152ULL;
+ 760              		.loc 1 136 5 is_stmt 1 view .LVU196
+ 761              		.loc 1 136 35 is_stmt 0 view .LVU197
+ 762 0012 334A     		ldr	r2, .L57
+ 763              	.LVL83:
+ 764              		.loc 1 136 35 view .LVU198
+ 765 0014 A0FB0232 		umull	r3, r2, r0, r2
+ 766              		.loc 1 136 14 view .LVU199
+ 767 0018 13F50013 		adds	r3, r3, #2097152
+ 768 001c 42F10002 		adc	r2, r2, #0
+ 769              	.LVL84:
+ 137:Core/Src/geo_math.c ****     int64_t lon_shifted = (int64_t)(num / 4194304ULL);
+ 770              		.loc 1 137 5 is_stmt 1 view .LVU200
+ 771              		.loc 1 137 41 is_stmt 0 view .LVU201
+ 772 0020 9B0D     		lsrs	r3, r3, #22
+ 773              	.LVL85:
+ 774              		.loc 1 137 41 view .LVU202
+ 775 0022 43EA8223 		orr	r3, r3, r2, lsl #10
+ 776              	.LVL86:
+ 138:Core/Src/geo_math.c ****     out_coord->lon_e7 = geo_wrap_longitude_e7((int32_t)(lon_shifted - 1800000000LL));
+ 777              		.loc 1 138 5 is_stmt 1 view .LVU203
+ 778              		.loc 1 138 25 is_stmt 0 view .LVU204
+ 779 0026 2F48     		ldr	r0, .L57+4
+ 780              	.LVL87:
+ 781              		.loc 1 138 25 view .LVU205
+ 782 0028 1844     		add	r0, r0, r3
+ 783 002a FFF7FEFF 		bl	geo_wrap_longitude_e7
+ 784              	.LVL88:
+ 785              		.loc 1 138 23 discriminator 1 view .LVU206
+ 786 002e 6060     		str	r0, [r4, #4]
+ 139:Core/Src/geo_math.c **** 
+ 140:Core/Src/geo_math.c ****     /* ------------------------------------------------------------- */
+ 141:Core/Src/geo_math.c ****     /* 2. Y32 -> Latitude:                                           */
+ 142:Core/Src/geo_math.c ****     /* Uses symmetric Inverse LUT with quadratic interpolation.       */
+ARM GAS  /tmp/ccq1psjJ.s 			page 18
+
+
+ 143:Core/Src/geo_math.c ****     /* ------------------------------------------------------------- */
+ 144:Core/Src/geo_math.c ****     const uint32_t EQUATOR_Y32 = 2147483648U;
+ 787              		.loc 1 144 5 is_stmt 1 view .LVU207
+ 788              	.LVL89:
+ 145:Core/Src/geo_math.c ****     int is_south = 0;
+ 789              		.loc 1 145 5 view .LVU208
+ 146:Core/Src/geo_math.c ****     uint32_t dist_from_top = 0;
+ 790              		.loc 1 146 5 view .LVU209
+ 147:Core/Src/geo_math.c **** 
+ 148:Core/Src/geo_math.c ****     if (wp.y > EQUATOR_Y32) {
+ 791              		.loc 1 148 5 view .LVU210
+ 792              		.loc 1 148 11 is_stmt 0 view .LVU211
+ 793 0030 019B     		ldr	r3, [sp, #4]
+ 794              		.loc 1 148 8 view .LVU212
+ 795 0032 B3F1004F 		cmp	r3, #-2147483648
+ 796 0036 4BD9     		bls	.L54
+ 149:Core/Src/geo_math.c ****         is_south = 1;
+ 797              		.loc 1 149 9 is_stmt 1 view .LVU213
+ 798              	.LVL90:
+ 150:Core/Src/geo_math.c ****         dist_from_top = (uint32_t)(4294967296ULL - (uint64_t)wp.y);
+ 799              		.loc 1 150 9 view .LVU214
+ 800              		.loc 1 150 23 is_stmt 0 view .LVU215
+ 801 0038 5B42     		rsbs	r3, r3, #0
+ 802              	.LVL91:
+ 149:Core/Src/geo_math.c ****         is_south = 1;
+ 803              		.loc 1 149 18 view .LVU216
+ 804 003a 0122     		movs	r2, #1
+ 805 003c 1746     		mov	r7, r2
+ 806              	.LVL92:
+ 807              	.L51:
+ 151:Core/Src/geo_math.c ****     } else {
+ 152:Core/Src/geo_math.c ****         dist_from_top = wp.y;
+ 153:Core/Src/geo_math.c ****     }
+ 154:Core/Src/geo_math.c **** 
+ 155:Core/Src/geo_math.c ****     int32_t idx = (int32_t)(dist_from_top / GEO_LUT_INV_STEP_Y32);
+ 808              		.loc 1 155 5 is_stmt 1 view .LVU217
+ 809              		.loc 1 155 43 is_stmt 0 view .LVU218
+ 810 003e 5A0D     		lsrs	r2, r3, #21
+ 811              	.LVL93:
+ 156:Core/Src/geo_math.c ****     if (idx >= GEO_LUT_N) idx = GEO_LUT_N - 1;
+ 812              		.loc 1 156 5 is_stmt 1 view .LVU219
+ 813              		.loc 1 156 8 is_stmt 0 view .LVU220
+ 814 0040 002B     		cmp	r3, #0
+ 815 0042 01DA     		bge	.L52
+ 816              		.loc 1 156 31 discriminator 1 view .LVU221
+ 817 0044 40F2FF32 		movw	r2, #1023
+ 818              	.LVL94:
+ 819              	.L52:
+ 157:Core/Src/geo_math.c **** 
+ 158:Core/Src/geo_math.c ****     int64_t rem = (int64_t)(dist_from_top - (uint32_t)idx * GEO_LUT_INV_STEP_Y32);
+ 820              		.loc 1 158 5 is_stmt 1 view .LVU222
+ 821              		.loc 1 158 43 is_stmt 0 view .LVU223
+ 822 0048 A3EB4253 		sub	r3, r3, r2, lsl #21
+ 823              	.LVL95:
+ 159:Core/Src/geo_math.c ****     int64_t t_q16 = (rem * 65536LL) / GEO_LUT_INV_STEP_Y32;
+ 824              		.loc 1 159 5 is_stmt 1 view .LVU224
+ 825              		.loc 1 159 13 is_stmt 0 view .LVU225
+ARM GAS  /tmp/ccq1psjJ.s 			page 19
+
+
+ 826 004c 5B09     		lsrs	r3, r3, #5
+ 827              	.LVL96:
+ 160:Core/Src/geo_math.c **** 
+ 161:Core/Src/geo_math.c ****     int64_t l0 = (int64_t)GEO_MERCATOR_INVERSE_LUT[idx];
+ 828              		.loc 1 161 5 is_stmt 1 view .LVU226
+ 829              		.loc 1 161 51 is_stmt 0 view .LVU227
+ 830 004e 264C     		ldr	r4, .L57+8
+ 831              	.LVL97:
+ 832              		.loc 1 161 51 view .LVU228
+ 833 0050 54F82200 		ldr	r0, [r4, r2, lsl #2]
+ 834              	.LVL98:
+ 162:Core/Src/geo_math.c ****     int64_t l1 = (int64_t)GEO_MERCATOR_INVERSE_LUT[idx + 1];
+ 835              		.loc 1 162 5 is_stmt 1 view .LVU229
+ 836              		.loc 1 162 56 is_stmt 0 view .LVU230
+ 837 0054 511C     		adds	r1, r2, #1
+ 838              		.loc 1 162 51 view .LVU231
+ 839 0056 54F82110 		ldr	r1, [r4, r1, lsl #2]
+ 840              		.loc 1 162 13 view .LVU232
+ 841 005a 4FEAE17E 		asr	lr, r1, #31
+ 842              	.LVL99:
+ 163:Core/Src/geo_math.c ****     int64_t l2 = (int64_t)GEO_MERCATOR_INVERSE_LUT[idx + 2];
+ 843              		.loc 1 163 5 is_stmt 1 view .LVU233
+ 844              		.loc 1 163 56 is_stmt 0 view .LVU234
+ 845 005e 0232     		adds	r2, r2, #2
+ 846              	.LVL100:
+ 847              		.loc 1 163 51 view .LVU235
+ 848 0060 54F82220 		ldr	r2, [r4, r2, lsl #2]
+ 849              	.LVL101:
+ 850              		.loc 1 163 13 view .LVU236
+ 851 0064 4FEAE27C 		asr	ip, r2, #31
+ 852              	.LVL102:
+ 164:Core/Src/geo_math.c **** 
+ 165:Core/Src/geo_math.c ****     int64_t delta1 = l1 - l0;
+ 853              		.loc 1 165 5 is_stmt 1 view .LVU237
+ 854              		.loc 1 165 13 is_stmt 0 view .LVU238
+ 855 0068 0D1A     		subs	r5, r1, r0
+ 856 006a 6EEBE074 		sbc	r4, lr, r0, asr #31
+ 857              	.LVL103:
+ 166:Core/Src/geo_math.c ****     int64_t delta2 = l2 - 2 * l1 + l0;
+ 858              		.loc 1 166 5 is_stmt 1 view .LVU239
+ 859              		.loc 1 166 29 is_stmt 0 view .LVU240
+ 860 006e 4918     		adds	r1, r1, r1
+ 861              	.LVL104:
+ 862              		.loc 1 166 29 view .LVU241
+ 863 0070 4EEB0E0E 		adc	lr, lr, lr
+ 864              		.loc 1 166 25 view .LVU242
+ 865 0074 521A     		subs	r2, r2, r1
+ 866              	.LVL105:
+ 867              		.loc 1 166 25 view .LVU243
+ 868 0076 6CEB0E01 		sbc	r1, ip, lr
+ 869              		.loc 1 166 13 view .LVU244
+ 870 007a 1218     		adds	r2, r2, r0
+ 871 007c 41EBE07C 		adc	ip, r1, r0, asr #31
+ 872              	.LVL106:
+ 167:Core/Src/geo_math.c **** 
+ 168:Core/Src/geo_math.c ****     int64_t term1 = (t_q16 * delta1) >> 16;
+ 873              		.loc 1 168 5 is_stmt 1 view .LVU245
+ARM GAS  /tmp/ccq1psjJ.s 			page 20
+
+
+ 874              		.loc 1 168 28 is_stmt 0 view .LVU246
+ 875 0080 A3FB05E1 		umull	lr, r1, r3, r5
+ 876 0084 03FB0411 		mla	r1, r3, r4, r1
+ 877              		.loc 1 168 13 view .LVU247
+ 878 0088 4FEA1E4E 		lsr	lr, lr, #16
+ 879 008c 4EEA014E 		orr	lr, lr, r1, lsl #16
+ 880              	.LVL107:
+ 169:Core/Src/geo_math.c ****     int64_t t_minus_1 = t_q16 - 65536LL;
+ 881              		.loc 1 169 5 is_stmt 1 view .LVU248
+ 882              		.loc 1 169 13 is_stmt 0 view .LVU249
+ 883 0090 B3F58031 		subs	r1, r3, #65536
+ 884              	.LVL108:
+ 885              		.loc 1 169 13 view .LVU250
+ 886 0094 64EB0404 		sbc	r4, r4, r4
+ 887              	.LVL109:
+ 170:Core/Src/geo_math.c ****     int64_t term2 = (((t_q16 * t_minus_1) / 2LL) * delta2) >> 32;
+ 888              		.loc 1 170 5 is_stmt 1 view .LVU251
+ 889              		.loc 1 170 30 is_stmt 0 view .LVU252
+ 890 0098 A3FB0151 		umull	r5, r1, r3, r1
+ 891              	.LVL110:
+ 892              		.loc 1 170 30 view .LVU253
+ 893 009c 03FB0411 		mla	r1, r3, r4, r1
+ 894              		.loc 1 170 43 view .LVU254
+ 895 00a0 CB0F     		lsrs	r3, r1, #31
+ 896              	.LVL111:
+ 897              		.loc 1 170 43 view .LVU255
+ 898 00a2 5B19     		adds	r3, r3, r5
+ 899 00a4 41F10001 		adc	r1, r1, #0
+ 900 00a8 5B08     		lsrs	r3, r3, #1
+ 901 00aa 43EAC173 		orr	r3, r3, r1, lsl #31
+ 902 00ae 4910     		asrs	r1, r1, #1
+ 903              		.loc 1 170 50 view .LVU256
+ 904 00b0 03FB0CF4 		mul	r4, r3, ip
+ 905 00b4 02FB0141 		mla	r1, r2, r1, r4
+ 906 00b8 A3FB0232 		umull	r3, r2, r3, r2
+ 907              	.LVL112:
+ 908              		.loc 1 170 50 view .LVU257
+ 909 00bc 0A44     		add	r2, r2, r1
+ 910              	.LVL113:
+ 171:Core/Src/geo_math.c **** 
+ 172:Core/Src/geo_math.c ****     int32_t lat_val = (int32_t)(l0 + term1 + term2);
+ 911              		.loc 1 172 5 is_stmt 1 view .LVU258
+ 912              		.loc 1 172 36 is_stmt 0 view .LVU259
+ 913 00be 7044     		add	r0, r0, lr
+ 914              	.LVL114:
+ 915              		.loc 1 172 44 view .LVU260
+ 916 00c0 1044     		add	r0, r0, r2
+ 917              	.LVL115:
+ 173:Core/Src/geo_math.c **** 
+ 174:Core/Src/geo_math.c ****     if (is_south) {
+ 918              		.loc 1 174 5 is_stmt 1 view .LVU261
+ 919              		.loc 1 174 8 is_stmt 0 view .LVU262
+ 920 00c2 47B1     		cbz	r7, .L53
+ 175:Core/Src/geo_math.c ****         out_coord->lat_e7 = geo_clamp_latitude_e7(-lat_val);
+ 921              		.loc 1 175 9 is_stmt 1 view .LVU263
+ 922              		.loc 1 175 29 is_stmt 0 view .LVU264
+ 923 00c4 4042     		rsbs	r0, r0, #0
+ARM GAS  /tmp/ccq1psjJ.s 			page 21
+
+
+ 924              	.LVL116:
+ 925              		.loc 1 175 29 view .LVU265
+ 926 00c6 FFF7FEFF 		bl	geo_clamp_latitude_e7
+ 927              	.LVL117:
+ 928              		.loc 1 175 27 discriminator 1 view .LVU266
+ 929 00ca 3060     		str	r0, [r6]
+ 930              	.LVL118:
+ 931              	.L49:
+ 176:Core/Src/geo_math.c ****     } else {
+ 177:Core/Src/geo_math.c ****         out_coord->lat_e7 = geo_clamp_latitude_e7(lat_val);
+ 178:Core/Src/geo_math.c ****     }
+ 179:Core/Src/geo_math.c **** }
+ 932              		.loc 1 179 1 view .LVU267
+ 933 00cc 03B0     		add	sp, sp, #12
+ 934              	.LCFI15:
+ 935              		.cfi_remember_state
+ 936              		.cfi_def_cfa_offset 20
+ 937              		@ sp needed
+ 938 00ce F0BD     		pop	{r4, r5, r6, r7, pc}
+ 939              	.LVL119:
+ 940              	.L54:
+ 941              	.LCFI16:
+ 942              		.cfi_restore_state
+ 145:Core/Src/geo_math.c ****     uint32_t dist_from_top = 0;
+ 943              		.loc 1 145 9 view .LVU268
+ 944 00d0 0022     		movs	r2, #0
+ 945 00d2 1746     		mov	r7, r2
+ 946 00d4 B3E7     		b	.L51
+ 947              	.LVL120:
+ 948              	.L53:
+ 177:Core/Src/geo_math.c ****     }
+ 949              		.loc 1 177 9 is_stmt 1 view .LVU269
+ 177:Core/Src/geo_math.c ****     }
+ 950              		.loc 1 177 29 is_stmt 0 view .LVU270
+ 951 00d6 FFF7FEFF 		bl	geo_clamp_latitude_e7
+ 952              	.LVL121:
+ 177:Core/Src/geo_math.c ****     }
+ 953              		.loc 1 177 27 discriminator 1 view .LVU271
+ 954 00da 3060     		str	r0, [r6]
+ 955 00dc F6E7     		b	.L49
+ 956              	.L58:
+ 957 00de 00BF     		.align	2
+ 958              	.L57:
+ 959 00e0 E9A43500 		.word	3515625
+ 960 00e4 002EB694 		.word	-1800000000
+ 961 00e8 00000000 		.word	GEO_MERCATOR_INVERSE_LUT
+ 962              		.cfi_endproc
+ 963              	.LFE8:
+ 965              		.section	.text.geo_latlon_to_tile,"ax",%progbits
+ 966              		.align	1
+ 967              		.global	geo_latlon_to_tile
+ 968              		.syntax unified
+ 969              		.thumb
+ 970              		.thumb_func
+ 972              	geo_latlon_to_tile:
+ 973              	.LVL122:
+ 974              	.LFB9:
+ARM GAS  /tmp/ccq1psjJ.s 			page 22
+
+
+ 180:Core/Src/geo_math.c **** 
+ 181:Core/Src/geo_math.c **** void geo_latlon_to_tile(GeoCoord coord, int32_t zoom, TileCoord *out_tile, WorldPixel *out_subtile_
+ 975              		.loc 1 181 104 is_stmt 1 view -0
+ 976              		.cfi_startproc
+ 977              		@ args = 4, pretend = 0, frame = 16
+ 978              		@ frame_needed = 0, uses_anonymous_args = 0
+ 979              		.loc 1 181 104 is_stmt 0 view .LVU273
+ 980 0000 30B5     		push	{r4, r5, lr}
+ 981              	.LCFI17:
+ 982              		.cfi_def_cfa_offset 12
+ 983              		.cfi_offset 4, -12
+ 984              		.cfi_offset 5, -8
+ 985              		.cfi_offset 14, -4
+ 986 0002 85B0     		sub	sp, sp, #20
+ 987              	.LCFI18:
+ 988              		.cfi_def_cfa_offset 32
+ 989 0004 CDE90001 		strd	r0, r1, [sp]
+ 990 0008 1446     		mov	r4, r2
+ 991 000a 1D46     		mov	r5, r3
+ 182:Core/Src/geo_math.c ****     WorldPoint32 wp;
+ 992              		.loc 1 182 5 is_stmt 1 view .LVU274
+ 183:Core/Src/geo_math.c ****     geo_latlon_to_world_point32(coord, &wp);
+ 993              		.loc 1 183 5 view .LVU275
+ 994 000c 02AA     		add	r2, sp, #8
+ 995              	.LVL123:
+ 996              		.loc 1 183 5 is_stmt 0 view .LVU276
+ 997 000e DDE90001 		ldrd	r0, r1, [sp]
+ 998 0012 FFF7FEFF 		bl	geo_latlon_to_world_point32
+ 999              	.LVL124:
+ 184:Core/Src/geo_math.c **** 
+ 185:Core/Src/geo_math.c ****     if (zoom < 0) zoom = 0;
+ 1000              		.loc 1 185 5 is_stmt 1 view .LVU277
+ 1001              		.loc 1 185 8 is_stmt 0 view .LVU278
+ 1002 0016 002C     		cmp	r4, #0
+ 1003 0018 03DB     		blt	.L64
+ 186:Core/Src/geo_math.c ****     if (zoom > 24) zoom = 24;
+ 1004              		.loc 1 186 5 is_stmt 1 view .LVU279
+ 1005              		.loc 1 186 8 is_stmt 0 view .LVU280
+ 1006 001a 182C     		cmp	r4, #24
+ 1007 001c 02DD     		ble	.L60
+ 1008              		.loc 1 186 25 discriminator 1 view .LVU281
+ 1009 001e 1824     		movs	r4, #24
+ 1010              	.LVL125:
+ 1011              		.loc 1 186 25 discriminator 1 view .LVU282
+ 1012 0020 00E0     		b	.L60
+ 1013              	.LVL126:
+ 1014              	.L64:
+ 185:Core/Src/geo_math.c ****     if (zoom > 24) zoom = 24;
+ 1015              		.loc 1 185 24 discriminator 1 view .LVU283
+ 1016 0022 0024     		movs	r4, #0
+ 1017              	.LVL127:
+ 1018              	.L60:
+ 187:Core/Src/geo_math.c **** 
+ 188:Core/Src/geo_math.c ****     /* Tile coordinates are the top bits of 32-bit world space */
+ 189:Core/Src/geo_math.c ****     int32_t shift_tile = 32 - zoom;
+ 1019              		.loc 1 189 5 is_stmt 1 view .LVU284
+ 1020              		.loc 1 189 13 is_stmt 0 view .LVU285
+ARM GAS  /tmp/ccq1psjJ.s 			page 23
+
+
+ 1021 0024 C4F12003 		rsb	r3, r4, #32
+ 190:Core/Src/geo_math.c ****     int32_t tx = (int32_t)(wp.x >> shift_tile);
+ 1022              		.loc 1 190 5 is_stmt 1 view .LVU286
+ 1023              		.loc 1 190 30 is_stmt 0 view .LVU287
+ 1024 0028 029A     		ldr	r2, [sp, #8]
+ 1025              		.loc 1 190 33 view .LVU288
+ 1026 002a 22FA03F1 		lsr	r1, r2, r3
+ 1027              	.LVL128:
+ 191:Core/Src/geo_math.c ****     int32_t ty = (int32_t)(wp.y >> shift_tile);
+ 1028              		.loc 1 191 5 is_stmt 1 view .LVU289
+ 1029              		.loc 1 191 30 is_stmt 0 view .LVU290
+ 1030 002e 039A     		ldr	r2, [sp, #12]
+ 1031              		.loc 1 191 33 view .LVU291
+ 1032 0030 DA40     		lsrs	r2, r2, r3
+ 1033              	.LVL129:
+ 192:Core/Src/geo_math.c **** 
+ 193:Core/Src/geo_math.c ****     if (out_tile) {
+ 1034              		.loc 1 193 5 is_stmt 1 view .LVU292
+ 1035              		.loc 1 193 8 is_stmt 0 view .LVU293
+ 1036 0032 15B1     		cbz	r5, .L61
+ 194:Core/Src/geo_math.c ****         out_tile->x = tx;
+ 1037              		.loc 1 194 9 is_stmt 1 view .LVU294
+ 1038              		.loc 1 194 21 is_stmt 0 view .LVU295
+ 1039 0034 2960     		str	r1, [r5]
+ 195:Core/Src/geo_math.c ****         out_tile->y = ty;
+ 1040              		.loc 1 195 9 is_stmt 1 view .LVU296
+ 1041              		.loc 1 195 21 is_stmt 0 view .LVU297
+ 1042 0036 6A60     		str	r2, [r5, #4]
+ 196:Core/Src/geo_math.c ****         out_tile->zoom = zoom;
+ 1043              		.loc 1 196 9 is_stmt 1 view .LVU298
+ 1044              		.loc 1 196 24 is_stmt 0 view .LVU299
+ 1045 0038 AC60     		str	r4, [r5, #8]
+ 1046              	.L61:
+ 197:Core/Src/geo_math.c ****     }
+ 198:Core/Src/geo_math.c **** 
+ 199:Core/Src/geo_math.c ****     if (out_subtile_px) {
+ 1047              		.loc 1 199 5 is_stmt 1 view .LVU300
+ 1048              		.loc 1 199 8 is_stmt 0 view .LVU301
+ 1049 003a 089B     		ldr	r3, [sp, #32]
+ 1050 003c 63B1     		cbz	r3, .L59
+ 1051              	.LBB2:
+ 200:Core/Src/geo_math.c ****         /* Intra-tile pixel is bits [shift_tile - 1 .. shift_tile - 8] */
+ 201:Core/Src/geo_math.c ****         int32_t shift_px = 24 - zoom;
+ 1052              		.loc 1 201 9 is_stmt 1 view .LVU302
+ 1053              		.loc 1 201 17 is_stmt 0 view .LVU303
+ 1054 003e C4F11802 		rsb	r2, r4, #24
+ 1055              	.LVL130:
+ 202:Core/Src/geo_math.c ****         if (shift_px >= 0) {
+ 1056              		.loc 1 202 9 is_stmt 1 view .LVU304
+ 1057              		.loc 1 202 12 is_stmt 0 view .LVU305
+ 1058 0042 182C     		cmp	r4, #24
+ 1059 0044 0ADC     		bgt	.L63
+ 203:Core/Src/geo_math.c ****             out_subtile_px->x = (int32_t)((wp.x >> shift_px) & 0xFF);
+ 1060              		.loc 1 203 13 is_stmt 1 view .LVU306
+ 1061              		.loc 1 203 46 is_stmt 0 view .LVU307
+ 1062 0046 029B     		ldr	r3, [sp, #8]
+ 1063              		.loc 1 203 49 view .LVU308
+ARM GAS  /tmp/ccq1psjJ.s 			page 24
+
+
+ 1064 0048 D340     		lsrs	r3, r3, r2
+ 1065              		.loc 1 203 33 view .LVU309
+ 1066 004a DBB2     		uxtb	r3, r3
+ 1067              		.loc 1 203 31 view .LVU310
+ 1068 004c 0899     		ldr	r1, [sp, #32]
+ 1069              	.LVL131:
+ 1070              		.loc 1 203 31 view .LVU311
+ 1071 004e 0B60     		str	r3, [r1]
+ 204:Core/Src/geo_math.c ****             out_subtile_px->y = (int32_t)((wp.y >> shift_px) & 0xFF);
+ 1072              		.loc 1 204 13 is_stmt 1 view .LVU312
+ 1073              		.loc 1 204 46 is_stmt 0 view .LVU313
+ 1074 0050 039B     		ldr	r3, [sp, #12]
+ 1075              		.loc 1 204 49 view .LVU314
+ 1076 0052 D340     		lsrs	r3, r3, r2
+ 1077              		.loc 1 204 33 view .LVU315
+ 1078 0054 DBB2     		uxtb	r3, r3
+ 1079              		.loc 1 204 31 view .LVU316
+ 1080 0056 4B60     		str	r3, [r1, #4]
+ 1081              	.LVL132:
+ 1082              	.L59:
+ 1083              		.loc 1 204 31 view .LVU317
+ 1084              	.LBE2:
+ 205:Core/Src/geo_math.c ****         } else {
+ 206:Core/Src/geo_math.c ****             out_subtile_px->x = 0;
+ 207:Core/Src/geo_math.c ****             out_subtile_px->y = 0;
+ 208:Core/Src/geo_math.c ****         }
+ 209:Core/Src/geo_math.c ****     }
+ 210:Core/Src/geo_math.c **** }
+ 1085              		.loc 1 210 1 view .LVU318
+ 1086 0058 05B0     		add	sp, sp, #20
+ 1087              	.LCFI19:
+ 1088              		.cfi_remember_state
+ 1089              		.cfi_def_cfa_offset 12
+ 1090              		@ sp needed
+ 1091 005a 30BD     		pop	{r4, r5, pc}
+ 1092              	.LVL133:
+ 1093              	.L63:
+ 1094              	.LCFI20:
+ 1095              		.cfi_restore_state
+ 1096              	.LBB3:
+ 206:Core/Src/geo_math.c ****             out_subtile_px->y = 0;
+ 1097              		.loc 1 206 13 is_stmt 1 view .LVU319
+ 206:Core/Src/geo_math.c ****             out_subtile_px->y = 0;
+ 1098              		.loc 1 206 31 is_stmt 0 view .LVU320
+ 1099 005c 0023     		movs	r3, #0
+ 1100 005e 089A     		ldr	r2, [sp, #32]
+ 1101              	.LVL134:
+ 206:Core/Src/geo_math.c ****             out_subtile_px->y = 0;
+ 1102              		.loc 1 206 31 view .LVU321
+ 1103 0060 1360     		str	r3, [r2]
+ 207:Core/Src/geo_math.c ****         }
+ 1104              		.loc 1 207 13 is_stmt 1 view .LVU322
+ 207:Core/Src/geo_math.c ****         }
+ 1105              		.loc 1 207 31 is_stmt 0 view .LVU323
+ 1106 0062 5360     		str	r3, [r2, #4]
+ 1107              	.LBE3:
+ 1108              		.loc 1 210 1 view .LVU324
+ARM GAS  /tmp/ccq1psjJ.s 			page 25
+
+
+ 1109 0064 F8E7     		b	.L59
+ 1110              		.cfi_endproc
+ 1111              	.LFE9:
+ 1113              		.section	.text.geo_tile_to_top_left_latlon,"ax",%progbits
+ 1114              		.align	1
+ 1115              		.global	geo_tile_to_top_left_latlon
+ 1116              		.syntax unified
+ 1117              		.thumb
+ 1118              		.thumb_func
+ 1120              	geo_tile_to_top_left_latlon:
+ 1121              	.LVL135:
+ 1122              	.LFB10:
+ 211:Core/Src/geo_math.c **** 
+ 212:Core/Src/geo_math.c **** void geo_tile_to_top_left_latlon(TileCoord tile, GeoCoord *out_coord) {
+ 1123              		.loc 1 212 71 is_stmt 1 view -0
+ 1124              		.cfi_startproc
+ 1125              		@ args = 0, pretend = 0, frame = 24
+ 1126              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1127              		.loc 1 212 71 is_stmt 0 view .LVU326
+ 1128 0000 00B5     		push	{lr}
+ 1129              	.LCFI21:
+ 1130              		.cfi_def_cfa_offset 4
+ 1131              		.cfi_offset 14, -4
+ 1132 0002 87B0     		sub	sp, sp, #28
+ 1133              	.LCFI22:
+ 1134              		.cfi_def_cfa_offset 32
+ 1135 0004 0DF1040C 		add	ip, sp, #4
+ 1136 0008 8CE80700 		stm	ip, {r0, r1, r2}
+ 213:Core/Src/geo_math.c ****     if (!out_coord) return;
+ 1137              		.loc 1 213 5 is_stmt 1 view .LVU327
+ 1138              		.loc 1 213 8 is_stmt 0 view .LVU328
+ 1139 000c 73B1     		cbz	r3, .L67
+ 1140 000e 1A46     		mov	r2, r3
+ 214:Core/Src/geo_math.c **** 
+ 215:Core/Src/geo_math.c ****     WorldPoint32 wp;
+ 1141              		.loc 1 215 5 is_stmt 1 view .LVU329
+ 216:Core/Src/geo_math.c ****     wp.x = (uint32_t)tile.x << (32 - tile.zoom);
+ 1142              		.loc 1 216 5 view .LVU330
+ 1143              		.loc 1 216 42 is_stmt 0 view .LVU331
+ 1144 0010 039B     		ldr	r3, [sp, #12]
+ 1145              	.LVL136:
+ 1146              		.loc 1 216 36 view .LVU332
+ 1147 0012 C3F12003 		rsb	r3, r3, #32
+ 1148              		.loc 1 216 29 view .LVU333
+ 1149 0016 0146     		mov	r1, r0
+ 1150 0018 9940     		lsls	r1, r1, r3
+ 1151              		.loc 1 216 10 view .LVU334
+ 1152 001a 0491     		str	r1, [sp, #16]
+ 217:Core/Src/geo_math.c ****     wp.y = (uint32_t)tile.y << (32 - tile.zoom);
+ 1153              		.loc 1 217 5 is_stmt 1 view .LVU335
+ 1154              		.loc 1 217 26 is_stmt 0 view .LVU336
+ 1155 001c 0299     		ldr	r1, [sp, #8]
+ 1156              		.loc 1 217 29 view .LVU337
+ 1157 001e 9940     		lsls	r1, r1, r3
+ 1158              		.loc 1 217 10 view .LVU338
+ 1159 0020 0591     		str	r1, [sp, #20]
+ 218:Core/Src/geo_math.c **** 
+ARM GAS  /tmp/ccq1psjJ.s 			page 26
+
+
+ 219:Core/Src/geo_math.c ****     geo_world_point32_to_latlon(wp, out_coord);
+ 1160              		.loc 1 219 5 is_stmt 1 view .LVU339
+ 1161 0022 06AB     		add	r3, sp, #24
+ 1162 0024 13E90300 		ldmdb	r3, {r0, r1}
+ 1163 0028 FFF7FEFF 		bl	geo_world_point32_to_latlon
+ 1164              	.LVL137:
+ 1165              	.L67:
+ 220:Core/Src/geo_math.c **** }
+ 1166              		.loc 1 220 1 is_stmt 0 view .LVU340
+ 1167 002c 07B0     		add	sp, sp, #28
+ 1168              	.LCFI23:
+ 1169              		.cfi_def_cfa_offset 4
+ 1170              		@ sp needed
+ 1171 002e 00BD     		pop	{pc}
+ 1172              		.cfi_endproc
+ 1173              	.LFE10:
+ 1175              		.section	.text.geo_tile_to_bbox,"ax",%progbits
+ 1176              		.align	1
+ 1177              		.global	geo_tile_to_bbox
+ 1178              		.syntax unified
+ 1179              		.thumb
+ 1180              		.thumb_func
+ 1182              	geo_tile_to_bbox:
+ 1183              	.LVL138:
+ 1184              	.LFB11:
+ 221:Core/Src/geo_math.c **** 
+ 222:Core/Src/geo_math.c **** void geo_tile_to_bbox(TileCoord tile, GeoBBox *out_bbox) {
+ 1185              		.loc 1 222 58 is_stmt 1 view -0
+ 1186              		.cfi_startproc
+ 1187              		@ args = 0, pretend = 0, frame = 48
+ 1188              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1189              		.loc 1 222 58 is_stmt 0 view .LVU342
+ 1190 0000 10B5     		push	{r4, lr}
+ 1191              	.LCFI24:
+ 1192              		.cfi_def_cfa_offset 8
+ 1193              		.cfi_offset 4, -8
+ 1194              		.cfi_offset 14, -4
+ 1195 0002 8CB0     		sub	sp, sp, #48
+ 1196              	.LCFI25:
+ 1197              		.cfi_def_cfa_offset 56
+ 1198 0004 01AC     		add	r4, sp, #4
+ 1199 0006 84E80700 		stm	r4, {r0, r1, r2}
+ 223:Core/Src/geo_math.c ****     if (!out_bbox) return;
+ 1200              		.loc 1 223 5 is_stmt 1 view .LVU343
+ 1201              		.loc 1 223 8 is_stmt 0 view .LVU344
+ 1202 000a 23B3     		cbz	r3, .L71
+ 1203 000c 1C46     		mov	r4, r3
+ 224:Core/Src/geo_math.c **** 
+ 225:Core/Src/geo_math.c ****     WorldPoint32 wp_tl, wp_br;
+ 1204              		.loc 1 225 5 is_stmt 1 view .LVU345
+ 226:Core/Src/geo_math.c ****     wp_tl.x = (uint32_t)tile.x << (32 - tile.zoom);
+ 1205              		.loc 1 226 5 view .LVU346
+ 1206              		.loc 1 226 29 is_stmt 0 view .LVU347
+ 1207 000e 0146     		mov	r1, r0
+ 1208              		.loc 1 226 39 view .LVU348
+ 1209 0010 C2F12002 		rsb	r2, r2, #32
+ 1210              		.loc 1 226 32 view .LVU349
+ARM GAS  /tmp/ccq1psjJ.s 			page 27
+
+
+ 1211 0014 00FA02F3 		lsl	r3, r0, r2
+ 1212              	.LVL139:
+ 1213              		.loc 1 226 13 view .LVU350
+ 1214 0018 0A93     		str	r3, [sp, #40]
+ 227:Core/Src/geo_math.c ****     wp_tl.y = (uint32_t)tile.y << (32 - tile.zoom);
+ 1215              		.loc 1 227 5 is_stmt 1 view .LVU351
+ 1216              		.loc 1 227 29 is_stmt 0 view .LVU352
+ 1217 001a 029B     		ldr	r3, [sp, #8]
+ 1218              		.loc 1 227 32 view .LVU353
+ 1219 001c 03FA02F0 		lsl	r0, r3, r2
+ 1220              		.loc 1 227 13 view .LVU354
+ 1221 0020 0B90     		str	r0, [sp, #44]
+ 228:Core/Src/geo_math.c **** 
+ 229:Core/Src/geo_math.c ****     wp_br.x = (uint32_t)(tile.x + 1) << (32 - tile.zoom);
+ 1222              		.loc 1 229 5 is_stmt 1 view .LVU355
+ 1223              		.loc 1 229 33 is_stmt 0 view .LVU356
+ 1224 0022 0131     		adds	r1, r1, #1
+ 1225              		.loc 1 229 38 view .LVU357
+ 1226 0024 9140     		lsls	r1, r1, r2
+ 1227              		.loc 1 229 13 view .LVU358
+ 1228 0026 0891     		str	r1, [sp, #32]
+ 230:Core/Src/geo_math.c ****     wp_br.y = (uint32_t)(tile.y + 1) << (32 - tile.zoom);
+ 1229              		.loc 1 230 5 is_stmt 1 view .LVU359
+ 1230              		.loc 1 230 33 is_stmt 0 view .LVU360
+ 1231 0028 0133     		adds	r3, r3, #1
+ 1232              		.loc 1 230 38 view .LVU361
+ 1233 002a 9340     		lsls	r3, r3, r2
+ 1234              		.loc 1 230 13 view .LVU362
+ 1235 002c 0993     		str	r3, [sp, #36]
+ 231:Core/Src/geo_math.c **** 
+ 232:Core/Src/geo_math.c ****     GeoCoord top_left, bottom_right;
+ 1236              		.loc 1 232 5 is_stmt 1 view .LVU363
+ 233:Core/Src/geo_math.c ****     geo_world_point32_to_latlon(wp_tl, &top_left);
+ 1237              		.loc 1 233 5 view .LVU364
+ 1238 002e 06AA     		add	r2, sp, #24
+ 1239 0030 0CAB     		add	r3, sp, #48
+ 1240 0032 13E90300 		ldmdb	r3, {r0, r1}
+ 1241 0036 FFF7FEFF 		bl	geo_world_point32_to_latlon
+ 1242              	.LVL140:
+ 234:Core/Src/geo_math.c ****     geo_world_point32_to_latlon(wp_br, &bottom_right);
+ 1243              		.loc 1 234 5 view .LVU365
+ 1244 003a 04AA     		add	r2, sp, #16
+ 1245 003c 08AB     		add	r3, sp, #32
+ 1246 003e 93E80300 		ldm	r3, {r0, r1}
+ 1247 0042 FFF7FEFF 		bl	geo_world_point32_to_latlon
+ 1248              	.LVL141:
+ 235:Core/Src/geo_math.c **** 
+ 236:Core/Src/geo_math.c ****     out_bbox->min_lat_e7 = bottom_right.lat_e7;
+ 1249              		.loc 1 236 5 view .LVU366
+ 1250              		.loc 1 236 40 is_stmt 0 view .LVU367
+ 1251 0046 049B     		ldr	r3, [sp, #16]
+ 1252              		.loc 1 236 26 view .LVU368
+ 1253 0048 2360     		str	r3, [r4]
+ 237:Core/Src/geo_math.c ****     out_bbox->max_lat_e7 = top_left.lat_e7;
+ 1254              		.loc 1 237 5 is_stmt 1 view .LVU369
+ 1255              		.loc 1 237 36 is_stmt 0 view .LVU370
+ 1256 004a 069B     		ldr	r3, [sp, #24]
+ARM GAS  /tmp/ccq1psjJ.s 			page 28
+
+
+ 1257              		.loc 1 237 26 view .LVU371
+ 1258 004c A360     		str	r3, [r4, #8]
+ 238:Core/Src/geo_math.c ****     out_bbox->min_lon_e7 = top_left.lon_e7;
+ 1259              		.loc 1 238 5 is_stmt 1 view .LVU372
+ 1260              		.loc 1 238 36 is_stmt 0 view .LVU373
+ 1261 004e 079B     		ldr	r3, [sp, #28]
+ 1262              		.loc 1 238 26 view .LVU374
+ 1263 0050 6360     		str	r3, [r4, #4]
+ 239:Core/Src/geo_math.c ****     out_bbox->max_lon_e7 = bottom_right.lon_e7;
+ 1264              		.loc 1 239 5 is_stmt 1 view .LVU375
+ 1265              		.loc 1 239 40 is_stmt 0 view .LVU376
+ 1266 0052 059B     		ldr	r3, [sp, #20]
+ 1267              		.loc 1 239 26 view .LVU377
+ 1268 0054 E360     		str	r3, [r4, #12]
+ 1269              	.LVL142:
+ 1270              	.L71:
+ 240:Core/Src/geo_math.c **** }
+ 1271              		.loc 1 240 1 view .LVU378
+ 1272 0056 0CB0     		add	sp, sp, #48
+ 1273              	.LCFI26:
+ 1274              		.cfi_def_cfa_offset 8
+ 1275              		@ sp needed
+ 1276 0058 10BD     		pop	{r4, pc}
+ 1277              		.cfi_endproc
+ 1278              	.LFE11:
+ 1280              		.section	.text.geo_distance_m,"ax",%progbits
+ 1281              		.align	1
+ 1282              		.global	geo_distance_m
+ 1283              		.syntax unified
+ 1284              		.thumb
+ 1285              		.thumb_func
+ 1287              	geo_distance_m:
+ 1288              	.LFB12:
+ 241:Core/Src/geo_math.c **** 
+ 242:Core/Src/geo_math.c **** uint32_t geo_distance_m(GeoCoord a, GeoCoord b) {
+ 1289              		.loc 1 242 49 is_stmt 1 view -0
+ 1290              		.cfi_startproc
+ 1291              		@ args = 0, pretend = 0, frame = 16
+ 1292              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1293 0000 70B5     		push	{r4, r5, r6, lr}
+ 1294              	.LCFI27:
+ 1295              		.cfi_def_cfa_offset 16
+ 1296              		.cfi_offset 4, -16
+ 1297              		.cfi_offset 5, -12
+ 1298              		.cfi_offset 6, -8
+ 1299              		.cfi_offset 14, -4
+ 1300 0002 84B0     		sub	sp, sp, #16
+ 1301              	.LCFI28:
+ 1302              		.cfi_def_cfa_offset 32
+ 1303 0004 04AC     		add	r4, sp, #16
+ 1304 0006 04E90300 		stmdb	r4, {r0, r1}
+ 1305 000a CDE90023 		strd	r2, r3, [sp]
+ 243:Core/Src/geo_math.c ****     int64_t dlat = (int64_t)(b.lat_e7 - a.lat_e7);
+ 1306              		.loc 1 243 5 view .LVU380
+ 1307              		.loc 1 243 31 is_stmt 0 view .LVU381
+ 1308 000e 1346     		mov	r3, r2
+ 1309              		.loc 1 243 42 view .LVU382
+ARM GAS  /tmp/ccq1psjJ.s 			page 29
+
+
+ 1310 0010 0146     		mov	r1, r0
+ 1311              		.loc 1 243 39 view .LVU383
+ 1312 0012 A2EB000E 		sub	lr, r2, r0
+ 1313              		.loc 1 243 13 view .LVU384
+ 1314 0016 4FEAEE7C 		asr	ip, lr, #31
+ 1315 001a 7046     		mov	r0, lr
+ 1316              	.LVL143:
+ 244:Core/Src/geo_math.c ****     int64_t dlon = (int64_t)(b.lon_e7 - a.lon_e7);
+ 1317              		.loc 1 244 5 is_stmt 1 view .LVU385
+ 1318              		.loc 1 244 39 is_stmt 0 view .LVU386
+ 1319 001c 019C     		ldr	r4, [sp, #4]
+ 1320 001e 039A     		ldr	r2, [sp, #12]
+ 1321 0020 A41A     		subs	r4, r4, r2
+ 1322              		.loc 1 244 13 view .LVU387
+ 1323 0022 E217     		asrs	r2, r4, #31
+ 1324 0024 2646     		mov	r6, r4
+ 1325              	.LVL144:
+ 245:Core/Src/geo_math.c **** 
+ 246:Core/Src/geo_math.c ****     int32_t mean_lat = (a.lat_e7 + b.lat_e7) / 2;
+ 1326              		.loc 1 246 5 is_stmt 1 view .LVU388
+ 1327              		.loc 1 246 34 is_stmt 0 view .LVU389
+ 1328 0026 0B44     		add	r3, r3, r1
+ 1329              		.loc 1 246 13 view .LVU390
+ 1330 0028 03EBD371 		add	r1, r3, r3, lsr #31
+ 1331 002c 4910     		asrs	r1, r1, #1
+ 1332              	.LVL145:
+ 247:Core/Src/geo_math.c ****     if (mean_lat < 0) mean_lat = -mean_lat;
+ 1333              		.loc 1 247 5 is_stmt 1 view .LVU391
+ 1334              		.loc 1 247 8 is_stmt 0 view .LVU392
+ 1335 002e B3F1FF3F 		cmp	r3, #-1
+ 1336 0032 4ADB     		blt	.L80
+ 1337              	.LVL146:
+ 1338              	.L76:
+ 248:Core/Src/geo_math.c ****     int32_t deg = mean_lat / 10000000;
+ 1339              		.loc 1 248 5 is_stmt 1 view .LVU393
+ 1340              		.loc 1 248 13 is_stmt 0 view .LVU394
+ 1341 0034 264D     		ldr	r5, .L81
+ 1342 0036 85FB0135 		smull	r3, r5, r5, r1
+ 1343 003a CB17     		asrs	r3, r1, #31
+ 1344 003c C3EBA553 		rsb	r3, r3, r5, asr #22
+ 1345              	.LVL147:
+ 249:Core/Src/geo_math.c ****     if (deg > 90) deg = 90;
+ 1346              		.loc 1 249 5 is_stmt 1 view .LVU395
+ 1347              		.loc 1 249 8 is_stmt 0 view .LVU396
+ 1348 0040 244D     		ldr	r5, .L81+4
+ 1349 0042 A942     		cmp	r1, r5
+ 1350 0044 00DB     		blt	.L77
+ 1351              		.loc 1 249 23 discriminator 1 view .LVU397
+ 1352 0046 5A23     		movs	r3, #90
+ 1353              	.LVL148:
+ 1354              	.L77:
+ 250:Core/Src/geo_math.c **** 
+ 251:Core/Src/geo_math.c ****     int32_t cos_q15 = GEO_COS_LUT_Q15[deg];
+ 1355              		.loc 1 251 5 is_stmt 1 view .LVU398
+ 1356              		.loc 1 251 38 is_stmt 0 view .LVU399
+ 1357 0048 2349     		ldr	r1, .L81+8
+ 1358              	.LVL149:
+ARM GAS  /tmp/ccq1psjJ.s 			page 30
+
+
+ 1359              		.loc 1 251 38 view .LVU400
+ 1360 004a 31F91330 		ldrsh	r3, [r1, r3, lsl #1]
+ 1361              	.LVL150:
+ 252:Core/Src/geo_math.c ****     int64_t dlon_scaled = (dlon * cos_q15) >> 15;
+ 1362              		.loc 1 252 5 is_stmt 1 view .LVU401
+ 1363              		.loc 1 252 33 is_stmt 0 view .LVU402
+ 1364 004e D917     		asrs	r1, r3, #31
+ 1365 0050 03FB02F2 		mul	r2, r3, r2
+ 1366              	.LVL151:
+ 1367              		.loc 1 252 33 view .LVU403
+ 1368 0054 04FB0122 		mla	r2, r4, r1, r2
+ 1369 0058 A3FB0631 		umull	r3, r1, r3, r6
+ 1370              	.LVL152:
+ 1371              		.loc 1 252 33 view .LVU404
+ 1372 005c 0A44     		add	r2, r2, r1
+ 1373              		.loc 1 252 13 view .LVU405
+ 1374 005e DB0B     		lsrs	r3, r3, #15
+ 1375 0060 43EA4243 		orr	r3, r3, r2, lsl #17
+ 1376 0064 D213     		asrs	r2, r2, #15
+ 1377              	.LVL153:
+ 253:Core/Src/geo_math.c **** 
+ 254:Core/Src/geo_math.c ****     uint64_t sum_sq = (uint64_t)(dlat * dlat + dlon_scaled * dlon_scaled);
+ 1378              		.loc 1 254 5 is_stmt 1 view .LVU406
+ 1379              		.loc 1 254 39 is_stmt 0 view .LVU407
+ 1380 0066 0EFB0CFC 		mul	ip, lr, ip
+ 1381              	.LVL154:
+ 1382              		.loc 1 254 39 view .LVU408
+ 1383 006a A0FB0001 		umull	r0, r1, r0, r0
+ 1384              	.LVL155:
+ 1385              		.loc 1 254 39 view .LVU409
+ 1386 006e 01EB4C01 		add	r1, r1, ip, lsl #1
+ 1387              		.loc 1 254 60 view .LVU410
+ 1388 0072 03FB02F2 		mul	r2, r3, r2
+ 1389              	.LVL156:
+ 1390              		.loc 1 254 60 view .LVU411
+ 1391 0076 A3FB0334 		umull	r3, r4, r3, r3
+ 1392              	.LVL157:
+ 1393              		.loc 1 254 60 view .LVU412
+ 1394 007a 04EB4202 		add	r2, r4, r2, lsl #1
+ 1395              		.loc 1 254 46 view .LVU413
+ 1396 007e C018     		adds	r0, r0, r3
+ 1397              	.LVL158:
+ 255:Core/Src/geo_math.c ****     uint32_t dist_e7 = geo_isqrt64(sum_sq);
+ 1398              		.loc 1 255 5 is_stmt 1 view .LVU414
+ 1399              		.loc 1 255 24 is_stmt 0 view .LVU415
+ 1400 0080 41EB0201 		adc	r1, r1, r2
+ 1401              	.LVL159:
+ 1402              		.loc 1 255 24 view .LVU416
+ 1403 0084 FFF7FEFF 		bl	geo_isqrt64
+ 1404              	.LVL160:
+ 256:Core/Src/geo_math.c **** 
+ 257:Core/Src/geo_math.c ****     /* 1e-7 deg = 111139 / 10000000 meters */
+ 258:Core/Src/geo_math.c ****     return (uint32_t)(((uint64_t)dist_e7 * 111139ULL) / 10000000ULL);
+ 1405              		.loc 1 258 5 is_stmt 1 view .LVU417
+ 1406              		.loc 1 258 42 is_stmt 0 view .LVU418
+ 1407 0088 C10E     		lsrs	r1, r0, #27
+ 1408 008a 4301     		lsls	r3, r0, #5
+ARM GAS  /tmp/ccq1psjJ.s 			page 31
+
+
+ 1409 008c 1B1A     		subs	r3, r3, r0
+ 1410 008e 61F10001 		sbc	r1, r1, #0
+ 1411 0092 C901     		lsls	r1, r1, #7
+ 1412 0094 41EA5361 		orr	r1, r1, r3, lsr #25
+ 1413 0098 DB01     		lsls	r3, r3, #7
+ 1414 009a 1B18     		adds	r3, r3, r0
+ 1415 009c 41F10001 		adc	r1, r1, #0
+ 1416 00a0 8900     		lsls	r1, r1, #2
+ 1417 00a2 41EA9371 		orr	r1, r1, r3, lsr #30
+ 1418 00a6 9B00     		lsls	r3, r3, #2
+ 1419 00a8 1818     		adds	r0, r3, r0
+ 1420              	.LVL161:
+ 1421              		.loc 1 258 42 view .LVU419
+ 1422 00aa 41F10001 		adc	r1, r1, #0
+ 1423 00ae CC00     		lsls	r4, r1, #3
+ 1424 00b0 44EA5074 		orr	r4, r4, r0, lsr #29
+ 1425 00b4 C300     		lsls	r3, r0, #3
+ 1426 00b6 181A     		subs	r0, r3, r0
+ 1427              		.loc 1 258 55 view .LVU420
+ 1428 00b8 084A     		ldr	r2, .L81+12
+ 1429 00ba 4FF00003 		mov	r3, #0
+ 1430 00be 64EB0101 		sbc	r1, r4, r1
+ 1431 00c2 FFF7FEFF 		bl	__aeabi_uldivmod
+ 1432              	.LVL162:
+ 259:Core/Src/geo_math.c **** }
+ 1433              		.loc 1 259 1 view .LVU421
+ 1434 00c6 04B0     		add	sp, sp, #16
+ 1435              	.LCFI29:
+ 1436              		.cfi_remember_state
+ 1437              		.cfi_def_cfa_offset 16
+ 1438              	.LVL163:
+ 1439              		.loc 1 259 1 view .LVU422
+ 1440              		@ sp needed
+ 1441 00c8 70BD     		pop	{r4, r5, r6, pc}
+ 1442              	.LVL164:
+ 1443              	.L80:
+ 1444              	.LCFI30:
+ 1445              		.cfi_restore_state
+ 247:Core/Src/geo_math.c ****     int32_t deg = mean_lat / 10000000;
+ 1446              		.loc 1 247 23 is_stmt 1 discriminator 1 view .LVU423
+ 247:Core/Src/geo_math.c ****     int32_t deg = mean_lat / 10000000;
+ 1447              		.loc 1 247 32 is_stmt 0 discriminator 1 view .LVU424
+ 1448 00ca 4942     		rsbs	r1, r1, #0
+ 1449              	.LVL165:
+ 247:Core/Src/geo_math.c ****     int32_t deg = mean_lat / 10000000;
+ 1450              		.loc 1 247 32 discriminator 1 view .LVU425
+ 1451 00cc B2E7     		b	.L76
+ 1452              	.L82:
+ 1453 00ce 00BF     		.align	2
+ 1454              	.L81:
+ 1455 00d0 6BCA5F6B 		.word	1801439851
+ 1456 00d4 807F3D36 		.word	910000000
+ 1457 00d8 00000000 		.word	GEO_COS_LUT_Q15
+ 1458 00dc 80969800 		.word	10000000
+ 1459              		.cfi_endproc
+ 1460              	.LFE12:
+ 1462              		.section	.text.geo_bearing_deg,"ax",%progbits
+ARM GAS  /tmp/ccq1psjJ.s 			page 32
+
+
+ 1463              		.align	1
+ 1464              		.global	geo_bearing_deg
+ 1465              		.syntax unified
+ 1466              		.thumb
+ 1467              		.thumb_func
+ 1469              	geo_bearing_deg:
+ 1470              	.LFB13:
+ 260:Core/Src/geo_math.c **** 
+ 261:Core/Src/geo_math.c **** int32_t geo_bearing_deg(GeoCoord from, GeoCoord to) {
+ 1471              		.loc 1 261 53 is_stmt 1 view -0
+ 1472              		.cfi_startproc
+ 1473              		@ args = 0, pretend = 0, frame = 16
+ 1474              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1475 0000 70B5     		push	{r4, r5, r6, lr}
+ 1476              	.LCFI31:
+ 1477              		.cfi_def_cfa_offset 16
+ 1478              		.cfi_offset 4, -16
+ 1479              		.cfi_offset 5, -12
+ 1480              		.cfi_offset 6, -8
+ 1481              		.cfi_offset 14, -4
+ 1482 0002 84B0     		sub	sp, sp, #16
+ 1483              	.LCFI32:
+ 1484              		.cfi_def_cfa_offset 32
+ 1485 0004 04AC     		add	r4, sp, #16
+ 1486 0006 04E90300 		stmdb	r4, {r0, r1}
+ 1487 000a CDE90023 		strd	r2, r3, [sp]
+ 262:Core/Src/geo_math.c ****     int64_t dlat = (int64_t)(to.lat_e7 - from.lat_e7);
+ 1488              		.loc 1 262 5 view .LVU427
+ 1489              		.loc 1 262 32 is_stmt 0 view .LVU428
+ 1490 000e 1346     		mov	r3, r2
+ 1491              		.loc 1 262 46 view .LVU429
+ 1492 0010 0546     		mov	r5, r0
+ 1493              		.loc 1 262 40 view .LVU430
+ 1494 0012 111A     		subs	r1, r2, r0
+ 1495              		.loc 1 262 13 view .LVU431
+ 1496 0014 CC17     		asrs	r4, r1, #31
+ 1497              	.LVL166:
+ 263:Core/Src/geo_math.c ****     int64_t dlon = (int64_t)(to.lon_e7 - from.lon_e7);
+ 1498              		.loc 1 263 5 is_stmt 1 view .LVU432
+ 1499              		.loc 1 263 40 is_stmt 0 view .LVU433
+ 1500 0016 019A     		ldr	r2, [sp, #4]
+ 1501 0018 0398     		ldr	r0, [sp, #12]
+ 1502 001a 121A     		subs	r2, r2, r0
+ 1503              		.loc 1 263 13 view .LVU434
+ 1504 001c D017     		asrs	r0, r2, #31
+ 1505 001e 9446     		mov	ip, r2
+ 1506              	.LVL167:
+ 264:Core/Src/geo_math.c **** 
+ 265:Core/Src/geo_math.c ****     if (dlat == 0 && dlon == 0) return 0;
+ 1507              		.loc 1 265 5 is_stmt 1 view .LVU435
+ 1508              		.loc 1 265 8 is_stmt 0 view .LVU436
+ 1509 0020 51EAE17E 		orrs	lr, r1, r1, asr #31
+ 1510 0024 02D1     		bne	.L84
+ 1511              		.loc 1 265 19 discriminator 1 view .LVU437
+ 1512 0026 52EA000E 		orrs	lr, r2, r0
+ 1513 002a 40D0     		beq	.L90
+ 1514              	.L84:
+ARM GAS  /tmp/ccq1psjJ.s 			page 33
+
+
+ 266:Core/Src/geo_math.c **** 
+ 267:Core/Src/geo_math.c ****     int32_t mean_lat = (from.lat_e7 + to.lat_e7) / 2;
+ 1515              		.loc 1 267 5 is_stmt 1 view .LVU438
+ 1516              		.loc 1 267 37 is_stmt 0 view .LVU439
+ 1517 002c 2B44     		add	r3, r3, r5
+ 1518              		.loc 1 267 13 view .LVU440
+ 1519 002e 03EBD375 		add	r5, r3, r3, lsr #31
+ 1520 0032 6D10     		asrs	r5, r5, #1
+ 1521              	.LVL168:
+ 268:Core/Src/geo_math.c ****     if (mean_lat < 0) mean_lat = -mean_lat;
+ 1522              		.loc 1 268 5 is_stmt 1 view .LVU441
+ 1523              		.loc 1 268 8 is_stmt 0 view .LVU442
+ 1524 0034 B3F1FF3F 		cmp	r3, #-1
+ 1525 0038 3BDB     		blt	.L103
+ 1526              	.LVL169:
+ 1527              	.L86:
+ 269:Core/Src/geo_math.c ****     int32_t deg = mean_lat / 10000000;
+ 1528              		.loc 1 269 5 is_stmt 1 view .LVU443
+ 1529              		.loc 1 269 13 is_stmt 0 view .LVU444
+ 1530 003a 3A4B     		ldr	r3, .L106
+ 1531 003c 83FB053E 		smull	r3, lr, r3, r5
+ 1532 0040 EB17     		asrs	r3, r5, #31
+ 1533 0042 C3EBAE53 		rsb	r3, r3, lr, asr #22
+ 1534              	.LVL170:
+ 270:Core/Src/geo_math.c ****     if (deg > 90) deg = 90;
+ 1535              		.loc 1 270 5 is_stmt 1 view .LVU445
+ 1536              		.loc 1 270 8 is_stmt 0 view .LVU446
+ 1537 0046 DFF8F0E0 		ldr	lr, .L106+20
+ 1538 004a 7545     		cmp	r5, lr
+ 1539 004c 00DB     		blt	.L87
+ 1540              		.loc 1 270 23 discriminator 1 view .LVU447
+ 1541 004e 5A23     		movs	r3, #90
+ 1542              	.LVL171:
+ 1543              	.L87:
+ 271:Core/Src/geo_math.c **** 
+ 272:Core/Src/geo_math.c ****     int64_t dy = (dlon * GEO_COS_LUT_Q15[deg]) >> 15;
+ 1544              		.loc 1 272 5 is_stmt 1 view .LVU448
+ 1545              		.loc 1 272 41 is_stmt 0 view .LVU449
+ 1546 0050 354D     		ldr	r5, .L106+4
+ 1547              	.LVL172:
+ 1548              		.loc 1 272 41 view .LVU450
+ 1549 0052 35F91330 		ldrsh	r3, [r5, r3, lsl #1]
+ 1550              	.LVL173:
+ 1551              		.loc 1 272 41 view .LVU451
+ 1552 0056 DD17     		asrs	r5, r3, #31
+ 1553              		.loc 1 272 24 view .LVU452
+ 1554 0058 03FB00F0 		mul	r0, r3, r0
+ 1555              	.LVL174:
+ 1556              		.loc 1 272 24 view .LVU453
+ 1557 005c 02FB0500 		mla	r0, r2, r5, r0
+ 1558 0060 A3FB0CC3 		umull	ip, r3, r3, ip
+ 1559 0064 1844     		add	r0, r0, r3
+ 1560              		.loc 1 272 13 view .LVU454
+ 1561 0066 4FEADC3C 		lsr	ip, ip, #15
+ 1562 006a C513     		asrs	r5, r0, #15
+ 1563              	.LVL175:
+ 273:Core/Src/geo_math.c ****     int64_t dx = dlat;
+ARM GAS  /tmp/ccq1psjJ.s 			page 34
+
+
+ 1564              		.loc 1 273 5 is_stmt 1 view .LVU455
+ 274:Core/Src/geo_math.c **** 
+ 275:Core/Src/geo_math.c ****     int64_t ax = (dx < 0) ? -dx : dx;
+ 1565              		.loc 1 275 5 view .LVU456
+ 1566              		.loc 1 275 13 is_stmt 0 view .LVU457
+ 1567 006c 0029     		cmp	r1, #0
+ 1568 006e B8BF     		it	lt
+ 1569 0070 4942     		rsblt	r1, r1, #0
+ 1570              	.LVL176:
+ 1571              		.loc 1 275 13 view .LVU458
+ 1572 0072 4FF0000E 		mov	lr, #0
+ 1573              	.LVL177:
+ 276:Core/Src/geo_math.c ****     int64_t ay = (dy < 0) ? -dy : dy;
+ 1574              		.loc 1 276 5 is_stmt 1 view .LVU459
+ 1575              		.loc 1 276 13 is_stmt 0 view .LVU460
+ 1576 0076 4CEA404C 		orr	ip, ip, r0, lsl #17
+ 1577              	.LVL178:
+ 1578              		.loc 1 276 13 view .LVU461
+ 1579 007a 2B46     		mov	r3, r5
+ 1580 007c 7545     		cmp	r5, lr
+ 1581 007e 1ADB     		blt	.L104
+ 1582              	.LVL179:
+ 1583              	.L88:
+ 277:Core/Src/geo_math.c **** 
+ 278:Core/Src/geo_math.c ****     int32_t angle_tenths = 0;
+ 1584              		.loc 1 278 5 is_stmt 1 view .LVU462
+ 279:Core/Src/geo_math.c ****     if (ax >= ay) {
+ 1585              		.loc 1 279 5 view .LVU463
+ 1586              		.loc 1 279 8 is_stmt 0 view .LVU464
+ 1587 0080 6145     		cmp	r1, ip
+ 1588 0082 7EEB0302 		sbcs	r2, lr, r3
+ 1589              	.LVL180:
+ 1590              		.loc 1 279 8 view .LVU465
+ 1591 0086 1BDB     		blt	.L89
+ 1592              	.LBB4:
+ 280:Core/Src/geo_math.c ****         if (ax == 0) return 0;
+ 1593              		.loc 1 280 9 is_stmt 1 view .LVU466
+ 1594              		.loc 1 280 12 is_stmt 0 view .LVU467
+ 1595 0088 89B1     		cbz	r1, .L90
+ 281:Core/Src/geo_math.c ****         int32_t idx = (int32_t)((ay * 64LL) / ax);
+ 1596              		.loc 1 281 9 is_stmt 1 view .LVU468
+ 1597              		.loc 1 281 37 is_stmt 0 view .LVU469
+ 1598 008a 9B01     		lsls	r3, r3, #6
+ 1599              	.LVL181:
+ 1600              		.loc 1 281 37 view .LVU470
+ 1601 008c 1E46     		mov	r6, r3
+ 1602              		.loc 1 281 45 view .LVU471
+ 1603 008e 0A46     		mov	r2, r1
+ 1604 0090 7346     		mov	r3, lr
+ 1605 0092 4FEA8C10 		lsl	r0, ip, #6
+ 1606              		.loc 1 281 45 view .LVU472
+ 1607 0096 46EA9C61 		orr	r1, r6, ip, lsr #26
+ 1608              	.LVL182:
+ 1609              		.loc 1 281 45 view .LVU473
+ 1610 009a FFF7FEFF 		bl	__aeabi_ldivmod
+ 1611              	.LVL183:
+ 1612              		.loc 1 281 17 view .LVU474
+ARM GAS  /tmp/ccq1psjJ.s 			page 35
+
+
+ 1613 009e 0346     		mov	r3, r0
+ 1614              	.LVL184:
+ 282:Core/Src/geo_math.c ****         if (idx > 64) idx = 64;
+ 1615              		.loc 1 282 9 is_stmt 1 view .LVU475
+ 1616              		.loc 1 282 12 is_stmt 0 view .LVU476
+ 1617 00a0 4028     		cmp	r0, #64
+ 1618 00a2 00DD     		ble	.L91
+ 1619              		.loc 1 282 27 discriminator 1 view .LVU477
+ 1620 00a4 4023     		movs	r3, #64
+ 1621              	.L91:
+ 1622              	.LVL185:
+ 283:Core/Src/geo_math.c ****         angle_tenths = GEO_ATAN_TENTHS_LUT[idx];
+ 1623              		.loc 1 283 9 is_stmt 1 view .LVU478
+ 1624              		.loc 1 283 43 is_stmt 0 view .LVU479
+ 1625 00a6 214A     		ldr	r2, .L106+8
+ 1626 00a8 32F91330 		ldrsh	r3, [r2, r3, lsl #1]
+ 1627              	.LVL186:
+ 1628              		.loc 1 283 43 view .LVU480
+ 1629 00ac 16E0     		b	.L92
+ 1630              	.LVL187:
+ 1631              	.L90:
+ 1632              		.loc 1 283 43 view .LVU481
+ 1633              	.LBE4:
+ 265:Core/Src/geo_math.c **** 
+ 1634              		.loc 1 265 40 discriminator 2 view .LVU482
+ 1635 00ae 0020     		movs	r0, #0
+ 1636 00b0 32E0     		b	.L83
+ 1637              	.LVL188:
+ 1638              	.L103:
+ 268:Core/Src/geo_math.c ****     int32_t deg = mean_lat / 10000000;
+ 1639              		.loc 1 268 23 is_stmt 1 discriminator 1 view .LVU483
+ 268:Core/Src/geo_math.c ****     int32_t deg = mean_lat / 10000000;
+ 1640              		.loc 1 268 32 is_stmt 0 discriminator 1 view .LVU484
+ 1641 00b2 6D42     		rsbs	r5, r5, #0
+ 1642              	.LVL189:
+ 268:Core/Src/geo_math.c ****     int32_t deg = mean_lat / 10000000;
+ 1643              		.loc 1 268 32 discriminator 1 view .LVU485
+ 1644 00b4 C1E7     		b	.L86
+ 1645              	.LVL190:
+ 1646              	.L104:
+ 276:Core/Src/geo_math.c **** 
+ 1647              		.loc 1 276 13 view .LVU486
+ 1648 00b6 DCF1000C 		rsbs	ip, ip, #0
+ 1649              	.LVL191:
+ 276:Core/Src/geo_math.c **** 
+ 1650              		.loc 1 276 13 view .LVU487
+ 1651 00ba 65EB4503 		sbc	r3, r5, r5, lsl #1
+ 1652              	.LVL192:
+ 276:Core/Src/geo_math.c **** 
+ 1653              		.loc 1 276 13 view .LVU488
+ 1654 00be DFE7     		b	.L88
+ 1655              	.LVL193:
+ 1656              	.L89:
+ 1657              	.LBB5:
+ 284:Core/Src/geo_math.c ****     } else {
+ 285:Core/Src/geo_math.c ****         int32_t idx = (int32_t)((ax * 64LL) / ay);
+ 1658              		.loc 1 285 9 is_stmt 1 view .LVU489
+ARM GAS  /tmp/ccq1psjJ.s 			page 36
+
+
+ 1659              		.loc 1 285 45 is_stmt 0 view .LVU490
+ 1660 00c0 6246     		mov	r2, ip
+ 1661 00c2 8801     		lsls	r0, r1, #6
+ 1662              		.loc 1 285 45 view .LVU491
+ 1663 00c4 890E     		lsrs	r1, r1, #26
+ 1664              	.LVL194:
+ 1665              		.loc 1 285 45 view .LVU492
+ 1666 00c6 FFF7FEFF 		bl	__aeabi_ldivmod
+ 1667              	.LVL195:
+ 1668              		.loc 1 285 17 view .LVU493
+ 1669 00ca 0346     		mov	r3, r0
+ 1670              	.LVL196:
+ 286:Core/Src/geo_math.c ****         if (idx > 64) idx = 64;
+ 1671              		.loc 1 286 9 is_stmt 1 view .LVU494
+ 1672              		.loc 1 286 12 is_stmt 0 view .LVU495
+ 1673 00cc 4028     		cmp	r0, #64
+ 1674 00ce 00DD     		ble	.L93
+ 1675              		.loc 1 286 27 discriminator 1 view .LVU496
+ 1676 00d0 4023     		movs	r3, #64
+ 1677              	.L93:
+ 1678              	.LVL197:
+ 287:Core/Src/geo_math.c ****         angle_tenths = 900 - GEO_ATAN_TENTHS_LUT[idx];
+ 1679              		.loc 1 287 9 is_stmt 1 view .LVU497
+ 1680              		.loc 1 287 49 is_stmt 0 view .LVU498
+ 1681 00d2 164A     		ldr	r2, .L106+8
+ 1682 00d4 32F91330 		ldrsh	r3, [r2, r3, lsl #1]
+ 1683              	.LVL198:
+ 1684              		.loc 1 287 22 view .LVU499
+ 1685 00d8 C3F56173 		rsb	r3, r3, #900
+ 1686              	.LVL199:
+ 1687              	.L92:
+ 1688              		.loc 1 287 22 view .LVU500
+ 1689              	.LBE5:
+ 288:Core/Src/geo_math.c ****     }
+ 289:Core/Src/geo_math.c **** 
+ 290:Core/Src/geo_math.c ****     if (dx < 0 && dy >= 0) angle_tenths = 1800 - angle_tenths;
+ 1690              		.loc 1 290 5 is_stmt 1 view .LVU501
+ 1691              		.loc 1 290 8 is_stmt 0 view .LVU502
+ 1692 00dc 002C     		cmp	r4, #0
+ 1693 00de 05DB     		blt	.L105
+ 291:Core/Src/geo_math.c ****     else if (dx < 0 && dy < 0) angle_tenths = 1800 + angle_tenths;
+ 292:Core/Src/geo_math.c ****     else if (dx >= 0 && dy < 0) angle_tenths = 3600 - angle_tenths;
+ 1694              		.loc 1 292 10 is_stmt 1 view .LVU503
+ 1695              		.loc 1 292 13 is_stmt 0 view .LVU504
+ 1696 00e0 08DB     		blt	.L96
+ 1697              		.loc 1 292 22 discriminator 1 view .LVU505
+ 1698 00e2 002D     		cmp	r5, #0
+ 1699 00e4 06DA     		bge	.L96
+ 1700              		.loc 1 292 33 is_stmt 1 discriminator 2 view .LVU506
+ 1701              		.loc 1 292 46 is_stmt 0 discriminator 2 view .LVU507
+ 1702 00e6 C3F56163 		rsb	r3, r3, #3600
+ 1703              	.LVL200:
+ 1704              		.loc 1 292 46 discriminator 2 view .LVU508
+ 1705 00ea 03E0     		b	.L96
+ 1706              	.LVL201:
+ 1707              	.L105:
+ 290:Core/Src/geo_math.c ****     else if (dx < 0 && dy < 0) angle_tenths = 1800 + angle_tenths;
+ARM GAS  /tmp/ccq1psjJ.s 			page 37
+
+
+ 1708              		.loc 1 290 16 discriminator 1 view .LVU509
+ 1709 00ec 002D     		cmp	r5, #0
+ 1710 00ee 15DB     		blt	.L95
+ 290:Core/Src/geo_math.c ****     else if (dx < 0 && dy < 0) angle_tenths = 1800 + angle_tenths;
+ 1711              		.loc 1 290 28 is_stmt 1 discriminator 2 view .LVU510
+ 290:Core/Src/geo_math.c ****     else if (dx < 0 && dy < 0) angle_tenths = 1800 + angle_tenths;
+ 1712              		.loc 1 290 41 is_stmt 0 discriminator 2 view .LVU511
+ 1713 00f0 C3F5E163 		rsb	r3, r3, #1800
+ 1714              	.LVL202:
+ 1715              	.L96:
+ 293:Core/Src/geo_math.c **** 
+ 294:Core/Src/geo_math.c ****     int32_t result_deg = (angle_tenths + 5) / 10;
+ 1716              		.loc 1 294 5 is_stmt 1 view .LVU512
+ 1717              		.loc 1 294 40 is_stmt 0 view .LVU513
+ 1718 00f4 0533     		adds	r3, r3, #5
+ 1719              	.LVL203:
+ 1720              		.loc 1 294 13 view .LVU514
+ 1721 00f6 0E4A     		ldr	r2, .L106+12
+ 1722 00f8 82FB0312 		smull	r1, r2, r2, r3
+ 1723 00fc DB17     		asrs	r3, r3, #31
+ 1724              	.LVL204:
+ 1725              		.loc 1 294 13 view .LVU515
+ 1726 00fe C3EBA203 		rsb	r3, r3, r2, asr #2
+ 1727              	.LVL205:
+ 295:Core/Src/geo_math.c ****     return result_deg % 360;
+ 1728              		.loc 1 295 5 is_stmt 1 view .LVU516
+ 1729              		.loc 1 295 23 is_stmt 0 view .LVU517
+ 1730 0102 0C4A     		ldr	r2, .L106+16
+ 1731 0104 82FB0312 		smull	r1, r2, r2, r3
+ 1732 0108 1A44     		add	r2, r2, r3
+ 1733 010a D817     		asrs	r0, r3, #31
+ 1734 010c C0EB2220 		rsb	r0, r0, r2, asr #8
+ 1735 0110 4FF4B472 		mov	r2, #360
+ 1736 0114 02FB1030 		mls	r0, r2, r0, r3
+ 1737              	.LVL206:
+ 1738              	.L83:
+ 296:Core/Src/geo_math.c **** }
+ 1739              		.loc 1 296 1 view .LVU518
+ 1740 0118 04B0     		add	sp, sp, #16
+ 1741              	.LCFI33:
+ 1742              		.cfi_remember_state
+ 1743              		.cfi_def_cfa_offset 16
+ 1744              	.LVL207:
+ 1745              		.loc 1 296 1 view .LVU519
+ 1746              		@ sp needed
+ 1747 011a 70BD     		pop	{r4, r5, r6, pc}
+ 1748              	.LVL208:
+ 1749              	.L95:
+ 1750              	.LCFI34:
+ 1751              		.cfi_restore_state
+ 291:Core/Src/geo_math.c ****     else if (dx >= 0 && dy < 0) angle_tenths = 3600 - angle_tenths;
+ 1752              		.loc 1 291 10 is_stmt 1 view .LVU520
+ 291:Core/Src/geo_math.c ****     else if (dx >= 0 && dy < 0) angle_tenths = 3600 - angle_tenths;
+ 1753              		.loc 1 291 32 discriminator 2 view .LVU521
+ 291:Core/Src/geo_math.c ****     else if (dx >= 0 && dy < 0) angle_tenths = 3600 - angle_tenths;
+ 1754              		.loc 1 291 45 is_stmt 0 discriminator 2 view .LVU522
+ 1755 011c 03F5E163 		add	r3, r3, #1800
+ARM GAS  /tmp/ccq1psjJ.s 			page 38
+
+
+ 1756              	.LVL209:
+ 291:Core/Src/geo_math.c ****     else if (dx >= 0 && dy < 0) angle_tenths = 3600 - angle_tenths;
+ 1757              		.loc 1 291 45 discriminator 2 view .LVU523
+ 1758 0120 E8E7     		b	.L96
+ 1759              	.L107:
+ 1760 0122 00BF     		.align	2
+ 1761              	.L106:
+ 1762 0124 6BCA5F6B 		.word	1801439851
+ 1763 0128 00000000 		.word	GEO_COS_LUT_Q15
+ 1764 012c 00000000 		.word	GEO_ATAN_TENTHS_LUT
+ 1765 0130 67666666 		.word	1717986919
+ 1766 0134 B7600BB6 		.word	-1240768329
+ 1767 0138 807F3D36 		.word	910000000
+ 1768              		.cfi_endproc
+ 1769              	.LFE13:
+ 1771              		.section	.rodata.GEO_ATAN_TENTHS_LUT,"a"
+ 1772              		.align	2
+ 1775              	GEO_ATAN_TENTHS_LUT:
+ 1776 0000 0000     		.short	0
+ 1777 0002 0900     		.short	9
+ 1778 0004 1200     		.short	18
+ 1779 0006 1B00     		.short	27
+ 1780 0008 2400     		.short	36
+ 1781 000a 2D00     		.short	45
+ 1782 000c 3600     		.short	54
+ 1783 000e 3E00     		.short	62
+ 1784 0010 4700     		.short	71
+ 1785 0012 5000     		.short	80
+ 1786 0014 5900     		.short	89
+ 1787 0016 6200     		.short	98
+ 1788 0018 6A00     		.short	106
+ 1789 001a 7300     		.short	115
+ 1790 001c 7B00     		.short	123
+ 1791 001e 8400     		.short	132
+ 1792 0020 8C00     		.short	140
+ 1793 0022 9500     		.short	149
+ 1794 0024 9D00     		.short	157
+ 1795 0026 A500     		.short	165
+ 1796 0028 AE00     		.short	174
+ 1797 002a B600     		.short	182
+ 1798 002c BE00     		.short	190
+ 1799 002e C600     		.short	198
+ 1800 0030 CE00     		.short	206
+ 1801 0032 D500     		.short	213
+ 1802 0034 DD00     		.short	221
+ 1803 0036 E500     		.short	229
+ 1804 0038 EC00     		.short	236
+ 1805 003a F400     		.short	244
+ 1806 003c FB00     		.short	251
+ 1807 003e 0201     		.short	258
+ 1808 0040 0A01     		.short	266
+ 1809 0042 1101     		.short	273
+ 1810 0044 1801     		.short	280
+ 1811 0046 1F01     		.short	287
+ 1812 0048 2601     		.short	294
+ 1813 004a 2C01     		.short	300
+ 1814 004c 3301     		.short	307
+ARM GAS  /tmp/ccq1psjJ.s 			page 39
+
+
+ 1815 004e 3A01     		.short	314
+ 1816 0050 4001     		.short	320
+ 1817 0052 4601     		.short	326
+ 1818 0054 4D01     		.short	333
+ 1819 0056 5301     		.short	339
+ 1820 0058 5901     		.short	345
+ 1821 005a 5F01     		.short	351
+ 1822 005c 6501     		.short	357
+ 1823 005e 6B01     		.short	363
+ 1824 0060 7101     		.short	369
+ 1825 0062 7601     		.short	374
+ 1826 0064 7C01     		.short	380
+ 1827 0066 8201     		.short	386
+ 1828 0068 8701     		.short	391
+ 1829 006a 8C01     		.short	396
+ 1830 006c 9201     		.short	402
+ 1831 006e 9701     		.short	407
+ 1832 0070 9C01     		.short	412
+ 1833 0072 A101     		.short	417
+ 1834 0074 A601     		.short	422
+ 1835 0076 AB01     		.short	427
+ 1836 0078 B001     		.short	432
+ 1837 007a B401     		.short	436
+ 1838 007c B901     		.short	441
+ 1839 007e BD01     		.short	445
+ 1840 0080 C201     		.short	450
+ 1841              		.section	.rodata.GEO_COS_LUT_Q15,"a"
+ 1842              		.align	2
+ 1845              	GEO_COS_LUT_Q15:
+ 1846 0000 FF7F     		.short	32767
+ 1847 0002 FA7F     		.short	32762
+ 1848 0004 EB7F     		.short	32747
+ 1849 0006 D27F     		.short	32722
+ 1850 0008 AF7F     		.short	32687
+ 1851 000a 827F     		.short	32642
+ 1852 000c 4B7F     		.short	32587
+ 1853 000e 0B7F     		.short	32523
+ 1854 0010 C07E     		.short	32448
+ 1855 0012 6C7E     		.short	32364
+ 1856 0014 0D7E     		.short	32269
+ 1857 0016 A57D     		.short	32165
+ 1858 0018 337D     		.short	32051
+ 1859 001a B77C     		.short	31927
+ 1860 001c 327C     		.short	31794
+ 1861 001e A27B     		.short	31650
+ 1862 0020 0A7B     		.short	31498
+ 1863 0022 677A     		.short	31335
+ 1864 0024 BB79     		.short	31163
+ 1865 0026 0679     		.short	30982
+ 1866 0028 4778     		.short	30791
+ 1867 002a 7F77     		.short	30591
+ 1868 002c AD76     		.short	30381
+ 1869 002e D275     		.short	30162
+ 1870 0030 EE74     		.short	29934
+ 1871 0032 0174     		.short	29697
+ 1872 0034 0B73     		.short	29451
+ 1873 0036 0C72     		.short	29196
+ARM GAS  /tmp/ccq1psjJ.s 			page 40
+
+
+ 1874 0038 0471     		.short	28932
+ 1875 003a F36F     		.short	28659
+ 1876 003c D96E     		.short	28377
+ 1877 003e B76D     		.short	28087
+ 1878 0040 8C6C     		.short	27788
+ 1879 0042 596B     		.short	27481
+ 1880 0044 1D6A     		.short	27165
+ 1881 0046 D968     		.short	26841
+ 1882 0048 8D67     		.short	26509
+ 1883 004a 3966     		.short	26169
+ 1884 004c DD64     		.short	25821
+ 1885 004e 7963     		.short	25465
+ 1886 0050 0D62     		.short	25101
+ 1887 0052 9A60     		.short	24730
+ 1888 0054 1F5F     		.short	24351
+ 1889 0056 9C5D     		.short	23964
+ 1890 0058 135C     		.short	23571
+ 1891 005a 825A     		.short	23170
+ 1892 005c EA58     		.short	22762
+ 1893 005e 4B57     		.short	22347
+ 1894 0060 A555     		.short	21925
+ 1895 0062 F953     		.short	21497
+ 1896 0064 4652     		.short	21062
+ 1897 0066 8D50     		.short	20621
+ 1898 0068 CD4E     		.short	20173
+ 1899 006a 084D     		.short	19720
+ 1900 006c 3C4B     		.short	19260
+ 1901 006e 6A49     		.short	18794
+ 1902 0070 9347     		.short	18323
+ 1903 0072 B645     		.short	17846
+ 1904 0074 D443     		.short	17364
+ 1905 0076 EC41     		.short	16876
+ 1906 0078 0040     		.short	16384
+ 1907 007a 0E3E     		.short	15886
+ 1908 007c 173C     		.short	15383
+ 1909 007e 1C3A     		.short	14876
+ 1910 0080 1C38     		.short	14364
+ 1911 0082 1836     		.short	13848
+ 1912 0084 1034     		.short	13328
+ 1913 0086 0332     		.short	12803
+ 1914 0088 F32F     		.short	12275
+ 1915 008a DF2D     		.short	11743
+ 1916 008c C72B     		.short	11207
+ 1917 008e AC29     		.short	10668
+ 1918 0090 8E27     		.short	10126
+ 1919 0092 6C25     		.short	9580
+ 1920 0094 4823     		.short	9032
+ 1921 0096 2121     		.short	8481
+ 1922 0098 F71E     		.short	7927
+ 1923 009a CB1C     		.short	7371
+ 1924 009c 9D1A     		.short	6813
+ 1925 009e 6C18     		.short	6252
+ 1926 00a0 3A16     		.short	5690
+ 1927 00a2 0614     		.short	5126
+ 1928 00a4 D011     		.short	4560
+ 1929 00a6 990F     		.short	3993
+ 1930 00a8 610D     		.short	3425
+ARM GAS  /tmp/ccq1psjJ.s 			page 41
+
+
+ 1931 00aa 280B     		.short	2856
+ 1932 00ac EE08     		.short	2286
+ 1933 00ae B306     		.short	1715
+ 1934 00b0 7804     		.short	1144
+ 1935 00b2 3C02     		.short	572
+ 1936 00b4 0000     		.short	0
+ 1937              		.section	.rodata.GEO_MERCATOR_INVERSE_LUT,"a"
+ 1938              		.align	2
+ 1941              	GEO_MERCATOR_INVERSE_LUT:
+ 1942 0000 B8C5B132 		.word	850511288
+ 1943 0004 7774AF32 		.word	850359415
+ 1944 0008 6521AD32 		.word	850207077
+ 1945 000c 81CCAA32 		.word	850054273
+ 1946 0010 CA75A832 		.word	849901002
+ 1947 0014 3D1DA632 		.word	849747261
+ 1948 0018 DAC2A332 		.word	849593050
+ 1949 001c 9E66A132 		.word	849438366
+ 1950 0020 89089F32 		.word	849283209
+ 1951 0024 9AA89C32 		.word	849127578
+ 1952 0028 CE469A32 		.word	848971470
+ 1953 002c 24E39732 		.word	848814884
+ 1954 0030 9B7D9532 		.word	848657819
+ 1955 0034 31169332 		.word	848500273
+ 1956 0038 E5AC9032 		.word	848342245
+ 1957 003c B6418E32 		.word	848183734
+ 1958 0040 A1D48B32 		.word	848024737
+ 1959 0044 A6658932 		.word	847865254
+ 1960 0048 C3F48632 		.word	847705283
+ 1961 004c F7818432 		.word	847544823
+ 1962 0050 3F0D8232 		.word	847383871
+ 1963 0054 9B967F32 		.word	847222427
+ 1964 0058 091E7D32 		.word	847060489
+ 1965 005c 88A37A32 		.word	846898056
+ 1966 0060 16277832 		.word	846735126
+ 1967 0064 B1A87532 		.word	846571697
+ 1968 0068 58287332 		.word	846407768
+ 1969 006c 0AA67032 		.word	846243338
+ 1970 0070 C5216E32 		.word	846078405
+ 1971 0074 879B6B32 		.word	845912967
+ 1972 0078 4F136932 		.word	845747023
+ 1973 007c 1B896632 		.word	845580571
+ 1974 0080 EBFC6332 		.word	845413611
+ 1975 0084 BB6E6132 		.word	845246139
+ 1976 0088 8CDE5E32 		.word	845078156
+ 1977 008c 5B4C5C32 		.word	844909659
+ 1978 0090 26B85932 		.word	844740646
+ 1979 0094 EC215732 		.word	844571116
+ 1980 0098 AC895432 		.word	844401068
+ 1981 009c 64EF5132 		.word	844230500
+ 1982 00a0 12534F32 		.word	844059410
+ 1983 00a4 B6B44C32 		.word	843887798
+ 1984 00a8 4C144A32 		.word	843715660
+ 1985 00ac D4714732 		.word	843542996
+ 1986 00b0 4CCD4432 		.word	843369804
+ 1987 00b4 B2264232 		.word	843196082
+ 1988 00b8 057E3F32 		.word	843021829
+ 1989 00bc 44D33C32 		.word	842847044
+ARM GAS  /tmp/ccq1psjJ.s 			page 42
+
+
+ 1990 00c0 6C263A32 		.word	842671724
+ 1991 00c4 7C773732 		.word	842495868
+ 1992 00c8 73C63432 		.word	842319475
+ 1993 00cc 4E133232 		.word	842142542
+ 1994 00d0 0C5E2F32 		.word	841965068
+ 1995 00d4 ACA62C32 		.word	841787052
+ 1996 00d8 2CED2932 		.word	841608492
+ 1997 00dc 8A312732 		.word	841429386
+ 1998 00e0 C4732432 		.word	841249732
+ 1999 00e4 D9B32132 		.word	841069529
+ 2000 00e8 C8F11E32 		.word	840888776
+ 2001 00ec 8E2D1C32 		.word	840707470
+ 2002 00f0 2A671932 		.word	840525610
+ 2003 00f4 9A9E1632 		.word	840343194
+ 2004 00f8 DDD31332 		.word	840160221
+ 2005 00fc F0061132 		.word	839976688
+ 2006 0100 D3370E32 		.word	839792595
+ 2007 0104 83660B32 		.word	839607939
+ 2008 0108 FF920832 		.word	839422719
+ 2009 010c 45BD0532 		.word	839236933
+ 2010 0110 54E50232 		.word	839050580
+ 2011 0114 290B0032 		.word	838863657
+ 2012 0118 C32EFD31 		.word	838676163
+ 2013 011c 2050FA31 		.word	838488096
+ 2014 0120 3E6FF731 		.word	838299454
+ 2015 0124 1D8CF431 		.word	838110237
+ 2016 0128 B9A6F131 		.word	837920441
+ 2017 012c 11BFEE31 		.word	837730065
+ 2018 0130 24D5EB31 		.word	837539108
+ 2019 0134 F0E8E831 		.word	837347568
+ 2020 0138 73FAE531 		.word	837155443
+ 2021 013c AB09E331 		.word	836962731
+ 2022 0140 9616E031 		.word	836769430
+ 2023 0144 3421DD31 		.word	836575540
+ 2024 0148 8129DA31 		.word	836381057
+ 2025 014c 7C2FD731 		.word	836185980
+ 2026 0150 2333D431 		.word	835990307
+ 2027 0154 7534D131 		.word	835794037
+ 2028 0158 7033CE31 		.word	835597168
+ 2029 015c 1130CB31 		.word	835399697
+ 2030 0160 582AC831 		.word	835201624
+ 2031 0164 4222C531 		.word	835002946
+ 2032 0168 CD17C231 		.word	834803661
+ 2033 016c F80ABF31 		.word	834603768
+ 2034 0170 C1FBBB31 		.word	834403265
+ 2035 0174 26EAB831 		.word	834202150
+ 2036 0178 25D6B531 		.word	834000421
+ 2037 017c BCBFB231 		.word	833798076
+ 2038 0180 E9A6AF31 		.word	833595113
+ 2039 0184 AB8BAC31 		.word	833391531
+ 2040 0188 006EA931 		.word	833187328
+ 2041 018c E64DA631 		.word	832982502
+ 2042 0190 5A2BA331 		.word	832777050
+ 2043 0194 5C06A031 		.word	832570972
+ 2044 0198 E9DE9C31 		.word	832364265
+ 2045 019c FFB49931 		.word	832156927
+ 2046 01a0 9C889631 		.word	831948956
+ARM GAS  /tmp/ccq1psjJ.s 			page 43
+
+
+ 2047 01a4 BF599331 		.word	831740351
+ 2048 01a8 66289031 		.word	831531110
+ 2049 01ac 8EF48C31 		.word	831321230
+ 2050 01b0 36BE8931 		.word	831110710
+ 2051 01b4 5C858631 		.word	830899548
+ 2052 01b8 FD498331 		.word	830687741
+ 2053 01bc 190C8031 		.word	830475289
+ 2054 01c0 ADCB7C31 		.word	830262189
+ 2055 01c4 B6887931 		.word	830048438
+ 2056 01c8 34437631 		.word	829834036
+ 2057 01cc 24FB7231 		.word	829618980
+ 2058 01d0 84B06F31 		.word	829403268
+ 2059 01d4 52636C31 		.word	829186898
+ 2060 01d8 8D136931 		.word	828969869
+ 2061 01dc 32C16531 		.word	828752178
+ 2062 01e0 3F6C6231 		.word	828533823
+ 2063 01e4 B2145F31 		.word	828314802
+ 2064 01e8 8ABA5B31 		.word	828095114
+ 2065 01ec C45D5831 		.word	827874756
+ 2066 01f0 5EFE5431 		.word	827653726
+ 2067 01f4 579C5131 		.word	827432023
+ 2068 01f8 AC374E31 		.word	827209644
+ 2069 01fc 5BD04A31 		.word	826986587
+ 2070 0200 62664731 		.word	826762850
+ 2071 0204 BFF94331 		.word	826538431
+ 2072 0208 718A4031 		.word	826313329
+ 2073 020c 74183D31 		.word	826087540
+ 2074 0210 C8A33931 		.word	825861064
+ 2075 0214 692C3631 		.word	825633897
+ 2076 0218 56B23231 		.word	825406038
+ 2077 021c 8D352F31 		.word	825177485
+ 2078 0220 0CB62B31 		.word	824948236
+ 2079 0224 D1332831 		.word	824718289
+ 2080 0228 D9AE2431 		.word	824487641
+ 2081 022c 22272131 		.word	824256290
+ 2082 0230 AB9C1D31 		.word	824024235
+ 2083 0234 710F1A31 		.word	823791473
+ 2084 0238 727F1631 		.word	823558002
+ 2085 023c ACEC1231 		.word	823323820
+ 2086 0240 1D570F31 		.word	823088925
+ 2087 0244 C3BE0B31 		.word	822853315
+ 2088 0248 9B230831 		.word	822616987
+ 2089 024c A4850431 		.word	822379940
+ 2090 0250 DBE40031 		.word	822142171
+ 2091 0254 3F41FD30 		.word	821903679
+ 2092 0258 CC9AF930 		.word	821664460
+ 2093 025c 81F1F530 		.word	821424513
+ 2094 0260 5C45F230 		.word	821183836
+ 2095 0264 5A96EE30 		.word	820942426
+ 2096 0268 7AE4EA30 		.word	820700282
+ 2097 026c B92FE730 		.word	820457401
+ 2098 0270 1478E330 		.word	820213780
+ 2099 0274 8ABDDF30 		.word	819969418
+ 2100 0278 1900DC30 		.word	819724313
+ 2101 027c BE3FD830 		.word	819478462
+ 2102 0280 777CD430 		.word	819231863
+ 2103 0284 42B6D030 		.word	818984514
+ARM GAS  /tmp/ccq1psjJ.s 			page 44
+
+
+ 2104 0288 1DEDCC30 		.word	818736413
+ 2105 028c 0421C930 		.word	818487556
+ 2106 0290 F751C530 		.word	818237943
+ 2107 0294 F37FC130 		.word	817987571
+ 2108 0298 F5AABD30 		.word	817736437
+ 2109 029c FCD2B930 		.word	817484540
+ 2110 02a0 04F8B530 		.word	817231876
+ 2111 02a4 0C1AB230 		.word	816978444
+ 2112 02a8 1239AE30 		.word	816724242
+ 2113 02ac 1355AA30 		.word	816469267
+ 2114 02b0 0D6EA630 		.word	816213517
+ 2115 02b4 FD83A230 		.word	815956989
+ 2116 02b8 E2969E30 		.word	815699682
+ 2117 02bc B9A69A30 		.word	815441593
+ 2118 02c0 7FB39630 		.word	815182719
+ 2119 02c4 32BD9230 		.word	814923058
+ 2120 02c8 D1C38E30 		.word	814662609
+ 2121 02cc 58C78A30 		.word	814401368
+ 2122 02d0 C5C78630 		.word	814139333
+ 2123 02d4 16C58230 		.word	813876502
+ 2124 02d8 49BF7E30 		.word	813612873
+ 2125 02dc 5AB67A30 		.word	813348442
+ 2126 02e0 49AA7630 		.word	813083209
+ 2127 02e4 129B7230 		.word	812817170
+ 2128 02e8 B3886E30 		.word	812550323
+ 2129 02ec 2A736A30 		.word	812282666
+ 2130 02f0 735A6630 		.word	812014195
+ 2131 02f4 8E3E6230 		.word	811744910
+ 2132 02f8 771F5E30 		.word	811474807
+ 2133 02fc 2CFD5930 		.word	811203884
+ 2134 0300 ABD75530 		.word	810932139
+ 2135 0304 F0AE5130 		.word	810659568
+ 2136 0308 FA824D30 		.word	810386170
+ 2137 030c C7534930 		.word	810111943
+ 2138 0310 53214530 		.word	809836883
+ 2139 0314 9DEB4030 		.word	809560989
+ 2140 0318 A1B23C30 		.word	809284257
+ 2141 031c 5E763830 		.word	809006686
+ 2142 0320 D0363430 		.word	808728272
+ 2143 0324 F6F32F30 		.word	808449014
+ 2144 0328 CDAD2B30 		.word	808168909
+ 2145 032c 52642730 		.word	807887954
+ 2146 0330 83172330 		.word	807606147
+ 2147 0334 5DC71E30 		.word	807323485
+ 2148 0338 DF731A30 		.word	807039967
+ 2149 033c 041D1630 		.word	806755588
+ 2150 0340 CBC21130 		.word	806470347
+ 2151 0344 32650D30 		.word	806184242
+ 2152 0348 35040930 		.word	805897269
+ 2153 034c D29F0430 		.word	805609426
+ 2154 0350 07380030 		.word	805320711
+ 2155 0354 D1CCFB2F 		.word	805031121
+ 2156 0358 2D5EF72F 		.word	804740653
+ 2157 035c 19ECF22F 		.word	804449305
+ 2158 0360 9276EE2F 		.word	804157074
+ 2159 0364 96FDE92F 		.word	803863958
+ 2160 0368 2281E52F 		.word	803569954
+ARM GAS  /tmp/ccq1psjJ.s 			page 45
+
+
+ 2161 036c 3301E12F 		.word	803275059
+ 2162 0370 C77DDC2F 		.word	802979271
+ 2163 0374 DCF6D72F 		.word	802682588
+ 2164 0378 6D6CD32F 		.word	802385005
+ 2165 037c 7ADECE2F 		.word	802086522
+ 2166 0380 FF4CCA2F 		.word	801787135
+ 2167 0384 F9B7C52F 		.word	801486841
+ 2168 0388 671FC12F 		.word	801185639
+ 2169 038c 4483BC2F 		.word	800883524
+ 2170 0390 90E3B72F 		.word	800580496
+ 2171 0394 4640B32F 		.word	800276550
+ 2172 0398 6499AE2F 		.word	799971684
+ 2173 039c E8EEA92F 		.word	799665896
+ 2174 03a0 CE40A52F 		.word	799359182
+ 2175 03a4 158FA02F 		.word	799051541
+ 2176 03a8 B9D99B2F 		.word	798742969
+ 2177 03ac B820972F 		.word	798433464
+ 2178 03b0 0F64922F 		.word	798123023
+ 2179 03b4 BAA38D2F 		.word	797811642
+ 2180 03b8 B9DF882F 		.word	797499321
+ 2181 03bc 0718842F 		.word	797186055
+ 2182 03c0 A24C7F2F 		.word	796871842
+ 2183 03c4 877D7A2F 		.word	796556679
+ 2184 03c8 B3AA752F 		.word	796240563
+ 2185 03cc 24D4702F 		.word	795923492
+ 2186 03d0 D7F96B2F 		.word	795605463
+ 2187 03d4 C81B672F 		.word	795286472
+ 2188 03d8 F639622F 		.word	794966518
+ 2189 03dc 5E545D2F 		.word	794645598
+ 2190 03e0 FC6A582F 		.word	794323708
+ 2191 03e4 CD7D532F 		.word	794000845
+ 2192 03e8 D08C4E2F 		.word	793677008
+ 2193 03ec 0098492F 		.word	793352192
+ 2194 03f0 5C9F442F 		.word	793026396
+ 2195 03f4 E0A23F2F 		.word	792699616
+ 2196 03f8 8AA23A2F 		.word	792371850
+ 2197 03fc 569E352F 		.word	792043094
+ 2198 0400 4296302F 		.word	791713346
+ 2199 0404 4B8A2B2F 		.word	791382603
+ 2200 0408 6E7A262F 		.word	791050862
+ 2201 040c A866212F 		.word	790718120
+ 2202 0410 F64E1C2F 		.word	790384374
+ 2203 0414 5633172F 		.word	790049622
+ 2204 0418 C313122F 		.word	789713859
+ 2205 041c 3CF00C2F 		.word	789377084
+ 2206 0420 BEC8072F 		.word	789039294
+ 2207 0424 459D022F 		.word	788700485
+ 2208 0428 CF6DFD2E 		.word	788360655
+ 2209 042c 583AF82E 		.word	788019800
+ 2210 0430 DE02F32E 		.word	787677918
+ 2211 0434 5DC7ED2E 		.word	787335005
+ 2212 0438 D387E82E 		.word	786991059
+ 2213 043c 3D44E32E 		.word	786646077
+ 2214 0440 98FCDD2E 		.word	786300056
+ 2215 0444 E0B0D82E 		.word	785952992
+ 2216 0448 1361D32E 		.word	785604883
+ 2217 044c 2D0DCE2E 		.word	785255725
+ARM GAS  /tmp/ccq1psjJ.s 			page 46
+
+
+ 2218 0450 2DB5C82E 		.word	784905517
+ 2219 0454 0D59C32E 		.word	784554253
+ 2220 0458 CDF8BD2E 		.word	784201933
+ 2221 045c 6894B82E 		.word	783848552
+ 2222 0460 DB2BB32E 		.word	783494107
+ 2223 0464 24BFAD2E 		.word	783138596
+ 2224 0468 3F4EA82E 		.word	782782015
+ 2225 046c 29D9A22E 		.word	782424361
+ 2226 0470 DF5F9D2E 		.word	782065631
+ 2227 0474 5EE2972E 		.word	781705822
+ 2228 0478 A460922E 		.word	781344932
+ 2229 047c ACDA8C2E 		.word	780982956
+ 2230 0480 7450872E 		.word	780619892
+ 2231 0484 F8C1812E 		.word	780255736
+ 2232 0488 362F7C2E 		.word	779890486
+ 2233 048c 2A98762E 		.word	779524138
+ 2234 0490 D2FC702E 		.word	779156690
+ 2235 0494 295D6B2E 		.word	778788137
+ 2236 0498 2EB9652E 		.word	778418478
+ 2237 049c DB10602E 		.word	778047707
+ 2238 04a0 30645A2E 		.word	777675824
+ 2239 04a4 28B3542E 		.word	777302824
+ 2240 04a8 BFFD4E2E 		.word	776928703
+ 2241 04ac F443492E 		.word	776553460
+ 2242 04b0 C385432E 		.word	776177091
+ 2243 04b4 27C33D2E 		.word	775799591
+ 2244 04b8 20FC372E 		.word	775420960
+ 2245 04bc A830322E 		.word	775041192
+ 2246 04c0 BD602C2E 		.word	774660285
+ 2247 04c4 5B8C262E 		.word	774278235
+ 2248 04c8 80B3202E 		.word	773895040
+ 2249 04cc 28D61A2E 		.word	773510696
+ 2250 04d0 4FF4142E 		.word	773125199
+ 2251 04d4 F30D0F2E 		.word	772738547
+ 2252 04d8 1123092E 		.word	772350737
+ 2253 04dc A433032E 		.word	771961764
+ 2254 04e0 A93FFD2D 		.word	771571625
+ 2255 04e4 1E47F72D 		.word	771180318
+ 2256 04e8 FF49F12D 		.word	770787839
+ 2257 04ec 4848EB2D 		.word	770394184
+ 2258 04f0 F741E52D 		.word	769999351
+ 2259 04f4 0837DF2D 		.word	769603336
+ 2260 04f8 7727D92D 		.word	769206135
+ 2261 04fc 4213D32D 		.word	768807746
+ 2262 0500 64FACC2D 		.word	768408164
+ 2263 0504 DBDCC62D 		.word	768007387
+ 2264 0508 A3BAC02D 		.word	767605411
+ 2265 050c B993BA2D 		.word	767202233
+ 2266 0510 1968B42D 		.word	766797849
+ 2267 0514 C037AE2D 		.word	766392256
+ 2268 0518 AB02A82D 		.word	765985451
+ 2269 051c D5C8A12D 		.word	765577429
+ 2270 0520 3D8A9B2D 		.word	765168189
+ 2271 0524 DD46952D 		.word	764757725
+ 2272 0528 B4FE8E2D 		.word	764346036
+ 2273 052c BDB1882D 		.word	763933117
+ 2274 0530 F45F822D 		.word	763518964
+ARM GAS  /tmp/ccq1psjJ.s 			page 47
+
+
+ 2275 0534 57097C2D 		.word	763103575
+ 2276 0538 E3AD752D 		.word	762686947
+ 2277 053c 924D6F2D 		.word	762269074
+ 2278 0540 63E8682D 		.word	761849955
+ 2279 0544 517E622D 		.word	761429585
+ 2280 0548 590F5C2D 		.word	761007961
+ 2281 054c 779B552D 		.word	760585079
+ 2282 0550 A9224F2D 		.word	760160937
+ 2283 0554 EAA4482D 		.word	759735530
+ 2284 0558 3622422D 		.word	759308854
+ 2285 055c 8B9A3B2D 		.word	758880907
+ 2286 0560 E50D352D 		.word	758451685
+ 2287 0564 417C2E2D 		.word	758021185
+ 2288 0568 99E5272D 		.word	757589401
+ 2289 056c EC49212D 		.word	757156332
+ 2290 0570 36A91A2D 		.word	756721974
+ 2291 0574 7203142D 		.word	756286322
+ 2292 0578 9E580D2D 		.word	755849374
+ 2293 057c B6A8062D 		.word	755411126
+ 2294 0580 B5F3FF2C 		.word	754971573
+ 2295 0584 9939F92C 		.word	754530713
+ 2296 0588 5E7AF22C 		.word	754088542
+ 2297 058c 01B6EB2C 		.word	753645057
+ 2298 0590 7CECE42C 		.word	753200252
+ 2299 0594 CE1DDE2C 		.word	752754126
+ 2300 0598 F249D72C 		.word	752306674
+ 2301 059c E570D02C 		.word	751857893
+ 2302 05a0 A292C92C 		.word	751407778
+ 2303 05a4 27AFC22C 		.word	750956327
+ 2304 05a8 70C6BB2C 		.word	750503536
+ 2305 05ac 78D8B42C 		.word	750049400
+ 2306 05b0 3DE5AD2C 		.word	749593917
+ 2307 05b4 BAECA62C 		.word	749137082
+ 2308 05b8 EBEE9F2C 		.word	748678891
+ 2309 05bc CEEB982C 		.word	748219342
+ 2310 05c0 5EE3912C 		.word	747758430
+ 2311 05c4 98D58A2C 		.word	747296152
+ 2312 05c8 77C2832C 		.word	746832503
+ 2313 05cc F8A97C2C 		.word	746367480
+ 2314 05d0 188C752C 		.word	745901080
+ 2315 05d4 D2686E2C 		.word	745433298
+ 2316 05d8 2340672C 		.word	744964131
+ 2317 05dc 0712602C 		.word	744493575
+ 2318 05e0 7ADE582C 		.word	744021626
+ 2319 05e4 78A5512C 		.word	743548280
+ 2320 05e8 FE664A2C 		.word	743073534
+ 2321 05ec 0823432C 		.word	742597384
+ 2322 05f0 91D93B2C 		.word	742119825
+ 2323 05f4 978A342C 		.word	741640855
+ 2324 05f8 14362D2C 		.word	741160468
+ 2325 05fc 06DC252C 		.word	740678662
+ 2326 0600 697C1E2C 		.word	740195433
+ 2327 0604 3817172C 		.word	739710776
+ 2328 0608 70AC0F2C 		.word	739224688
+ 2329 060c 0D3C082C 		.word	738737165
+ 2330 0610 0BC6002C 		.word	738248203
+ 2331 0614 674AF92B 		.word	737757799
+ARM GAS  /tmp/ccq1psjJ.s 			page 48
+
+
+ 2332 0618 1BC9F12B 		.word	737265947
+ 2333 061c 2542EA2B 		.word	736772645
+ 2334 0620 80B5E22B 		.word	736277888
+ 2335 0624 2923DB2B 		.word	735781673
+ 2336 0628 1B8BD32B 		.word	735283995
+ 2337 062c 53EDCB2B 		.word	734784851
+ 2338 0630 CC49C42B 		.word	734284236
+ 2339 0634 84A0BC2B 		.word	733782148
+ 2340 0638 75F1B42B 		.word	733278581
+ 2341 063c 9C3CAD2B 		.word	732773532
+ 2342 0640 F581A52B 		.word	732266997
+ 2343 0644 7CC19D2B 		.word	731758972
+ 2344 0648 2CFB952B 		.word	731249452
+ 2345 064c 032F8E2B 		.word	730738435
+ 2346 0650 FC5C862B 		.word	730225916
+ 2347 0654 12857E2B 		.word	729711890
+ 2348 0658 43A7762B 		.word	729196355
+ 2349 065c 89C36E2B 		.word	728679305
+ 2350 0660 E1D9662B 		.word	728160737
+ 2351 0664 47EA5E2B 		.word	727640647
+ 2352 0668 B7F4562B 		.word	727119031
+ 2353 066c 2DF94E2B 		.word	726595885
+ 2354 0670 A4F7462B 		.word	726071204
+ 2355 0674 19F03E2B 		.word	725544985
+ 2356 0678 88E2362B 		.word	725017224
+ 2357 067c ECCE2E2B 		.word	724487916
+ 2358 0680 41B5262B 		.word	723957057
+ 2359 0684 84951E2B 		.word	723424644
+ 2360 0688 B06F162B 		.word	722890672
+ 2361 068c C1430E2B 		.word	722355137
+ 2362 0690 B411062B 		.word	721818036
+ 2363 0694 83D9FD2A 		.word	721279363
+ 2364 0698 2B9BF52A 		.word	720739115
+ 2365 069c A856ED2A 		.word	720197288
+ 2366 06a0 F50BE52A 		.word	719653877
+ 2367 06a4 0FBBDC2A 		.word	719108879
+ 2368 06a8 F163D42A 		.word	718562289
+ 2369 06ac 9706CC2A 		.word	718014103
+ 2370 06b0 FDA2C32A 		.word	717464317
+ 2371 06b4 1F39BB2A 		.word	716912927
+ 2372 06b8 F9C8B22A 		.word	716359929
+ 2373 06bc 8652AA2A 		.word	715805318
+ 2374 06c0 C2D5A12A 		.word	715249090
+ 2375 06c4 AA52992A 		.word	714691242
+ 2376 06c8 38C9902A 		.word	714131768
+ 2377 06cc 6939882A 		.word	713570665
+ 2378 06d0 39A37F2A 		.word	713007929
+ 2379 06d4 A306772A 		.word	712443555
+ 2380 06d8 A3636E2A 		.word	711877539
+ 2381 06dc 35BA652A 		.word	711309877
+ 2382 06e0 550A5D2A 		.word	710740565
+ 2383 06e4 FE53542A 		.word	710169598
+ 2384 06e8 2C974B2A 		.word	709596972
+ 2385 06ec DBD3422A 		.word	709022683
+ 2386 06f0 060A3A2A 		.word	708446726
+ 2387 06f4 AA39312A 		.word	707869098
+ 2388 06f8 C362282A 		.word	707289795
+ARM GAS  /tmp/ccq1psjJ.s 			page 49
+
+
+ 2389 06fc 4B851F2A 		.word	706708811
+ 2390 0700 3EA1162A 		.word	706126142
+ 2391 0704 99B60D2A 		.word	705541785
+ 2392 0708 57C5042A 		.word	704955735
+ 2393 070c 74CDFB29 		.word	704367988
+ 2394 0710 EBCEF229 		.word	703778539
+ 2395 0714 B9C9E929 		.word	703187385
+ 2396 0718 D8BDE029 		.word	702594520
+ 2397 071c 45ABD729 		.word	701999941
+ 2398 0720 FB91CE29 		.word	701403643
+ 2399 0724 F671C529 		.word	700805622
+ 2400 0728 314BBC29 		.word	700205873
+ 2401 072c A91DB329 		.word	699604393
+ 2402 0730 58E9A929 		.word	699001176
+ 2403 0734 3BAEA029 		.word	698396219
+ 2404 0738 4E6C9729 		.word	697789518
+ 2405 073c 8B238E29 		.word	697181067
+ 2406 0740 EFD38429 		.word	696570863
+ 2407 0744 757D7B29 		.word	695958901
+ 2408 0748 18207229 		.word	695345176
+ 2409 074c D5BB6829 		.word	694729685
+ 2410 0750 A8505F29 		.word	694112424
+ 2411 0754 8ADE5529 		.word	693493386
+ 2412 0758 7A654C29 		.word	692872570
+ 2413 075c 71E54229 		.word	692249969
+ 2414 0760 6B5E3929 		.word	691625579
+ 2415 0764 65D02F29 		.word	690999397
+ 2416 0768 593B2629 		.word	690371417
+ 2417 076c 449F1C29 		.word	689741636
+ 2418 0770 20FC1229 		.word	689110048
+ 2419 0774 EB510929 		.word	688476651
+ 2420 0778 9EA0FF28 		.word	687841438
+ 2421 077c 36E8F528 		.word	687204406
+ 2422 0780 AE28EC28 		.word	686565550
+ 2423 0784 0262E228 		.word	685924866
+ 2424 0788 2D94D828 		.word	685282349
+ 2425 078c 2CBFCE28 		.word	684637996
+ 2426 0790 F8E2C428 		.word	683991800
+ 2427 0794 8FFFBA28 		.word	683343759
+ 2428 0798 EC14B128 		.word	682693868
+ 2429 079c 0A23A728 		.word	682042122
+ 2430 07a0 E4299D28 		.word	681388516
+ 2431 07a4 77299328 		.word	680733047
+ 2432 07a8 BE218928 		.word	680075710
+ 2433 07ac B4127F28 		.word	679416500
+ 2434 07b0 55FC7428 		.word	678755413
+ 2435 07b4 9DDE6A28 		.word	678092445
+ 2436 07b8 87B96028 		.word	677427591
+ 2437 07bc 0E8D5628 		.word	676760846
+ 2438 07c0 2E594C28 		.word	676092206
+ 2439 07c4 E31D4228 		.word	675421667
+ 2440 07c8 28DB3728 		.word	674749224
+ 2441 07cc F8902D28 		.word	674074872
+ 2442 07d0 503F2328 		.word	673398608
+ 2443 07d4 2BE61828 		.word	672720427
+ 2444 07d8 83850E28 		.word	672040323
+ 2445 07dc 561D0428 		.word	671358294
+ARM GAS  /tmp/ccq1psjJ.s 			page 50
+
+
+ 2446 07e0 9EADF927 		.word	670674334
+ 2447 07e4 5636EF27 		.word	669988438
+ 2448 07e8 7BB7E427 		.word	669300603
+ 2449 07ec 0731DA27 		.word	668610823
+ 2450 07f0 F7A2CF27 		.word	667919095
+ 2451 07f4 450DC527 		.word	667225413
+ 2452 07f8 EE6FBA27 		.word	666529774
+ 2453 07fc EDCAAF27 		.word	665832173
+ 2454 0800 3C1EA527 		.word	665132604
+ 2455 0804 D9699A27 		.word	664431065
+ 2456 0808 BEAD8F27 		.word	663727550
+ 2457 080c E7E98427 		.word	663022055
+ 2458 0810 4F1E7A27 		.word	662314575
+ 2459 0814 F24A6F27 		.word	661605106
+ 2460 0818 CB6F6427 		.word	660893643
+ 2461 081c D68C5927 		.word	660180182
+ 2462 0820 0EA24E27 		.word	659464718
+ 2463 0824 6FAF4327 		.word	658747247
+ 2464 0828 F4B43827 		.word	658027764
+ 2465 082c 99B22D27 		.word	657306265
+ 2466 0830 59A82227 		.word	656582745
+ 2467 0834 30961727 		.word	655857200
+ 2468 0838 1A7C0C27 		.word	655129626
+ 2469 083c 115A0127 		.word	654400017
+ 2470 0840 1130F626 		.word	653668369
+ 2471 0844 16FEEA26 		.word	652934678
+ 2472 0848 1BC4DF26 		.word	652198939
+ 2473 084c 1C82D426 		.word	651461148
+ 2474 0850 1538C926 		.word	650721301
+ 2475 0854 00E6BD26 		.word	649979392
+ 2476 0858 D98BB226 		.word	649235417
+ 2477 085c 9D29A726 		.word	648489373
+ 2478 0860 45BF9B26 		.word	647741253
+ 2479 0864 CE4C9026 		.word	646991054
+ 2480 0868 34D28426 		.word	646238772
+ 2481 086c 714F7926 		.word	645484401
+ 2482 0870 82C46D26 		.word	644727938
+ 2483 0874 62316226 		.word	643969378
+ 2484 0878 0C965626 		.word	643208716
+ 2485 087c 7CF24A26 		.word	642445948
+ 2486 0880 AD463F26 		.word	641681069
+ 2487 0884 9B923326 		.word	640914075
+ 2488 0888 42D62726 		.word	640144962
+ 2489 088c 9D111C26 		.word	639373725
+ 2490 0890 A7441026 		.word	638600359
+ 2491 0894 5C6F0426 		.word	637824860
+ 2492 0898 B891F825 		.word	637047224
+ 2493 089c B6ABEC25 		.word	636267446
+ 2494 08a0 52BDE025 		.word	635485522
+ 2495 08a4 87C6D425 		.word	634701447
+ 2496 08a8 51C7C825 		.word	633915217
+ 2497 08ac ACBFBC25 		.word	633126828
+ 2498 08b0 92AFB025 		.word	632336274
+ 2499 08b4 0097A425 		.word	631543552
+ 2500 08b8 F1759825 		.word	630748657
+ 2501 08bc 614C8C25 		.word	629951585
+ 2502 08c0 4A1A8025 		.word	629152330
+ARM GAS  /tmp/ccq1psjJ.s 			page 51
+
+
+ 2503 08c4 AADF7325 		.word	628350890
+ 2504 08c8 7B9C6725 		.word	627547259
+ 2505 08cc B9505B25 		.word	626741433
+ 2506 08d0 60FC4E25 		.word	625933408
+ 2507 08d4 6B9F4225 		.word	625123179
+ 2508 08d8 D6393625 		.word	624310742
+ 2509 08dc 9DCB2925 		.word	623496093
+ 2510 08e0 BA541D25 		.word	622679226
+ 2511 08e4 2BD51025 		.word	621860139
+ 2512 08e8 E94C0425 		.word	621038825
+ 2513 08ec F2BBF724 		.word	620215282
+ 2514 08f0 4022EB24 		.word	619389504
+ 2515 08f4 D07FDE24 		.word	618561488
+ 2516 08f8 9DD4D124 		.word	617731229
+ 2517 08fc A220C524 		.word	616898722
+ 2518 0900 DC63B824 		.word	616063964
+ 2519 0904 459EAB24 		.word	615226949
+ 2520 0908 DBCF9E24 		.word	614387675
+ 2521 090c 98F89124 		.word	613546136
+ 2522 0910 78188524 		.word	612702328
+ 2523 0914 772F7824 		.word	611856247
+ 2524 0918 903D6B24 		.word	611007888
+ 2525 091c C0425E24 		.word	610157248
+ 2526 0920 023F5124 		.word	609304322
+ 2527 0924 52324424 		.word	608449106
+ 2528 0928 AB1C3724 		.word	607591595
+ 2529 092c 0AFE2924 		.word	606731786
+ 2530 0930 69D61C24 		.word	605869673
+ 2531 0934 C6A50F24 		.word	605005254
+ 2532 0938 1C6C0224 		.word	604138524
+ 2533 093c 6529F523 		.word	603269477
+ 2534 0940 A0DDE723 		.word	602398112
+ 2535 0944 C688DA23 		.word	601524422
+ 2536 0948 D52ACD23 		.word	600648405
+ 2537 094c C7C3BF23 		.word	599770055
+ 2538 0950 9953B223 		.word	598889369
+ 2539 0954 47DAA423 		.word	598006343
+ 2540 0958 CC579723 		.word	597120972
+ 2541 095c 24CC8923 		.word	596233252
+ 2542 0960 4C377C23 		.word	595343180
+ 2543 0964 3F996E23 		.word	594450751
+ 2544 0968 F9F16023 		.word	593555961
+ 2545 096c 76415323 		.word	592658806
+ 2546 0970 B2874523 		.word	591759282
+ 2547 0974 AAC43723 		.word	590857386
+ 2548 0978 58F82923 		.word	589953112
+ 2549 097c B9221C23 		.word	589046457
+ 2550 0980 C9430E23 		.word	588137417
+ 2551 0984 845B0023 		.word	587225988
+ 2552 0988 E669F222 		.word	586312166
+ 2553 098c EC6EE422 		.word	585395948
+ 2554 0990 906AD622 		.word	584477328
+ 2555 0994 D05CC822 		.word	583556304
+ 2556 0998 A745BA22 		.word	582632871
+ 2557 099c 1125AC22 		.word	581707025
+ 2558 09a0 0BFB9D22 		.word	580778763
+ 2559 09a4 90C78F22 		.word	579848080
+ARM GAS  /tmp/ccq1psjJ.s 			page 52
+
+
+ 2560 09a8 9E8A8122 		.word	578914974
+ 2561 09ac 2F447322 		.word	577979439
+ 2562 09b0 40F46422 		.word	577041472
+ 2563 09b4 CE9A5622 		.word	576101070
+ 2564 09b8 D5374822 		.word	575158229
+ 2565 09bc 50CB3922 		.word	574212944
+ 2566 09c0 3C552B22 		.word	573265212
+ 2567 09c4 96D51C22 		.word	572315030
+ 2568 09c8 594C0E22 		.word	571362393
+ 2569 09cc 82B9FF21 		.word	570407298
+ 2570 09d0 0E1DF121 		.word	569449742
+ 2571 09d4 F876E221 		.word	568489720
+ 2572 09d8 3DC7D321 		.word	567527229
+ 2573 09dc D90DC521 		.word	566562265
+ 2574 09e0 C94AB621 		.word	565594825
+ 2575 09e4 097EA721 		.word	564624905
+ 2576 09e8 95A79821 		.word	563652501
+ 2577 09ec 6BC78921 		.word	562677611
+ 2578 09f0 86DD7A21 		.word	561700230
+ 2579 09f4 E3E96B21 		.word	560720355
+ 2580 09f8 7EEC5C21 		.word	559737982
+ 2581 09fc 54E54D21 		.word	558753108
+ 2582 0a00 62D43E21 		.word	557765730
+ 2583 0a04 A4B92F21 		.word	556775844
+ 2584 0a08 17952021 		.word	555783447
+ 2585 0a0c B7661121 		.word	554788535
+ 2586 0a10 802E0221 		.word	553791104
+ 2587 0a14 71ECF220 		.word	552791153
+ 2588 0a18 85A0E320 		.word	551788677
+ 2589 0a1c B84AD420 		.word	550783672
+ 2590 0a20 09EBC420 		.word	549776137
+ 2591 0a24 7381B520 		.word	548766067
+ 2592 0a28 F30DA620 		.word	547753459
+ 2593 0a2c 86909620 		.word	546738310
+ 2594 0a30 29098720 		.word	545720617
+ 2595 0a34 D8777720 		.word	544700376
+ 2596 0a38 91DC6720 		.word	543677585
+ 2597 0a3c 51375820 		.word	542652241
+ 2598 0a40 14884820 		.word	541624340
+ 2599 0a44 D7CE3820 		.word	540593879
+ 2600 0a48 970B2920 		.word	539560855
+ 2601 0a4c 523E1920 		.word	538525266
+ 2602 0a50 04670920 		.word	537487108
+ 2603 0a54 AA85F91F 		.word	536446378
+ 2604 0a58 429AE91F 		.word	535403074
+ 2605 0a5c C8A4D91F 		.word	534357192
+ 2606 0a60 3AA5C91F 		.word	533308730
+ 2607 0a64 949BB91F 		.word	532257684
+ 2608 0a68 D587A91F 		.word	531204053
+ 2609 0a6c F869991F 		.word	530147832
+ 2610 0a70 FC41891F 		.word	529089020
+ 2611 0a74 DE0F791F 		.word	528027614
+ 2612 0a78 9BD3681F 		.word	526963611
+ 2613 0a7c 308D581F 		.word	525897008
+ 2614 0a80 9A3C481F 		.word	524827802
+ 2615 0a84 D8E1371F 		.word	523755992
+ 2616 0a88 E67C271F 		.word	522681574
+ARM GAS  /tmp/ccq1psjJ.s 			page 53
+
+
+ 2617 0a8c C20D171F 		.word	521604546
+ 2618 0a90 6994061F 		.word	520524905
+ 2619 0a94 D910F61E 		.word	519442649
+ 2620 0a98 0F83E51E 		.word	518357775
+ 2621 0a9c 0AEBD41E 		.word	517270282
+ 2622 0aa0 C548C41E 		.word	516180165
+ 2623 0aa4 419CB31E 		.word	515087425
+ 2624 0aa8 79E5A21E 		.word	513992057
+ 2625 0aac 6B24921E 		.word	512894059
+ 2626 0ab0 1659811E 		.word	511793430
+ 2627 0ab4 7783701E 		.word	510690167
+ 2628 0ab8 8BA35F1E 		.word	509584267
+ 2629 0abc 52B94E1E 		.word	508475730
+ 2630 0ac0 C7C43D1E 		.word	507364551
+ 2631 0ac4 EBC52C1E 		.word	506250731
+ 2632 0ac8 B9BC1B1E 		.word	505134265
+ 2633 0acc 31A90A1E 		.word	504015153
+ 2634 0ad0 518BF91D 		.word	502893393
+ 2635 0ad4 1563E81D 		.word	501768981
+ 2636 0ad8 7D30D71D 		.word	500641917
+ 2637 0adc 87F3C51D 		.word	499512199
+ 2638 0ae0 31ACB41D 		.word	498379825
+ 2639 0ae4 785AA31D 		.word	497244792
+ 2640 0ae8 5BFE911D 		.word	496107099
+ 2641 0aec D997801D 		.word	494966745
+ 2642 0af0 F0266F1D 		.word	493823728
+ 2643 0af4 9EAB5D1D 		.word	492678046
+ 2644 0af8 E1254C1D 		.word	491529697
+ 2645 0afc B7953A1D 		.word	490378679
+ 2646 0b00 21FB281D 		.word	489224993
+ 2647 0b04 1B56171D 		.word	488068635
+ 2648 0b08 A4A6051D 		.word	486909604
+ 2649 0b0c BBECF31C 		.word	485747899
+ 2650 0b10 5F28E21C 		.word	484583519
+ 2651 0b14 8E59D01C 		.word	483416462
+ 2652 0b18 4680BE1C 		.word	482246726
+ 2653 0b1c 889CAC1C 		.word	481074312
+ 2654 0b20 51AE9A1C 		.word	479899217
+ 2655 0b24 A0B5881C 		.word	478721440
+ 2656 0b28 74B2761C 		.word	477540980
+ 2657 0b2c CCA4641C 		.word	476357836
+ 2658 0b30 A78C521C 		.word	475172007
+ 2659 0b34 046A401C 		.word	473983492
+ 2660 0b38 E23C2E1C 		.word	472792290
+ 2661 0b3c 40051C1C 		.word	471598400
+ 2662 0b40 1DC3091C 		.word	470401821
+ 2663 0b44 7976F71B 		.word	469202553
+ 2664 0b48 521FE51B 		.word	468000594
+ 2665 0b4c A9BDD21B 		.word	466795945
+ 2666 0b50 7B51C01B 		.word	465588603
+ 2667 0b54 C9DAAD1B 		.word	464378569
+ 2668 0b58 92599B1B 		.word	463165842
+ 2669 0b5c D5CD881B 		.word	461950421
+ 2670 0b60 9237761B 		.word	460732306
+ 2671 0b64 C996631B 		.word	459511497
+ 2672 0b68 79EB501B 		.word	458287993
+ 2673 0b6c A1353E1B 		.word	457061793
+ARM GAS  /tmp/ccq1psjJ.s 			page 54
+
+
+ 2674 0b70 42752B1B 		.word	455832898
+ 2675 0b74 5AAA181B 		.word	454601306
+ 2676 0b78 EBD4051B 		.word	453367019
+ 2677 0b7c F4F4F21A 		.word	452130036
+ 2678 0b80 740AE01A 		.word	450890356
+ 2679 0b84 6B15CD1A 		.word	449647979
+ 2680 0b88 DB15BA1A 		.word	448402907
+ 2681 0b8c C10BA71A 		.word	447155137
+ 2682 0b90 20F7931A 		.word	445904672
+ 2683 0b94 F6D7801A 		.word	444651510
+ 2684 0b98 44AE6D1A 		.word	443395652
+ 2685 0b9c 0B7A5A1A 		.word	442137099
+ 2686 0ba0 4A3B471A 		.word	440875850
+ 2687 0ba4 02F2331A 		.word	439611906
+ 2688 0ba8 349E201A 		.word	438345268
+ 2689 0bac DF3F0D1A 		.word	437075935
+ 2690 0bb0 05D7F919 		.word	435803909
+ 2691 0bb4 A563E619 		.word	434529189
+ 2692 0bb8 C1E5D219 		.word	433251777
+ 2693 0bbc 595DBF19 		.word	431971673
+ 2694 0bc0 6ECAAB19 		.word	430688878
+ 2695 0bc4 002D9819 		.word	429403392
+ 2696 0bc8 11858419 		.word	428115217
+ 2697 0bcc A2D27019 		.word	426824354
+ 2698 0bd0 B3155D19 		.word	425530803
+ 2699 0bd4 454E4919 		.word	424234565
+ 2700 0bd8 5A7C3519 		.word	422935642
+ 2701 0bdc F29F2119 		.word	421634034
+ 2702 0be0 0FB90D19 		.word	420329743
+ 2703 0be4 B2C7F918 		.word	419022770
+ 2704 0be8 DDCBE518 		.word	417713117
+ 2705 0bec 90C5D118 		.word	416400784
+ 2706 0bf0 CDB4BD18 		.word	415085773
+ 2707 0bf4 9699A918 		.word	413768086
+ 2708 0bf8 EB739518 		.word	412447723
+ 2709 0bfc D0438118 		.word	411124688
+ 2710 0c00 45096D18 		.word	409798981
+ 2711 0c04 4CC45818 		.word	408470604
+ 2712 0c08 E6744418 		.word	407139558
+ 2713 0c0c 171B3018 		.word	405805847
+ 2714 0c10 DFB61B18 		.word	404469471
+ 2715 0c14 40480718 		.word	403130432
+ 2716 0c18 3DCFF217 		.word	401788733
+ 2717 0c1c D84BDE17 		.word	400444376
+ 2718 0c20 12BEC917 		.word	399097362
+ 2719 0c24 EF25B517 		.word	397747695
+ 2720 0c28 7083A017 		.word	396395376
+ 2721 0c2c 97D68B17 		.word	395040407
+ 2722 0c30 671F7717 		.word	393682791
+ 2723 0c34 E35D6217 		.word	392322531
+ 2724 0c38 0D924D17 		.word	390959629
+ 2725 0c3c E8BB3817 		.word	389594088
+ 2726 0c40 76DB2317 		.word	388225910
+ 2727 0c44 BAF00E17 		.word	386855098
+ 2728 0c48 B6FBF916 		.word	385481654
+ 2729 0c4c 6FFCE416 		.word	384105583
+ 2730 0c50 E5F2CF16 		.word	382726885
+ARM GAS  /tmp/ccq1psjJ.s 			page 55
+
+
+ 2731 0c54 1EDFBA16 		.word	381345566
+ 2732 0c58 1BC1A516 		.word	379961627
+ 2733 0c5c E0989016 		.word	378575072
+ 2734 0c60 6F667B16 		.word	377185903
+ 2735 0c64 CD296616 		.word	375794125
+ 2736 0c68 FDE25016 		.word	374399741
+ 2737 0c6c 01923B16 		.word	373002753
+ 2738 0c70 DD362616 		.word	371603165
+ 2739 0c74 96D11016 		.word	370200982
+ 2740 0c78 2E62FB15 		.word	368796206
+ 2741 0c7c A9E8E515 		.word	367388841
+ 2742 0c80 0B65D015 		.word	365978891
+ 2743 0c84 58D7BA15 		.word	364566360
+ 2744 0c88 933FA515 		.word	363151251
+ 2745 0c8c C19D8F15 		.word	361733569
+ 2746 0c90 E6F17915 		.word	360313318
+ 2747 0c94 053C6415 		.word	358890501
+ 2748 0c98 237C4E15 		.word	357465123
+ 2749 0c9c 43B23815 		.word	356037187
+ 2750 0ca0 6CDE2215 		.word	354606700
+ 2751 0ca4 9F000D15 		.word	353173663
+ 2752 0ca8 E318F714 		.word	351738083
+ 2753 0cac 3C27E114 		.word	350299964
+ 2754 0cb0 AD2BCB14 		.word	348859309
+ 2755 0cb4 3D26B514 		.word	347416125
+ 2756 0cb8 EF169F14 		.word	345970415
+ 2757 0cbc C9FD8814 		.word	344522185
+ 2758 0cc0 CFDA7214 		.word	343071439
+ 2759 0cc4 06AE5C14 		.word	341618182
+ 2760 0cc8 73774614 		.word	340162419
+ 2761 0ccc 1C373014 		.word	338704156
+ 2762 0cd0 05ED1914 		.word	337243397
+ 2763 0cd4 33990314 		.word	335780147
+ 2764 0cd8 AD3BED13 		.word	334314413
+ 2765 0cdc 78D4D613 		.word	332846200
+ 2766 0ce0 9863C013 		.word	331375512
+ 2767 0ce4 14E9A913 		.word	329902356
+ 2768 0ce8 F0649313 		.word	328426736
+ 2769 0cec 34D77C13 		.word	326948660
+ 2770 0cf0 E43F6613 		.word	325468132
+ 2771 0cf4 069F4F13 		.word	323985158
+ 2772 0cf8 A1F43813 		.word	322499745
+ 2773 0cfc B9402213 		.word	321011897
+ 2774 0d00 56830B13 		.word	319521622
+ 2775 0d04 7EBCF412 		.word	318028926
+ 2776 0d08 36ECDD12 		.word	316533814
+ 2777 0d0c 8512C712 		.word	315036293
+ 2778 0d10 712FB012 		.word	313536369
+ 2779 0d14 02439912 		.word	312034050
+ 2780 0d18 3C4D8212 		.word	310529340
+ 2781 0d1c 274E6B12 		.word	309022247
+ 2782 0d20 CA455412 		.word	307512778
+ 2783 0d24 2B343D12 		.word	306000939
+ 2784 0d28 51192612 		.word	304486737
+ 2785 0d2c 43F50E12 		.word	302970179
+ 2786 0d30 08C8F711 		.word	301451272
+ 2787 0d34 A791E011 		.word	299930023
+ARM GAS  /tmp/ccq1psjJ.s 			page 56
+
+
+ 2788 0d38 2752C911 		.word	298406439
+ 2789 0d3c 8F09B211 		.word	296880527
+ 2790 0d40 E8B79A11 		.word	295352296
+ 2791 0d44 375D8311 		.word	293821751
+ 2792 0d48 84F96B11 		.word	292288900
+ 2793 0d4c D88C5411 		.word	290753752
+ 2794 0d50 39173D11 		.word	289216313
+ 2795 0d54 AF982511 		.word	287676591
+ 2796 0d58 42110E11 		.word	286134594
+ 2797 0d5c FA80F610 		.word	284590330
+ 2798 0d60 DFE7DE10 		.word	283043807
+ 2799 0d64 F845C710 		.word	281495032
+ 2800 0d68 4E9BAF10 		.word	279944014
+ 2801 0d6c E9E79710 		.word	278390761
+ 2802 0d70 D12B8010 		.word	276835281
+ 2803 0d74 0E676810 		.word	275277582
+ 2804 0d78 A9995010 		.word	273717673
+ 2805 0d7c AAC33810 		.word	272155562
+ 2806 0d80 1AE52010 		.word	270591258
+ 2807 0d84 01FE0810 		.word	269024769
+ 2808 0d88 680EF10F 		.word	267456104
+ 2809 0d8c 5716D90F 		.word	265885271
+ 2810 0d90 D915C10F 		.word	264312281
+ 2811 0d94 F40CA90F 		.word	262737140
+ 2812 0d98 B3FB900F 		.word	261159859
+ 2813 0d9c 1FE2780F 		.word	259580447
+ 2814 0da0 40C0600F 		.word	257998912
+ 2815 0da4 2096480F 		.word	256415264
+ 2816 0da8 C863300F 		.word	254829512
+ 2817 0dac 4129180F 		.word	253241665
+ 2818 0db0 96E6FF0E 		.word	251651734
+ 2819 0db4 CF9BE70E 		.word	250059727
+ 2820 0db8 F548CF0E 		.word	248465653
+ 2821 0dbc 14EEB60E 		.word	246869524
+ 2822 0dc0 348B9E0E 		.word	245271348
+ 2823 0dc4 6020860E 		.word	243671136
+ 2824 0dc8 A0AD6D0E 		.word	242068896
+ 2825 0dcc 0033550E 		.word	240464640
+ 2826 0dd0 89B03C0E 		.word	238858377
+ 2827 0dd4 4526240E 		.word	237250117
+ 2828 0dd8 3F940B0E 		.word	235639871
+ 2829 0ddc 81FAF20D 		.word	234027649
+ 2830 0de0 1559DA0D 		.word	232413461
+ 2831 0de4 06B0C10D 		.word	230797318
+ 2832 0de8 5DFFA80D 		.word	229179229
+ 2833 0dec 2747900D 		.word	227559207
+ 2834 0df0 6D87770D 		.word	225937261
+ 2835 0df4 3AC05E0D 		.word	224313402
+ 2836 0df8 98F1450D 		.word	222687640
+ 2837 0dfc 941B2D0D 		.word	221059988
+ 2838 0e00 373E140D 		.word	219430455
+ 2839 0e04 8D59FB0C 		.word	217799053
+ 2840 0e08 A16DE20C 		.word	216165793
+ 2841 0e0c 7E7AC90C 		.word	214530686
+ 2842 0e10 3080B00C 		.word	212893744
+ 2843 0e14 C07E970C 		.word	211254976
+ 2844 0e18 3C767E0C 		.word	209614396
+ARM GAS  /tmp/ccq1psjJ.s 			page 57
+
+
+ 2845 0e1c AE66650C 		.word	207972014
+ 2846 0e20 23504C0C 		.word	206327843
+ 2847 0e24 A432330C 		.word	204681892
+ 2848 0e28 3F0E1A0C 		.word	203034175
+ 2849 0e2c FFE2000C 		.word	201384703
+ 2850 0e30 F0B0E70B 		.word	199733488
+ 2851 0e34 1D78CE0B 		.word	198080541
+ 2852 0e38 9338B50B 		.word	196425875
+ 2853 0e3c 5EF29B0B 		.word	194769502
+ 2854 0e40 8AA5820B 		.word	193111434
+ 2855 0e44 2252690B 		.word	191451682
+ 2856 0e48 34F84F0B 		.word	189790260
+ 2857 0e4c CB97360B 		.word	188127179
+ 2858 0e50 F3301D0B 		.word	186462451
+ 2859 0e54 BBC3030B 		.word	184796091
+ 2860 0e58 2C50EA0A 		.word	183128108
+ 2861 0e5c 56D6D00A 		.word	181458518
+ 2862 0e60 4356B70A 		.word	179787331
+ 2863 0e64 01D09D0A 		.word	178114561
+ 2864 0e68 9C43840A 		.word	176440220
+ 2865 0e6c 22B16A0A 		.word	174764322
+ 2866 0e70 9F18510A 		.word	173086879
+ 2867 0e74 207A370A 		.word	171407904
+ 2868 0e78 B2D51D0A 		.word	169727410
+ 2869 0e7c 632B040A 		.word	168045411
+ 2870 0e80 3F7BEA09 		.word	166361919
+ 2871 0e84 53C5D009 		.word	164676947
+ 2872 0e88 AE09B709 		.word	162990510
+ 2873 0e8c 5C489D09 		.word	161302620
+ 2874 0e90 6B818309 		.word	159613291
+ 2875 0e94 E8B46909 		.word	157922536
+ 2876 0e98 E0E24F09 		.word	156230368
+ 2877 0e9c 620B3609 		.word	154536802
+ 2878 0ea0 7B2E1C09 		.word	152841851
+ 2879 0ea4 394C0209 		.word	151145529
+ 2880 0ea8 A964E808 		.word	149447849
+ 2881 0eac D977CE08 		.word	147748825
+ 2882 0eb0 D885B408 		.word	146048472
+ 2883 0eb4 B28E9A08 		.word	144346802
+ 2884 0eb8 77928008 		.word	142643831
+ 2885 0ebc 34916608 		.word	140939572
+ 2886 0ec0 F78A4C08 		.word	139234039
+ 2887 0ec4 CF7F3208 		.word	137527247
+ 2888 0ec8 C96F1808 		.word	135819209
+ 2889 0ecc F45AFE07 		.word	134109940
+ 2890 0ed0 5F41E407 		.word	132399455
+ 2891 0ed4 1723CA07 		.word	130687767
+ 2892 0ed8 2C00B007 		.word	128974892
+ 2893 0edc ABD89507 		.word	127260843
+ 2894 0ee0 A3AC7B07 		.word	125545635
+ 2895 0ee4 237C6107 		.word	123829283
+ 2896 0ee8 3A474707 		.word	122111802
+ 2897 0eec F60D2D07 		.word	120393206
+ 2898 0ef0 65D01207 		.word	118673509
+ 2899 0ef4 978EF806 		.word	116952727
+ 2900 0ef8 9B48DE06 		.word	115230875
+ 2901 0efc 7FFEC306 		.word	113507967
+ARM GAS  /tmp/ccq1psjJ.s 			page 58
+
+
+ 2902 0f00 53B0A906 		.word	111784019
+ 2903 0f04 255E8F06 		.word	110059045
+ 2904 0f08 04087506 		.word	108333060
+ 2905 0f0c 00AE5A06 		.word	106606080
+ 2906 0f10 27504006 		.word	104878119
+ 2907 0f14 89EE2506 		.word	103149193
+ 2908 0f18 35890B06 		.word	101419317
+ 2909 0f1c 3A20F105 		.word	99688506
+ 2910 0f20 A8B3D605 		.word	97956776
+ 2911 0f24 8D43BC05 		.word	96224141
+ 2912 0f28 FACFA105 		.word	94490618
+ 2913 0f2c FE588705 		.word	92756222
+ 2914 0f30 A7DE6C05 		.word	91020967
+ 2915 0f34 07615205 		.word	89284871
+ 2916 0f38 2BE03705 		.word	87547947
+ 2917 0f3c 245C1D05 		.word	85810212
+ 2918 0f40 02D50205 		.word	84071682
+ 2919 0f44 D34AE804 		.word	82332371
+ 2920 0f48 A8BDCD04 		.word	80592296
+ 2921 0f4c 912DB304 		.word	78851473
+ 2922 0f50 9D9A9804 		.word	77109917
+ 2923 0f54 DB047E04 		.word	75367643
+ 2924 0f58 5D6C6304 		.word	73624669
+ 2925 0f5c 31D14804 		.word	71881009
+ 2926 0f60 67332E04 		.word	70136679
+ 2927 0f64 10931304 		.word	68391696
+ 2928 0f68 3CF0F803 		.word	66646076
+ 2929 0f6c F94ADE03 		.word	64899833
+ 2930 0f70 59A3C303 		.word	63152985
+ 2931 0f74 6CF9A803 		.word	61405548
+ 2932 0f78 414D8E03 		.word	59657537
+ 2933 0f7c E89E7303 		.word	57908968
+ 2934 0f80 72EE5803 		.word	56159858
+ 2935 0f84 EF3B3E03 		.word	54410223
+ 2936 0f88 6F872303 		.word	52660079
+ 2937 0f8c 02D10803 		.word	50909442
+ 2938 0f90 B818EE02 		.word	49158328
+ 2939 0f94 A25ED302 		.word	47406754
+ 2940 0f98 D0A2B802 		.word	45654736
+ 2941 0f9c 51E59D02 		.word	43902289
+ 2942 0fa0 37268302 		.word	42149431
+ 2943 0fa4 92656802 		.word	40396178
+ 2944 0fa8 72A34D02 		.word	38642546
+ 2945 0fac E7DF3202 		.word	36888551
+ 2946 0fb0 021B1802 		.word	35134210
+ 2947 0fb4 D454FD01 		.word	33379540
+ 2948 0fb8 6B8DE201 		.word	31624555
+ 2949 0fbc DAC4C701 		.word	29869274
+ 2950 0fc0 30FBAC01 		.word	28113712
+ 2951 0fc4 7E309201 		.word	26357886
+ 2952 0fc8 D4647701 		.word	24601812
+ 2953 0fcc 43985C01 		.word	22845507
+ 2954 0fd0 DBCA4101 		.word	21088987
+ 2955 0fd4 ACFC2601 		.word	19332268
+ 2956 0fd8 C82D0C01 		.word	17575368
+ 2957 0fdc 3F5EF100 		.word	15818303
+ 2958 0fe0 208ED600 		.word	14061088
+ARM GAS  /tmp/ccq1psjJ.s 			page 59
+
+
+ 2959 0fe4 7EBDBB00 		.word	12303742
+ 2960 0fe8 67ECA000 		.word	10546279
+ 2961 0fec EE1A8600 		.word	8788718
+ 2962 0ff0 22496B00 		.word	7031074
+ 2963 0ff4 13775000 		.word	5273363
+ 2964 0ff8 D3A43500 		.word	3515603
+ 2965 0ffc 72D21A00 		.word	1757810
+ 2966 1000 00000000 		.word	0
+ 2967 1004 00000000 		.word	0
+ 2968              		.section	.rodata.GEO_MERCATOR_FORWARD_LUT,"a"
+ 2969              		.align	2
+ 2972              	GEO_MERCATOR_FORWARD_LUT:
+ 2973 0000 00000080 		.word	-2147483648
+ 2974 0004 3AE1F07F 		.word	2146492730
+ 2975 0008 71C2E17F 		.word	2145501809
+ 2976 000c A4A3D27F 		.word	2144510884
+ 2977 0010 D184C37F 		.word	2143519953
+ 2978 0014 F665B47F 		.word	2142529014
+ 2979 0018 1047A57F 		.word	2141538064
+ 2980 001c 1E28967F 		.word	2140547102
+ 2981 0020 1D09877F 		.word	2139556125
+ 2982 0024 0CEA777F 		.word	2138565132
+ 2983 0028 E7CA687F 		.word	2137574119
+ 2984 002c AEAB597F 		.word	2136583086
+ 2985 0030 5E8C4A7F 		.word	2135592030
+ 2986 0034 F56C3B7F 		.word	2134600949
+ 2987 0038 714D2C7F 		.word	2133609841
+ 2988 003c D02D1D7F 		.word	2132618704
+ 2989 0040 100E0E7F 		.word	2131627536
+ 2990 0044 2EEEFE7E 		.word	2130636334
+ 2991 0048 29CEEF7E 		.word	2129645097
+ 2992 004c FEADE07E 		.word	2128653822
+ 2993 0050 AC8DD17E 		.word	2127662508
+ 2994 0054 306DC27E 		.word	2126671152
+ 2995 0058 884CB37E 		.word	2125679752
+ 2996 005c B32BA47E 		.word	2124688307
+ 2997 0060 AD0A957E 		.word	2123696813
+ 2998 0064 76E9857E 		.word	2122705270
+ 2999 0068 0AC8767E 		.word	2121713674
+ 3000 006c 68A6677E 		.word	2120722024
+ 3001 0070 8E84587E 		.word	2119730318
+ 3002 0074 7962497E 		.word	2118738553
+ 3003 0078 28403A7E 		.word	2117746728
+ 3004 007c 991D2B7E 		.word	2116754841
+ 3005 0080 C9FA1B7E 		.word	2115762889
+ 3006 0084 B6D70C7E 		.word	2114770870
+ 3007 0088 5EB4FD7D 		.word	2113778782
+ 3008 008c BF90EE7D 		.word	2112786623
+ 3009 0090 D76CDF7D 		.word	2111794391
+ 3010 0094 A448D07D 		.word	2110802084
+ 3011 0098 2424C17D 		.word	2109809700
+ 3012 009c 54FFB17D 		.word	2108817236
+ 3013 00a0 34DAA27D 		.word	2107824692
+ 3014 00a4 BFB4937D 		.word	2106832063
+ 3015 00a8 F58E847D 		.word	2105839349
+ 3016 00ac D368757D 		.word	2104846547
+ 3017 00b0 5742667D 		.word	2103853655
+ARM GAS  /tmp/ccq1psjJ.s 			page 60
+
+
+ 3018 00b4 801B577D 		.word	2102860672
+ 3019 00b8 4AF4477D 		.word	2101867594
+ 3020 00bc B4CC387D 		.word	2100874420
+ 3021 00c0 BCA4297D 		.word	2099881148
+ 3022 00c4 607C1A7D 		.word	2098887776
+ 3023 00c8 9D530B7D 		.word	2097894301
+ 3024 00cc 722AFC7C 		.word	2096900722
+ 3025 00d0 DC00ED7C 		.word	2095907036
+ 3026 00d4 D9D6DD7C 		.word	2094913241
+ 3027 00d8 67ACCE7C 		.word	2093919335
+ 3028 00dc 8481BF7C 		.word	2092925316
+ 3029 00e0 2E56B07C 		.word	2091931182
+ 3030 00e4 632AA17C 		.word	2090936931
+ 3031 00e8 20FE917C 		.word	2089942560
+ 3032 00ec 64D1827C 		.word	2088948068
+ 3033 00f0 2CA4737C 		.word	2087953452
+ 3034 00f4 7776647C 		.word	2086958711
+ 3035 00f8 4248557C 		.word	2085963842
+ 3036 00fc 8A19467C 		.word	2084968842
+ 3037 0100 4FEA367C 		.word	2083973711
+ 3038 0104 8DBA277C 		.word	2082978445
+ 3039 0108 438A187C 		.word	2081983043
+ 3040 010c 6F59097C 		.word	2080987503
+ 3041 0110 0E28FA7B 		.word	2079991822
+ 3042 0114 1EF6EA7B 		.word	2078995998
+ 3043 0118 9DC3DB7B 		.word	2078000029
+ 3044 011c 8990CC7B 		.word	2077003913
+ 3045 0120 E05CBD7B 		.word	2076007648
+ 3046 0124 A028AE7B 		.word	2075011232
+ 3047 0128 C7F39E7B 		.word	2074014663
+ 3048 012c 51BE8F7B 		.word	2073017937
+ 3049 0130 3E88807B 		.word	2072021054
+ 3050 0134 8C51717B 		.word	2071024012
+ 3051 0138 371A627B 		.word	2070026807
+ 3052 013c 3EE2527B 		.word	2069029438
+ 3053 0140 9EA9437B 		.word	2068031902
+ 3054 0144 5770347B 		.word	2067034199
+ 3055 0148 6436257B 		.word	2066036324
+ 3056 014c C5FB157B 		.word	2065038277
+ 3057 0150 77C0067B 		.word	2064040055
+ 3058 0154 7784F77A 		.word	2063041655
+ 3059 0158 C547E87A 		.word	2062043077
+ 3060 015c 5D0AD97A 		.word	2061044317
+ 3061 0160 3ECCC97A 		.word	2060045374
+ 3062 0164 648DBA7A 		.word	2059046244
+ 3063 0168 CF4DAB7A 		.word	2058046927
+ 3064 016c 7C0D9C7A 		.word	2057047420
+ 3065 0170 68CC8C7A 		.word	2056047720
+ 3066 0174 928A7D7A 		.word	2055047826
+ 3067 0178 F7476E7A 		.word	2054047735
+ 3068 017c 96045F7A 		.word	2053047446
+ 3069 0180 6CC04F7A 		.word	2052046956
+ 3070 0184 767B407A 		.word	2051046262
+ 3071 0188 B335317A 		.word	2050045363
+ 3072 018c 21EF217A 		.word	2049044257
+ 3073 0190 BCA7127A 		.word	2048042940
+ 3074 0194 845F037A 		.word	2047041412
+ARM GAS  /tmp/ccq1psjJ.s 			page 61
+
+
+ 3075 0198 7616F479 		.word	2046039670
+ 3076 019c 8FCCE479 		.word	2045037711
+ 3077 01a0 CE81D579 		.word	2044035534
+ 3078 01a4 3036C679 		.word	2043033136
+ 3079 01a8 B3E9B679 		.word	2042030515
+ 3080 01ac 559CA779 		.word	2041027669
+ 3081 01b0 144E9879 		.word	2040024596
+ 3082 01b4 EDFE8879 		.word	2039021293
+ 3083 01b8 DFAE7979 		.word	2038017759
+ 3084 01bc E65D6A79 		.word	2037013990
+ 3085 01c0 010C5B79 		.word	2036009985
+ 3086 01c4 2EB94B79 		.word	2035005742
+ 3087 01c8 6A653C79 		.word	2034001258
+ 3088 01cc B3102D79 		.word	2032996531
+ 3089 01d0 08BB1D79 		.word	2031991560
+ 3090 01d4 64640E79 		.word	2030986340
+ 3091 01d8 C80CFF78 		.word	2029980872
+ 3092 01dc 2FB4EF78 		.word	2028975151
+ 3093 01e0 985AE078 		.word	2027969176
+ 3094 01e4 0100D178 		.word	2026962945
+ 3095 01e8 68A4C178 		.word	2025956456
+ 3096 01ec C947B278 		.word	2024949705
+ 3097 01f0 24EAA278 		.word	2023942692
+ 3098 01f4 758B9378 		.word	2022935413
+ 3099 01f8 BB2B8478 		.word	2021927867
+ 3100 01fc F3CA7478 		.word	2020920051
+ 3101 0200 1B696578 		.word	2019911963
+ 3102 0204 30065678 		.word	2018903600
+ 3103 0208 31A24678 		.word	2017894961
+ 3104 020c 1B3D3778 		.word	2016886043
+ 3105 0210 ECD62778 		.word	2015876844
+ 3106 0214 A16F1878 		.word	2014867361
+ 3107 0218 39070978 		.word	2013857593
+ 3108 021c B19DF977 		.word	2012847537
+ 3109 0220 0633EA77 		.word	2011837190
+ 3110 0224 37C7DA77 		.word	2010826551
+ 3111 0228 415ACB77 		.word	2009815617
+ 3112 022c 21ECBB77 		.word	2008804385
+ 3113 0230 D67CAC77 		.word	2007792854
+ 3114 0234 5E0C9D77 		.word	2006781022
+ 3115 0238 B59A8D77 		.word	2005768885
+ 3116 023c DA277E77 		.word	2004756442
+ 3117 0240 CAB36E77 		.word	2003743690
+ 3118 0244 833E5F77 		.word	2002730627
+ 3119 0248 03C84F77 		.word	2001717251
+ 3120 024c 47504077 		.word	2000703559
+ 3121 0250 4DD73077 		.word	1999689549
+ 3122 0254 135D2177 		.word	1998675219
+ 3123 0258 96E11177 		.word	1997660566
+ 3124 025c D4640277 		.word	1996645588
+ 3125 0260 CAE6F276 		.word	1995630282
+ 3126 0264 7767E376 		.word	1994614647
+ 3127 0268 D8E6D376 		.word	1993598680
+ 3128 026c EA64C476 		.word	1992582378
+ 3129 0270 ACE1B476 		.word	1991565740
+ 3130 0274 1A5DA576 		.word	1990548762
+ 3131 0278 33D79576 		.word	1989531443
+ARM GAS  /tmp/ccq1psjJ.s 			page 62
+
+
+ 3132 027c F44F8676 		.word	1988513780
+ 3133 0280 5BC77676 		.word	1987495771
+ 3134 0284 663D6776 		.word	1986477414
+ 3135 0288 11B25776 		.word	1985458705
+ 3136 028c 5B254876 		.word	1984439643
+ 3137 0290 41973876 		.word	1983420225
+ 3138 0294 C1072976 		.word	1982400449
+ 3139 0298 D8761976 		.word	1981380312
+ 3140 029c 85E40976 		.word	1980359813
+ 3141 02a0 C450FA75 		.word	1979338948
+ 3142 02a4 93BBEA75 		.word	1978317715
+ 3143 02a8 F024DB75 		.word	1977296112
+ 3144 02ac D98CCB75 		.word	1976274137
+ 3145 02b0 4AF3BB75 		.word	1975251786
+ 3146 02b4 4258AC75 		.word	1974229058
+ 3147 02b8 BEBB9C75 		.word	1973205950
+ 3148 02bc BC1D8D75 		.word	1972182460
+ 3149 02c0 397E7D75 		.word	1971158585
+ 3150 02c4 33DD6D75 		.word	1970134323
+ 3151 02c8 A83A5E75 		.word	1969109672
+ 3152 02cc 94964E75 		.word	1968084628
+ 3153 02d0 F5F03E75 		.word	1967059189
+ 3154 02d4 CA492F75 		.word	1966033354
+ 3155 02d8 0FA11F75 		.word	1965007119
+ 3156 02dc C2F60F75 		.word	1963980482
+ 3157 02e0 E14A0075 		.word	1962953441
+ 3158 02e4 699DF074 		.word	1961925993
+ 3159 02e8 58EEE074 		.word	1960898136
+ 3160 02ec AA3DD174 		.word	1959869866
+ 3161 02f0 5F8BC174 		.word	1958841183
+ 3162 02f4 72D7B174 		.word	1957812082
+ 3163 02f8 E221A274 		.word	1956782562
+ 3164 02fc AC6A9274 		.word	1955752620
+ 3165 0300 CEB18274 		.word	1954722254
+ 3166 0304 45F77274 		.word	1953691461
+ 3167 0308 0F3B6374 		.word	1952660239
+ 3168 030c 287D5374 		.word	1951628584
+ 3169 0310 8FBD4374 		.word	1950596495
+ 3170 0314 41FC3374 		.word	1949563969
+ 3171 0318 3C392474 		.word	1948531004
+ 3172 031c 7C741474 		.word	1947497596
+ 3173 0320 00AE0474 		.word	1946463744
+ 3174 0324 C5E5F473 		.word	1945429445
+ 3175 0328 C81BE573 		.word	1944394696
+ 3176 032c 0650D573 		.word	1943359494
+ 3177 0330 7E82C573 		.word	1942323838
+ 3178 0334 2CB3B573 		.word	1941287724
+ 3179 0338 0EE2A573 		.word	1940251150
+ 3180 033c 210F9673 		.word	1939214113
+ 3181 0340 633A8673 		.word	1938176611
+ 3182 0344 D1637673 		.word	1937138641
+ 3183 0348 698B6673 		.word	1936100201
+ 3184 034c 28B15673 		.word	1935061288
+ 3185 0350 0BD54673 		.word	1934021899
+ 3186 0354 10F73673 		.word	1932982032
+ 3187 0358 33172773 		.word	1931941683
+ 3188 035c 73351773 		.word	1930900851
+ARM GAS  /tmp/ccq1psjJ.s 			page 63
+
+
+ 3189 0360 CD510773 		.word	1929859533
+ 3190 0364 3F6CF772 		.word	1928817727
+ 3191 0368 C484E772 		.word	1927775428
+ 3192 036c 5C9BD772 		.word	1926732636
+ 3193 0370 02B0C772 		.word	1925689346
+ 3194 0374 B5C2B772 		.word	1924645557
+ 3195 0378 72D3A772 		.word	1923601266
+ 3196 037c 36E29772 		.word	1922556470
+ 3197 0380 FFEE8772 		.word	1921511167
+ 3198 0384 C9F97772 		.word	1920465353
+ 3199 0388 93026872 		.word	1919419027
+ 3200 038c 58095872 		.word	1918372184
+ 3201 0390 180E4872 		.word	1917324824
+ 3202 0394 CE103872 		.word	1916276942
+ 3203 0398 79112872 		.word	1915228537
+ 3204 039c 15101872 		.word	1914179605
+ 3205 03a0 A00C0872 		.word	1913130144
+ 3206 03a4 1607F871 		.word	1912080150
+ 3207 03a8 77FFE771 		.word	1911029623
+ 3208 03ac BDF5D771 		.word	1909978557
+ 3209 03b0 E8E9C771 		.word	1908926952
+ 3210 03b4 F3DBB771 		.word	1907874803
+ 3211 03b8 DDCBA771 		.word	1906822109
+ 3212 03bc A2B99771 		.word	1905768866
+ 3213 03c0 3FA58771 		.word	1904715071
+ 3214 03c4 B38E7771 		.word	1903660723
+ 3215 03c8 F9756771 		.word	1902605817
+ 3216 03cc 105B5771 		.word	1901550352
+ 3217 03d0 F43D4771 		.word	1900494324
+ 3218 03d4 A31E3771 		.word	1899437731
+ 3219 03d8 19FD2671 		.word	1898380569
+ 3220 03dc 55D91671 		.word	1897322837
+ 3221 03e0 52B30671 		.word	1896264530
+ 3222 03e4 0F8BF670 		.word	1895205647
+ 3223 03e8 8860E670 		.word	1894146184
+ 3224 03ec BB33D670 		.word	1893086139
+ 3225 03f0 A404C670 		.word	1892025508
+ 3226 03f4 42D3B570 		.word	1890964290
+ 3227 03f8 909FA570 		.word	1889902480
+ 3228 03fc 8C699570 		.word	1888840076
+ 3229 0400 33318570 		.word	1887777075
+ 3230 0404 82F67470 		.word	1886713474
+ 3231 0408 77B96470 		.word	1885649271
+ 3232 040c 0E7A5470 		.word	1884584462
+ 3233 0410 44384470 		.word	1883519044
+ 3234 0414 17F43370 		.word	1882453015
+ 3235 0418 83AD2370 		.word	1881386371
+ 3236 041c 86641370 		.word	1880319110
+ 3237 0420 1D190370 		.word	1879251229
+ 3238 0424 44CBF26F 		.word	1878182724
+ 3239 0428 F97AE26F 		.word	1877113593
+ 3240 042c 3828D26F 		.word	1876043832
+ 3241 0430 00D3C16F 		.word	1874973440
+ 3242 0434 4C7BB16F 		.word	1873902412
+ 3243 0438 1921A16F 		.word	1872830745
+ 3244 043c 66C4906F 		.word	1871758438
+ 3245 0440 2E65806F 		.word	1870685486
+ARM GAS  /tmp/ccq1psjJ.s 			page 64
+
+
+ 3246 0444 6F03706F 		.word	1869611887
+ 3247 0448 259F5F6F 		.word	1868537637
+ 3248 044c 4E384F6F 		.word	1867462734
+ 3249 0450 E6CE3E6F 		.word	1866387174
+ 3250 0454 EB622E6F 		.word	1865310955
+ 3251 0458 59F41D6F 		.word	1864234073
+ 3252 045c 2D830D6F 		.word	1863156525
+ 3253 0460 640FFD6E 		.word	1862078308
+ 3254 0464 FC98EC6E 		.word	1860999420
+ 3255 0468 F01FDC6E 		.word	1859919856
+ 3256 046c 3FA4CB6E 		.word	1858839615
+ 3257 0470 E425BB6E 		.word	1857758692
+ 3258 0474 DCA4AA6E 		.word	1856677084
+ 3259 0478 25219A6E 		.word	1855594789
+ 3260 047c BC9A896E 		.word	1854511804
+ 3261 0480 9C11796E 		.word	1853428124
+ 3262 0484 C385686E 		.word	1852343747
+ 3263 0488 2FF7576E 		.word	1851258671
+ 3264 048c DA65476E 		.word	1850172890
+ 3265 0490 C3D1366E 		.word	1849086403
+ 3266 0494 E73A266E 		.word	1847999207
+ 3267 0498 41A1156E 		.word	1846911297
+ 3268 049c CF04056E 		.word	1845822671
+ 3269 04a0 8E65F46D 		.word	1844733326
+ 3270 04a4 7AC3E36D 		.word	1843643258
+ 3271 04a8 8F1ED36D 		.word	1842552463
+ 3272 04ac CC76C26D 		.word	1841460940
+ 3273 04b0 2CCCB16D 		.word	1840368684
+ 3274 04b4 AC1EA16D 		.word	1839275692
+ 3275 04b8 496E906D 		.word	1838181961
+ 3276 04bc 00BB7F6D 		.word	1837087488
+ 3277 04c0 CD046F6D 		.word	1835992269
+ 3278 04c4 AD4B5E6D 		.word	1834896301
+ 3279 04c8 9D8F4D6D 		.word	1833799581
+ 3280 04cc 99D03C6D 		.word	1832702105
+ 3281 04d0 9E0E2C6D 		.word	1831603870
+ 3282 04d4 A8491B6D 		.word	1830504872
+ 3283 04d8 B5810A6D 		.word	1829405109
+ 3284 04dc C0B6F96C 		.word	1828304576
+ 3285 04e0 C7E8E86C 		.word	1827203271
+ 3286 04e4 C617D86C 		.word	1826101190
+ 3287 04e8 BA43C76C 		.word	1824998330
+ 3288 04ec 9F6CB66C 		.word	1823894687
+ 3289 04f0 7192A56C 		.word	1822790257
+ 3290 04f4 2EB5946C 		.word	1821685038
+ 3291 04f8 D2D4836C 		.word	1820579026
+ 3292 04fc 59F1726C 		.word	1819472217
+ 3293 0500 C00A626C 		.word	1818364608
+ 3294 0504 0321516C 		.word	1817256195
+ 3295 0508 1F34406C 		.word	1816146975
+ 3296 050c 11442F6C 		.word	1815036945
+ 3297 0510 D5501E6C 		.word	1813926101
+ 3298 0514 675A0D6C 		.word	1812814439
+ 3299 0518 C460FC6B 		.word	1811701956
+ 3300 051c E863EB6B 		.word	1810588648
+ 3301 0520 D063DA6B 		.word	1809474512
+ 3302 0524 7860C96B 		.word	1808359544
+ARM GAS  /tmp/ccq1psjJ.s 			page 65
+
+
+ 3303 0528 DC59B86B 		.word	1807243740
+ 3304 052c F94FA76B 		.word	1806127097
+ 3305 0530 CC42966B 		.word	1805009612
+ 3306 0534 5032856B 		.word	1803891280
+ 3307 0538 831E746B 		.word	1802772099
+ 3308 053c 5F07636B 		.word	1801652063
+ 3309 0540 E3EC516B 		.word	1800531171
+ 3310 0544 0ACF406B 		.word	1799409418
+ 3311 0548 D0AD2F6B 		.word	1798286800
+ 3312 054c 31891E6B 		.word	1797163313
+ 3313 0550 2B610D6B 		.word	1796038955
+ 3314 0554 B935FC6A 		.word	1794913721
+ 3315 0558 D706EB6A 		.word	1793787607
+ 3316 055c 83D4D96A 		.word	1792660611
+ 3317 0560 B79EC86A 		.word	1791532727
+ 3318 0564 7065B76A 		.word	1790403952
+ 3319 0568 AB28A66A 		.word	1789274283
+ 3320 056c 64E8946A 		.word	1788143716
+ 3321 0570 96A4836A 		.word	1787012246
+ 3322 0574 3F5D726A 		.word	1785879871
+ 3323 0578 5A12616A 		.word	1784746586
+ 3324 057c E3C34F6A 		.word	1783612387
+ 3325 0580 D6713E6A 		.word	1782477270
+ 3326 0584 301C2D6A 		.word	1781341232
+ 3327 0588 EDC21B6A 		.word	1780204269
+ 3328 058c 09660A6A 		.word	1779066377
+ 3329 0590 8005F969 		.word	1777927552
+ 3330 0594 4DA1E769 		.word	1776787789
+ 3331 0598 6E39D669 		.word	1775647086
+ 3332 059c DECDC469 		.word	1774505438
+ 3333 05a0 995EB369 		.word	1773362841
+ 3334 05a4 9BEBA169 		.word	1772219291
+ 3335 05a8 E0749069 		.word	1771074784
+ 3336 05ac 64FA7E69 		.word	1769929316
+ 3337 05b0 237C6D69 		.word	1768782883
+ 3338 05b4 1AFA5B69 		.word	1767635482
+ 3339 05b8 43744A69 		.word	1766487107
+ 3340 05bc 9BEA3869 		.word	1765337755
+ 3341 05c0 1F5D2769 		.word	1764187423
+ 3342 05c4 C9CB1569 		.word	1763036105
+ 3343 05c8 95360469 		.word	1761883797
+ 3344 05cc 809DF268 		.word	1760730496
+ 3345 05d0 8600E168 		.word	1759576198
+ 3346 05d4 A15FCF68 		.word	1758420897
+ 3347 05d8 CFBABD68 		.word	1757264591
+ 3348 05dc 0A12AC68 		.word	1756107274
+ 3349 05e0 50659A68 		.word	1754948944
+ 3350 05e4 9AB48868 		.word	1753789594
+ 3351 05e8 E6FF7668 		.word	1752629222
+ 3352 05ec 2F476568 		.word	1751467823
+ 3353 05f0 708A5368 		.word	1750305392
+ 3354 05f4 A6C94168 		.word	1749141926
+ 3355 05f8 CC043068 		.word	1747977420
+ 3356 05fc DE3B1E68 		.word	1746811870
+ 3357 0600 D76E0C68 		.word	1745645271
+ 3358 0604 B39DFA67 		.word	1744477619
+ 3359 0608 6EC8E867 		.word	1743308910
+ARM GAS  /tmp/ccq1psjJ.s 			page 66
+
+
+ 3360 060c 04EFD667 		.word	1742139140
+ 3361 0610 6F11C567 		.word	1740968303
+ 3362 0614 AC2FB367 		.word	1739796396
+ 3363 0618 B649A167 		.word	1738623414
+ 3364 061c 895F8F67 		.word	1737449353
+ 3365 0620 20717D67 		.word	1736274208
+ 3366 0624 777E6B67 		.word	1735097975
+ 3367 0628 8A875967 		.word	1733920650
+ 3368 062c 538C4767 		.word	1732742227
+ 3369 0630 CE8C3567 		.word	1731562702
+ 3370 0634 F7882367 		.word	1730382071
+ 3371 0638 C9801167 		.word	1729200329
+ 3372 063c 3F74FF66 		.word	1728017471
+ 3373 0640 5663ED66 		.word	1726833494
+ 3374 0644 084EDB66 		.word	1725648392
+ 3375 0648 5034C966 		.word	1724462160
+ 3376 064c 2B16B766 		.word	1723274795
+ 3377 0650 93F3A466 		.word	1722086291
+ 3378 0654 84CC9266 		.word	1720896644
+ 3379 0658 F9A08066 		.word	1719705849
+ 3380 065c ED706E66 		.word	1718513901
+ 3381 0660 5B3C5C66 		.word	1717320795
+ 3382 0664 3F034A66 		.word	1716126527
+ 3383 0668 95C53766 		.word	1714931093
+ 3384 066c 56832566 		.word	1713734486
+ 3385 0670 7F3C1366 		.word	1712536703
+ 3386 0674 0AF10066 		.word	1711337738
+ 3387 0678 F3A0EE65 		.word	1710137587
+ 3388 067c 354CDC65 		.word	1708936245
+ 3389 0680 CBF2C965 		.word	1707733707
+ 3390 0684 AF94B765 		.word	1706529967
+ 3391 0688 DE31A565 		.word	1705325022
+ 3392 068c 52CA9265 		.word	1704118866
+ 3393 0690 055E8065 		.word	1702911493
+ 3394 0694 F4EC6D65 		.word	1701702900
+ 3395 0698 19775B65 		.word	1700493081
+ 3396 069c 70FC4865 		.word	1699282032
+ 3397 06a0 F27C3665 		.word	1698069746
+ 3398 06a4 9BF82365 		.word	1696856219
+ 3399 06a8 656F1165 		.word	1695641445
+ 3400 06ac 4DE1FE64 		.word	1694425421
+ 3401 06b0 4C4EEC64 		.word	1693208140
+ 3402 06b4 5EB6D964 		.word	1691989598
+ 3403 06b8 7C19C764 		.word	1690769788
+ 3404 06bc A377B464 		.word	1689548707
+ 3405 06c0 CCD0A164 		.word	1688326348
+ 3406 06c4 F3248F64 		.word	1687102707
+ 3407 06c8 13747C64 		.word	1685877779
+ 3408 06cc 25BE6964 		.word	1684651557
+ 3409 06d0 25035764 		.word	1683424037
+ 3410 06d4 0D434464 		.word	1682195213
+ 3411 06d8 D87D3164 		.word	1680965080
+ 3412 06dc 81B31E64 		.word	1679733633
+ 3413 06e0 02E40B64 		.word	1678500866
+ 3414 06e4 560FF963 		.word	1677266774
+ 3415 06e8 7635E663 		.word	1676031350
+ 3416 06ec 5F56D363 		.word	1674794591
+ARM GAS  /tmp/ccq1psjJ.s 			page 67
+
+
+ 3417 06f0 0A72C063 		.word	1673556490
+ 3418 06f4 7288AD63 		.word	1672317042
+ 3419 06f8 91999A63 		.word	1671076241
+ 3420 06fc 62A58763 		.word	1669834082
+ 3421 0700 DFAB7463 		.word	1668590559
+ 3422 0704 02AD6163 		.word	1667345666
+ 3423 0708 C6A84E63 		.word	1666099398
+ 3424 070c 269F3B63 		.word	1664851750
+ 3425 0710 1A902863 		.word	1663602714
+ 3426 0714 9F7B1563 		.word	1662352287
+ 3427 0718 AE610263 		.word	1661100462
+ 3428 071c 4042EF62 		.word	1659847232
+ 3429 0720 521DDC62 		.word	1658592594
+ 3430 0724 DBF2C862 		.word	1657336539
+ 3431 0728 D8C2B562 		.word	1656079064
+ 3432 072c 428DA262 		.word	1654820162
+ 3433 0730 12528F62 		.word	1653559826
+ 3434 0734 44117C62 		.word	1652298052
+ 3435 0738 D1CA6862 		.word	1651034833
+ 3436 073c B37E5562 		.word	1649770163
+ 3437 0740 E52C4262 		.word	1648504037
+ 3438 0744 5FD52E62 		.word	1647236447
+ 3439 0748 1D781B62 		.word	1645967389
+ 3440 074c 17150862 		.word	1644696855
+ 3441 0750 49ACF461 		.word	1643424841
+ 3442 0754 AB3DE161 		.word	1642151339
+ 3443 0758 38C9CD61 		.word	1640876344
+ 3444 075c E94EBA61 		.word	1639599849
+ 3445 0760 B9CEA661 		.word	1638321849
+ 3446 0764 A1489361 		.word	1637042337
+ 3447 0768 9ABC7F61 		.word	1635761306
+ 3448 076c 9E2A6C61 		.word	1634478750
+ 3449 0770 A8925861 		.word	1633194664
+ 3450 0774 B0F44461 		.word	1631909040
+ 3451 0778 B1503161 		.word	1630621873
+ 3452 077c A3A61D61 		.word	1629333155
+ 3453 0780 81F60961 		.word	1628042881
+ 3454 0784 4440F660 		.word	1626751044
+ 3455 0788 E583E260 		.word	1625457637
+ 3456 078c 5EC1CE60 		.word	1624162654
+ 3457 0790 A9F8BA60 		.word	1622866089
+ 3458 0794 BE29A760 		.word	1621567934
+ 3459 0798 97549360 		.word	1620268183
+ 3460 079c 2D797F60 		.word	1618966829
+ 3461 07a0 7B976B60 		.word	1617663867
+ 3462 07a4 78AF5760 		.word	1616359288
+ 3463 07a8 1EC14360 		.word	1615053086
+ 3464 07ac 67CC2F60 		.word	1613745255
+ 3465 07b0 4BD11B60 		.word	1612435787
+ 3466 07b4 C4CF0760 		.word	1611124676
+ 3467 07b8 CBC7F35F 		.word	1609811915
+ 3468 07bc 59B9DF5F 		.word	1608497497
+ 3469 07c0 67A4CB5F 		.word	1607181415
+ 3470 07c4 ED88B75F 		.word	1605863661
+ 3471 07c8 E666A35F 		.word	1604544230
+ 3472 07cc 493E8F5F 		.word	1603223113
+ 3473 07d0 100F7B5F 		.word	1601900304
+ARM GAS  /tmp/ccq1psjJ.s 			page 68
+
+
+ 3474 07d4 34D9665F 		.word	1600575796
+ 3475 07d8 AE9C525F 		.word	1599249582
+ 3476 07dc 75593E5F 		.word	1597921653
+ 3477 07e0 840F2A5F 		.word	1596592004
+ 3478 07e4 D3BE155F 		.word	1595260627
+ 3479 07e8 5967015F 		.word	1593927513
+ 3480 07ec 1209ED5E 		.word	1592592658
+ 3481 07f0 F3A3D85E 		.word	1591256051
+ 3482 07f4 F837C45E 		.word	1589917688
+ 3483 07f8 17C5AF5E 		.word	1588577559
+ 3484 07fc 494B9B5E 		.word	1587235657
+ 3485 0800 88CA865E 		.word	1585891976
+ 3486 0804 CB42725E 		.word	1584546507
+ 3487 0808 0AB45D5E 		.word	1583199242
+ 3488 080c 3F1E495E 		.word	1581850175
+ 3489 0810 6181345E 		.word	1580499297
+ 3490 0814 69DD1F5E 		.word	1579146601
+ 3491 0818 4E320B5E 		.word	1577792078
+ 3492 081c 0A80F65D 		.word	1576435722
+ 3493 0820 95C6E15D 		.word	1575077525
+ 3494 0824 E505CD5D 		.word	1573717477
+ 3495 0828 F53DB85D 		.word	1572355573
+ 3496 082c BB6EA35D 		.word	1570991803
+ 3497 0830 2F988E5D 		.word	1569626159
+ 3498 0834 4ABA795D 		.word	1568258634
+ 3499 0838 04D5645D 		.word	1566889220
+ 3500 083c 54E84F5D 		.word	1565517908
+ 3501 0840 32F43A5D 		.word	1564144690
+ 3502 0844 97F8255D 		.word	1562769559
+ 3503 0848 79F5105D 		.word	1561392505
+ 3504 084c D1EAFB5C 		.word	1560013521
+ 3505 0850 96D8E65C 		.word	1558632598
+ 3506 0854 BFBED15C 		.word	1557249727
+ 3507 0858 469DBC5C 		.word	1555864902
+ 3508 085c 2074A75C 		.word	1554478112
+ 3509 0860 4543925C 		.word	1553089349
+ 3510 0864 AE0A7D5C 		.word	1551698606
+ 3511 0868 51CA675C 		.word	1550305873
+ 3512 086c 2582525C 		.word	1548911141
+ 3513 0870 23323D5C 		.word	1547514403
+ 3514 0874 40DA275C 		.word	1546115648
+ 3515 0878 767A125C 		.word	1544714870
+ 3516 087c BA12FD5B 		.word	1543312058
+ 3517 0880 03A3E75B 		.word	1541907203
+ 3518 0884 4A2BD25B 		.word	1540500298
+ 3519 0888 85ABBC5B 		.word	1539091333
+ 3520 088c AA23A75B 		.word	1537680298
+ 3521 0890 B293915B 		.word	1536267186
+ 3522 0894 92FB7B5B 		.word	1534851986
+ 3523 0898 425B665B 		.word	1533434690
+ 3524 089c B8B2505B 		.word	1532015288
+ 3525 08a0 EB013B5B 		.word	1530593771
+ 3526 08a4 D248255B 		.word	1529170130
+ 3527 08a8 64870F5B 		.word	1527744356
+ 3528 08ac 96BDF95A 		.word	1526316438
+ 3529 08b0 61EBE35A 		.word	1524886369
+ 3530 08b4 B910CE5A 		.word	1523454137
+ARM GAS  /tmp/ccq1psjJ.s 			page 69
+
+
+ 3531 08b8 962DB85A 		.word	1522019734
+ 3532 08bc ED41A25A 		.word	1520583149
+ 3533 08c0 B64D8C5A 		.word	1519144374
+ 3534 08c4 E750765A 		.word	1517703399
+ 3535 08c8 754B605A 		.word	1516260213
+ 3536 08cc 573D4A5A 		.word	1514814807
+ 3537 08d0 8326345A 		.word	1513367171
+ 3538 08d4 EF061E5A 		.word	1511917295
+ 3539 08d8 92DE075A 		.word	1510465170
+ 3540 08dc 60ADF159 		.word	1509010784
+ 3541 08e0 5073DB59 		.word	1507554128
+ 3542 08e4 5830C559 		.word	1506095192
+ 3543 08e8 6DE4AE59 		.word	1504633965
+ 3544 08ec 858F9859 		.word	1503170437
+ 3545 08f0 97318259 		.word	1501704599
+ 3546 08f4 97CA6B59 		.word	1500236439
+ 3547 08f8 7B5A5559 		.word	1498765947
+ 3548 08fc 38E13E59 		.word	1497293112
+ 3549 0900 C45E2859 		.word	1495817924
+ 3550 0904 15D31159 		.word	1494340373
+ 3551 0908 1F3EFB58 		.word	1492860447
+ 3552 090c D89FE458 		.word	1491378136
+ 3553 0910 35F8CD58 		.word	1489893429
+ 3554 0914 2B47B758 		.word	1488406315
+ 3555 0918 AF8CA058 		.word	1486916783
+ 3556 091c B7C88958 		.word	1485424823
+ 3557 0920 36FB7258 		.word	1483930422
+ 3558 0924 22245C58 		.word	1482433570
+ 3559 0928 70434558 		.word	1480934256
+ 3560 092c 14592E58 		.word	1479432468
+ 3561 0930 04651758 		.word	1477928196
+ 3562 0934 33670058 		.word	1476421427
+ 3563 0938 965FE957 		.word	1474912150
+ 3564 093c 224ED257 		.word	1473400354
+ 3565 0940 CB32BB57 		.word	1471886027
+ 3566 0944 850DA457 		.word	1470369157
+ 3567 0948 45DE8C57 		.word	1468849733
+ 3568 094c FFA47557 		.word	1467327743
+ 3569 0950 A7615E57 		.word	1465803175
+ 3570 0954 30144757 		.word	1464276016
+ 3571 0958 90BC2F57 		.word	1462746256
+ 3572 095c B95A1857 		.word	1461213881
+ 3573 0960 9FEE0057 		.word	1459678879
+ 3574 0964 3878E956 		.word	1458141240
+ 3575 0968 75F7D156 		.word	1456600949
+ 3576 096c 4A6CBA56 		.word	1455057994
+ 3577 0970 ACD6A256 		.word	1453512364
+ 3578 0974 8E368B56 		.word	1451964046
+ 3579 0978 E28B7356 		.word	1450413026
+ 3580 097c 9DD65B56 		.word	1448859293
+ 3581 0980 B1164456 		.word	1447302833
+ 3582 0984 114C2C56 		.word	1445743633
+ 3583 0988 B2761456 		.word	1444181682
+ 3584 098c 8496FC55 		.word	1442616964
+ 3585 0990 7DABE455 		.word	1441049469
+ 3586 0994 8DB5CC55 		.word	1439479181
+ 3587 0998 A9B4B455 		.word	1437906089
+ARM GAS  /tmp/ccq1psjJ.s 			page 70
+
+
+ 3588 099c C2A89C55 		.word	1436330178
+ 3589 09a0 CC918455 		.word	1434751436
+ 3590 09a4 B86F6C55 		.word	1433169848
+ 3591 09a8 79425455 		.word	1431585401
+ 3592 09ac 020A3C55 		.word	1429998082
+ 3593 09b0 44C62355 		.word	1428407876
+ 3594 09b4 32770B55 		.word	1426814770
+ 3595 09b8 BE1CF354 		.word	1425218750
+ 3596 09bc D9B6DA54 		.word	1423619801
+ 3597 09c0 7745C254 		.word	1422017911
+ 3598 09c4 87C8A954 		.word	1420413063
+ 3599 09c8 FD3F9154 		.word	1418805245
+ 3600 09cc C9AB7854 		.word	1417194441
+ 3601 09d0 DD0B6054 		.word	1415580637
+ 3602 09d4 2B604754 		.word	1413963819
+ 3603 09d8 A3A82E54 		.word	1412343971
+ 3604 09dc 38E51554 		.word	1410721080
+ 3605 09e0 DA15FD53 		.word	1409095130
+ 3606 09e4 7A3AE453 		.word	1407466106
+ 3607 09e8 0953CB53 		.word	1405833993
+ 3608 09ec 785FB253 		.word	1404198776
+ 3609 09f0 B85F9953 		.word	1402560440
+ 3610 09f4 B9538053 		.word	1400918969
+ 3611 09f8 6C3B6753 		.word	1399274348
+ 3612 09fc C1164E53 		.word	1397626561
+ 3613 0a00 A8E53453 		.word	1395975592
+ 3614 0a04 12A81B53 		.word	1394321426
+ 3615 0a08 EF5D0253 		.word	1392664047
+ 3616 0a0c 2F07E952 		.word	1391003439
+ 3617 0a10 C2A3CF52 		.word	1389339586
+ 3618 0a14 9733B652 		.word	1387672471
+ 3619 0a18 9EB69C52 		.word	1386002078
+ 3620 0a1c C72C8352 		.word	1384328391
+ 3621 0a20 01966952 		.word	1382651393
+ 3622 0a24 3BF24F52 		.word	1380971067
+ 3623 0a28 66413652 		.word	1379287398
+ 3624 0a2c 6F831C52 		.word	1377600367
+ 3625 0a30 46B80252 		.word	1375909958
+ 3626 0a34 DADFE851 		.word	1374216154
+ 3627 0a38 19FACE51 		.word	1372518937
+ 3628 0a3c F206B551 		.word	1370818290
+ 3629 0a40 54069B51 		.word	1369114196
+ 3630 0a44 2DF88051 		.word	1367406637
+ 3631 0a48 6BDC6651 		.word	1365695595
+ 3632 0a4c FDB24C51 		.word	1363981053
+ 3633 0a50 D07B3251 		.word	1362262992
+ 3634 0a54 D3361851 		.word	1360541395
+ 3635 0a58 F2E3FD50 		.word	1358816242
+ 3636 0a5c 1D83E350 		.word	1357087517
+ 3637 0a60 4014C950 		.word	1355355200
+ 3638 0a64 4897AE50 		.word	1353619272
+ 3639 0a68 240C9450 		.word	1351879716
+ 3640 0a6c C0727950 		.word	1350136512
+ 3641 0a70 09CB5E50 		.word	1348389641
+ 3642 0a74 EB144450 		.word	1346639083
+ 3643 0a78 55502950 		.word	1344884821
+ 3644 0a7c 327D0E50 		.word	1343126834
+ARM GAS  /tmp/ccq1psjJ.s 			page 71
+
+
+ 3645 0a80 6E9BF34F 		.word	1341365102
+ 3646 0a84 F7AAD84F 		.word	1339599607
+ 3647 0a88 B7ABBD4F 		.word	1337830327
+ 3648 0a8c 9C9DA24F 		.word	1336057244
+ 3649 0a90 9180874F 		.word	1334280337
+ 3650 0a94 81546C4F 		.word	1332499585
+ 3651 0a98 5919514F 		.word	1330714969
+ 3652 0a9c 03CF354F 		.word	1328926467
+ 3653 0aa0 6C751A4F 		.word	1327134060
+ 3654 0aa4 7E0CFF4E 		.word	1325337726
+ 3655 0aa8 2394E34E 		.word	1323537443
+ 3656 0aac 480CC84E 		.word	1321733192
+ 3657 0ab0 D674AC4E 		.word	1319924950
+ 3658 0ab4 B8CD904E 		.word	1318112696
+ 3659 0ab8 D916754E 		.word	1316296409
+ 3660 0abc 2250594E 		.word	1314476066
+ 3661 0ac0 7E793D4E 		.word	1312651646
+ 3662 0ac4 D692214E 		.word	1310823126
+ 3663 0ac8 149C054E 		.word	1308990484
+ 3664 0acc 2295E94D 		.word	1307153698
+ 3665 0ad0 E97DCD4D 		.word	1305312745
+ 3666 0ad4 5256B14D 		.word	1303467602
+ 3667 0ad8 451E954D 		.word	1301618245
+ 3668 0adc ADD5784D 		.word	1299764653
+ 3669 0ae0 717C5C4D 		.word	1297906801
+ 3670 0ae4 7A12404D 		.word	1296044666
+ 3671 0ae8 B197234D 		.word	1294178225
+ 3672 0aec FD0B074D 		.word	1292307453
+ 3673 0af0 466FEA4C 		.word	1290432326
+ 3674 0af4 74C1CD4C 		.word	1288552820
+ 3675 0af8 6E02B14C 		.word	1286668910
+ 3676 0afc 1C32944C 		.word	1284780572
+ 3677 0b00 6650774C 		.word	1282887782
+ 3678 0b04 315D5A4C 		.word	1280990513
+ 3679 0b08 65583D4C 		.word	1279088741
+ 3680 0b0c E841204C 		.word	1277182440
+ 3681 0b10 A119034C 		.word	1275271585
+ 3682 0b14 75DFE54B 		.word	1273356149
+ 3683 0b18 4B93C84B 		.word	1271436107
+ 3684 0b1c 0935AB4B 		.word	1269511433
+ 3685 0b20 93C48D4B 		.word	1267582099
+ 3686 0b24 D041704B 		.word	1265648080
+ 3687 0b28 A5AC524B 		.word	1263709349
+ 3688 0b2c F504354B 		.word	1261765877
+ 3689 0b30 A64A174B 		.word	1259817638
+ 3690 0b34 9D7DF94A 		.word	1257864605
+ 3691 0b38 BD9DDB4A 		.word	1255906749
+ 3692 0b3c EBAABD4A 		.word	1253944043
+ 3693 0b40 0BA59F4A 		.word	1251976459
+ 3694 0b44 FF8B814A 		.word	1250003967
+ 3695 0b48 AB5F634A 		.word	1248026539
+ 3696 0b4c F31F454A 		.word	1246044147
+ 3697 0b50 B8CC264A 		.word	1244056760
+ 3698 0b54 DE65084A 		.word	1242064350
+ 3699 0b58 47EBE949 		.word	1240066887
+ 3700 0b5c D55CCB49 		.word	1238064341
+ 3701 0b60 6ABAAC49 		.word	1236056682
+ARM GAS  /tmp/ccq1psjJ.s 			page 72
+
+
+ 3702 0b64 E8038E49 		.word	1234043880
+ 3703 0b68 2F396F49 		.word	1232025903
+ 3704 0b6c 215A5049 		.word	1230002721
+ 3705 0b70 9F663149 		.word	1227974303
+ 3706 0b74 895E1249 		.word	1225940617
+ 3707 0b78 BF41F348 		.word	1223901631
+ 3708 0b7c 2210D448 		.word	1221857314
+ 3709 0b80 91C9B448 		.word	1219807633
+ 3710 0b84 EC6D9548 		.word	1217752556
+ 3711 0b88 11FD7548 		.word	1215692049
+ 3712 0b8c E1765648 		.word	1213626081
+ 3713 0b90 38DB3648 		.word	1211554616
+ 3714 0b94 F6291748 		.word	1209477622
+ 3715 0b98 F962F747 		.word	1207395065
+ 3716 0b9c 1E86D747 		.word	1205306910
+ 3717 0ba0 4393B747 		.word	1203213123
+ 3718 0ba4 448A9747 		.word	1201113668
+ 3719 0ba8 006B7747 		.word	1199008512
+ 3720 0bac 51355747 		.word	1196897617
+ 3721 0bb0 15E93647 		.word	1194780949
+ 3722 0bb4 27861647 		.word	1192658471
+ 3723 0bb8 620CF646 		.word	1190530146
+ 3724 0bbc A37BD546 		.word	1188395939
+ 3725 0bc0 C3D3B446 		.word	1186255811
+ 3726 0bc4 9E149446 		.word	1184109726
+ 3727 0bc8 0D3E7346 		.word	1181957645
+ 3728 0bcc EB4F5246 		.word	1179799531
+ 3729 0bd0 104A3146 		.word	1177635344
+ 3730 0bd4 572C1046 		.word	1175465047
+ 3731 0bd8 97F6EE45 		.word	1173288599
+ 3732 0bdc AAA8CD45 		.word	1171105962
+ 3733 0be0 6742AC45 		.word	1168917095
+ 3734 0be4 A7C38A45 		.word	1166721959
+ 3735 0be8 3F2C6945 		.word	1164520511
+ 3736 0bec 097C4745 		.word	1162312713
+ 3737 0bf0 D9B22545 		.word	1160098521
+ 3738 0bf4 86D00345 		.word	1157877894
+ 3739 0bf8 E6D4E144 		.word	1155650790
+ 3740 0bfc CFBFBF44 		.word	1153417167
+ 3741 0c00 15919D44 		.word	1151176981
+ 3742 0c04 8D487B44 		.word	1148930189
+ 3743 0c08 0BE65844 		.word	1146676747
+ 3744 0c0c 63693644 		.word	1144416611
+ 3745 0c10 69D21344 		.word	1142149737
+ 3746 0c14 EE20F143 		.word	1139876078
+ 3747 0c18 C654CE43 		.word	1137595590
+ 3748 0c1c C36DAB43 		.word	1135308227
+ 3749 0c20 B66B8843 		.word	1133013942
+ 3750 0c24 704E6543 		.word	1130712688
+ 3751 0c28 C2154243 		.word	1128404418
+ 3752 0c2c 7CC11E43 		.word	1126089084
+ 3753 0c30 6E51FB42 		.word	1123766638
+ 3754 0c34 68C5D742 		.word	1121437032
+ 3755 0c38 371DB442 		.word	1119100215
+ 3756 0c3c AB589042 		.word	1116756139
+ 3757 0c40 91776C42 		.word	1114404753
+ 3758 0c44 B6794842 		.word	1112046006
+ARM GAS  /tmp/ccq1psjJ.s 			page 73
+
+
+ 3759 0c48 E75E2442 		.word	1109679847
+ 3760 0c4c F1260042 		.word	1107306225
+ 3761 0c50 9FD1DB41 		.word	1104925087
+ 3762 0c54 BD5EB741 		.word	1102536381
+ 3763 0c58 14CE9241 		.word	1100140052
+ 3764 0c5c 701F6E41 		.word	1097736048
+ 3765 0c60 99524941 		.word	1095324313
+ 3766 0c64 59672441 		.word	1092904793
+ 3767 0c68 795DFF40 		.word	1090477433
+ 3768 0c6c BF34DA40 		.word	1088042175
+ 3769 0c70 F4ECB440 		.word	1085598964
+ 3770 0c74 DF858F40 		.word	1083147743
+ 3771 0c78 44FF6940 		.word	1080688452
+ 3772 0c7c EB584440 		.word	1078221035
+ 3773 0c80 96921E40 		.word	1075745430
+ 3774 0c84 0CACF83F 		.word	1073261580
+ 3775 0c88 10A5D23F 		.word	1070769424
+ 3776 0c8c 647DAC3F 		.word	1068268900
+ 3777 0c90 CB34863F 		.word	1065759947
+ 3778 0c94 06CB5F3F 		.word	1063242502
+ 3779 0c98 D73F393F 		.word	1060716503
+ 3780 0c9c FE92123F 		.word	1058181886
+ 3781 0ca0 3AC4EB3E 		.word	1055638586
+ 3782 0ca4 4BD3C43E 		.word	1053086539
+ 3783 0ca8 EEBF9D3E 		.word	1050525678
+ 3784 0cac E189763E 		.word	1047955937
+ 3785 0cb0 E2304F3E 		.word	1045377250
+ 3786 0cb4 ABB4273E 		.word	1042789547
+ 3787 0cb8 F814003E 		.word	1040192760
+ 3788 0cbc 8551D83D 		.word	1037586821
+ 3789 0cc0 096AB03D 		.word	1034971657
+ 3790 0cc4 3F5E883D 		.word	1032347199
+ 3791 0cc8 DE2D603D 		.word	1029713374
+ 3792 0ccc 9FD8373D 		.word	1027070111
+ 3793 0cd0 365E0F3D 		.word	1024417334
+ 3794 0cd4 5BBEE63C 		.word	1021754971
+ 3795 0cd8 C1F8BD3C 		.word	1019082945
+ 3796 0cdc 1E0D953C 		.word	1016401182
+ 3797 0ce0 23FB6B3C 		.word	1013709603
+ 3798 0ce4 83C2423C 		.word	1011008131
+ 3799 0ce8 EF62193C 		.word	1008296687
+ 3800 0cec 19DCEF3B 		.word	1005575193
+ 3801 0cf0 AE2DC63B 		.word	1002843566
+ 3802 0cf4 5E579C3B 		.word	1000101726
+ 3803 0cf8 D658723B 		.word	997349590
+ 3804 0cfc C331483B 		.word	994587075
+ 3805 0d00 D0E11D3B 		.word	991814096
+ 3806 0d04 A968F33A 		.word	989030569
+ 3807 0d08 F5C5C83A 		.word	986236405
+ 3808 0d0c 5FF99D3A 		.word	983431519
+ 3809 0d10 8C02733A 		.word	980615820
+ 3810 0d14 25E1473A 		.word	977789221
+ 3811 0d18 CD941C3A 		.word	974951629
+ 3812 0d1c 2A1DF139 		.word	972102954
+ 3813 0d20 DE79C539 		.word	969243102
+ 3814 0d24 8BAA9939 		.word	966371979
+ 3815 0d28 D2AE6D39 		.word	963489490
+ARM GAS  /tmp/ccq1psjJ.s 			page 74
+
+
+ 3816 0d2c 52864139 		.word	960595538
+ 3817 0d30 A9301539 		.word	957690025
+ 3818 0d34 76ADE838 		.word	954772854
+ 3819 0d38 53FCBB38 		.word	951843923
+ 3820 0d3c DC1C8F38 		.word	948903132
+ 3821 0d40 A90E6238 		.word	945950377
+ 3822 0d44 53D13438 		.word	942985555
+ 3823 0d48 70640738 		.word	940008560
+ 3824 0d4c 96C7D937 		.word	937019286
+ 3825 0d50 58FAAB37 		.word	934017624
+ 3826 0d54 49FC7D37 		.word	931003465
+ 3827 0d58 FBCC4F37 		.word	927976699
+ 3828 0d5c FC6B2137 		.word	924937212
+ 3829 0d60 DCD8F236 		.word	921884892
+ 3830 0d64 2613C436 		.word	918819622
+ 3831 0d68 671A9536 		.word	915741287
+ 3832 0d6c 27EE6536 		.word	912649767
+ 3833 0d70 EE8D3636 		.word	909544942
+ 3834 0d74 44F90636 		.word	906426692
+ 3835 0d78 AC2FD735 		.word	903294892
+ 3836 0d7c AA30A735 		.word	900149418
+ 3837 0d80 BFFB7635 		.word	896990143
+ 3838 0d84 6C904635 		.word	893816940
+ 3839 0d88 2DEE1535 		.word	890629677
+ 3840 0d8c 7F14E534 		.word	887428223
+ 3841 0d90 DC02B434 		.word	884212444
+ 3842 0d94 BDB88234 		.word	880982205
+ 3843 0d98 98355134 		.word	877737368
+ 3844 0d9c E2781F34 		.word	874477794
+ 3845 0da0 0D82ED33 		.word	871203341
+ 3846 0da4 8B50BB33 		.word	867913867
+ 3847 0da8 C8E38833 		.word	864609224
+ 3848 0dac 333B5633 		.word	861289267
+ 3849 0db0 35562333 		.word	857953845
+ 3850 0db4 3634F032 		.word	854602806
+ 3851 0db8 9DD4BC32 		.word	851235997
+ 3852 0dbc CD368932 		.word	847853261
+ 3853 0dc0 285A5532 		.word	844454440
+ 3854 0dc4 0C3E2132 		.word	841039372
+ 3855 0dc8 D7E1EC31 		.word	837607895
+ 3856 0dcc E244B831 		.word	834159842
+ 3857 0dd0 86668331 		.word	830695046
+ 3858 0dd4 17464E31 		.word	827213335
+ 3859 0dd8 E9E21831 		.word	823714537
+ 3860 0ddc 4B3CE330 		.word	820198475
+ 3861 0de0 8B51AD30 		.word	816664971
+ 3862 0de4 F3217730 		.word	813113843
+ 3863 0de8 CBAC4030 		.word	809544907
+ 3864 0dec 58F10930 		.word	805957976
+ 3865 0df0 DCEED22F 		.word	802352860
+ 3866 0df4 96A49B2F 		.word	798729366
+ 3867 0df8 C211642F 		.word	795087298
+ 3868 0dfc 98352C2F 		.word	791426456
+ 3869 0e00 4F0FF42E 		.word	787746639
+ 3870 0e04 199EBB2E 		.word	784047641
+ 3871 0e08 25E1822E 		.word	780329253
+ 3872 0e0c 9FD7492E 		.word	776591263
+ARM GAS  /tmp/ccq1psjJ.s 			page 75
+
+
+ 3873 0e10 AF80102E 		.word	772833455
+ 3874 0e14 7ADBD62D 		.word	769055610
+ 3875 0e18 21E79C2D 		.word	765257505
+ 3876 0e1c C1A2622D 		.word	761438913
+ 3877 0e20 750D282D 		.word	757599605
+ 3878 0e24 5126ED2C 		.word	753739345
+ 3879 0e28 69ECB12C 		.word	749857897
+ 3880 0e2c C95E762C 		.word	745955017
+ 3881 0e30 7B7C3A2C 		.word	742030459
+ 3882 0e34 8644FE2B 		.word	738083974
+ 3883 0e38 E9B5C12B 		.word	734115305
+ 3884 0e3c A3CF842B 		.word	730124195
+ 3885 0e40 AB90472B 		.word	726110379
+ 3886 0e44 F4F7092B 		.word	722073588
+ 3887 0e48 6F04CC2A 		.word	718013551
+ 3888 0e4c 04B58D2A 		.word	713929988
+ 3889 0e50 99084F2A 		.word	709822617
+ 3890 0e54 0EFE0F2A 		.word	705691150
+ 3891 0e58 3E94D029 		.word	701535294
+ 3892 0e5c FEC99029 		.word	697354750
+ 3893 0e60 1E9E5029 		.word	693149214
+ 3894 0e64 690F1029 		.word	688918377
+ 3895 0e68 A41CCF28 		.word	684661924
+ 3896 0e6c 8CC48D28 		.word	680379532
+ 3897 0e70 DC054C28 		.word	676070876
+ 3898 0e74 46DF0928 		.word	671735622
+ 3899 0e78 764FC727 		.word	667373430
+ 3900 0e7c 12558427 		.word	662983954
+ 3901 0e80 BAEE4027 		.word	658566842
+ 3902 0e84 051BFD26 		.word	654121733
+ 3903 0e88 85D8B826 		.word	649648261
+ 3904 0e8c C4257426 		.word	645146052
+ 3905 0e90 45012F26 		.word	640614725
+ 3906 0e94 8369E925 		.word	636053891
+ 3907 0e98 F35CA325 		.word	631463155
+ 3908 0e9c FED95C25 		.word	626842110
+ 3909 0ea0 09DF1525 		.word	622190345
+ 3910 0ea4 6F6ACE24 		.word	617507439
+ 3911 0ea8 827A8624 		.word	612792962
+ 3912 0eac 8A0D3E24 		.word	608046474
+ 3913 0eb0 C921F523 		.word	603267529
+ 3914 0eb4 76B5AB23 		.word	598455670
+ 3915 0eb8 BCC66123 		.word	593610428
+ 3916 0ebc C1531723 		.word	588731329
+ 3917 0ec0 9C5ACC22 		.word	583817884
+ 3918 0ec4 5DD98022 		.word	578869597
+ 3919 0ec8 07CE3422 		.word	573885959
+ 3920 0ecc 9236E821 		.word	568866450
+ 3921 0ed0 ED109B21 		.word	563810541
+ 3922 0ed4 F85A4D21 		.word	558717688
+ 3923 0ed8 8812FF20 		.word	553587336
+ 3924 0edc 6735B020 		.word	548418919
+ 3925 0ee0 50C16020 		.word	543211856
+ 3926 0ee4 F3B31020 		.word	537965555
+ 3927 0ee8 EF0AC01F 		.word	532679407
+ 3928 0eec D7C36E1F 		.word	527352791
+ 3929 0ef0 31DC1C1F 		.word	521985073
+ARM GAS  /tmp/ccq1psjJ.s 			page 76
+
+
+ 3930 0ef4 7051CA1E 		.word	516575600
+ 3931 0ef8 FC20771E 		.word	511123708
+ 3932 0efc 2948231E 		.word	505628713
+ 3933 0f00 3EC4CE1D 		.word	500089918
+ 3934 0f04 6D92791D 		.word	494506605
+ 3935 0f08 DBAF231D 		.word	488878043
+ 3936 0f0c 9719CD1C 		.word	483203479
+ 3937 0f10 A0CC751C 		.word	477482144
+ 3938 0f14 DFC51D1C 		.word	471713247
+ 3939 0f18 2B02C51B 		.word	465895979
+ 3940 0f1c 457E6B1B 		.word	460029509
+ 3941 0f20 DA36111B 		.word	454112986
+ 3942 0f24 8028B61A 		.word	448145536
+ 3943 0f28 B54F5A1A 		.word	442126261
+ 3944 0f2c E0A8FD19 		.word	436054240
+ 3945 0f30 4F30A019 		.word	429928527
+ 3946 0f34 39E24119 		.word	423748153
+ 3947 0f38 B7BAE218 		.word	417512119
+ 3948 0f3c C8B58218 		.word	411219400
+ 3949 0f40 4ECF2118 		.word	404868942
+ 3950 0f44 0F03C017 		.word	398459663
+ 3951 0f48 B24C5D17 		.word	391990450
+ 3952 0f4c BCA7F916 		.word	385460156
+ 3953 0f50 940F9516 		.word	378867604
+ 3954 0f54 7C7F2F16 		.word	372211580
+ 3955 0f58 95F2C815 		.word	365490837
+ 3956 0f5c D9636115 		.word	358704089
+ 3957 0f60 1BCEF814 		.word	351850011
+ 3958 0f64 0A2C8F14 		.word	344927242
+ 3959 0f68 25782414 		.word	337934373
+ 3960 0f6c C5ACB813 		.word	330869957
+ 3961 0f70 13C44B13 		.word	323732499
+ 3962 0f74 09B8DD12 		.word	316520457
+ 3963 0f78 70826E12 		.word	309232240
+ 3964 0f7c E01CFE11 		.word	301866208
+ 3965 0f80 B8808C11 		.word	294420664
+ 3966 0f84 20A71911 		.word	286893856
+ 3967 0f88 0989A510 		.word	279283977
+ 3968 0f8c 221F3010 		.word	271589154
+ 3969 0f90 DD61B90F 		.word	263807453
+ 3970 0f94 6A49410F 		.word	255936874
+ 3971 0f98 B2CDC70E 		.word	247975346
+ 3972 0f9c 55E64C0E 		.word	239920725
+ 3973 0fa0 A88AD00D 		.word	231770792
+ 3974 0fa4 ADB1520D 		.word	223523245
+ 3975 0fa8 1552D30C 		.word	215175701
+ 3976 0fac 3762520C 		.word	206725687
+ 3977 0fb0 0DD8CF0B 		.word	198170637
+ 3978 0fb4 31A94B0B 		.word	189507889
+ 3979 0fb8 D7CAC50A 		.word	180734679
+ 3980 0fbc C5313E0A 		.word	171848133
+ 3981 0fc0 52D2B409 		.word	162845266
+ 3982 0fc4 5DA02909 		.word	153722973
+ 3983 0fc8 488F9C08 		.word	144478024
+ 3984 0fcc EE910D08 		.word	135107054
+ 3985 0fd0 A09A7C07 		.word	125606560
+ 3986 0fd4 1B9BE906 		.word	115972891
+ARM GAS  /tmp/ccq1psjJ.s 			page 77
+
+
+ 3987 0fd8 80845406 		.word	106202240
+ 3988 0fdc 4947BD05 		.word	96290633
+ 3989 0fe0 43D32305 		.word	86233923
+ 3990 0fe4 80178804 		.word	76027776
+ 3991 0fe8 4E02EA03 		.word	65667662
+ 3992 0fec 29814903 		.word	55148841
+ 3993 0ff0 B180A602 		.word	44466353
+ 3994 0ff4 98EC0002 		.word	33615000
+ 3995 0ff8 98AF5801 		.word	22589336
+ 3996 0ffc 5BB3AD00 		.word	11383643
+ 3997 1000 00000000 		.word	0
+ 3998 1004 00000000 		.word	0
+ 3999              		.text
+ 4000              	.Letext0:
+ 4001              		.file 2 "/usr/arm-none-eabi/include/machine/_default_types.h"
+ 4002              		.file 3 "/usr/arm-none-eabi/include/sys/_stdint.h"
+ 4003              		.file 4 "Core/Inc/geo_math.h"
+ 4004              		.file 5 "Core/Inc/geo_lut.h"
+ARM GAS  /tmp/ccq1psjJ.s 			page 78
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 geo_math.c
+     /tmp/ccq1psjJ.s:21     .text.geo_tile_coord_make:00000000 $t
+     /tmp/ccq1psjJ.s:27     .text.geo_tile_coord_make:00000000 geo_tile_coord_make
+     /tmp/ccq1psjJ.s:52     .text.geo_bbox_make:00000000 $t
+     /tmp/ccq1psjJ.s:58     .text.geo_bbox_make:00000000 geo_bbox_make
+     /tmp/ccq1psjJ.s:89     .text.geo_clamp_latitude_e7:00000000 $t
+     /tmp/ccq1psjJ.s:95     .text.geo_clamp_latitude_e7:00000000 geo_clamp_latitude_e7
+     /tmp/ccq1psjJ.s:130    .text.geo_clamp_latitude_e7:00000018 $d
+     /tmp/ccq1psjJ.s:136    .text.geo_wrap_longitude_e7:00000000 $t
+     /tmp/ccq1psjJ.s:142    .text.geo_wrap_longitude_e7:00000000 geo_wrap_longitude_e7
+     /tmp/ccq1psjJ.s:195    .text.geo_wrap_longitude_e7:0000002c $d
+     /tmp/ccq1psjJ.s:201    .text.geo_coord_make:00000000 $t
+     /tmp/ccq1psjJ.s:207    .text.geo_coord_make:00000000 geo_coord_make
+     /tmp/ccq1psjJ.s:250    .text.geo_coord_is_in_bbox:00000000 $t
+     /tmp/ccq1psjJ.s:256    .text.geo_coord_is_in_bbox:00000000 geo_coord_is_in_bbox
+     /tmp/ccq1psjJ.s:321    .text.geo_isqrt64:00000000 $t
+     /tmp/ccq1psjJ.s:327    .text.geo_isqrt64:00000000 geo_isqrt64
+     /tmp/ccq1psjJ.s:452    .text.geo_latlon_to_world_point32:00000000 $t
+     /tmp/ccq1psjJ.s:458    .text.geo_latlon_to_world_point32:00000000 geo_latlon_to_world_point32
+     /tmp/ccq1psjJ.s:715    .text.geo_latlon_to_world_point32:00000118 $d
+     /tmp/ccq1psjJ.s:2972   .rodata.GEO_MERCATOR_FORWARD_LUT:00000000 GEO_MERCATOR_FORWARD_LUT
+     /tmp/ccq1psjJ.s:727    .text.geo_world_point32_to_latlon:00000000 $t
+     /tmp/ccq1psjJ.s:733    .text.geo_world_point32_to_latlon:00000000 geo_world_point32_to_latlon
+     /tmp/ccq1psjJ.s:959    .text.geo_world_point32_to_latlon:000000e0 $d
+     /tmp/ccq1psjJ.s:1941   .rodata.GEO_MERCATOR_INVERSE_LUT:00000000 GEO_MERCATOR_INVERSE_LUT
+     /tmp/ccq1psjJ.s:966    .text.geo_latlon_to_tile:00000000 $t
+     /tmp/ccq1psjJ.s:972    .text.geo_latlon_to_tile:00000000 geo_latlon_to_tile
+     /tmp/ccq1psjJ.s:1114   .text.geo_tile_to_top_left_latlon:00000000 $t
+     /tmp/ccq1psjJ.s:1120   .text.geo_tile_to_top_left_latlon:00000000 geo_tile_to_top_left_latlon
+     /tmp/ccq1psjJ.s:1176   .text.geo_tile_to_bbox:00000000 $t
+     /tmp/ccq1psjJ.s:1182   .text.geo_tile_to_bbox:00000000 geo_tile_to_bbox
+     /tmp/ccq1psjJ.s:1281   .text.geo_distance_m:00000000 $t
+     /tmp/ccq1psjJ.s:1287   .text.geo_distance_m:00000000 geo_distance_m
+     /tmp/ccq1psjJ.s:1455   .text.geo_distance_m:000000d0 $d
+     /tmp/ccq1psjJ.s:1845   .rodata.GEO_COS_LUT_Q15:00000000 GEO_COS_LUT_Q15
+     /tmp/ccq1psjJ.s:1463   .text.geo_bearing_deg:00000000 $t
+     /tmp/ccq1psjJ.s:1469   .text.geo_bearing_deg:00000000 geo_bearing_deg
+     /tmp/ccq1psjJ.s:1762   .text.geo_bearing_deg:00000124 $d
+     /tmp/ccq1psjJ.s:1775   .rodata.GEO_ATAN_TENTHS_LUT:00000000 GEO_ATAN_TENTHS_LUT
+     /tmp/ccq1psjJ.s:1772   .rodata.GEO_ATAN_TENTHS_LUT:00000000 $d
+     /tmp/ccq1psjJ.s:1842   .rodata.GEO_COS_LUT_Q15:00000000 $d
+     /tmp/ccq1psjJ.s:1938   .rodata.GEO_MERCATOR_INVERSE_LUT:00000000 $d
+     /tmp/ccq1psjJ.s:2969   .rodata.GEO_MERCATOR_FORWARD_LUT:00000000 $d
+
+UNDEFINED SYMBOLS
+__aeabi_uldivmod
+__aeabi_ldivmod

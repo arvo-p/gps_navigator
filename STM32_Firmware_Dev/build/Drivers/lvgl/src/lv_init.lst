@@ -1,0 +1,1256 @@
+ARM GAS  /tmp/ccqMFObh.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.arch armv7e-m
+   3              		.fpu fpv4-sp-d16
+   4              		.eabi_attribute 27, 1
+   5              		.eabi_attribute 28, 1
+   6              		.eabi_attribute 20, 1
+   7              		.eabi_attribute 21, 1
+   8              		.eabi_attribute 23, 3
+   9              		.eabi_attribute 24, 1
+  10              		.eabi_attribute 25, 1
+  11              		.eabi_attribute 26, 1
+  12              		.eabi_attribute 30, 1
+  13              		.eabi_attribute 34, 1
+  14              		.eabi_attribute 18, 4
+  15              		.file	"lv_init.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.file 1 "Drivers/lvgl/src/lv_init.c"
+  20              		.section	.text.lv_global_init,"ax",%progbits
+  21              		.align	1
+  22              		.syntax unified
+  23              		.thumb
+  24              		.thumb_func
+  26              	lv_global_init:
+  27              	.LVL0:
+  28              	.LFB36:
+   1:Drivers/lvgl/src/lv_init.c **** /**
+   2:Drivers/lvgl/src/lv_init.c ****  * @file lv_init.c
+   3:Drivers/lvgl/src/lv_init.c ****  *
+   4:Drivers/lvgl/src/lv_init.c ****  */
+   5:Drivers/lvgl/src/lv_init.c **** 
+   6:Drivers/lvgl/src/lv_init.c **** /*********************
+   7:Drivers/lvgl/src/lv_init.c ****  *      INCLUDES
+   8:Drivers/lvgl/src/lv_init.c ****  *********************/
+   9:Drivers/lvgl/src/lv_init.c **** 
+  10:Drivers/lvgl/src/lv_init.c **** #include "core/lv_observer_private.h"
+  11:Drivers/lvgl/src/lv_init.c **** #include "lvgl_public.h"
+  12:Drivers/lvgl/src/lv_init.c **** #include "misc/lv_timer_private.h"
+  13:Drivers/lvgl/src/lv_init.c **** #include "debugging/profiler/lv_profiler_builtin_private.h"
+  14:Drivers/lvgl/src/lv_init.c **** #include "misc/lv_anim_private.h"
+  15:Drivers/lvgl/src/lv_init.c **** #include "image/lv_image_decoder_private.h"
+  16:Drivers/lvgl/src/lv_init.c **** #include "draw/lv_draw_buf_private.h"
+  17:Drivers/lvgl/src/lv_init.c **** #include "core/lv_refr_private.h"
+  18:Drivers/lvgl/src/lv_init.c **** #include "core/lv_obj_style_private.h"
+  19:Drivers/lvgl/src/lv_init.c **** #include "core/lv_group_private.h"
+  20:Drivers/lvgl/src/lv_init.c **** #include "core/lv_global.h"
+  21:Drivers/lvgl/src/lv_init.c **** #include "display/lv_display_private.h"
+  22:Drivers/lvgl/src/lv_init.c **** #include "indev/lv_indev_private.h"
+  23:Drivers/lvgl/src/lv_init.c **** #include "layouts/lv_layout_private.h"
+  24:Drivers/lvgl/src/lv_init.c **** #include "fs/lv_fs_private.h"
+  25:Drivers/lvgl/src/lv_init.c **** #include "osal/lv_os_private.h"
+  26:Drivers/lvgl/src/lv_init.c **** #include "debugging/sysmon/lv_sysmon_private.h"
+  27:Drivers/lvgl/src/lv_init.c **** #include "drivers/wayland/lv_wayland_private.h"
+  28:Drivers/lvgl/src/lv_init.c **** 
+  29:Drivers/lvgl/src/lv_init.c **** #if LV_USE_SVG
+  30:Drivers/lvgl/src/lv_init.c ****     #include "image/svg/lv_svg_decoder.h"
+ARM GAS  /tmp/ccqMFObh.s 			page 2
+
+
+  31:Drivers/lvgl/src/lv_init.c **** #endif
+  32:Drivers/lvgl/src/lv_init.c **** 
+  33:Drivers/lvgl/src/lv_init.c **** #if LV_USE_NEMA_GFX
+  34:Drivers/lvgl/src/lv_init.c ****     #include "draw/nema_gfx/lv_draw_nema_gfx.h"
+  35:Drivers/lvgl/src/lv_init.c **** #endif
+  36:Drivers/lvgl/src/lv_init.c **** #if LV_USE_DRAW_PXP
+  37:Drivers/lvgl/src/lv_init.c ****     #include "draw/nxp/pxp/lv_draw_pxp.h"
+  38:Drivers/lvgl/src/lv_init.c **** #endif
+  39:Drivers/lvgl/src/lv_init.c **** #if LV_USE_DRAW_G2D
+  40:Drivers/lvgl/src/lv_init.c ****     #include "draw/nxp/g2d/lv_draw_g2d.h"
+  41:Drivers/lvgl/src/lv_init.c **** #endif
+  42:Drivers/lvgl/src/lv_init.c **** #if LV_USE_DRAW_DAVE2D
+  43:Drivers/lvgl/src/lv_init.c ****     #include "draw/renesas/dave2d/lv_draw_dave2d.h"
+  44:Drivers/lvgl/src/lv_init.c **** #endif
+  45:Drivers/lvgl/src/lv_init.c **** #if LV_USE_DRAW_SDL
+  46:Drivers/lvgl/src/lv_init.c ****     #include "draw/sdl/lv_draw_sdl.h"
+  47:Drivers/lvgl/src/lv_init.c **** #endif
+  48:Drivers/lvgl/src/lv_init.c **** #if LV_USE_DRAW_VG_LITE
+  49:Drivers/lvgl/src/lv_init.c ****     #include "draw/vg_lite/lv_draw_vg_lite.h"
+  50:Drivers/lvgl/src/lv_init.c **** #endif
+  51:Drivers/lvgl/src/lv_init.c **** #if LV_USE_DRAW_DMA2D
+  52:Drivers/lvgl/src/lv_init.c ****     #include "draw/dma2d/lv_draw_dma2d.h"
+  53:Drivers/lvgl/src/lv_init.c **** #endif
+  54:Drivers/lvgl/src/lv_init.c **** #if LV_USE_DRAW_OPENGLES
+  55:Drivers/lvgl/src/lv_init.c ****     #include "draw/opengles/lv_draw_opengles.h"
+  56:Drivers/lvgl/src/lv_init.c **** #endif
+  57:Drivers/lvgl/src/lv_init.c **** #if LV_USE_PPA
+  58:Drivers/lvgl/src/lv_init.c ****     #include "draw/espressif/ppa/lv_draw_ppa.h"
+  59:Drivers/lvgl/src/lv_init.c **** #endif
+  60:Drivers/lvgl/src/lv_init.c **** #if LV_USE_WINDOWS
+  61:Drivers/lvgl/src/lv_init.c ****     #include "drivers/windows/lv_windows_context.h"
+  62:Drivers/lvgl/src/lv_init.c **** #endif
+  63:Drivers/lvgl/src/lv_init.c **** #if LV_USE_EVDEV
+  64:Drivers/lvgl/src/lv_init.c ****     #include "drivers/evdev/lv_evdev_private.h"
+  65:Drivers/lvgl/src/lv_init.c **** #endif
+  66:Drivers/lvgl/src/lv_init.c **** #if LV_USE_DRAW_EVE
+  67:Drivers/lvgl/src/lv_init.c ****     #include "draw/eve/lv_draw_eve.h"
+  68:Drivers/lvgl/src/lv_init.c **** #endif
+  69:Drivers/lvgl/src/lv_init.c **** #if LV_USE_SIFLI_EPIC
+  70:Drivers/lvgl/src/lv_init.c ****     #include "draw/sifli/epic/lv_draw_sifli_epic.h"
+  71:Drivers/lvgl/src/lv_init.c **** #endif
+  72:Drivers/lvgl/src/lv_init.c **** 
+  73:Drivers/lvgl/src/lv_init.c **** #if LV_USE_DRAW_IPA
+  74:Drivers/lvgl/src/lv_init.c ****     #include "draw/gigadevice/ipa/lv_draw_ipa.h"
+  75:Drivers/lvgl/src/lv_init.c **** #endif
+  76:Drivers/lvgl/src/lv_init.c **** 
+  77:Drivers/lvgl/src/lv_init.c **** /*********************
+  78:Drivers/lvgl/src/lv_init.c ****  *      DEFINES
+  79:Drivers/lvgl/src/lv_init.c ****  *********************/
+  80:Drivers/lvgl/src/lv_init.c **** #define lv_initialized  LV_GLOBAL_DEFAULT()->inited
+  81:Drivers/lvgl/src/lv_init.c **** #define lv_deinit_in_progress  LV_GLOBAL_DEFAULT()->deinit_in_progress
+  82:Drivers/lvgl/src/lv_init.c **** 
+  83:Drivers/lvgl/src/lv_init.c **** /**********************
+  84:Drivers/lvgl/src/lv_init.c ****  *      TYPEDEFS
+  85:Drivers/lvgl/src/lv_init.c ****  **********************/
+  86:Drivers/lvgl/src/lv_init.c **** 
+  87:Drivers/lvgl/src/lv_init.c **** /**********************
+ARM GAS  /tmp/ccqMFObh.s 			page 3
+
+
+  88:Drivers/lvgl/src/lv_init.c ****  *  STATIC PROTOTYPES
+  89:Drivers/lvgl/src/lv_init.c ****  **********************/
+  90:Drivers/lvgl/src/lv_init.c **** 
+  91:Drivers/lvgl/src/lv_init.c **** /**********************
+  92:Drivers/lvgl/src/lv_init.c ****  *  STATIC VARIABLES
+  93:Drivers/lvgl/src/lv_init.c ****  **********************/
+  94:Drivers/lvgl/src/lv_init.c **** #if !LV_ENABLE_GLOBAL_CUSTOM
+  95:Drivers/lvgl/src/lv_init.c ****     lv_global_t lv_global;
+  96:Drivers/lvgl/src/lv_init.c **** #endif
+  97:Drivers/lvgl/src/lv_init.c **** 
+  98:Drivers/lvgl/src/lv_init.c **** /**********************
+  99:Drivers/lvgl/src/lv_init.c ****  *      MACROS
+ 100:Drivers/lvgl/src/lv_init.c ****  **********************/
+ 101:Drivers/lvgl/src/lv_init.c **** 
+ 102:Drivers/lvgl/src/lv_init.c **** #ifndef LV_GLOBAL_INIT
+ 103:Drivers/lvgl/src/lv_init.c ****     #define LV_GLOBAL_INIT(__GLOBAL_PTR)    lv_global_init((lv_global_t *)(__GLOBAL_PTR))
+ 104:Drivers/lvgl/src/lv_init.c **** #endif
+ 105:Drivers/lvgl/src/lv_init.c **** 
+ 106:Drivers/lvgl/src/lv_init.c **** /**********************
+ 107:Drivers/lvgl/src/lv_init.c ****  *   GLOBAL FUNCTIONS
+ 108:Drivers/lvgl/src/lv_init.c ****  **********************/
+ 109:Drivers/lvgl/src/lv_init.c **** static inline void lv_global_init(lv_global_t * global)
+ 110:Drivers/lvgl/src/lv_init.c **** {
+  29              		.loc 1 110 1 view -0
+  30              		.cfi_startproc
+  31              		@ args = 0, pretend = 0, frame = 0
+  32              		@ frame_needed = 0, uses_anonymous_args = 0
+ 111:Drivers/lvgl/src/lv_init.c ****     LV_ASSERT_NULL(global);
+  33              		.loc 1 111 27 view .LVU1
+ 112:Drivers/lvgl/src/lv_init.c **** 
+ 113:Drivers/lvgl/src/lv_init.c ****     if(global == NULL) {
+  34              		.loc 1 113 5 view .LVU2
+  35              		.loc 1 113 7 is_stmt 0 view .LVU3
+  36 0000 08B3     		cbz	r0, .L4
+ 110:Drivers/lvgl/src/lv_init.c ****     LV_ASSERT_NULL(global);
+  37              		.loc 1 110 1 view .LVU4
+  38 0002 10B5     		push	{r4, lr}
+  39              	.LCFI0:
+  40              		.cfi_def_cfa_offset 8
+  41              		.cfi_offset 4, -8
+  42              		.cfi_offset 14, -4
+  43 0004 0446     		mov	r4, r0
+ 114:Drivers/lvgl/src/lv_init.c ****         LV_LOG_ERROR("lv_global cannot be null");
+ 115:Drivers/lvgl/src/lv_init.c ****         return;
+ 116:Drivers/lvgl/src/lv_init.c ****     }
+ 117:Drivers/lvgl/src/lv_init.c **** 
+ 118:Drivers/lvgl/src/lv_init.c ****     lv_memzero(global, sizeof(lv_global_t));
+  44              		.loc 1 118 5 is_stmt 1 view .LVU5
+  45              	.LVL1:
+  46              	.LBB4:
+  47              	.LBI4:
+  48              		.file 2 "Drivers/lvgl/src/core/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h"
+   1:Drivers/lvgl/src/core/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** /**
+   2:Drivers/lvgl/src/core/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @file lv_string.h
+   3:Drivers/lvgl/src/core/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  *
+   4:Drivers/lvgl/src/core/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  */
+   5:Drivers/lvgl/src/core/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** 
+ARM GAS  /tmp/ccqMFObh.s 			page 4
+
+
+   6:Drivers/lvgl/src/core/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** #ifndef LV_STRING_H
+   7:Drivers/lvgl/src/core/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** #define LV_STRING_H
+   8:Drivers/lvgl/src/core/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** 
+   9:Drivers/lvgl/src/core/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** #ifdef __cplusplus
+  10:Drivers/lvgl/src/core/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** extern "C" {
+  11:Drivers/lvgl/src/core/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** #endif
+  12:Drivers/lvgl/src/core/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** 
+  13:Drivers/lvgl/src/core/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** /*********************
+  14:Drivers/lvgl/src/core/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  *      INCLUDES
+  15:Drivers/lvgl/src/core/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  *********************/
+  16:Drivers/lvgl/src/core/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** #include "../config/lv_conf_internal.h"
+  17:Drivers/lvgl/src/core/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** #include "../lv_types.h"
+  18:Drivers/lvgl/src/core/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** 
+  19:Drivers/lvgl/src/core/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** /*********************
+  20:Drivers/lvgl/src/core/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  *      DEFINES
+  21:Drivers/lvgl/src/core/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  *********************/
+  22:Drivers/lvgl/src/core/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** 
+  23:Drivers/lvgl/src/core/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** /**********************
+  24:Drivers/lvgl/src/core/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  *      TYPEDEFS
+  25:Drivers/lvgl/src/core/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  **********************/
+  26:Drivers/lvgl/src/core/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** 
+  27:Drivers/lvgl/src/core/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** /**********************
+  28:Drivers/lvgl/src/core/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * GLOBAL PROTOTYPES
+  29:Drivers/lvgl/src/core/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  **********************/
+  30:Drivers/lvgl/src/core/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** 
+  31:Drivers/lvgl/src/core/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** /**
+  32:Drivers/lvgl/src/core/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @brief Copies a block of memory from a source address to a destination address.
+  33:Drivers/lvgl/src/core/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @param dst Pointer to the destination array where the content is to be copied.
+  34:Drivers/lvgl/src/core/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @param src Pointer to the source of data to be copied.
+  35:Drivers/lvgl/src/core/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @param len Number of bytes to copy.
+  36:Drivers/lvgl/src/core/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @return Pointer to the destination array.
+  37:Drivers/lvgl/src/core/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @note The function does not check for any overlapping of the source and destination memory block
+  38:Drivers/lvgl/src/core/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  */
+  39:Drivers/lvgl/src/core/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** void * lv_memcpy(void * dst, const void * src, size_t len);
+  40:Drivers/lvgl/src/core/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** 
+  41:Drivers/lvgl/src/core/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** /**
+  42:Drivers/lvgl/src/core/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @brief Fills a block of memory with a specified value.
+  43:Drivers/lvgl/src/core/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @param dst Pointer to the destination array to fill with the specified value.
+  44:Drivers/lvgl/src/core/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @param v Value to be set. The value is passed as an int, but the function fills
+  45:Drivers/lvgl/src/core/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  *          the block of memory using the unsigned char conversion of this value.
+  46:Drivers/lvgl/src/core/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @param len Number of bytes to be set to the value.
+  47:Drivers/lvgl/src/core/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  */
+  48:Drivers/lvgl/src/core/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** void lv_memset(void * dst, uint8_t v, size_t len);
+  49:Drivers/lvgl/src/core/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** 
+  50:Drivers/lvgl/src/core/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** /**
+  51:Drivers/lvgl/src/core/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @brief Move a block of memory from source to destination
+  52:Drivers/lvgl/src/core/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @param dst Pointer to the destination array where the content is to be copied.
+  53:Drivers/lvgl/src/core/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @param src Pointer to the source of data to be copied.
+  54:Drivers/lvgl/src/core/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @param len Number of bytes to copy
+  55:Drivers/lvgl/src/core/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @return Pointer to the destination array.
+  56:Drivers/lvgl/src/core/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  */
+  57:Drivers/lvgl/src/core/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** void * lv_memmove(void * dst, const void * src, size_t len);
+  58:Drivers/lvgl/src/core/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** 
+  59:Drivers/lvgl/src/core/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** /**
+  60:Drivers/lvgl/src/core/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @brief This function will compare two memory blocks
+  61:Drivers/lvgl/src/core/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @param p1 Pointer to the first memory block
+  62:Drivers/lvgl/src/core/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @param p2 Pointer to the second memory block
+ARM GAS  /tmp/ccqMFObh.s 			page 5
+
+
+  63:Drivers/lvgl/src/core/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @param len Number of bytes to compare
+  64:Drivers/lvgl/src/core/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @return The difference between the value of the first unmatching byte.
+  65:Drivers/lvgl/src/core/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  */
+  66:Drivers/lvgl/src/core/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** int lv_memcmp(const void * p1, const void * p2, size_t len);
+  67:Drivers/lvgl/src/core/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** 
+  68:Drivers/lvgl/src/core/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** /**
+  69:Drivers/lvgl/src/core/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * Same as `memset(dst, 0x00, len)`.
+  70:Drivers/lvgl/src/core/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @param dst pointer to the destination buffer
+  71:Drivers/lvgl/src/core/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  * @param len number of byte to set
+  72:Drivers/lvgl/src/core/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****  */
+  73:Drivers/lvgl/src/core/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** static inline void lv_memzero(void * dst, size_t len)
+  49              		.loc 2 73 20 view .LVU6
+  50              	.LBB5:
+  74:Drivers/lvgl/src/core/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h **** {
+  75:Drivers/lvgl/src/core/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h ****     lv_memset(dst, 0x00, len);
+  51              		.loc 2 75 5 view .LVU7
+  52 0006 4FF40672 		mov	r2, #536
+  53 000a 0021     		movs	r1, #0
+  54 000c FFF7FEFF 		bl	lv_memset
+  55              	.LVL2:
+  56              		.loc 2 75 5 is_stmt 0 view .LVU8
+  57              	.LBE5:
+  58              	.LBE4:
+ 119:Drivers/lvgl/src/lv_init.c **** 
+ 120:Drivers/lvgl/src/lv_init.c ****     lv_ll_init(&(global->disp_ll), sizeof(lv_display_t));
+  59              		.loc 1 120 5 is_stmt 1 view .LVU9
+  60 0010 4FF44B71 		mov	r1, #812
+  61 0014 04F10800 		add	r0, r4, #8
+  62 0018 FFF7FEFF 		bl	lv_ll_init
+  63              	.LVL3:
+ 121:Drivers/lvgl/src/lv_init.c ****     lv_ll_init(&(global->indev_ll), sizeof(lv_indev_t));
+  64              		.loc 1 121 5 view .LVU10
+  65 001c 4FF4A471 		mov	r1, #328
+  66 0020 04F14C00 		add	r0, r4, #76
+  67 0024 FFF7FEFF 		bl	lv_ll_init
+  68              	.LVL4:
+ 122:Drivers/lvgl/src/lv_init.c **** 
+ 123:Drivers/lvgl/src/lv_init.c ****     global->memory_zero = ZERO_MEM_SENTINEL;
+  69              		.loc 1 123 5 view .LVU11
+  70              		.loc 1 123 25 is_stmt 0 view .LVU12
+  71 0028 074B     		ldr	r3, .L7
+  72 002a E366     		str	r3, [r4, #108]
+ 124:Drivers/lvgl/src/lv_init.c ****     global->style_refresh = true;
+  73              		.loc 1 124 5 is_stmt 1 view .LVU13
+  74              		.loc 1 124 27 is_stmt 0 view .LVU14
+  75 002c 0123     		movs	r3, #1
+  76 002e 84F82830 		strb	r3, [r4, #40]
+ 125:Drivers/lvgl/src/lv_init.c ****     global->layout_count = LV_LAYOUT_LAST;
+  77              		.loc 1 125 5 is_stmt 1 view .LVU15
+  78              		.loc 1 125 26 is_stmt 0 view .LVU16
+  79 0032 0323     		movs	r3, #3
+  80 0034 2366     		str	r3, [r4, #96]
+ 126:Drivers/lvgl/src/lv_init.c ****     global->style_last_custom_prop_id = (uint32_t)LV_STYLE_LAST_BUILT_IN_PROP;
+  81              		.loc 1 126 5 is_stmt 1 view .LVU17
+  82              		.loc 1 126 39 is_stmt 0 view .LVU18
+  83 0036 B123     		movs	r3, #177
+  84 0038 6363     		str	r3, [r4, #52]
+ARM GAS  /tmp/ccqMFObh.s 			page 6
+
+
+ 127:Drivers/lvgl/src/lv_init.c ****     global->event_last_register_id = LV_EVENT_LAST;
+  85              		.loc 1 127 5 is_stmt 1 view .LVU19
+  86              		.loc 1 127 36 is_stmt 0 view .LVU20
+  87 003a 4F23     		movs	r3, #79
+  88 003c A367     		str	r3, [r4, #120]
+ 128:Drivers/lvgl/src/lv_init.c ****     lv_rand_set_seed(0x1234ABCD);
+  89              		.loc 1 128 5 is_stmt 1 view .LVU21
+  90 003e 0348     		ldr	r0, .L7+4
+  91 0040 FFF7FEFF 		bl	lv_rand_set_seed
+  92              	.LVL5:
+ 129:Drivers/lvgl/src/lv_init.c **** 
+ 130:Drivers/lvgl/src/lv_init.c **** #ifdef LV_LOG_PRINT_CB
+ 131:Drivers/lvgl/src/lv_init.c ****     void LV_LOG_PRINT_CB(lv_log_level_t, const char * txt);
+ 132:Drivers/lvgl/src/lv_init.c ****     global->custom_log_print_cb = LV_LOG_PRINT_CB;
+ 133:Drivers/lvgl/src/lv_init.c **** #endif
+ 134:Drivers/lvgl/src/lv_init.c **** 
+ 135:Drivers/lvgl/src/lv_init.c **** #if defined(LV_DRAW_SW_SHADOW_CACHE_SIZE) && LV_DRAW_SW_SHADOW_CACHE_SIZE > 0
+ 136:Drivers/lvgl/src/lv_init.c ****     global->sw_shadow_cache.cache_size = -1;
+ 137:Drivers/lvgl/src/lv_init.c ****     global->sw_shadow_cache.cache_r = -1;
+ 138:Drivers/lvgl/src/lv_init.c **** #endif
+ 139:Drivers/lvgl/src/lv_init.c **** }
+  93              		.loc 1 139 1 is_stmt 0 view .LVU22
+  94 0044 10BD     		pop	{r4, pc}
+  95              	.LVL6:
+  96              	.L4:
+  97              	.LCFI1:
+  98              		.cfi_def_cfa_offset 0
+  99              		.cfi_restore 4
+ 100              		.cfi_restore 14
+ 101              		.loc 1 139 1 view .LVU23
+ 102 0046 7047     		bx	lr
+ 103              	.L8:
+ 104              		.align	2
+ 105              	.L7:
+ 106 0048 D4C3B2A1 		.word	-1582119980
+ 107 004c CDAB3412 		.word	305441741
+ 108              		.cfi_endproc
+ 109              	.LFE36:
+ 111              		.section	.text.lv_cleanup_devices,"ax",%progbits
+ 112              		.align	1
+ 113              		.syntax unified
+ 114              		.thumb
+ 115              		.thumb_func
+ 117              	lv_cleanup_devices:
+ 118              	.LVL7:
+ 119              	.LFB37:
+ 140:Drivers/lvgl/src/lv_init.c **** 
+ 141:Drivers/lvgl/src/lv_init.c **** static inline void lv_cleanup_devices(lv_global_t * global)
+ 142:Drivers/lvgl/src/lv_init.c **** {
+ 120              		.loc 1 142 1 is_stmt 1 view -0
+ 121              		.cfi_startproc
+ 122              		@ args = 0, pretend = 0, frame = 0
+ 123              		@ frame_needed = 0, uses_anonymous_args = 0
+ 143:Drivers/lvgl/src/lv_init.c ****     LV_ASSERT_NULL(global);
+ 124              		.loc 1 143 27 view .LVU25
+ 144:Drivers/lvgl/src/lv_init.c **** 
+ 145:Drivers/lvgl/src/lv_init.c ****     if(global) {
+ARM GAS  /tmp/ccqMFObh.s 			page 7
+
+
+ 125              		.loc 1 145 5 view .LVU26
+ 126              		.loc 1 145 7 is_stmt 0 view .LVU27
+ 127 0000 58B1     		cbz	r0, .L12
+ 142:Drivers/lvgl/src/lv_init.c ****     LV_ASSERT_NULL(global);
+ 128              		.loc 1 142 1 view .LVU28
+ 129 0002 10B5     		push	{r4, lr}
+ 130              	.LCFI2:
+ 131              		.cfi_def_cfa_offset 8
+ 132              		.cfi_offset 4, -8
+ 133              		.cfi_offset 14, -4
+ 134 0004 0446     		mov	r4, r0
+ 146:Drivers/lvgl/src/lv_init.c ****         /* cleanup indev and display */
+ 147:Drivers/lvgl/src/lv_init.c ****         lv_ll_clear_custom(&(global->indev_ll), (void (*)(void *)) lv_indev_delete);
+ 135              		.loc 1 147 9 is_stmt 1 view .LVU29
+ 136 0006 0549     		ldr	r1, .L15
+ 137 0008 4C30     		adds	r0, r0, #76
+ 138              	.LVL8:
+ 139              		.loc 1 147 9 is_stmt 0 view .LVU30
+ 140 000a FFF7FEFF 		bl	lv_ll_clear_custom
+ 141              	.LVL9:
+ 148:Drivers/lvgl/src/lv_init.c ****         lv_ll_clear_custom(&(global->disp_ll), (void (*)(void *)) lv_display_delete);
+ 142              		.loc 1 148 9 is_stmt 1 view .LVU31
+ 143 000e 0449     		ldr	r1, .L15+4
+ 144 0010 04F10800 		add	r0, r4, #8
+ 145 0014 FFF7FEFF 		bl	lv_ll_clear_custom
+ 146              	.LVL10:
+ 149:Drivers/lvgl/src/lv_init.c ****     }
+ 150:Drivers/lvgl/src/lv_init.c **** }
+ 147              		.loc 1 150 1 is_stmt 0 view .LVU32
+ 148 0018 10BD     		pop	{r4, pc}
+ 149              	.LVL11:
+ 150              	.L12:
+ 151              	.LCFI3:
+ 152              		.cfi_def_cfa_offset 0
+ 153              		.cfi_restore 4
+ 154              		.cfi_restore 14
+ 155              		.loc 1 150 1 view .LVU33
+ 156 001a 7047     		bx	lr
+ 157              	.L16:
+ 158              		.align	2
+ 159              	.L15:
+ 160 001c 00000000 		.word	lv_indev_delete
+ 161 0020 00000000 		.word	lv_display_delete
+ 162              		.cfi_endproc
+ 163              	.LFE37:
+ 165              		.section	.text.lv_is_initialized,"ax",%progbits
+ 166              		.align	1
+ 167              		.global	lv_is_initialized
+ 168              		.syntax unified
+ 169              		.thumb
+ 170              		.thumb_func
+ 172              	lv_is_initialized:
+ 173              	.LFB38:
+ 151:Drivers/lvgl/src/lv_init.c **** 
+ 152:Drivers/lvgl/src/lv_init.c **** bool lv_is_initialized(void)
+ 153:Drivers/lvgl/src/lv_init.c **** {
+ 174              		.loc 1 153 1 is_stmt 1 view -0
+ARM GAS  /tmp/ccqMFObh.s 			page 8
+
+
+ 175              		.cfi_startproc
+ 176              		@ args = 0, pretend = 0, frame = 0
+ 177              		@ frame_needed = 0, uses_anonymous_args = 0
+ 178              		@ link register save eliminated.
+ 154:Drivers/lvgl/src/lv_init.c **** #if LV_ENABLE_GLOBAL_CUSTOM
+ 155:Drivers/lvgl/src/lv_init.c ****     if(LV_GLOBAL_DEFAULT()) return lv_initialized;
+ 156:Drivers/lvgl/src/lv_init.c ****     else return false;
+ 157:Drivers/lvgl/src/lv_init.c **** #else
+ 158:Drivers/lvgl/src/lv_init.c ****     return lv_initialized;
+ 179              		.loc 1 158 5 view .LVU35
+ 159:Drivers/lvgl/src/lv_init.c **** #endif
+ 160:Drivers/lvgl/src/lv_init.c **** }
+ 180              		.loc 1 160 1 is_stmt 0 view .LVU36
+ 181 0000 014B     		ldr	r3, .L18
+ 182 0002 1879     		ldrb	r0, [r3, #4]	@ zero_extendqisi2
+ 183 0004 7047     		bx	lr
+ 184              	.L19:
+ 185 0006 00BF     		.align	2
+ 186              	.L18:
+ 187 0008 00000000 		.word	lv_global
+ 188              		.cfi_endproc
+ 189              	.LFE38:
+ 191              		.section	.text.lv_init,"ax",%progbits
+ 192              		.align	1
+ 193              		.global	lv_init
+ 194              		.syntax unified
+ 195              		.thumb
+ 196              		.thumb_func
+ 198              	lv_init:
+ 199              	.LFB39:
+ 161:Drivers/lvgl/src/lv_init.c **** 
+ 162:Drivers/lvgl/src/lv_init.c **** void lv_init(void)
+ 163:Drivers/lvgl/src/lv_init.c **** {
+ 200              		.loc 1 163 1 is_stmt 1 view -0
+ 201              		.cfi_startproc
+ 202              		@ args = 0, pretend = 0, frame = 0
+ 203              		@ frame_needed = 0, uses_anonymous_args = 0
+ 204 0000 08B5     		push	{r3, lr}
+ 205              	.LCFI4:
+ 206              		.cfi_def_cfa_offset 8
+ 207              		.cfi_offset 3, -8
+ 208              		.cfi_offset 14, -4
+ 164:Drivers/lvgl/src/lv_init.c ****     /*First initialize Garbage Collection if needed*/
+ 165:Drivers/lvgl/src/lv_init.c **** #ifdef LV_GC_INIT
+ 166:Drivers/lvgl/src/lv_init.c ****     LV_GC_INIT();
+ 167:Drivers/lvgl/src/lv_init.c **** #endif
+ 168:Drivers/lvgl/src/lv_init.c **** 
+ 169:Drivers/lvgl/src/lv_init.c ****     /*Do nothing if already initialized*/
+ 170:Drivers/lvgl/src/lv_init.c ****     if(lv_initialized) {
+ 209              		.loc 1 170 5 view .LVU38
+ 210              		.loc 1 170 8 is_stmt 0 view .LVU39
+ 211 0002 164B     		ldr	r3, .L24
+ 212 0004 1B79     		ldrb	r3, [r3, #4]	@ zero_extendqisi2
+ 213              		.loc 1 170 7 view .LVU40
+ 214 0006 03B1     		cbz	r3, .L23
+ 215              	.L20:
+ 171:Drivers/lvgl/src/lv_init.c ****         LV_LOG_WARN("lv_init: already initialized");
+ARM GAS  /tmp/ccqMFObh.s 			page 9
+
+
+ 172:Drivers/lvgl/src/lv_init.c ****         return;
+ 173:Drivers/lvgl/src/lv_init.c ****     }
+ 174:Drivers/lvgl/src/lv_init.c **** 
+ 175:Drivers/lvgl/src/lv_init.c ****     LV_LOG_INFO("begin");
+ 176:Drivers/lvgl/src/lv_init.c **** 
+ 177:Drivers/lvgl/src/lv_init.c ****     /*Initialize members of static variable lv_global */
+ 178:Drivers/lvgl/src/lv_init.c ****     LV_GLOBAL_INIT(LV_GLOBAL_DEFAULT());
+ 179:Drivers/lvgl/src/lv_init.c **** 
+ 180:Drivers/lvgl/src/lv_init.c ****     lv_mem_init();
+ 181:Drivers/lvgl/src/lv_init.c **** 
+ 182:Drivers/lvgl/src/lv_init.c ****     lv_draw_buf_init_handlers();
+ 183:Drivers/lvgl/src/lv_init.c **** 
+ 184:Drivers/lvgl/src/lv_init.c **** #if LV_USE_OBSERVER
+ 185:Drivers/lvgl/src/lv_init.c ****     lv_subject_global_init();
+ 186:Drivers/lvgl/src/lv_init.c **** #endif
+ 187:Drivers/lvgl/src/lv_init.c **** 
+ 188:Drivers/lvgl/src/lv_init.c **** #if LV_USE_SPAN != 0
+ 189:Drivers/lvgl/src/lv_init.c ****     lv_span_stack_init();
+ 190:Drivers/lvgl/src/lv_init.c **** #endif
+ 191:Drivers/lvgl/src/lv_init.c **** 
+ 192:Drivers/lvgl/src/lv_init.c **** #if LV_USE_PROFILER && LV_USE_PROFILER_BUILTIN
+ 193:Drivers/lvgl/src/lv_init.c **** #if LV_USE_PROFILER_BUILTIN_POSIX
+ 194:Drivers/lvgl/src/lv_init.c ****     lv_profiler_builtin_posix_init();
+ 195:Drivers/lvgl/src/lv_init.c **** #else
+ 196:Drivers/lvgl/src/lv_init.c ****     lv_profiler_builtin_config_t profiler_config;
+ 197:Drivers/lvgl/src/lv_init.c ****     lv_profiler_builtin_config_init(&profiler_config);
+ 198:Drivers/lvgl/src/lv_init.c ****     lv_profiler_builtin_init(&profiler_config);
+ 199:Drivers/lvgl/src/lv_init.c **** #endif
+ 200:Drivers/lvgl/src/lv_init.c **** #endif
+ 201:Drivers/lvgl/src/lv_init.c **** 
+ 202:Drivers/lvgl/src/lv_init.c ****     lv_os_init();
+ 203:Drivers/lvgl/src/lv_init.c **** 
+ 204:Drivers/lvgl/src/lv_init.c ****     lv_timer_core_init();
+ 205:Drivers/lvgl/src/lv_init.c **** 
+ 206:Drivers/lvgl/src/lv_init.c ****     lv_fs_init();
+ 207:Drivers/lvgl/src/lv_init.c **** 
+ 208:Drivers/lvgl/src/lv_init.c ****     lv_layout_init();
+ 209:Drivers/lvgl/src/lv_init.c **** 
+ 210:Drivers/lvgl/src/lv_init.c ****     lv_anim_core_init();
+ 211:Drivers/lvgl/src/lv_init.c **** 
+ 212:Drivers/lvgl/src/lv_init.c ****     lv_group_init();
+ 213:Drivers/lvgl/src/lv_init.c **** 
+ 214:Drivers/lvgl/src/lv_init.c **** #if LV_USE_FREETYPE
+ 215:Drivers/lvgl/src/lv_init.c ****     /* Since the drawing unit needs to register the freetype event,
+ 216:Drivers/lvgl/src/lv_init.c ****      * initialize the freetype module first
+ 217:Drivers/lvgl/src/lv_init.c ****      */
+ 218:Drivers/lvgl/src/lv_init.c ****     lv_freetype_init(LV_FREETYPE_CACHE_FT_GLYPH_CNT);
+ 219:Drivers/lvgl/src/lv_init.c **** #endif
+ 220:Drivers/lvgl/src/lv_init.c **** 
+ 221:Drivers/lvgl/src/lv_init.c ****     lv_draw_init();
+ 222:Drivers/lvgl/src/lv_init.c **** 
+ 223:Drivers/lvgl/src/lv_init.c **** #if LV_USE_DRAW_SW
+ 224:Drivers/lvgl/src/lv_init.c ****     lv_draw_sw_init();
+ 225:Drivers/lvgl/src/lv_init.c **** #endif
+ 226:Drivers/lvgl/src/lv_init.c **** 
+ 227:Drivers/lvgl/src/lv_init.c **** #if LV_USE_NEMA_GFX
+ 228:Drivers/lvgl/src/lv_init.c ****     lv_draw_nema_gfx_init();
+ARM GAS  /tmp/ccqMFObh.s 			page 10
+
+
+ 229:Drivers/lvgl/src/lv_init.c **** #endif
+ 230:Drivers/lvgl/src/lv_init.c **** 
+ 231:Drivers/lvgl/src/lv_init.c **** #if LV_USE_DRAW_PXP
+ 232:Drivers/lvgl/src/lv_init.c ****     lv_draw_pxp_init();
+ 233:Drivers/lvgl/src/lv_init.c **** #endif
+ 234:Drivers/lvgl/src/lv_init.c **** 
+ 235:Drivers/lvgl/src/lv_init.c **** #if LV_USE_DRAW_G2D
+ 236:Drivers/lvgl/src/lv_init.c ****     lv_draw_g2d_init();
+ 237:Drivers/lvgl/src/lv_init.c **** #endif
+ 238:Drivers/lvgl/src/lv_init.c **** 
+ 239:Drivers/lvgl/src/lv_init.c **** #if LV_USE_DRAW_DAVE2D
+ 240:Drivers/lvgl/src/lv_init.c ****     lv_draw_dave2d_init();
+ 241:Drivers/lvgl/src/lv_init.c **** #endif
+ 242:Drivers/lvgl/src/lv_init.c **** 
+ 243:Drivers/lvgl/src/lv_init.c **** #if LV_USE_DRAW_SDL
+ 244:Drivers/lvgl/src/lv_init.c ****     lv_draw_sdl_init();
+ 245:Drivers/lvgl/src/lv_init.c **** #endif
+ 246:Drivers/lvgl/src/lv_init.c **** 
+ 247:Drivers/lvgl/src/lv_init.c **** #if LV_USE_DRAW_DMA2D
+ 248:Drivers/lvgl/src/lv_init.c ****     lv_draw_dma2d_init();
+ 249:Drivers/lvgl/src/lv_init.c **** #endif
+ 250:Drivers/lvgl/src/lv_init.c **** 
+ 251:Drivers/lvgl/src/lv_init.c **** #if LV_USE_DRAW_OPENGLES
+ 252:Drivers/lvgl/src/lv_init.c ****     lv_draw_opengles_init();
+ 253:Drivers/lvgl/src/lv_init.c **** #endif
+ 254:Drivers/lvgl/src/lv_init.c **** 
+ 255:Drivers/lvgl/src/lv_init.c **** #if LV_USE_PPA
+ 256:Drivers/lvgl/src/lv_init.c ****     lv_draw_ppa_init();
+ 257:Drivers/lvgl/src/lv_init.c **** #endif
+ 258:Drivers/lvgl/src/lv_init.c **** 
+ 259:Drivers/lvgl/src/lv_init.c **** #if LV_USE_WINDOWS
+ 260:Drivers/lvgl/src/lv_init.c ****     lv_windows_platform_init();
+ 261:Drivers/lvgl/src/lv_init.c **** #endif
+ 262:Drivers/lvgl/src/lv_init.c **** 
+ 263:Drivers/lvgl/src/lv_init.c **** #if LV_USE_UEFI
+ 264:Drivers/lvgl/src/lv_init.c ****     lv_uefi_platform_init();
+ 265:Drivers/lvgl/src/lv_init.c **** #endif
+ 266:Drivers/lvgl/src/lv_init.c **** 
+ 267:Drivers/lvgl/src/lv_init.c **** #if LV_USE_DRAW_EVE
+ 268:Drivers/lvgl/src/lv_init.c ****     lv_draw_eve_init();
+ 269:Drivers/lvgl/src/lv_init.c **** #endif
+ 270:Drivers/lvgl/src/lv_init.c **** 
+ 271:Drivers/lvgl/src/lv_init.c **** #if LV_USE_SIFLI_EPIC
+ 272:Drivers/lvgl/src/lv_init.c ****     lv_draw_sifli_epic_init();
+ 273:Drivers/lvgl/src/lv_init.c **** #endif
+ 274:Drivers/lvgl/src/lv_init.c **** 
+ 275:Drivers/lvgl/src/lv_init.c **** #if LV_USE_DRAW_IPA
+ 276:Drivers/lvgl/src/lv_init.c ****     lv_draw_ipa_init();
+ 277:Drivers/lvgl/src/lv_init.c **** #endif
+ 278:Drivers/lvgl/src/lv_init.c **** 
+ 279:Drivers/lvgl/src/lv_init.c ****     lv_obj_style_init();
+ 280:Drivers/lvgl/src/lv_init.c **** 
+ 281:Drivers/lvgl/src/lv_init.c ****     /*Initialize the screen refresh system*/
+ 282:Drivers/lvgl/src/lv_init.c ****     lv_refr_init();
+ 283:Drivers/lvgl/src/lv_init.c **** 
+ 284:Drivers/lvgl/src/lv_init.c **** #if LV_USE_SYSMON
+ 285:Drivers/lvgl/src/lv_init.c ****     lv_sysmon_builtin_init();
+ARM GAS  /tmp/ccqMFObh.s 			page 11
+
+
+ 286:Drivers/lvgl/src/lv_init.c **** #endif
+ 287:Drivers/lvgl/src/lv_init.c **** 
+ 288:Drivers/lvgl/src/lv_init.c ****     lv_image_decoder_init(LV_CACHE_DEF_SIZE, LV_IMAGE_HEADER_CACHE_DEF_CNT);
+ 289:Drivers/lvgl/src/lv_init.c ****     lv_bin_decoder_init();  /*LVGL built-in binary image decoder*/
+ 290:Drivers/lvgl/src/lv_init.c **** 
+ 291:Drivers/lvgl/src/lv_init.c **** #if LV_USE_DRAW_VG_LITE
+ 292:Drivers/lvgl/src/lv_init.c ****     lv_draw_vg_lite_init();
+ 293:Drivers/lvgl/src/lv_init.c **** #endif
+ 294:Drivers/lvgl/src/lv_init.c **** 
+ 295:Drivers/lvgl/src/lv_init.c ****     /*Test if the IDE has UTF-8 encoding*/
+ 296:Drivers/lvgl/src/lv_init.c ****     const char * txt = "Á";
+ 297:Drivers/lvgl/src/lv_init.c **** 
+ 298:Drivers/lvgl/src/lv_init.c ****     uint8_t * txt_u8 = (uint8_t *)txt;
+ 299:Drivers/lvgl/src/lv_init.c ****     if(txt_u8[0] != 0xc3 || txt_u8[1] != 0x81 || txt_u8[2] != 0x00) {
+ 300:Drivers/lvgl/src/lv_init.c ****         LV_LOG_WARN("The strings have no UTF-8 encoding. Non-ASCII characters won't be displayed.")
+ 301:Drivers/lvgl/src/lv_init.c ****     }
+ 302:Drivers/lvgl/src/lv_init.c **** 
+ 303:Drivers/lvgl/src/lv_init.c ****     uint32_t endianness_test = 0x11223344;
+ 304:Drivers/lvgl/src/lv_init.c ****     uint8_t * endianness_test_p = (uint8_t *) &endianness_test;
+ 305:Drivers/lvgl/src/lv_init.c ****     bool big_endian = endianness_test_p[0] == 0x11;
+ 306:Drivers/lvgl/src/lv_init.c **** 
+ 307:Drivers/lvgl/src/lv_init.c ****     if(big_endian) {
+ 308:Drivers/lvgl/src/lv_init.c ****         LV_ASSERT_MSG(LV_BIG_ENDIAN_SYSTEM == 1,
+ 309:Drivers/lvgl/src/lv_init.c ****                       "It's a big endian system but LV_BIG_ENDIAN_SYSTEM is not enabled in lv_conf.
+ 310:Drivers/lvgl/src/lv_init.c ****     }
+ 311:Drivers/lvgl/src/lv_init.c ****     else {
+ 312:Drivers/lvgl/src/lv_init.c ****         LV_ASSERT_MSG(LV_BIG_ENDIAN_SYSTEM == 0,
+ 313:Drivers/lvgl/src/lv_init.c ****                       "It's a little endian system but LV_BIG_ENDIAN_SYSTEM is enabled in lv_conf.h
+ 314:Drivers/lvgl/src/lv_init.c ****     }
+ 315:Drivers/lvgl/src/lv_init.c **** 
+ 316:Drivers/lvgl/src/lv_init.c **** #if LV_USE_ASSERT_MEM_INTEGRITY
+ 317:Drivers/lvgl/src/lv_init.c ****     LV_LOG_WARN("Memory integrity checks are enabled via LV_USE_ASSERT_MEM_INTEGRITY which makes LV
+ 318:Drivers/lvgl/src/lv_init.c **** #endif
+ 319:Drivers/lvgl/src/lv_init.c **** 
+ 320:Drivers/lvgl/src/lv_init.c **** #if LV_USE_ASSERT_STYLE
+ 321:Drivers/lvgl/src/lv_init.c ****     LV_LOG_WARN("Style sanity checks are enabled that uses more RAM");
+ 322:Drivers/lvgl/src/lv_init.c **** #endif
+ 323:Drivers/lvgl/src/lv_init.c **** 
+ 324:Drivers/lvgl/src/lv_init.c **** #if LV_LOG_LEVEL == LV_LOG_LEVEL_TRACE
+ 325:Drivers/lvgl/src/lv_init.c ****     LV_LOG_WARN("Log level is set to 'Trace' which makes LVGL much slower");
+ 326:Drivers/lvgl/src/lv_init.c **** #endif
+ 327:Drivers/lvgl/src/lv_init.c **** 
+ 328:Drivers/lvgl/src/lv_init.c **** #if LV_USE_FS_FATFS != '\0'
+ 329:Drivers/lvgl/src/lv_init.c ****     lv_fs_fatfs_init();
+ 330:Drivers/lvgl/src/lv_init.c **** #endif
+ 331:Drivers/lvgl/src/lv_init.c **** 
+ 332:Drivers/lvgl/src/lv_init.c **** #if LV_USE_FS_STDIO != '\0'
+ 333:Drivers/lvgl/src/lv_init.c ****     lv_fs_stdio_init();
+ 334:Drivers/lvgl/src/lv_init.c **** #endif
+ 335:Drivers/lvgl/src/lv_init.c **** 
+ 336:Drivers/lvgl/src/lv_init.c **** #if LV_USE_FS_POSIX != '\0'
+ 337:Drivers/lvgl/src/lv_init.c ****     lv_fs_posix_init();
+ 338:Drivers/lvgl/src/lv_init.c **** #endif
+ 339:Drivers/lvgl/src/lv_init.c **** 
+ 340:Drivers/lvgl/src/lv_init.c **** #if LV_USE_FS_WIN32 != '\0'
+ 341:Drivers/lvgl/src/lv_init.c ****     lv_fs_win32_init();
+ 342:Drivers/lvgl/src/lv_init.c **** #endif
+ARM GAS  /tmp/ccqMFObh.s 			page 12
+
+
+ 343:Drivers/lvgl/src/lv_init.c **** 
+ 344:Drivers/lvgl/src/lv_init.c **** #if LV_USE_FS_MEMFS
+ 345:Drivers/lvgl/src/lv_init.c ****     lv_fs_memfs_init();
+ 346:Drivers/lvgl/src/lv_init.c **** #endif
+ 347:Drivers/lvgl/src/lv_init.c **** 
+ 348:Drivers/lvgl/src/lv_init.c **** #if LV_USE_FS_LITTLEFS
+ 349:Drivers/lvgl/src/lv_init.c ****     lv_fs_littlefs_init();
+ 350:Drivers/lvgl/src/lv_init.c **** #endif
+ 351:Drivers/lvgl/src/lv_init.c **** 
+ 352:Drivers/lvgl/src/lv_init.c **** #if LV_USE_FS_ARDUINO_ESP_LITTLEFS
+ 353:Drivers/lvgl/src/lv_init.c ****     lv_fs_arduino_esp_littlefs_init();
+ 354:Drivers/lvgl/src/lv_init.c **** #endif
+ 355:Drivers/lvgl/src/lv_init.c **** 
+ 356:Drivers/lvgl/src/lv_init.c **** #if LV_USE_FS_ARDUINO_SD
+ 357:Drivers/lvgl/src/lv_init.c ****     lv_fs_arduino_sd_init();
+ 358:Drivers/lvgl/src/lv_init.c **** #endif
+ 359:Drivers/lvgl/src/lv_init.c **** 
+ 360:Drivers/lvgl/src/lv_init.c **** #if LV_USE_FS_UEFI
+ 361:Drivers/lvgl/src/lv_init.c ****     lv_fs_uefi_init();
+ 362:Drivers/lvgl/src/lv_init.c **** #endif
+ 363:Drivers/lvgl/src/lv_init.c **** 
+ 364:Drivers/lvgl/src/lv_init.c **** #if LV_USE_FS_FROGFS
+ 365:Drivers/lvgl/src/lv_init.c ****     lv_fs_frogfs_init();
+ 366:Drivers/lvgl/src/lv_init.c **** #endif
+ 367:Drivers/lvgl/src/lv_init.c **** 
+ 368:Drivers/lvgl/src/lv_init.c ****     /*Use the earlier initialized position of FFmpeg decoder as a fallback decoder*/
+ 369:Drivers/lvgl/src/lv_init.c **** #if LV_USE_FFMPEG
+ 370:Drivers/lvgl/src/lv_init.c ****     lv_ffmpeg_init();
+ 371:Drivers/lvgl/src/lv_init.c **** #endif
+ 372:Drivers/lvgl/src/lv_init.c **** 
+ 373:Drivers/lvgl/src/lv_init.c **** #if LV_USE_LODEPNG
+ 374:Drivers/lvgl/src/lv_init.c ****     lv_lodepng_init();
+ 375:Drivers/lvgl/src/lv_init.c **** #endif
+ 376:Drivers/lvgl/src/lv_init.c **** 
+ 377:Drivers/lvgl/src/lv_init.c **** #if LV_USE_LIBPNG
+ 378:Drivers/lvgl/src/lv_init.c ****     lv_libpng_init();
+ 379:Drivers/lvgl/src/lv_init.c **** #endif
+ 380:Drivers/lvgl/src/lv_init.c **** 
+ 381:Drivers/lvgl/src/lv_init.c **** #if LV_USE_TJPGD
+ 382:Drivers/lvgl/src/lv_init.c ****     lv_tjpgd_init();
+ 383:Drivers/lvgl/src/lv_init.c **** #endif
+ 384:Drivers/lvgl/src/lv_init.c **** 
+ 385:Drivers/lvgl/src/lv_init.c **** #if LV_USE_LIBJPEG_TURBO
+ 386:Drivers/lvgl/src/lv_init.c ****     lv_libjpeg_turbo_init();
+ 387:Drivers/lvgl/src/lv_init.c **** #endif
+ 388:Drivers/lvgl/src/lv_init.c **** 
+ 389:Drivers/lvgl/src/lv_init.c **** #if LV_USE_LIBWEBP
+ 390:Drivers/lvgl/src/lv_init.c ****     lv_libwebp_init();
+ 391:Drivers/lvgl/src/lv_init.c **** #endif
+ 392:Drivers/lvgl/src/lv_init.c **** 
+ 393:Drivers/lvgl/src/lv_init.c **** #if LV_USE_BMP
+ 394:Drivers/lvgl/src/lv_init.c ****     lv_bmp_init();
+ 395:Drivers/lvgl/src/lv_init.c **** #endif
+ 396:Drivers/lvgl/src/lv_init.c **** 
+ 397:Drivers/lvgl/src/lv_init.c **** #if LV_USE_SVG
+ 398:Drivers/lvgl/src/lv_init.c ****     lv_svg_decoder_init();
+ 399:Drivers/lvgl/src/lv_init.c **** #endif
+ARM GAS  /tmp/ccqMFObh.s 			page 13
+
+
+ 400:Drivers/lvgl/src/lv_init.c **** 
+ 401:Drivers/lvgl/src/lv_init.c **** #if LV_USE_TRANSLATION
+ 402:Drivers/lvgl/src/lv_init.c ****     lv_translation_init();
+ 403:Drivers/lvgl/src/lv_init.c **** #endif
+ 404:Drivers/lvgl/src/lv_init.c **** 
+ 405:Drivers/lvgl/src/lv_init.c ****     lv_initialized = true;
+ 406:Drivers/lvgl/src/lv_init.c **** 
+ 407:Drivers/lvgl/src/lv_init.c ****     LV_LOG_TRACE("finished");
+ 408:Drivers/lvgl/src/lv_init.c **** }
+ 216              		.loc 1 408 1 view .LVU41
+ 217 0008 08BD     		pop	{r3, pc}
+ 218              	.L23:
+ 175:Drivers/lvgl/src/lv_init.c **** 
+ 219              		.loc 1 175 5 is_stmt 1 view .LVU42
+ 175:Drivers/lvgl/src/lv_init.c **** 
+ 220              		.loc 1 175 5 view .LVU43
+ 175:Drivers/lvgl/src/lv_init.c **** 
+ 221              		.loc 1 175 5 view .LVU44
+ 178:Drivers/lvgl/src/lv_init.c **** 
+ 222              		.loc 1 178 5 view .LVU45
+ 223 000a 1448     		ldr	r0, .L24
+ 224 000c FFF7FEFF 		bl	lv_global_init
+ 225              	.LVL12:
+ 180:Drivers/lvgl/src/lv_init.c **** 
+ 226              		.loc 1 180 5 view .LVU46
+ 227 0010 FFF7FEFF 		bl	lv_mem_init
+ 228              	.LVL13:
+ 182:Drivers/lvgl/src/lv_init.c **** 
+ 229              		.loc 1 182 5 view .LVU47
+ 230 0014 FFF7FEFF 		bl	lv_draw_buf_init_handlers
+ 231              	.LVL14:
+ 185:Drivers/lvgl/src/lv_init.c **** #endif
+ 232              		.loc 1 185 5 view .LVU48
+ 233 0018 FFF7FEFF 		bl	lv_subject_global_init
+ 234              	.LVL15:
+ 189:Drivers/lvgl/src/lv_init.c **** #endif
+ 235              		.loc 1 189 5 view .LVU49
+ 236 001c FFF7FEFF 		bl	lv_span_stack_init
+ 237              	.LVL16:
+ 202:Drivers/lvgl/src/lv_init.c **** 
+ 238              		.loc 1 202 5 view .LVU50
+ 239 0020 FFF7FEFF 		bl	lv_os_init
+ 240              	.LVL17:
+ 204:Drivers/lvgl/src/lv_init.c **** 
+ 241              		.loc 1 204 5 view .LVU51
+ 242 0024 FFF7FEFF 		bl	lv_timer_core_init
+ 243              	.LVL18:
+ 206:Drivers/lvgl/src/lv_init.c **** 
+ 244              		.loc 1 206 5 view .LVU52
+ 245 0028 FFF7FEFF 		bl	lv_fs_init
+ 246              	.LVL19:
+ 208:Drivers/lvgl/src/lv_init.c **** 
+ 247              		.loc 1 208 5 view .LVU53
+ 248 002c FFF7FEFF 		bl	lv_layout_init
+ 249              	.LVL20:
+ 210:Drivers/lvgl/src/lv_init.c **** 
+ 250              		.loc 1 210 5 view .LVU54
+ARM GAS  /tmp/ccqMFObh.s 			page 14
+
+
+ 251 0030 FFF7FEFF 		bl	lv_anim_core_init
+ 252              	.LVL21:
+ 212:Drivers/lvgl/src/lv_init.c **** 
+ 253              		.loc 1 212 5 view .LVU55
+ 254 0034 FFF7FEFF 		bl	lv_group_init
+ 255              	.LVL22:
+ 221:Drivers/lvgl/src/lv_init.c **** 
+ 256              		.loc 1 221 5 view .LVU56
+ 257 0038 FFF7FEFF 		bl	lv_draw_init
+ 258              	.LVL23:
+ 224:Drivers/lvgl/src/lv_init.c **** #endif
+ 259              		.loc 1 224 5 view .LVU57
+ 260 003c FFF7FEFF 		bl	lv_draw_sw_init
+ 261              	.LVL24:
+ 279:Drivers/lvgl/src/lv_init.c **** 
+ 262              		.loc 1 279 5 view .LVU58
+ 263 0040 FFF7FEFF 		bl	lv_obj_style_init
+ 264              	.LVL25:
+ 282:Drivers/lvgl/src/lv_init.c **** 
+ 265              		.loc 1 282 5 view .LVU59
+ 266 0044 FFF7FEFF 		bl	lv_refr_init
+ 267              	.LVL26:
+ 288:Drivers/lvgl/src/lv_init.c ****     lv_bin_decoder_init();  /*LVGL built-in binary image decoder*/
+ 268              		.loc 1 288 5 view .LVU60
+ 269 0048 0021     		movs	r1, #0
+ 270 004a 0846     		mov	r0, r1
+ 271 004c FFF7FEFF 		bl	lv_image_decoder_init
+ 272              	.LVL27:
+ 289:Drivers/lvgl/src/lv_init.c **** 
+ 273              		.loc 1 289 5 view .LVU61
+ 274 0050 FFF7FEFF 		bl	lv_bin_decoder_init
+ 275              	.LVL28:
+ 296:Drivers/lvgl/src/lv_init.c **** 
+ 276              		.loc 1 296 5 view .LVU62
+ 298:Drivers/lvgl/src/lv_init.c ****     if(txt_u8[0] != 0xc3 || txt_u8[1] != 0x81 || txt_u8[2] != 0x00) {
+ 277              		.loc 1 298 5 view .LVU63
+ 299:Drivers/lvgl/src/lv_init.c ****         LV_LOG_WARN("The strings have no UTF-8 encoding. Non-ASCII characters won't be displayed.")
+ 278              		.loc 1 299 5 view .LVU64
+ 300:Drivers/lvgl/src/lv_init.c ****     }
+ 279              		.loc 1 300 9 view .LVU65
+ 300:Drivers/lvgl/src/lv_init.c ****     }
+ 280              		.loc 1 300 9 view .LVU66
+ 300:Drivers/lvgl/src/lv_init.c ****     }
+ 281              		.loc 1 300 9 view .LVU67
+ 303:Drivers/lvgl/src/lv_init.c ****     uint8_t * endianness_test_p = (uint8_t *) &endianness_test;
+ 282              		.loc 1 303 5 view .LVU68
+ 304:Drivers/lvgl/src/lv_init.c ****     bool big_endian = endianness_test_p[0] == 0x11;
+ 283              		.loc 1 304 5 view .LVU69
+ 305:Drivers/lvgl/src/lv_init.c **** 
+ 284              		.loc 1 305 5 view .LVU70
+ 307:Drivers/lvgl/src/lv_init.c ****         LV_ASSERT_MSG(LV_BIG_ENDIAN_SYSTEM == 1,
+ 285              		.loc 1 307 5 view .LVU71
+ 309:Drivers/lvgl/src/lv_init.c ****     }
+ 286              		.loc 1 309 103 view .LVU72
+ 313:Drivers/lvgl/src/lv_init.c ****     }
+ 287              		.loc 1 313 102 view .LVU73
+ 405:Drivers/lvgl/src/lv_init.c **** 
+ARM GAS  /tmp/ccqMFObh.s 			page 15
+
+
+ 288              		.loc 1 405 5 view .LVU74
+ 405:Drivers/lvgl/src/lv_init.c **** 
+ 289              		.loc 1 405 20 is_stmt 0 view .LVU75
+ 290 0054 0123     		movs	r3, #1
+ 291 0056 014A     		ldr	r2, .L24
+ 292 0058 1371     		strb	r3, [r2, #4]
+ 407:Drivers/lvgl/src/lv_init.c **** }
+ 293              		.loc 1 407 5 is_stmt 1 view .LVU76
+ 407:Drivers/lvgl/src/lv_init.c **** }
+ 294              		.loc 1 407 5 view .LVU77
+ 407:Drivers/lvgl/src/lv_init.c **** }
+ 295              		.loc 1 407 5 view .LVU78
+ 296              	.LVL29:
+ 407:Drivers/lvgl/src/lv_init.c **** }
+ 297              		.loc 1 407 5 is_stmt 0 view .LVU79
+ 298 005a D5E7     		b	.L20
+ 299              	.L25:
+ 300              		.align	2
+ 301              	.L24:
+ 302 005c 00000000 		.word	lv_global
+ 303              		.cfi_endproc
+ 304              	.LFE39:
+ 306              		.section	.text.lv_deinit,"ax",%progbits
+ 307              		.align	1
+ 308              		.global	lv_deinit
+ 309              		.syntax unified
+ 310              		.thumb
+ 311              		.thumb_func
+ 313              	lv_deinit:
+ 314              	.LFB40:
+ 409:Drivers/lvgl/src/lv_init.c **** 
+ 410:Drivers/lvgl/src/lv_init.c **** void lv_deinit(void)
+ 411:Drivers/lvgl/src/lv_init.c **** {
+ 315              		.loc 1 411 1 is_stmt 1 view -0
+ 316              		.cfi_startproc
+ 317              		@ args = 0, pretend = 0, frame = 0
+ 318              		@ frame_needed = 0, uses_anonymous_args = 0
+ 412:Drivers/lvgl/src/lv_init.c ****     /*Do nothing if already deinit*/
+ 413:Drivers/lvgl/src/lv_init.c ****     if(!lv_initialized) {
+ 319              		.loc 1 413 5 view .LVU81
+ 320              		.loc 1 413 9 is_stmt 0 view .LVU82
+ 321 0000 194B     		ldr	r3, .L33
+ 322 0002 1B79     		ldrb	r3, [r3, #4]	@ zero_extendqisi2
+ 323              		.loc 1 413 7 view .LVU83
+ 324 0004 13B1     		cbz	r3, .L29
+ 414:Drivers/lvgl/src/lv_init.c ****         LV_LOG_WARN("lv_deinit: already deinit!");
+ 415:Drivers/lvgl/src/lv_init.c ****         return;
+ 416:Drivers/lvgl/src/lv_init.c ****     }
+ 417:Drivers/lvgl/src/lv_init.c **** 
+ 418:Drivers/lvgl/src/lv_init.c ****     if(lv_deinit_in_progress) return;
+ 325              		.loc 1 418 5 is_stmt 1 view .LVU84
+ 326              		.loc 1 418 8 is_stmt 0 view .LVU85
+ 327 0006 184B     		ldr	r3, .L33
+ 328 0008 5B79     		ldrb	r3, [r3, #5]	@ zero_extendqisi2
+ 329              		.loc 1 418 7 view .LVU86
+ 330 000a 03B1     		cbz	r3, .L32
+ 331              	.L29:
+ARM GAS  /tmp/ccqMFObh.s 			page 16
+
+
+ 332 000c 7047     		bx	lr
+ 333              	.L32:
+ 411:Drivers/lvgl/src/lv_init.c ****     /*Do nothing if already deinit*/
+ 334              		.loc 1 411 1 view .LVU87
+ 335 000e 10B5     		push	{r4, lr}
+ 336              	.LCFI5:
+ 337              		.cfi_def_cfa_offset 8
+ 338              		.cfi_offset 4, -8
+ 339              		.cfi_offset 14, -4
+ 419:Drivers/lvgl/src/lv_init.c **** 
+ 420:Drivers/lvgl/src/lv_init.c ****     lv_deinit_in_progress = true;
+ 340              		.loc 1 420 5 is_stmt 1 view .LVU88
+ 341              		.loc 1 420 27 is_stmt 0 view .LVU89
+ 342 0010 0123     		movs	r3, #1
+ 343 0012 154C     		ldr	r4, .L33
+ 344 0014 6371     		strb	r3, [r4, #5]
+ 421:Drivers/lvgl/src/lv_init.c **** 
+ 422:Drivers/lvgl/src/lv_init.c **** #if LV_USE_SYSMON
+ 423:Drivers/lvgl/src/lv_init.c ****     lv_sysmon_builtin_deinit();
+ 424:Drivers/lvgl/src/lv_init.c **** #endif
+ 425:Drivers/lvgl/src/lv_init.c **** 
+ 426:Drivers/lvgl/src/lv_init.c ****     lv_display_set_default(NULL);
+ 345              		.loc 1 426 5 is_stmt 1 view .LVU90
+ 346 0016 0020     		movs	r0, #0
+ 347 0018 FFF7FEFF 		bl	lv_display_set_default
+ 348              	.LVL30:
+ 427:Drivers/lvgl/src/lv_init.c **** 
+ 428:Drivers/lvgl/src/lv_init.c ****     lv_cleanup_devices(LV_GLOBAL_DEFAULT());
+ 349              		.loc 1 428 5 view .LVU91
+ 350 001c 2046     		mov	r0, r4
+ 351 001e FFF7FEFF 		bl	lv_cleanup_devices
+ 352              	.LVL31:
+ 429:Drivers/lvgl/src/lv_init.c **** 
+ 430:Drivers/lvgl/src/lv_init.c **** #if LV_USE_EVDEV
+ 431:Drivers/lvgl/src/lv_init.c ****     lv_evdev_deinit();
+ 432:Drivers/lvgl/src/lv_init.c **** #endif
+ 433:Drivers/lvgl/src/lv_init.c **** 
+ 434:Drivers/lvgl/src/lv_init.c **** #if LV_USE_SPAN != 0
+ 435:Drivers/lvgl/src/lv_init.c ****     lv_span_stack_deinit();
+ 353              		.loc 1 435 5 view .LVU92
+ 354 0022 FFF7FEFF 		bl	lv_span_stack_deinit
+ 355              	.LVL32:
+ 436:Drivers/lvgl/src/lv_init.c **** #endif
+ 437:Drivers/lvgl/src/lv_init.c **** 
+ 438:Drivers/lvgl/src/lv_init.c **** #if LV_USE_FREETYPE
+ 439:Drivers/lvgl/src/lv_init.c ****     lv_freetype_uninit();
+ 440:Drivers/lvgl/src/lv_init.c **** #endif
+ 441:Drivers/lvgl/src/lv_init.c **** 
+ 442:Drivers/lvgl/src/lv_init.c **** #if LV_USE_THEME_DEFAULT
+ 443:Drivers/lvgl/src/lv_init.c ****     lv_theme_default_deinit();
+ 356              		.loc 1 443 5 view .LVU93
+ 357 0026 FFF7FEFF 		bl	lv_theme_default_deinit
+ 358              	.LVL33:
+ 444:Drivers/lvgl/src/lv_init.c **** #endif
+ 445:Drivers/lvgl/src/lv_init.c **** 
+ 446:Drivers/lvgl/src/lv_init.c **** #if LV_USE_THEME_SIMPLE
+ 447:Drivers/lvgl/src/lv_init.c ****     lv_theme_simple_deinit();
+ARM GAS  /tmp/ccqMFObh.s 			page 17
+
+
+ 359              		.loc 1 447 5 view .LVU94
+ 360 002a FFF7FEFF 		bl	lv_theme_simple_deinit
+ 361              	.LVL34:
+ 448:Drivers/lvgl/src/lv_init.c **** #endif
+ 449:Drivers/lvgl/src/lv_init.c **** 
+ 450:Drivers/lvgl/src/lv_init.c **** #if LV_USE_THEME_MONO
+ 451:Drivers/lvgl/src/lv_init.c ****     lv_theme_mono_deinit();
+ 362              		.loc 1 451 5 view .LVU95
+ 363 002e FFF7FEFF 		bl	lv_theme_mono_deinit
+ 364              	.LVL35:
+ 452:Drivers/lvgl/src/lv_init.c **** #endif
+ 453:Drivers/lvgl/src/lv_init.c **** 
+ 454:Drivers/lvgl/src/lv_init.c ****     lv_image_decoder_deinit();
+ 365              		.loc 1 454 5 view .LVU96
+ 366 0032 FFF7FEFF 		bl	lv_image_decoder_deinit
+ 367              	.LVL36:
+ 455:Drivers/lvgl/src/lv_init.c **** 
+ 456:Drivers/lvgl/src/lv_init.c ****     lv_refr_deinit();
+ 368              		.loc 1 456 5 view .LVU97
+ 369 0036 FFF7FEFF 		bl	lv_refr_deinit
+ 370              	.LVL37:
+ 457:Drivers/lvgl/src/lv_init.c **** 
+ 458:Drivers/lvgl/src/lv_init.c ****     lv_obj_style_deinit();
+ 371              		.loc 1 458 5 view .LVU98
+ 372 003a FFF7FEFF 		bl	lv_obj_style_deinit
+ 373              	.LVL38:
+ 459:Drivers/lvgl/src/lv_init.c **** 
+ 460:Drivers/lvgl/src/lv_init.c **** #if LV_USE_UEFI
+ 461:Drivers/lvgl/src/lv_init.c ****     lv_uefi_platform_deinit();
+ 462:Drivers/lvgl/src/lv_init.c **** #endif
+ 463:Drivers/lvgl/src/lv_init.c **** 
+ 464:Drivers/lvgl/src/lv_init.c **** #if LV_USE_DRAW_PXP
+ 465:Drivers/lvgl/src/lv_init.c ****     lv_draw_pxp_deinit();
+ 466:Drivers/lvgl/src/lv_init.c **** #endif
+ 467:Drivers/lvgl/src/lv_init.c **** 
+ 468:Drivers/lvgl/src/lv_init.c **** #if LV_USE_WAYLAND
+ 469:Drivers/lvgl/src/lv_init.c ****     lv_wayland_deinit();
+ 470:Drivers/lvgl/src/lv_init.c **** #endif
+ 471:Drivers/lvgl/src/lv_init.c **** #if LV_USE_DRAW_G2D
+ 472:Drivers/lvgl/src/lv_init.c ****     lv_draw_g2d_deinit();
+ 473:Drivers/lvgl/src/lv_init.c **** #endif
+ 474:Drivers/lvgl/src/lv_init.c **** 
+ 475:Drivers/lvgl/src/lv_init.c **** #if LV_USE_DRAW_VG_LITE
+ 476:Drivers/lvgl/src/lv_init.c ****     lv_draw_vg_lite_deinit();
+ 477:Drivers/lvgl/src/lv_init.c **** #endif
+ 478:Drivers/lvgl/src/lv_init.c **** 
+ 479:Drivers/lvgl/src/lv_init.c **** #if LV_USE_DRAW_DMA2D
+ 480:Drivers/lvgl/src/lv_init.c ****     lv_draw_dma2d_deinit();
+ 481:Drivers/lvgl/src/lv_init.c **** #endif
+ 482:Drivers/lvgl/src/lv_init.c **** 
+ 483:Drivers/lvgl/src/lv_init.c **** #if LV_USE_DRAW_OPENGLES
+ 484:Drivers/lvgl/src/lv_init.c ****     lv_draw_opengles_deinit();
+ 485:Drivers/lvgl/src/lv_init.c **** #endif
+ 486:Drivers/lvgl/src/lv_init.c **** 
+ 487:Drivers/lvgl/src/lv_init.c **** #if LV_USE_DRAW_SW
+ 488:Drivers/lvgl/src/lv_init.c ****     lv_draw_sw_deinit();
+ 374              		.loc 1 488 5 view .LVU99
+ARM GAS  /tmp/ccqMFObh.s 			page 18
+
+
+ 375 003e FFF7FEFF 		bl	lv_draw_sw_deinit
+ 376              	.LVL39:
+ 489:Drivers/lvgl/src/lv_init.c **** #endif
+ 490:Drivers/lvgl/src/lv_init.c **** 
+ 491:Drivers/lvgl/src/lv_init.c **** #if LV_USE_SIFLI_EPIC
+ 492:Drivers/lvgl/src/lv_init.c ****     lv_draw_sifli_epic_deinit();
+ 493:Drivers/lvgl/src/lv_init.c **** #endif
+ 494:Drivers/lvgl/src/lv_init.c **** 
+ 495:Drivers/lvgl/src/lv_init.c **** #if LV_USE_DRAW_IPA
+ 496:Drivers/lvgl/src/lv_init.c ****     lv_draw_ipa_deinit();
+ 497:Drivers/lvgl/src/lv_init.c **** #endif
+ 498:Drivers/lvgl/src/lv_init.c **** 
+ 499:Drivers/lvgl/src/lv_init.c ****     lv_draw_deinit();
+ 377              		.loc 1 499 5 view .LVU100
+ 378 0042 FFF7FEFF 		bl	lv_draw_deinit
+ 379              	.LVL40:
+ 500:Drivers/lvgl/src/lv_init.c **** 
+ 501:Drivers/lvgl/src/lv_init.c ****     lv_group_deinit();
+ 380              		.loc 1 501 5 view .LVU101
+ 381 0046 FFF7FEFF 		bl	lv_group_deinit
+ 382              	.LVL41:
+ 502:Drivers/lvgl/src/lv_init.c **** 
+ 503:Drivers/lvgl/src/lv_init.c ****     lv_anim_core_deinit();
+ 383              		.loc 1 503 5 view .LVU102
+ 384 004a FFF7FEFF 		bl	lv_anim_core_deinit
+ 385              	.LVL42:
+ 504:Drivers/lvgl/src/lv_init.c **** 
+ 505:Drivers/lvgl/src/lv_init.c ****     lv_layout_deinit();
+ 386              		.loc 1 505 5 view .LVU103
+ 387 004e FFF7FEFF 		bl	lv_layout_deinit
+ 388              	.LVL43:
+ 506:Drivers/lvgl/src/lv_init.c **** 
+ 507:Drivers/lvgl/src/lv_init.c ****     lv_timer_core_deinit();
+ 389              		.loc 1 507 5 view .LVU104
+ 390 0052 FFF7FEFF 		bl	lv_timer_core_deinit
+ 391              	.LVL44:
+ 508:Drivers/lvgl/src/lv_init.c **** 
+ 509:Drivers/lvgl/src/lv_init.c **** #if LV_USE_PROFILER && LV_USE_PROFILER_BUILTIN
+ 510:Drivers/lvgl/src/lv_init.c ****     lv_profiler_builtin_uninit();
+ 511:Drivers/lvgl/src/lv_init.c **** #endif
+ 512:Drivers/lvgl/src/lv_init.c **** 
+ 513:Drivers/lvgl/src/lv_init.c **** #if LV_USE_OBJ_ID && LV_USE_OBJ_ID_BUILTIN
+ 514:Drivers/lvgl/src/lv_init.c ****     lv_objid_builtin_destroy();
+ 515:Drivers/lvgl/src/lv_init.c **** #endif
+ 516:Drivers/lvgl/src/lv_init.c **** 
+ 517:Drivers/lvgl/src/lv_init.c **** #if LV_USE_TRANSLATION
+ 518:Drivers/lvgl/src/lv_init.c ****     lv_translation_deinit();
+ 519:Drivers/lvgl/src/lv_init.c **** #endif
+ 520:Drivers/lvgl/src/lv_init.c **** 
+ 521:Drivers/lvgl/src/lv_init.c **** #if LV_USE_FS_FROGFS
+ 522:Drivers/lvgl/src/lv_init.c ****     lv_fs_frogfs_deinit();
+ 523:Drivers/lvgl/src/lv_init.c **** #endif
+ 524:Drivers/lvgl/src/lv_init.c **** 
+ 525:Drivers/lvgl/src/lv_init.c ****     lv_fs_deinit();
+ 392              		.loc 1 525 5 view .LVU105
+ 393 0056 FFF7FEFF 		bl	lv_fs_deinit
+ 394              	.LVL45:
+ARM GAS  /tmp/ccqMFObh.s 			page 19
+
+
+ 526:Drivers/lvgl/src/lv_init.c **** 
+ 527:Drivers/lvgl/src/lv_init.c **** #if LV_USE_OBSERVER
+ 528:Drivers/lvgl/src/lv_init.c ****     lv_subject_global_deinit();
+ 395              		.loc 1 528 5 view .LVU106
+ 396 005a FFF7FEFF 		bl	lv_subject_global_deinit
+ 397              	.LVL46:
+ 529:Drivers/lvgl/src/lv_init.c **** #endif
+ 530:Drivers/lvgl/src/lv_init.c **** 
+ 531:Drivers/lvgl/src/lv_init.c ****     lv_mem_deinit();
+ 398              		.loc 1 531 5 view .LVU107
+ 399 005e FFF7FEFF 		bl	lv_mem_deinit
+ 400              	.LVL47:
+ 532:Drivers/lvgl/src/lv_init.c **** 
+ 533:Drivers/lvgl/src/lv_init.c ****     lv_initialized = false;
+ 401              		.loc 1 533 5 view .LVU108
+ 402              		.loc 1 533 20 is_stmt 0 view .LVU109
+ 403 0062 0023     		movs	r3, #0
+ 404 0064 2371     		strb	r3, [r4, #4]
+ 534:Drivers/lvgl/src/lv_init.c **** 
+ 535:Drivers/lvgl/src/lv_init.c ****     LV_LOG_INFO("lv_deinit done");
+ 405              		.loc 1 535 5 is_stmt 1 view .LVU110
+ 406              		.loc 1 535 5 view .LVU111
+ 407              		.loc 1 535 5 view .LVU112
+ 536:Drivers/lvgl/src/lv_init.c **** 
+ 537:Drivers/lvgl/src/lv_init.c **** #if LV_USE_LOG
+ 538:Drivers/lvgl/src/lv_init.c ****     lv_log_register_print_cb(NULL);
+ 539:Drivers/lvgl/src/lv_init.c **** #endif
+ 540:Drivers/lvgl/src/lv_init.c **** 
+ 541:Drivers/lvgl/src/lv_init.c **** #ifdef LV_GC_DEINIT
+ 542:Drivers/lvgl/src/lv_init.c ****     LV_GC_DEINIT();
+ 543:Drivers/lvgl/src/lv_init.c **** #endif
+ 544:Drivers/lvgl/src/lv_init.c **** 
+ 545:Drivers/lvgl/src/lv_init.c **** }
+ 408              		.loc 1 545 1 is_stmt 0 view .LVU113
+ 409 0066 10BD     		pop	{r4, pc}
+ 410              	.L34:
+ 411              		.align	2
+ 412              	.L33:
+ 413 0068 00000000 		.word	lv_global
+ 414              		.cfi_endproc
+ 415              	.LFE40:
+ 417              		.global	lv_global
+ 418              		.section	.bss.lv_global,"aw",%nobits
+ 419              		.align	2
+ 422              	lv_global:
+ 423 0000 00000000 		.space	536
+ 423      00000000 
+ 423      00000000 
+ 423      00000000 
+ 423      00000000 
+ 424              		.text
+ 425              	.Letext0:
+ 426              		.file 3 "/usr/arm-none-eabi/include/machine/_default_types.h"
+ 427              		.file 4 "/usr/arm-none-eabi/include/sys/_stdint.h"
+ 428              		.file 5 "/usr/lib/gcc/arm-none-eabi/16.2.0/include/stddef.h"
+ 429              		.file 6 "Drivers/lvgl/src/core/../../include/lvgl/core/../lv_types.h"
+ 430              		.file 7 "Drivers/lvgl/src/core/lv_group_private.h"
+ARM GAS  /tmp/ccqMFObh.s 			page 20
+
+
+ 431              		.file 8 "Drivers/lvgl/src/display/lv_display_private.h"
+ 432              		.file 9 "Drivers/lvgl/src/core/../../include/lvgl/core/../draw/lv_draw.h"
+ 433              		.file 10 "Drivers/lvgl/src/core/../draw/sw/../lv_draw_private.h"
+ 434              		.file 11 "Drivers/lvgl/src/indev/lv_indev_private.h"
+ 435              		.file 12 "Drivers/lvgl/src/display/../misc/lv_event_private.h"
+ 436              		.file 13 "Drivers/lvgl/src/misc/lv_timer_private.h"
+ 437              		.file 14 "Drivers/lvgl/src/core/../../include/lvgl/core/lv_anim.h"
+ 438              		.file 15 "Drivers/lvgl/src/draw/lv_draw_buf_private.h"
+ 439              		.file 16 "Drivers/lvgl/src/core/../../include/lvgl/core/../font/../draw/lv_draw_buf.h"
+ 440              		.file 17 "Drivers/lvgl/src/core/../../include/lvgl/core/lv_area.h"
+ 441              		.file 18 "Drivers/lvgl/src/core/../../include/lvgl/core/lv_event.h"
+ 442              		.file 19 "Drivers/lvgl/src/core/../../include/lvgl/core/lv_group.h"
+ 443              		.file 20 "Drivers/lvgl/src/core/../../include/lvgl/core/../font/../draw/lv_color.h"
+ 444              		.file 21 "Drivers/lvgl/src/core/../../include/lvgl/core/../font/../draw/lv_image_dsc.h"
+ 445              		.file 22 "Drivers/lvgl/src/core/../../include/lvgl/core/../layouts/lv_layout.h"
+ 446              		.file 23 "Drivers/lvgl/src/core/../../include/lvgl/core/../display/../core/lv_timer.h"
+ 447              		.file 24 "Drivers/lvgl/src/core/../../include/lvgl/core/../display/lv_display.h"
+ 448              		.file 25 "Drivers/lvgl/src/core/../../include/lvgl/core/../indev/lv_indev.h"
+ 449              		.file 26 "Drivers/lvgl/src/core/../../include/lvgl/core/../misc/lv_ll.h"
+ 450              		.file 27 "Drivers/lvgl/src/core/../../include/lvgl/tick/lv_tick.h"
+ 451              		.file 28 "Drivers/lvgl/src/core/../../include/lvgl/widgets/lv_bar.h"
+ 452              		.file 29 "Drivers/lvgl/src/misc/lv_anim_private.h"
+ 453              		.file 30 "Drivers/lvgl/src/image/../misc/cache/../lv_iter_private.h"
+ 454              		.file 31 "Drivers/lvgl/src/image/../misc/cache/../../osal/lv_os_none.h"
+ 455              		.file 32 "Drivers/lvgl/src/image/../misc/cache/lv_cache.h"
+ 456              		.file 33 "Drivers/lvgl/src/core/../stdlib/builtin/lv_tlsf.h"
+ 457              		.file 34 "Drivers/lvgl/src/core/../tick/lv_tick_private.h"
+ 458              		.file 35 "Drivers/lvgl/src/core/../draw/sw/lv_draw_sw_mask_private.h"
+ 459              		.file 36 "Drivers/lvgl/src/core/../stdlib/builtin/lv_tlsf_private.h"
+ 460              		.file 37 "Drivers/lvgl/src/core/../layouts/lv_layout_private.h"
+ 461              		.file 38 "Drivers/lvgl/src/core/lv_global.h"
+ 462              		.file 39 "Drivers/lvgl/src/display/../misc/../misc/lv_array.h"
+ 463              		.file 40 "Drivers/lvgl/src/core/../../include/lvgl/core/../font/../draw/../debugging/../stdlib/lv_
+ 464              		.file 41 "Drivers/lvgl/src/core/lv_observer_private.h"
+ 465              		.file 42 "Drivers/lvgl/src/fs/lv_fs_private.h"
+ 466              		.file 43 "Drivers/lvgl/src/core/../draw/sw/lv_draw_sw.h"
+ 467              		.file 44 "Drivers/lvgl/src/core/lv_obj_style_private.h"
+ 468              		.file 45 "Drivers/lvgl/src/core/lv_refr_private.h"
+ 469              		.file 46 "Drivers/lvgl/src/image/lv_image_decoder_private.h"
+ 470              		.file 47 "Drivers/lvgl/src/core/../../include/lvgl/themes/lv_theme_mono.h"
+ 471              		.file 48 "Drivers/lvgl/src/core/../../include/lvgl/themes/lv_theme_simple.h"
+ 472              		.file 49 "Drivers/lvgl/src/core/../../include/lvgl/themes/lv_theme_default.h"
+ 473              		.file 50 "Drivers/lvgl/src/core/../../include/lvgl/widgets/lv_span.h"
+ 474              		.file 51 "Drivers/lvgl/src/core/../../include/lvgl/core/../misc/lv_math.h"
+ 475              		.file 52 "Drivers/lvgl/src/core/../../include/lvgl/image/lv_bin_decoder.h"
+ 476              		.file 53 "Drivers/lvgl/src/image/../misc/cache/../../osal/lv_os_private.h"
+ 477              		.file 54 "Drivers/lvgl/src/core/../../include/lvgl/core/lv_style.h"
+ARM GAS  /tmp/ccqMFObh.s 			page 21
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 lv_init.c
+     /tmp/ccqMFObh.s:21     .text.lv_global_init:00000000 $t
+     /tmp/ccqMFObh.s:26     .text.lv_global_init:00000000 lv_global_init
+     /tmp/ccqMFObh.s:106    .text.lv_global_init:00000048 $d
+     /tmp/ccqMFObh.s:112    .text.lv_cleanup_devices:00000000 $t
+     /tmp/ccqMFObh.s:117    .text.lv_cleanup_devices:00000000 lv_cleanup_devices
+     /tmp/ccqMFObh.s:160    .text.lv_cleanup_devices:0000001c $d
+     /tmp/ccqMFObh.s:166    .text.lv_is_initialized:00000000 $t
+     /tmp/ccqMFObh.s:172    .text.lv_is_initialized:00000000 lv_is_initialized
+     /tmp/ccqMFObh.s:187    .text.lv_is_initialized:00000008 $d
+     /tmp/ccqMFObh.s:422    .bss.lv_global:00000000 lv_global
+     /tmp/ccqMFObh.s:192    .text.lv_init:00000000 $t
+     /tmp/ccqMFObh.s:198    .text.lv_init:00000000 lv_init
+     /tmp/ccqMFObh.s:302    .text.lv_init:0000005c $d
+     /tmp/ccqMFObh.s:307    .text.lv_deinit:00000000 $t
+     /tmp/ccqMFObh.s:313    .text.lv_deinit:00000000 lv_deinit
+     /tmp/ccqMFObh.s:413    .text.lv_deinit:00000068 $d
+     /tmp/ccqMFObh.s:419    .bss.lv_global:00000000 $d
+
+UNDEFINED SYMBOLS
+lv_memset
+lv_ll_init
+lv_rand_set_seed
+lv_ll_clear_custom
+lv_indev_delete
+lv_display_delete
+lv_mem_init
+lv_draw_buf_init_handlers
+lv_subject_global_init
+lv_span_stack_init
+lv_os_init
+lv_timer_core_init
+lv_fs_init
+lv_layout_init
+lv_anim_core_init
+lv_group_init
+lv_draw_init
+lv_draw_sw_init
+lv_obj_style_init
+lv_refr_init
+lv_image_decoder_init
+lv_bin_decoder_init
+lv_display_set_default
+lv_span_stack_deinit
+lv_theme_default_deinit
+lv_theme_simple_deinit
+lv_theme_mono_deinit
+lv_image_decoder_deinit
+lv_refr_deinit
+lv_obj_style_deinit
+lv_draw_sw_deinit
+lv_draw_deinit
+lv_group_deinit
+lv_anim_core_deinit
+lv_layout_deinit
+lv_timer_core_deinit
+ARM GAS  /tmp/ccqMFObh.s 			page 22
+
+
+lv_fs_deinit
+lv_subject_global_deinit
+lv_mem_deinit

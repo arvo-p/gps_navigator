@@ -1,0 +1,256 @@
+================================================================================
+  EMBEDDED HARDWARE ADAPTATION SPECIFICATION: PC SIMULATION TO STM32 FIRMWARE
+================================================================================
+Target Hardware Architecture:
+  MCU:           STMicroelectronics STM32U575RIT6 (ARM Cortex-M33 @ 160 MHz)
+  Internal RAM:  786 KB SRAM (SRAM1: 192KB, SRAM2: 64KB, SRAM3: 512KB, SRAM4: 16KB)
+  Internal ROM:  2 MB Flash
+  External RAM:  None on PCB (Zero external PSRAM / SDRAM)
+  Storage:       MicroSD Card (Molex 47309-2651) over SDMMC 4-bit bus
+  GNSS:          ST TESEO-LIV3R module over UART (NMEA 0183 / ST binary)
+  Display:       Color LCD / mLCD (SPI or 8080 parallel with DMA)
+  Power:         Li-Ion Battery + MCP73831 Charger + AP7361C 3.3V LDO
+
+--------------------------------------------------------------------------------
+TABLE OF CONTENTS
+--------------------------------------------------------------------------------
+  1. Screen Viewport & Display Dimensions (MapCamera)
+  2. RAM Budget & SRAM Constraint (786 KB vs 12.0 MB Simulation .bss)
+  3. Map Tile Format & PNG Decompression Elimination
+  4. Graphics & Display Driver Architecture (Raylib Elimination)
+  5. Storage & File System (POSIX stdio.h -> FatFs / SDMMC)
+  6. Real-Time GNSS / GPS Sensor Hardware Interface
+  7. Timebase & Hardware User Inputs
+  8. Binary Struct Alignment & Endianness
+
+================================================================================
+1. SCREEN VIEWPORT & DISPLAY DIMENSIONS (MapCamera)
+================================================================================
+The PC simulation initializes MapCamera to a default 800x600 resolution.
+On the embedded target, the camera viewport MUST be adapted to the physical LCD
+resolution (e.g. 320x240, 480x320, etc.).
+
+Why this adaptation is required:
+  A. Center / Focal Point Calculation:
+     In map_camera_latlon_to_screen():
+       tl_x = cx - cam->viewport_width / 2;
+       tl_y = cy - cam->viewport_height / 2;
+     If left at 800x600, the camera assumes screen center is at (400, 300).
+     On a 320x240 display, the user's GPS position pin is rendered off-screen.
+
+  B. Visible Tile Culling (map_camera_get_visible_tiles):
+     The camera calculates visible tiles using viewport bounding coordinates:
+       br_x = tl_x + cam->viewport_width;
+       br_y = tl_y + cam->viewport_height;
+     At 800x600, it requests 12 to 16 tiles (256x256 px).
+     At 320x240, it only requests 2 to 4 tiles (or 6 on diagonal seams).
+     Failing to adapt causes massive over-fetching, killing SD bandwidth & RAM.
+
+  C. Screen-to-World Touch / Cursor Mapping:
+     map_camera_screen_to_latlon() offsets touches relative to viewport center.
+     Mismatched dimensions corrupt GPS coordinates from touchscreen taps.
+
+Implementation:
+  Define physical screen constants and pass them to map_camera_init() or call
+  map_camera_set_viewport() before rendering:
+    #define LCD_WIDTH   320
+    #define LCD_HEIGHT  240
+    map_camera_init(&cam, initial_gps_coord, 15, LCD_WIDTH, LCD_HEIGHT);
+
+
+================================================================================
+2. RAM BUDGET & SRAM CONSTRAINT (786 KB vs 12.0 MB SIMULATION .bss)
+================================================================================
+This is the most critical architectural adaptation.
+
+A. The Discrepancy:
+   The PC simulation static_memory_architecture.txt defines:
+     - tile_graph_cache (4 local tiles):   5,136 KB
+     - tile_graph_cache (backbone graph):  4,040 KB
+     - pathfinder scratchpads & g_scores:  2,232 KB
+     - astar_heap priority queue:            384 KB
+     - route_result buffers:                 210 KB
+     ----------------------------------------------
+     TOTAL STATIC ALLOCATION:             ~12.0 MB
+
+   The STM32U575 has 786 KB total SRAM and NO external RAM chip.
+   A 12 MB .bss will result in a linker overflow error.
+
+B. Required Adaptations:
+   1. Downscale Local Graph Cache:
+      - Reduce TILE_GRAPH_CACHE_MAX_LOCAL from 4 slots to 1 or 2 slots.
+      - Clamp TILE_MAX_LOCAL_NODES (e.g. from 24,000 down to 4,000-8,000)
+        and TILE_MAX_LOCAL_EDGES (from 45,000 down to 8,000-16,000).
+   2. Backbone Network Architecture:
+      - Do NOT load the full nationwide backbone (90k nodes + 130k edges = 4 MB)
+        into internal SRAM.
+      - Options:
+        a) MicroSD On-Demand Streaming: Keep nodes and edges on the MicroSD card,
+           using a lightweight index table or binary search on disk.
+        b) Regional Backbone Pruning: Generate regional backbone files containing
+           only major highways in a ~50-100 km radius around current travel origin.
+   3. Compacting A* Scratchpads:
+      - Flat 32-bit arrays like s_bb_g_scores[90000] (360 KB) cannot fit.
+      - Use closed-set bitmasks (1 bit per node) and a small dynamic or static
+        hash map for active open-set nodes rather than flat arrays for all nodes.
+   4. A* Heap Sizing:
+      - Reduce ASTAR_HEAP_MAX_ENTRIES from 32,768 (384 KB) to 4,096 (48 KB).
+
+
+================================================================================
+3. MAP TILE FORMAT & PNG DECOMPRESSION ELIMINATION
+================================================================================
+In the simulation, tiles are standard 256x256 PNG images loaded via Raylib:
+  Texture2D tex = LoadTexture(path);
+
+Why this cannot run on STM32 directly:
+  1. PNG Decompression Overhead:
+     Libraries like libpng, lodepng, or stb_image require 30 to 50 KB of working
+     memory per image decode and heavy CPU cycles (deflate/zlib decompression).
+     Decoding multiple 256x256 PNG tiles on every pan action would cause extreme
+     stuttering on a 160 MHz microcontroller.
+  2. Cache Footprint:
+     TILE_CACHE_DEFAULT_CAPACITY is set to 256 textures in simulation.
+     256 tiles @ 256x256 RGB565 = 32 MB of memory!
+
+Adaptation Strategy:
+  1. Pre-process Tiles to Raw Binary Bitmaps:
+     Convert tiles offline into uncompressed raw RGB565 binary files (.raw / .bin)
+     or a lightweight 8-bit palette / run-length encoded (RLE) format:
+       256 x 256 pixels x 2 bytes (RGB565) = 131,072 bytes per tile.
+  2. Direct MicroSD-to-Display DMA Streaming:
+     Instead of decoding PNGs into RAM, stream raw pixel blocks directly from
+     MicroSD over SDMMC DMA to the display buffer.
+  3. Micro Tile Cache:
+     Reduce TileCache capacity to 2 to 4 active tiles in RAM (or blit directly to
+     framebuffer and keep 0 tiles permanently cached in RAM).
+
+
+================================================================================
+4. GRAPHICS & DISPLAY DRIVER ARCHITECTURE (RAYLIB ELIMINATION)
+================================================================================
+The simulation UI (ui.c) relies on Raylib (OpenGL, GPU shaders, window management):
+  InitWindow(), BeginDrawing(), DrawTexture(), DrawLineStrip(), etc.
+
+Adaptation Strategy:
+  1. Hardware Display Controller Driver:
+     Write a hardware driver for your LCD (e.g. ST7789, ILI9341, or Memory LCD):
+       - Hardware communication via SPI with DMA or 8080 8/16-bit parallel bus.
+       - Use non-blocking DMA transfers so tile blitting and rendering happen
+         concurrently with MCU execution.
+  2. Framebuffer Architecture:
+     - Full Framebuffer: A 320x240 display at 16-bit RGB565 requires:
+         320 x 240 x 2 bytes = 150 KB of RAM.
+         This fits comfortably inside the STM32U575's 786 KB SRAM.
+     - Partial / Line Buffer (Optional): If RAM is needed for routing, use a
+       dual 16-line buffer (320 x 16 x 2 = 10 KB) driven by DMA.
+  3. UI & Vector Rendering:
+     Replace Raylib vector calls:
+       - Route line rendering: Implement Bresenham's thick line algorithm to
+         draw the route polyline (geom_points) into the framebuffer.
+       - Map markers / HUD: Implement simple sprite blitting for GPS vehicle
+         arrow, turn prompts, speed, and distance indicators.
+       - Alternatively, integrate a lightweight embedded GUI library such as
+         LVGL (Light and Versatile Graphics Library) or u8g2.
+
+
+================================================================================
+5. STORAGE & FILE SYSTEM (POSIX stdio.h -> FatFs / SDMMC)
+================================================================================
+The simulation uses standard C library file functions:
+  fopen(), fread(), fseek(), ftell(), fclose()
+with Linux relative paths (e.g. "../tiles/16/...", "data/nodes.bin").
+
+Adaptation Strategy:
+  1. Integrate FatFs:
+     Use ChaN's FatFs (included with STM32Cube firmware packages):
+       fopen()  -> f_open()
+       fread()  -> f_read()
+       fseek()  -> f_lseek()
+       fclose() -> f_close()
+  2. Hardware SDMMC Driver:
+     Configure STM32 SDMMC1 peripheral in 4-bit bus mode with DMA to interface
+     with the Molex 47309-2651 MicroSD socket.
+  3. Buffer Alignment:
+     Ensure that binary read buffers in tile_graph_cache and geom streaming
+     are 4-byte or 32-byte aligned in RAM to enable direct zero-copy SDMMC DMA.
+  4. Drive Volume Paths:
+     Prefix paths with logical drive numbers:
+       "../tiles/16/..." -> "0:/tiles/16/..."
+       "backbone_nodes.bin" -> "0:/map/backbone_nodes.bin"
+
+
+================================================================================
+6. REAL-TIME GNSS / GPS SENSOR HARDWARE INTERFACE
+================================================================================
+In the simulation, the current GPS coordinate is either fixed or driven by keyboard.
+On the hardware, navigation must be fed by the physical GNSS module.
+
+Adaptation Strategy:
+  1. Hardware Connection:
+     Connect the ST TESEO-LIV3R module UART TX/RX pins to an STM32 USART peripheral
+     (e.g. USART1 or UART4).
+  2. DMA Circular Buffer:
+     Configure UART reception using DMA in circular mode with idle-line detection
+     interrupts (IDLEIE) to capture raw NMEA sentence packets with zero CPU load.
+  3. Protocol Parsing:
+     Implement a non-blocking NMEA 0183 parser:
+       - Parse $GPRMC / $GNRMC (validity, latitude, longitude, speed, heading).
+       - Parse $GPGGA / $GNGGA (fix quality, satellites tracked, altitude).
+  4. Coordinate Conversion:
+     Convert NMEA degrees-minutes format (ddmm.mmmm) into your engine's standard
+     fixed-point 10^-7 micro-degrees:
+       int32_t lat_e7 = (degrees * 10000000) + ((minutes * 10000000) / 60);
+  5. Navigation Update Hook:
+     On each valid fix:
+       - Update camera: map_camera_set_center(&cam, fix_coord);
+       - Update route progress: match vehicle coordinate against active route
+         segment geometry and compute distance-to-next-turn.
+
+
+================================================================================
+7. TIMEBASE & HARDWARE USER INPUTS
+================================================================================
+A. High-Resolution Timebase:
+   - Simulation uses Raylib's GetTime() / GetFrameTime().
+   - On STM32:
+     - Use HAL_GetTick() (1 ms resolution) for general timing and timeouts.
+     - For sub-millisecond precision (e.g. profiling A* runtime or smooth pan
+       interpolation), enable the ARM Cortex-M DWT cycle counter:
+         CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
+         DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
+         uint32_t cycles = DWT->CYCCNT;
+
+B. Physical User Input:
+   - Simulation uses keyboard (arrows, space, +/-) and mouse clicks.
+   - On Hardware:
+     - Pushbuttons / 5-way navigation switch: configure GPIO inputs with
+       internal pull-ups and debouncing timers.
+     - Rotary encoder: configure STM32 Timer in Encoder Interface Mode for
+       tactile map zooming.
+     - Touchscreen (if equipped): I2C/SPI touch controller interrupt line
+       reading (x, y) coordinates, passed to map_camera_screen_to_latlon().
+
+
+================================================================================
+8. BINARY STRUCT ALIGNMENT & ENDIANNESS
+================================================================================
+Binary files (nodes.bin, edges.bin, geom.bin) generated by map_binaries_gen.py
+are read directly into memory structs:
+  - NodeRecord
+  - EdgeRecord
+  - GeomPoint
+
+Verification for Embedded Target:
+  1. Endianness:
+     - Both x86_64 (host simulation) and ARM Cortex-M33 (STM32U575) are Little-Endian.
+     - No byte-swapping is required for multi-byte integers (int32_t, uint32_t).
+  2. Struct Padding & Alignment:
+     - Ensure all binary structs are declared with explicit packing:
+         #pragma pack(push, 1)
+         typedef struct { ... } NodeRecord;
+         #pragma pack(pop)
+       or __attribute__((packed)).
+     - This guarantees that struct layouts in C match the exact byte offsets
+       written by Python's struct.pack() in the preprocessing scripts.
+================================================================================

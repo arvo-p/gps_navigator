@@ -1,0 +1,816 @@
+ARM GAS  /tmp/ccY4nLa8.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.arch armv7e-m
+   3              		.fpu fpv4-sp-d16
+   4              		.eabi_attribute 27, 1
+   5              		.eabi_attribute 28, 1
+   6              		.eabi_attribute 20, 1
+   7              		.eabi_attribute 21, 1
+   8              		.eabi_attribute 23, 3
+   9              		.eabi_attribute 24, 1
+  10              		.eabi_attribute 25, 1
+  11              		.eabi_attribute 26, 1
+  12              		.eabi_attribute 30, 1
+  13              		.eabi_attribute 34, 1
+  14              		.eabi_attribute 18, 4
+  15              		.file	"stm32f429i_discovery_ts.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.file 1 "Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c"
+  20              		.section	.text.BSP_TS_Init,"ax",%progbits
+  21              		.align	1
+  22              		.global	BSP_TS_Init
+  23              		.syntax unified
+  24              		.thumb
+  25              		.thumb_func
+  27              	BSP_TS_Init:
+  28              	.LVL0:
+  29              	.LFB134:
+   1:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** /**
+   2:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   ******************************************************************************
+   3:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   * @file    stm32f429i_discovery_ts.c
+   4:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   * @author  MCD Application Team
+   5:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   * @brief   This file provides a set of functions needed to manage Touch
+   6:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   *          screen available with STMPE811 IO Expander device mounted on
+   7:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   *          STM32F429I-Discovery Kit.
+   8:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   ******************************************************************************
+   9:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   * @attention
+  10:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   *
+  11:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   * Copyright (c) 2017 STMicroelectronics.
+  12:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   * All rights reserved.
+  13:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   *
+  14:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   * This software is licensed under terms that can be found in the LICENSE file
+  15:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   * in the root directory of this software component.
+  16:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   * If no LICENSE file comes with this software, it is provided AS-IS.
+  17:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   *
+  18:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   ******************************************************************************
+  19:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   */
+  20:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** 
+  21:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** /* Includes ------------------------------------------------------------------*/
+  22:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** #include "stm32f429i_discovery_ts.h"
+  23:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** #include "stm32f429i_discovery_io.h"
+  24:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** 
+  25:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** /** @addtogroup BSP
+  26:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   * @{
+  27:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   */
+  28:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** 
+  29:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** /** @addtogroup STM32F429I_DISCOVERY
+ARM GAS  /tmp/ccY4nLa8.s 			page 2
+
+
+  30:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   * @{
+  31:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   */
+  32:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** 
+  33:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** /** @defgroup STM32F429I_DISCOVERY_TS STM32F429I DISCOVERY TS
+  34:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   * @{
+  35:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   */
+  36:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** 
+  37:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** /** @defgroup STM32F429I_DISCOVERY_TS_Private_Types_Definitions STM32F429I DISCOVERY TS Private Typ
+  38:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   * @{
+  39:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   */
+  40:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** /**
+  41:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   * @}
+  42:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   */
+  43:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** 
+  44:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** /** @defgroup STM32F429I_DISCOVERY_TS_Private_Defines STM32F429I DISCOVERY TS Private Defines
+  45:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   * @{
+  46:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   */
+  47:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** /**
+  48:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   * @}
+  49:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   */
+  50:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** 
+  51:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** /** @defgroup STM32F429I_DISCOVERY_TS_Private_Macros STM32F429I DISCOVERY TS Private Macros
+  52:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   * @{
+  53:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   */
+  54:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** /**
+  55:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   * @}
+  56:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   */
+  57:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** 
+  58:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** /** @defgroup STM32F429I_DISCOVERY_TS_Private_Variables STM32F429I DISCOVERY TS Private Variables
+  59:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   * @{
+  60:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   */
+  61:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** static TS_DrvTypeDef     *TsDrv;
+  62:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** static uint16_t          TsXBoundary, TsYBoundary;
+  63:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** /**
+  64:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   * @}
+  65:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   */
+  66:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** 
+  67:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** /** @defgroup STM32F429I_DISCOVERY_TS_Private_Function_Prototypes STM32F429I DISCOVERY TS Private F
+  68:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   * @{
+  69:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   */
+  70:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** /**
+  71:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   * @}
+  72:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   */
+  73:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** 
+  74:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** /** @defgroup STM32F429I_DISCOVERY_TS_Private_Functions STM32F429I DISCOVERY TS Private Functions
+  75:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   * @{
+  76:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   */
+  77:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** 
+  78:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** /**
+  79:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   * @brief  Initializes and configures the touch screen functionalities and
+  80:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   *         configures all necessary hardware resources (GPIOs, clocks..).
+  81:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   * @param  XSize: The maximum X size of the TS area on LCD
+  82:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   * @param  YSize: The maximum Y size of the TS area on LCD
+  83:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   * @retval TS_OK: if all initializations are OK. Other value if error.
+  84:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   */
+  85:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** uint8_t BSP_TS_Init(uint16_t XSize, uint16_t YSize)
+  86:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** {
+ARM GAS  /tmp/ccY4nLa8.s 			page 3
+
+
+  30              		.loc 1 86 1 view -0
+  31              		.cfi_startproc
+  32              		@ args = 0, pretend = 0, frame = 0
+  33              		@ frame_needed = 0, uses_anonymous_args = 0
+  34              		.loc 1 86 1 is_stmt 0 view .LVU1
+  35 0000 10B5     		push	{r4, lr}
+  36              	.LCFI0:
+  37              		.cfi_def_cfa_offset 8
+  38              		.cfi_offset 4, -8
+  39              		.cfi_offset 14, -4
+  87:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   uint8_t ret = TS_ERROR;
+  40              		.loc 1 87 3 is_stmt 1 view .LVU2
+  41              	.LVL1:
+  88:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** 
+  89:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   /* Initialize x and y positions boundaries */
+  90:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   TsXBoundary = XSize;
+  42              		.loc 1 90 3 view .LVU3
+  43              		.loc 1 90 15 is_stmt 0 view .LVU4
+  44 0002 0D4B     		ldr	r3, .L6
+  45 0004 1880     		strh	r0, [r3]	@ movhi
+  91:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   TsYBoundary = YSize;
+  46              		.loc 1 91 3 is_stmt 1 view .LVU5
+  47              		.loc 1 91 15 is_stmt 0 view .LVU6
+  48 0006 0D4B     		ldr	r3, .L6+4
+  49 0008 1980     		strh	r1, [r3]	@ movhi
+  92:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** 
+  93:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   /* Read ID and verify if the IO expander is ready */
+  94:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   if (stmpe811_ts_drv.ReadID(TS_I2C_ADDRESS) == STMPE811_ID)
+  50              		.loc 1 94 3 is_stmt 1 view .LVU7
+  51              		.loc 1 94 22 is_stmt 0 view .LVU8
+  52 000a 0D4B     		ldr	r3, .L6+8
+  53 000c 5B68     		ldr	r3, [r3, #4]
+  54              		.loc 1 94 7 view .LVU9
+  55 000e 8220     		movs	r0, #130
+  56              	.LVL2:
+  57              		.loc 1 94 7 view .LVU10
+  58 0010 9847     		blx	r3
+  59              	.LVL3:
+  60              		.loc 1 94 6 discriminator 1 view .LVU11
+  61 0012 40F61103 		movw	r3, #2065
+  62 0016 9842     		cmp	r0, r3
+  63 0018 01D0     		beq	.L5
+  87:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** 
+  64              		.loc 1 87 11 view .LVU12
+  65 001a 0120     		movs	r0, #1
+  66              	.LVL4:
+  67              	.L2:
+  95:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   {
+  96:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****     /* Initialize the TS driver structure */
+  97:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****     TsDrv = &stmpe811_ts_drv;
+  98:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** 
+  99:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****     ret = TS_OK;
+ 100:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   }
+ 101:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** 
+ 102:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   if (ret == TS_OK)
+ 103:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   {
+ 104:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****     /* Initialize the LL TS Driver */
+ARM GAS  /tmp/ccY4nLa8.s 			page 4
+
+
+ 105:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****     TsDrv->Init(TS_I2C_ADDRESS);
+ 106:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****     TsDrv->Start(TS_I2C_ADDRESS);
+ 107:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   }
+ 108:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** 
+ 109:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   return ret;
+  68              		.loc 1 109 3 is_stmt 1 view .LVU13
+ 110:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** }
+  69              		.loc 1 110 1 is_stmt 0 view .LVU14
+  70 001c 10BD     		pop	{r4, pc}
+  71              	.LVL5:
+  72              	.L5:
+  97:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** 
+  73              		.loc 1 97 5 is_stmt 1 view .LVU15
+  97:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** 
+  74              		.loc 1 97 11 is_stmt 0 view .LVU16
+  75 001e 084B     		ldr	r3, .L6+8
+  76 0020 084C     		ldr	r4, .L6+12
+  77 0022 2360     		str	r3, [r4]
+  99:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   }
+  78              		.loc 1 99 5 is_stmt 1 view .LVU17
+  79              	.LVL6:
+ 102:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   {
+  80              		.loc 1 102 3 view .LVU18
+ 105:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****     TsDrv->Start(TS_I2C_ADDRESS);
+  81              		.loc 1 105 5 view .LVU19
+ 105:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****     TsDrv->Start(TS_I2C_ADDRESS);
+  82              		.loc 1 105 10 is_stmt 0 view .LVU20
+  83 0024 1B68     		ldr	r3, [r3]
+ 105:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****     TsDrv->Start(TS_I2C_ADDRESS);
+  84              		.loc 1 105 5 view .LVU21
+  85 0026 8220     		movs	r0, #130
+  86 0028 9847     		blx	r3
+  87              	.LVL7:
+ 106:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   }
+  88              		.loc 1 106 5 is_stmt 1 view .LVU22
+ 106:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   }
+  89              		.loc 1 106 10 is_stmt 0 view .LVU23
+  90 002a 2368     		ldr	r3, [r4]
+  91 002c DB68     		ldr	r3, [r3, #12]
+ 106:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   }
+  92              		.loc 1 106 5 view .LVU24
+  93 002e 8220     		movs	r0, #130
+  94 0030 9847     		blx	r3
+  95              	.LVL8:
+  99:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   }
+  96              		.loc 1 99 9 view .LVU25
+  97 0032 0020     		movs	r0, #0
+  98 0034 F2E7     		b	.L2
+  99              	.L7:
+ 100 0036 00BF     		.align	2
+ 101              	.L6:
+ 102 0038 00000000 		.word	TsXBoundary
+ 103 003c 00000000 		.word	TsYBoundary
+ 104 0040 00000000 		.word	stmpe811_ts_drv
+ 105 0044 00000000 		.word	TsDrv
+ 106              		.cfi_endproc
+ 107              	.LFE134:
+ARM GAS  /tmp/ccY4nLa8.s 			page 5
+
+
+ 109              		.section	.text.BSP_TS_ITConfig,"ax",%progbits
+ 110              		.align	1
+ 111              		.global	BSP_TS_ITConfig
+ 112              		.syntax unified
+ 113              		.thumb
+ 114              		.thumb_func
+ 116              	BSP_TS_ITConfig:
+ 117              	.LFB135:
+ 111:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** 
+ 112:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** /**
+ 113:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   * @brief  Configures and enables the touch screen interrupts.
+ 114:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   * @retval TS_OK: if ITconfig is OK. Other value if error.
+ 115:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   */
+ 116:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** uint8_t BSP_TS_ITConfig(void)
+ 117:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** {
+ 118              		.loc 1 117 1 is_stmt 1 view -0
+ 119              		.cfi_startproc
+ 120              		@ args = 0, pretend = 0, frame = 0
+ 121              		@ frame_needed = 0, uses_anonymous_args = 0
+ 122 0000 08B5     		push	{r3, lr}
+ 123              	.LCFI1:
+ 124              		.cfi_def_cfa_offset 8
+ 125              		.cfi_offset 3, -8
+ 126              		.cfi_offset 14, -4
+ 118:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   /* Enable the TS ITs */
+ 119:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   TsDrv->EnableIT(TS_I2C_ADDRESS);
+ 127              		.loc 1 119 3 view .LVU27
+ 128              		.loc 1 119 8 is_stmt 0 view .LVU28
+ 129 0002 034B     		ldr	r3, .L10
+ 130 0004 1B68     		ldr	r3, [r3]
+ 131 0006 9B69     		ldr	r3, [r3, #24]
+ 132              		.loc 1 119 3 view .LVU29
+ 133 0008 8220     		movs	r0, #130
+ 134 000a 9847     		blx	r3
+ 135              	.LVL9:
+ 120:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** 
+ 121:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   return TS_OK;
+ 136              		.loc 1 121 3 is_stmt 1 view .LVU30
+ 122:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** }
+ 137              		.loc 1 122 1 is_stmt 0 view .LVU31
+ 138 000c 0020     		movs	r0, #0
+ 139 000e 08BD     		pop	{r3, pc}
+ 140              	.L11:
+ 141              		.align	2
+ 142              	.L10:
+ 143 0010 00000000 		.word	TsDrv
+ 144              		.cfi_endproc
+ 145              	.LFE135:
+ 147              		.section	.text.BSP_TS_ITGetStatus,"ax",%progbits
+ 148              		.align	1
+ 149              		.global	BSP_TS_ITGetStatus
+ 150              		.syntax unified
+ 151              		.thumb
+ 152              		.thumb_func
+ 154              	BSP_TS_ITGetStatus:
+ 155              	.LFB136:
+ 123:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** 
+ARM GAS  /tmp/ccY4nLa8.s 			page 6
+
+
+ 124:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** /**
+ 125:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   * @brief  Gets the TS IT status.
+ 126:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   * @retval Interrupt status.
+ 127:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   */
+ 128:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** uint8_t BSP_TS_ITGetStatus(void)
+ 129:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** {
+ 156              		.loc 1 129 1 is_stmt 1 view -0
+ 157              		.cfi_startproc
+ 158              		@ args = 0, pretend = 0, frame = 0
+ 159              		@ frame_needed = 0, uses_anonymous_args = 0
+ 160 0000 08B5     		push	{r3, lr}
+ 161              	.LCFI2:
+ 162              		.cfi_def_cfa_offset 8
+ 163              		.cfi_offset 3, -8
+ 164              		.cfi_offset 14, -4
+ 130:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   /* Return the TS IT status */
+ 131:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   return (TsDrv->GetITStatus(TS_I2C_ADDRESS));
+ 165              		.loc 1 131 3 view .LVU33
+ 166              		.loc 1 131 16 is_stmt 0 view .LVU34
+ 167 0002 034B     		ldr	r3, .L14
+ 168 0004 1B68     		ldr	r3, [r3]
+ 169 0006 1B6A     		ldr	r3, [r3, #32]
+ 170              		.loc 1 131 11 view .LVU35
+ 171 0008 8220     		movs	r0, #130
+ 172 000a 9847     		blx	r3
+ 173              	.LVL10:
+ 132:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** }
+ 174              		.loc 1 132 1 view .LVU36
+ 175 000c 08BD     		pop	{r3, pc}
+ 176              	.L15:
+ 177 000e 00BF     		.align	2
+ 178              	.L14:
+ 179 0010 00000000 		.word	TsDrv
+ 180              		.cfi_endproc
+ 181              	.LFE136:
+ 183              		.section	.text.BSP_TS_GetState,"ax",%progbits
+ 184              		.align	1
+ 185              		.global	BSP_TS_GetState
+ 186              		.syntax unified
+ 187              		.thumb
+ 188              		.thumb_func
+ 190              	BSP_TS_GetState:
+ 191              	.LVL11:
+ 192              	.LFB137:
+ 133:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** 
+ 134:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** /**
+ 135:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   * @brief  Returns status and positions of the touch screen.
+ 136:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   * @param  TsState: Pointer to touch screen current state structure
+ 137:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   */
+ 138:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** void BSP_TS_GetState(TS_StateTypeDef *TsState)
+ 139:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** {
+ 193              		.loc 1 139 1 is_stmt 1 view -0
+ 194              		.cfi_startproc
+ 195              		@ args = 0, pretend = 0, frame = 8
+ 196              		@ frame_needed = 0, uses_anonymous_args = 0
+ 197              		.loc 1 139 1 is_stmt 0 view .LVU38
+ 198 0000 10B5     		push	{r4, lr}
+ARM GAS  /tmp/ccY4nLa8.s 			page 7
+
+
+ 199              	.LCFI3:
+ 200              		.cfi_def_cfa_offset 8
+ 201              		.cfi_offset 4, -8
+ 202              		.cfi_offset 14, -4
+ 203 0002 82B0     		sub	sp, sp, #8
+ 204              	.LCFI4:
+ 205              		.cfi_def_cfa_offset 16
+ 206 0004 0446     		mov	r4, r0
+ 140:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   static uint32_t _x = 0, _y = 0;
+ 207              		.loc 1 140 3 is_stmt 1 view .LVU39
+ 141:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   uint16_t xDiff, yDiff, x, y, xr, yr;
+ 208              		.loc 1 141 3 view .LVU40
+ 142:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** 
+ 143:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   TsState->TouchDetected = TsDrv->DetectTouch(TS_I2C_ADDRESS);
+ 209              		.loc 1 143 3 view .LVU41
+ 210              		.loc 1 143 33 is_stmt 0 view .LVU42
+ 211 0006 394B     		ldr	r3, .L30
+ 212 0008 1B68     		ldr	r3, [r3]
+ 213 000a 1B69     		ldr	r3, [r3, #16]
+ 214              		.loc 1 143 28 view .LVU43
+ 215 000c 8220     		movs	r0, #130
+ 216              	.LVL12:
+ 217              		.loc 1 143 28 view .LVU44
+ 218 000e 9847     		blx	r3
+ 219              	.LVL13:
+ 220              		.loc 1 143 26 discriminator 1 view .LVU45
+ 221 0010 2080     		strh	r0, [r4]	@ movhi
+ 144:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** 
+ 145:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   if (TsState->TouchDetected)
+ 222              		.loc 1 145 3 is_stmt 1 view .LVU46
+ 223              		.loc 1 145 6 is_stmt 0 view .LVU47
+ 224 0012 0028     		cmp	r0, #0
+ 225 0014 5FD0     		beq	.L16
+ 146:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   {
+ 147:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****     TsDrv->GetXY(TS_I2C_ADDRESS, &x, &y);
+ 226              		.loc 1 147 5 is_stmt 1 view .LVU48
+ 227              		.loc 1 147 10 is_stmt 0 view .LVU49
+ 228 0016 354B     		ldr	r3, .L30
+ 229 0018 1B68     		ldr	r3, [r3]
+ 230 001a 5B69     		ldr	r3, [r3, #20]
+ 231              		.loc 1 147 5 view .LVU50
+ 232 001c 01AA     		add	r2, sp, #4
+ 233 001e 0DF10601 		add	r1, sp, #6
+ 234 0022 8220     		movs	r0, #130
+ 235 0024 9847     		blx	r3
+ 236              	.LVL14:
+ 148:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** 
+ 149:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** #if defined (USE_STM32F429I_DISCOVERY_REVD)
+ 150:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****     if (y > 3700)
+ 151:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****     {
+ 152:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****       y = 3700;
+ 153:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****     }
+ 154:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****     else if (y < 180)
+ 155:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****     {
+ 156:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****       y = 180;
+ 157:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****     }
+ 158:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** 
+ARM GAS  /tmp/ccY4nLa8.s 			page 8
+
+
+ 159:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****     /* Y value first correction */
+ 160:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****     y = 3700 - y;
+ 161:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** #else
+ 162:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** 
+ 163:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****     /* Y value first correction */
+ 164:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****     y -= 360;
+ 237              		.loc 1 164 5 is_stmt 1 view .LVU51
+ 238              		.loc 1 164 7 is_stmt 0 view .LVU52
+ 239 0026 BDF80430 		ldrh	r3, [sp, #4]
+ 240 002a A3F5B473 		sub	r3, r3, #360
+ 241 002e 9BB2     		uxth	r3, r3
+ 242 0030 ADF80430 		strh	r3, [sp, #4]	@ movhi
+ 165:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** 
+ 166:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** #endif
+ 167:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** 
+ 168:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****     /* Y value second correction */
+ 169:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****     yr = y / 11;
+ 243              		.loc 1 169 5 is_stmt 1 view .LVU53
+ 244              		.loc 1 169 8 is_stmt 0 view .LVU54
+ 245 0034 2E4A     		ldr	r2, .L30+4
+ 246 0036 A2FB0312 		umull	r1, r2, r2, r3
+ 247 003a D208     		lsrs	r2, r2, #3
+ 248              	.LVL15:
+ 170:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** 
+ 171:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****     /* Return y position value */
+ 172:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****     if (yr <= 0)
+ 249              		.loc 1 172 5 is_stmt 1 view .LVU55
+ 250              		.loc 1 172 8 is_stmt 0 view .LVU56
+ 251 003c 0A2B     		cmp	r3, #10
+ 252 003e 06D9     		bls	.L27
+ 173:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****     {
+ 174:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****       yr = 0;
+ 175:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****     }
+ 176:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****     else if (yr > TsYBoundary)
+ 253              		.loc 1 176 10 is_stmt 1 view .LVU57
+ 254              		.loc 1 176 17 is_stmt 0 view .LVU58
+ 255 0040 2C4B     		ldr	r3, .L30+8
+ 256 0042 1B88     		ldrh	r3, [r3]
+ 257              		.loc 1 176 13 view .LVU59
+ 258 0044 9342     		cmp	r3, r2
+ 259 0046 03D2     		bcs	.L18
+ 177:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****     {
+ 178:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****       yr = TsYBoundary - 1;
+ 260              		.loc 1 178 7 is_stmt 1 view .LVU60
+ 261              		.loc 1 178 10 is_stmt 0 view .LVU61
+ 262 0048 013B     		subs	r3, r3, #1
+ 263 004a 9AB2     		uxth	r2, r3
+ 264              	.LVL16:
+ 265              		.loc 1 178 10 view .LVU62
+ 266 004c 00E0     		b	.L18
+ 267              	.L27:
+ 174:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****     }
+ 268              		.loc 1 174 10 view .LVU63
+ 269 004e 0022     		movs	r2, #0
+ 270              	.LVL17:
+ 271              	.L18:
+ 179:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****     }
+ARM GAS  /tmp/ccY4nLa8.s 			page 9
+
+
+ 180:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****     else
+ 181:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****     {}
+ 272              		.loc 1 181 6 is_stmt 1 view .LVU64
+ 182:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****     y = yr;
+ 273              		.loc 1 182 5 view .LVU65
+ 274              		.loc 1 182 7 is_stmt 0 view .LVU66
+ 275 0050 ADF80420 		strh	r2, [sp, #4]	@ movhi
+ 183:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** 
+ 184:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****     /* X value first correction */
+ 185:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****     if (x <= 3000)
+ 276              		.loc 1 185 5 is_stmt 1 view .LVU67
+ 277              		.loc 1 185 11 is_stmt 0 view .LVU68
+ 278 0054 BDF80630 		ldrh	r3, [sp, #6]
+ 279              		.loc 1 185 8 view .LVU69
+ 280 0058 40F6B831 		movw	r1, #3000
+ 281 005c 8B42     		cmp	r3, r1
+ 282 005e 13D8     		bhi	.L19
+ 186:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****     {
+ 187:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****       x = 3870 - x;
+ 283              		.loc 1 187 7 is_stmt 1 view .LVU70
+ 284              		.loc 1 187 16 is_stmt 0 view .LVU71
+ 285 0060 C3F57163 		rsb	r3, r3, #3856
+ 286 0064 0E33     		adds	r3, r3, #14
+ 287              		.loc 1 187 9 view .LVU72
+ 288 0066 ADF80630 		strh	r3, [sp, #6]	@ movhi
+ 289              	.L20:
+ 188:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****     }
+ 189:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****     else
+ 190:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****     {
+ 191:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****       x = 3800 - x;
+ 192:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****     }
+ 193:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** 
+ 194:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****     /* X value second correction */
+ 195:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****     xr = x / 15;
+ 290              		.loc 1 195 5 is_stmt 1 view .LVU73
+ 291              		.loc 1 195 8 is_stmt 0 view .LVU74
+ 292 006a BDF80610 		ldrh	r1, [sp, #6]
+ 293 006e 224B     		ldr	r3, .L30+12
+ 294 0070 A3FB0103 		umull	r0, r3, r3, r1
+ 295 0074 DB08     		lsrs	r3, r3, #3
+ 296              	.LVL18:
+ 196:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** 
+ 197:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****     /* Return X position value */
+ 198:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****     if (xr <= 0)
+ 297              		.loc 1 198 5 is_stmt 1 view .LVU75
+ 298              		.loc 1 198 8 is_stmt 0 view .LVU76
+ 299 0076 0E29     		cmp	r1, #14
+ 300 0078 0CD9     		bls	.L28
+ 199:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****     {
+ 200:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****       xr = 0;
+ 201:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****     }
+ 202:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****     else if (xr > TsXBoundary)
+ 301              		.loc 1 202 10 is_stmt 1 view .LVU77
+ 302              		.loc 1 202 17 is_stmt 0 view .LVU78
+ 303 007a 2049     		ldr	r1, .L30+16
+ 304 007c 0988     		ldrh	r1, [r1]
+ 305              		.loc 1 202 13 view .LVU79
+ARM GAS  /tmp/ccY4nLa8.s 			page 10
+
+
+ 306 007e 9942     		cmp	r1, r3
+ 307 0080 09D2     		bcs	.L21
+ 203:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****     {
+ 204:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****       xr = TsXBoundary - 1;
+ 308              		.loc 1 204 7 is_stmt 1 view .LVU80
+ 309              		.loc 1 204 10 is_stmt 0 view .LVU81
+ 310 0082 0139     		subs	r1, r1, #1
+ 311 0084 8BB2     		uxth	r3, r1
+ 312              	.LVL19:
+ 313              		.loc 1 204 10 view .LVU82
+ 314 0086 06E0     		b	.L21
+ 315              	.LVL20:
+ 316              	.L19:
+ 191:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****     }
+ 317              		.loc 1 191 7 is_stmt 1 view .LVU83
+ 191:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****     }
+ 318              		.loc 1 191 16 is_stmt 0 view .LVU84
+ 319 0088 C3F56D63 		rsb	r3, r3, #3792
+ 320 008c 0833     		adds	r3, r3, #8
+ 191:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****     }
+ 321              		.loc 1 191 9 view .LVU85
+ 322 008e ADF80630 		strh	r3, [sp, #6]	@ movhi
+ 323 0092 EAE7     		b	.L20
+ 324              	.LVL21:
+ 325              	.L28:
+ 200:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****     }
+ 326              		.loc 1 200 10 view .LVU86
+ 327 0094 0023     		movs	r3, #0
+ 328              	.LVL22:
+ 329              	.L21:
+ 205:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****     }
+ 206:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****     else
+ 207:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****     {}
+ 330              		.loc 1 207 6 is_stmt 1 view .LVU87
+ 208:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** 
+ 209:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****     x = xr;
+ 331              		.loc 1 209 5 view .LVU88
+ 332              		.loc 1 209 7 is_stmt 0 view .LVU89
+ 333 0096 ADF80630 		strh	r3, [sp, #6]	@ movhi
+ 210:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****     xDiff = x > _x ? (x - _x): (_x - x);
+ 334              		.loc 1 210 5 is_stmt 1 view .LVU90
+ 335              		.loc 1 210 15 is_stmt 0 view .LVU91
+ 336 009a 1846     		mov	r0, r3
+ 337 009c 1849     		ldr	r1, .L30+20
+ 338 009e 0968     		ldr	r1, [r1]
+ 339              		.loc 1 210 11 view .LVU92
+ 340 00a0 8B42     		cmp	r3, r1
+ 341 00a2 1AD9     		bls	.L22
+ 342              		.loc 1 210 25 discriminator 1 view .LVU93
+ 343 00a4 89B2     		uxth	r1, r1
+ 344              		.loc 1 210 11 discriminator 1 view .LVU94
+ 345 00a6 5B1A     		subs	r3, r3, r1
+ 346              	.LVL23:
+ 347              		.loc 1 210 11 discriminator 1 view .LVU95
+ 348 00a8 99B2     		uxth	r1, r3
+ 349              	.LVL24:
+ 350              	.L23:
+ARM GAS  /tmp/ccY4nLa8.s 			page 11
+
+
+ 211:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****     yDiff = y > _y ? (y - _y) : (_y - y);
+ 351              		.loc 1 211 5 is_stmt 1 view .LVU96
+ 352              		.loc 1 211 15 is_stmt 0 view .LVU97
+ 353 00aa 9446     		mov	ip, r2
+ 354 00ac 154B     		ldr	r3, .L30+24
+ 355 00ae 1B68     		ldr	r3, [r3]
+ 356              		.loc 1 211 11 view .LVU98
+ 357 00b0 9A42     		cmp	r2, r3
+ 358 00b2 16D9     		bls	.L24
+ 359              		.loc 1 211 25 discriminator 1 view .LVU99
+ 360 00b4 9BB2     		uxth	r3, r3
+ 361              		.loc 1 211 11 discriminator 1 view .LVU100
+ 362 00b6 D31A     		subs	r3, r2, r3
+ 363 00b8 9BB2     		uxth	r3, r3
+ 364              	.LVL25:
+ 365              	.L25:
+ 212:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** 
+ 213:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****     if (xDiff + yDiff > 5)
+ 366              		.loc 1 213 5 is_stmt 1 view .LVU101
+ 367              		.loc 1 213 15 is_stmt 0 view .LVU102
+ 368 00ba 1944     		add	r1, r1, r3
+ 369              	.LVL26:
+ 370              		.loc 1 213 8 view .LVU103
+ 371 00bc 0529     		cmp	r1, #5
+ 372 00be 04DD     		ble	.L26
+ 214:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****     {
+ 215:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****       _x = x;
+ 373              		.loc 1 215 7 is_stmt 1 view .LVU104
+ 374              		.loc 1 215 10 is_stmt 0 view .LVU105
+ 375 00c0 0F4B     		ldr	r3, .L30+20
+ 376              	.LVL27:
+ 377              		.loc 1 215 10 view .LVU106
+ 378 00c2 1860     		str	r0, [r3]
+ 216:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****       _y = y;
+ 379              		.loc 1 216 7 is_stmt 1 view .LVU107
+ 380              		.loc 1 216 10 is_stmt 0 view .LVU108
+ 381 00c4 0F4B     		ldr	r3, .L30+24
+ 382 00c6 C3F800C0 		str	ip, [r3]
+ 383              	.L26:
+ 217:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****     }
+ 218:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** 
+ 219:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****     /* Update the X position */
+ 220:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****     TsState->X = _x;
+ 384              		.loc 1 220 5 is_stmt 1 view .LVU109
+ 385              		.loc 1 220 16 is_stmt 0 view .LVU110
+ 386 00ca 0D4B     		ldr	r3, .L30+20
+ 387 00cc 1B68     		ldr	r3, [r3]
+ 388 00ce 6380     		strh	r3, [r4, #2]	@ movhi
+ 221:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** 
+ 222:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****     /* Update the Y position */
+ 223:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****     TsState->Y = _y;
+ 389              		.loc 1 223 5 is_stmt 1 view .LVU111
+ 390              		.loc 1 223 16 is_stmt 0 view .LVU112
+ 391 00d0 0C4B     		ldr	r3, .L30+24
+ 392 00d2 1B68     		ldr	r3, [r3]
+ 393 00d4 A380     		strh	r3, [r4, #4]	@ movhi
+ 394              	.LVL28:
+ARM GAS  /tmp/ccY4nLa8.s 			page 12
+
+
+ 395              	.L16:
+ 224:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   }
+ 225:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** }
+ 396              		.loc 1 225 1 view .LVU113
+ 397 00d6 02B0     		add	sp, sp, #8
+ 398              	.LCFI5:
+ 399              		.cfi_remember_state
+ 400              		.cfi_def_cfa_offset 8
+ 401              		@ sp needed
+ 402 00d8 10BD     		pop	{r4, pc}
+ 403              	.LVL29:
+ 404              	.L22:
+ 405              	.LCFI6:
+ 406              		.cfi_restore_state
+ 210:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****     yDiff = y > _y ? (y - _y) : (_y - y);
+ 407              		.loc 1 210 36 discriminator 2 view .LVU114
+ 408 00da 89B2     		uxth	r1, r1
+ 210:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****     yDiff = y > _y ? (y - _y) : (_y - y);
+ 409              		.loc 1 210 11 discriminator 2 view .LVU115
+ 410 00dc C91A     		subs	r1, r1, r3
+ 411 00de 89B2     		uxth	r1, r1
+ 412 00e0 E3E7     		b	.L23
+ 413              	.LVL30:
+ 414              	.L24:
+ 211:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** 
+ 415              		.loc 1 211 37 discriminator 2 view .LVU116
+ 416 00e2 9BB2     		uxth	r3, r3
+ 211:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** 
+ 417              		.loc 1 211 11 discriminator 2 view .LVU117
+ 418 00e4 9B1A     		subs	r3, r3, r2
+ 419 00e6 9BB2     		uxth	r3, r3
+ 420 00e8 E7E7     		b	.L25
+ 421              	.L31:
+ 422 00ea 00BF     		.align	2
+ 423              	.L30:
+ 424 00ec 00000000 		.word	TsDrv
+ 425 00f0 A38B2EBA 		.word	-1171354717
+ 426 00f4 00000000 		.word	TsYBoundary
+ 427 00f8 89888888 		.word	-2004318071
+ 428 00fc 00000000 		.word	TsXBoundary
+ 429 0100 00000000 		.word	_x.1
+ 430 0104 00000000 		.word	_y.0
+ 431              		.cfi_endproc
+ 432              	.LFE137:
+ 434              		.section	.text.BSP_TS_ITClear,"ax",%progbits
+ 435              		.align	1
+ 436              		.global	BSP_TS_ITClear
+ 437              		.syntax unified
+ 438              		.thumb
+ 439              		.thumb_func
+ 441              	BSP_TS_ITClear:
+ 442              	.LFB138:
+ 226:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** 
+ 227:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** /**
+ 228:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   * @brief  Clears all touch screen interrupts.
+ 229:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   */
+ 230:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** void BSP_TS_ITClear(void)
+ARM GAS  /tmp/ccY4nLa8.s 			page 13
+
+
+ 231:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** {
+ 443              		.loc 1 231 1 is_stmt 1 view -0
+ 444              		.cfi_startproc
+ 445              		@ args = 0, pretend = 0, frame = 0
+ 446              		@ frame_needed = 0, uses_anonymous_args = 0
+ 447 0000 08B5     		push	{r3, lr}
+ 448              	.LCFI7:
+ 449              		.cfi_def_cfa_offset 8
+ 450              		.cfi_offset 3, -8
+ 451              		.cfi_offset 14, -4
+ 232:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   /* Clear TS IT pending bits */
+ 233:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c ****   TsDrv->ClearIT(TS_I2C_ADDRESS);
+ 452              		.loc 1 233 3 view .LVU119
+ 453              		.loc 1 233 8 is_stmt 0 view .LVU120
+ 454 0002 034B     		ldr	r3, .L34
+ 455 0004 1B68     		ldr	r3, [r3]
+ 456 0006 DB69     		ldr	r3, [r3, #28]
+ 457              		.loc 1 233 3 view .LVU121
+ 458 0008 8220     		movs	r0, #130
+ 459 000a 9847     		blx	r3
+ 460              	.LVL31:
+ 234:Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.c **** }
+ 461              		.loc 1 234 1 view .LVU122
+ 462 000c 08BD     		pop	{r3, pc}
+ 463              	.L35:
+ 464 000e 00BF     		.align	2
+ 465              	.L34:
+ 466 0010 00000000 		.word	TsDrv
+ 467              		.cfi_endproc
+ 468              	.LFE138:
+ 470              		.section	.bss._y.0,"aw",%nobits
+ 471              		.align	2
+ 474              	_y.0:
+ 475 0000 00000000 		.space	4
+ 476              		.section	.bss._x.1,"aw",%nobits
+ 477              		.align	2
+ 480              	_x.1:
+ 481 0000 00000000 		.space	4
+ 482              		.section	.bss.TsYBoundary,"aw",%nobits
+ 483              		.align	1
+ 486              	TsYBoundary:
+ 487 0000 0000     		.space	2
+ 488              		.section	.bss.TsXBoundary,"aw",%nobits
+ 489              		.align	1
+ 492              	TsXBoundary:
+ 493 0000 0000     		.space	2
+ 494              		.section	.bss.TsDrv,"aw",%nobits
+ 495              		.align	2
+ 498              	TsDrv:
+ 499 0000 00000000 		.space	4
+ 500              		.text
+ 501              	.Letext0:
+ 502              		.file 2 "/usr/arm-none-eabi/include/machine/_default_types.h"
+ 503              		.file 3 "/usr/arm-none-eabi/include/sys/_stdint.h"
+ 504              		.file 4 "Drivers/BSP/STM32F429I-Discovery/../Components/stmpe811/../Common/ts.h"
+ 505              		.file 5 "Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.h"
+ 506              		.file 6 "Drivers/BSP/STM32F429I-Discovery/../Components/stmpe811/stmpe811.h"
+ARM GAS  /tmp/ccY4nLa8.s 			page 14
+
+
+ARM GAS  /tmp/ccY4nLa8.s 			page 15
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 stm32f429i_discovery_ts.c
+     /tmp/ccY4nLa8.s:21     .text.BSP_TS_Init:00000000 $t
+     /tmp/ccY4nLa8.s:27     .text.BSP_TS_Init:00000000 BSP_TS_Init
+     /tmp/ccY4nLa8.s:102    .text.BSP_TS_Init:00000038 $d
+     /tmp/ccY4nLa8.s:492    .bss.TsXBoundary:00000000 TsXBoundary
+     /tmp/ccY4nLa8.s:486    .bss.TsYBoundary:00000000 TsYBoundary
+     /tmp/ccY4nLa8.s:498    .bss.TsDrv:00000000 TsDrv
+     /tmp/ccY4nLa8.s:110    .text.BSP_TS_ITConfig:00000000 $t
+     /tmp/ccY4nLa8.s:116    .text.BSP_TS_ITConfig:00000000 BSP_TS_ITConfig
+     /tmp/ccY4nLa8.s:143    .text.BSP_TS_ITConfig:00000010 $d
+     /tmp/ccY4nLa8.s:148    .text.BSP_TS_ITGetStatus:00000000 $t
+     /tmp/ccY4nLa8.s:154    .text.BSP_TS_ITGetStatus:00000000 BSP_TS_ITGetStatus
+     /tmp/ccY4nLa8.s:179    .text.BSP_TS_ITGetStatus:00000010 $d
+     /tmp/ccY4nLa8.s:184    .text.BSP_TS_GetState:00000000 $t
+     /tmp/ccY4nLa8.s:190    .text.BSP_TS_GetState:00000000 BSP_TS_GetState
+     /tmp/ccY4nLa8.s:424    .text.BSP_TS_GetState:000000ec $d
+     /tmp/ccY4nLa8.s:480    .bss._x.1:00000000 _x.1
+     /tmp/ccY4nLa8.s:474    .bss._y.0:00000000 _y.0
+     /tmp/ccY4nLa8.s:435    .text.BSP_TS_ITClear:00000000 $t
+     /tmp/ccY4nLa8.s:441    .text.BSP_TS_ITClear:00000000 BSP_TS_ITClear
+     /tmp/ccY4nLa8.s:466    .text.BSP_TS_ITClear:00000010 $d
+     /tmp/ccY4nLa8.s:471    .bss._y.0:00000000 $d
+     /tmp/ccY4nLa8.s:477    .bss._x.1:00000000 $d
+     /tmp/ccY4nLa8.s:483    .bss.TsYBoundary:00000000 $d
+     /tmp/ccY4nLa8.s:489    .bss.TsXBoundary:00000000 $d
+     /tmp/ccY4nLa8.s:495    .bss.TsDrv:00000000 $d
+
+UNDEFINED SYMBOLS
+stmpe811_ts_drv

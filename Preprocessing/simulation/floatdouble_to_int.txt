@@ -1,0 +1,90 @@
+# Floating-Point (double / float) vs Fixed-Point Integer Math in Embedded GPS Systems
+
+## 1. Is `double` and `float` fine for embedded?
+
+In general: **`double` is a serious performance bottleneck on microcontrollers, and `float` has dangerous precision traps for GPS.**
+
+Here is how common microcontroller families handle them:
+
+| Architecture | Example MCUs | Hardware FPU | What happens with `float`? | What happens with `double`? |
+| :--- | :--- | :--- | :--- | :--- |
+| **ARM Cortex-M0 / M0+ / M3** | STM32F103, RP2040, SAMD21 | **None** | Software emulation (slow) | Software emulation (**extremely slow & heavy flash bloat**) |
+| **ARM Cortex-M4F / M7 (Single-precision)** | STM32F4, STM32F3, ESP32 | **32-bit only** | **Fast** (1-cycle hardware instructions) | **Software emulation** (tens to hundreds of clock cycles per operation) |
+| **ARM Cortex-M7 (Double-precision)** | STM32H7 (some models) | **64-bit** | Fast | Fast |
+
+### The Two Big Problems on Embedded:
+
+1. **The `double` problem:**
+   Even on popular chips with hardware FPUs (like STM32F4 or ESP32), the hardware FPU is strictly **32-bit (`float`)**. If the code uses `double`, GCC links software floating-point emulation routines (`__aeabi_dmul`, `__aeabi_ddiv`, software `sin`/`cos`), adding kilobytes of flash memory overhead and running 20×–50× slower.
+
+2. **The `float` precision trap:**
+   Standard 32-bit IEEE-754 `float` only provides **24 bits of mantissa (~7 decimal digits of precision)**:
+   - At 50° latitude, `50.12345°` already consumes 7 significant digits.
+   - Any sub-meter precision is lost to floating-point round-off error.
+   - At zoom 16, the world map is 256 * 2^16 = 16,777,216 pixels wide. A 32-bit float cannot accurately represent sub-pixel positions at this zoom level without visible jitter, shaking, and pixel quantization artifacts.
+
+---
+
+## 2. How to Circumvent Them: Fixed-Point & Integer Arithmetic
+
+Professional embedded GPS devices (such as **Garmin**, **TomTom**, and **u-blox** chipsets) do **not** use floating-point math for coordinate tracking. Instead, they use integer techniques:
+
+### Strategy A: 10^-7 Degree Fixed-Point Integers (Micro-Degrees)
+
+GNSS receivers (u-blox UBX binary protocol, RTCM, and NMEA standard) output latitude and longitude as signed 32-bit integers scaled by 10^7:
+
+    lat_e7 = round(latitude * 10,000,000)
+    lon_e7 = round(longitude * 10,000,000)
+
+- **Latitude range:**  ±90°  -> ±900,000,000 (fits in signed 32-bit `int32_t`, max ±2,147,483,647).
+- **Longitude range:** ±180° -> ±1,800,000,000 (fits in signed 32-bit `int32_t`).
+- **Precision:** 10^-7 degrees ≈ **1.11 cm** everywhere on Earth!
+
+```c
+typedef struct {
+    int32_t lat_e7; /* e.g.  50624200 for 50.624200° */
+    int32_t lon_e7; /* e.g.   5566600 for  5.566600° */
+} GeoCoordE7;
+```
+
+---
+
+### Strategy B: 32-bit Normalized World Coordinates (2^32 Fixed-Point)
+
+For tile-based maps (Web Mercator), the entire globe can be mapped to a 32-bit unsigned integer range [0, 2^32 - 1]:
+
+    X_32 = floor(((lon + 180) / 360) * 2^32)
+
+When using 2^32 world space:
+
+1. **Tile index at any zoom Z is a single bit-shift:**
+   
+       tile_x = X_32 >> (32 - Z);
+   
+   *(Takes exactly **1 CPU clock cycle** on Cortex-M; zero multiplication or division!)*
+
+2. **Pixel offset inside the 256x256 tile:**
+   
+       pixel_in_tile = (X_32 >> (32 - Z - 8)) & 0xFF;
+
+---
+
+### Strategy C: Mercator Y Projection with a Look-Up Table (LUT)
+
+The only non-linear part of Web Mercator is:
+
+    y = (1 / (2 * pi)) * ln(tan(pi / 4 + lat / 2))
+
+On an embedded system with no FPU:
+- Precompute a 1 KB table in Flash memory (e.g. 512 `uint32_t` entries representing 0° to 85° latitude).
+- For a given `lat_e7`, index the table and perform a **16-bit linear interpolation** between two table entries using integer multiply-accumulate (`MLA` instruction, 1 cycle on ARM).
+
+---
+
+## 3. Comparison Summary
+
+| Approach | Storage | CPU Cycles per Projection | Precision | Suitable for Cortex-M0/M3/M4? |
+| :--- | :--- | :--- | :--- | :--- |
+| **`double` (Current Simulation)** | 8 bytes | ~500–2000 cycles (software emulated) | ≈ 1 nm | ❌ Too slow, causes flash bloat |
+| **`float` (32-bit)** | 4 bytes | ~50–100 cycles | ≈ 1 m (stuttery) | ⚠️ Jitter at high zoom levels |
+| **Fixed-Point 10^-7 + 2^32 LUT** | 4 bytes | **~10–20 cycles** | ≈ 1.1 cm | ✅ **Ideal for embedded** |

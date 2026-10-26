@@ -1,0 +1,381 @@
+ARM GAS  /tmp/ccHgNvNg.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.arch armv7e-m
+   3              		.fpu fpv4-sp-d16
+   4              		.eabi_attribute 27, 1
+   5              		.eabi_attribute 28, 1
+   6              		.eabi_attribute 20, 1
+   7              		.eabi_attribute 21, 1
+   8              		.eabi_attribute 23, 3
+   9              		.eabi_attribute 24, 1
+  10              		.eabi_attribute 25, 1
+  11              		.eabi_attribute 26, 1
+  12              		.eabi_attribute 30, 1
+  13              		.eabi_attribute 34, 1
+  14              		.eabi_attribute 18, 4
+  15              		.file	"decomp_raw.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.file 1 "Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c"
+  20              		.section	.text.seek_raw,"ax",%progbits
+  21              		.align	1
+  22              		.syntax unified
+  23              		.thumb
+  24              		.thumb_func
+  26              	seek_raw:
+  27              	.LVL0:
+  28              	.LFB18:
+   1:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c **** /* This Source Code Form is subject to the terms of the Mozilla Public
+   2:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c ****  * License, v. 2.0. If a copy of the MPL was not distributed with this
+   3:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c ****  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+   4:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c **** 
+   5:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c **** #include "../../../lvgl_public.h"
+   6:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c **** #include LV_STDDEF_INCLUDE
+   7:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c **** #include LV_STDINT_INCLUDE
+   8:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c **** 
+   9:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c **** #include "frogfs_priv.h"
+  10:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c **** #include "frogfs_format.h"
+  11:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c **** #include "../include/frogfs/frogfs.h"
+  12:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c **** 
+  13:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c **** 
+  14:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c **** static frogfs_ssize_t read_raw(frogfs_fh_t *f, void *buf, size_t len)
+  15:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c **** {
+  16:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c ****     size_t remaining = f->data_sz - ((char *)f->data_ptr - (char *)f->data_start);
+  17:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c **** 
+  18:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c ****     if (len > remaining) {
+  19:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c ****         len = remaining;
+  20:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c ****     }
+  21:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c **** 
+  22:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c ****     if (buf) {
+  23:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c ****         lv_memcpy(buf, f->data_ptr, len);
+  24:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c ****     }
+  25:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c ****     f->data_ptr = (char *)f->data_ptr + len;
+  26:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c **** 
+  27:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c ****     return len;
+  28:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c **** }
+  29:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c **** 
+  30:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c **** static frogfs_ssize_t seek_raw(frogfs_fh_t *f, long offset, int mode)
+ARM GAS  /tmp/ccHgNvNg.s 			page 2
+
+
+  31:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c **** {
+  29              		.loc 1 31 1 view -0
+  30              		.cfi_startproc
+  31              		@ args = 0, pretend = 0, frame = 0
+  32              		@ frame_needed = 0, uses_anonymous_args = 0
+  33              		.loc 1 31 1 is_stmt 0 view .LVU1
+  34 0000 00B5     		push	{lr}
+  35              	.LCFI0:
+  36              		.cfi_def_cfa_offset 4
+  37              		.cfi_offset 14, -4
+  38 0002 0346     		mov	r3, r0
+  32:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c ****     frogfs_ssize_t new_pos = (char *)f->data_ptr - (char *)f->data_start;
+  39              		.loc 1 32 5 is_stmt 1 view .LVU2
+  40              		.loc 1 32 39 is_stmt 0 view .LVU3
+  41 0004 C068     		ldr	r0, [r0, #12]
+  42              	.LVL1:
+  43              		.loc 1 32 61 view .LVU4
+  44 0006 D3F808C0 		ldr	ip, [r3, #8]
+  45              		.loc 1 32 20 view .LVU5
+  46 000a A0EB0C0E 		sub	lr, r0, ip
+  47              	.LVL2:
+  33:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c **** 
+  34:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c ****     if (mode == LV_FS_SEEK_SET) {
+  48              		.loc 1 34 5 is_stmt 1 view .LVU6
+  49              		.loc 1 34 8 is_stmt 0 view .LVU7
+  50 000e 4AB9     		cbnz	r2, .L2
+  35:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c ****         if (offset < 0) {
+  51              		.loc 1 35 9 is_stmt 1 view .LVU8
+  52              		.loc 1 35 12 is_stmt 0 view .LVU9
+  53 0010 9142     		cmp	r1, r2
+  54 0012 04DB     		blt	.L7
+  36:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c ****             return -1;
+  37:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c ****         }
+  38:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c ****         if ((size_t)offset > f->data_sz) {
+  55              		.loc 1 38 9 is_stmt 1 view .LVU10
+  56              		.loc 1 38 31 is_stmt 0 view .LVU11
+  57 0014 1869     		ldr	r0, [r3, #16]
+  58              		.loc 1 38 12 view .LVU12
+  59 0016 8842     		cmp	r0, r1
+  60 0018 10D3     		bcc	.L5
+  39:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c ****             offset = f->data_sz;
+  40:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c ****         }
+  41:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c ****         new_pos = offset;
+  61              		.loc 1 41 17 view .LVU13
+  62 001a 0846     		mov	r0, r1
+  63 001c 0EE0     		b	.L5
+  64              	.L7:
+  36:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c ****             return -1;
+  65              		.loc 1 36 20 view .LVU14
+  66 001e 4FF0FF30 		mov	r0, #-1
+  67 0022 0EE0     		b	.L1
+  68              	.L2:
+  42:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c ****     } else if (mode == LV_FS_SEEK_CUR) {
+  69              		.loc 1 42 12 is_stmt 1 view .LVU15
+  70              		.loc 1 42 15 is_stmt 0 view .LVU16
+  71 0024 012A     		cmp	r2, #1
+  72 0026 0DD0     		beq	.L13
+ARM GAS  /tmp/ccHgNvNg.s 			page 3
+
+
+  43:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c ****         if (new_pos + offset < 0) {
+  44:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c ****             new_pos = 0;
+  45:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c ****         } else if ((size_t)new_pos > f->data_sz) {
+  46:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c ****             new_pos = f->data_sz;
+  47:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c ****         } else {
+  48:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c ****             new_pos += offset;
+  49:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c ****         }
+  50:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c ****     } else if (mode == LV_FS_SEEK_END) {
+  73              		.loc 1 50 12 is_stmt 1 view .LVU17
+  74              		.loc 1 50 15 is_stmt 0 view .LVU18
+  75 0028 022A     		cmp	r2, #2
+  76 002a F8D1     		bne	.L7
+  51:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c ****         if (offset > 0) {
+  77              		.loc 1 51 9 is_stmt 1 view .LVU19
+  78              		.loc 1 51 12 is_stmt 0 view .LVU20
+  79 002c 0029     		cmp	r1, #0
+  80 002e F6DC     		bgt	.L7
+  52:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c ****             return -1;
+  53:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c ****         }
+  54:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c ****         if (offset < -(frogfs_ssize_t) f->data_sz) {
+  81              		.loc 1 54 9 is_stmt 1 view .LVU21
+  82              		.loc 1 54 41 is_stmt 0 view .LVU22
+  83 0030 1A69     		ldr	r2, [r3, #16]
+  84              	.LVL3:
+  85              		.loc 1 54 22 view .LVU23
+  86 0032 5042     		rsbs	r0, r2, #0
+  87              		.loc 1 54 12 view .LVU24
+  88 0034 8842     		cmp	r0, r1
+  89 0036 00DD     		ble	.L8
+  55:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c ****             offset = 0;
+  90              		.loc 1 55 20 view .LVU25
+  91 0038 0021     		movs	r1, #0
+  92              	.LVL4:
+  93              	.L8:
+  56:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c ****         }
+  57:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c ****         new_pos = f->data_sz + offset;
+  94              		.loc 1 57 9 is_stmt 1 view .LVU26
+  95              		.loc 1 57 30 is_stmt 0 view .LVU27
+  96 003a 8818     		adds	r0, r1, r2
+  97              	.LVL5:
+  98              	.L5:
+  58:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c ****     } else {
+  59:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c ****         return -1;
+  60:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c ****     }
+  61:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c **** 
+  62:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c ****     f->data_ptr = (char *)f->data_start + new_pos;
+  99              		.loc 1 62 5 is_stmt 1 view .LVU28
+ 100              		.loc 1 62 41 is_stmt 0 view .LVU29
+ 101 003c 0CEB0002 		add	r2, ip, r0
+ 102              		.loc 1 62 17 view .LVU30
+ 103 0040 DA60     		str	r2, [r3, #12]
+  63:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c ****     return new_pos;
+ 104              		.loc 1 63 5 is_stmt 1 view .LVU31
+ 105              	.LVL6:
+ 106              	.L1:
+  64:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c **** }
+ 107              		.loc 1 64 1 is_stmt 0 view .LVU32
+ARM GAS  /tmp/ccHgNvNg.s 			page 4
+
+
+ 108 0042 00BD     		pop	{pc}
+ 109              	.LVL7:
+ 110              	.L13:
+  43:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c ****             new_pos = 0;
+ 111              		.loc 1 43 9 is_stmt 1 view .LVU33
+  43:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c ****             new_pos = 0;
+ 112              		.loc 1 43 12 is_stmt 0 view .LVU34
+ 113 0044 1EEB0100 		adds	r0, lr, r1
+ 114 0048 04D4     		bmi	.L10
+  45:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c ****             new_pos = f->data_sz;
+ 115              		.loc 1 45 16 is_stmt 1 view .LVU35
+  45:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c ****             new_pos = f->data_sz;
+ 116              		.loc 1 45 39 is_stmt 0 view .LVU36
+ 117 004a 1A69     		ldr	r2, [r3, #16]
+ 118              	.LVL8:
+  45:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c ****             new_pos = f->data_sz;
+ 119              		.loc 1 45 19 view .LVU37
+ 120 004c 7245     		cmp	r2, lr
+ 121 004e F5D2     		bcs	.L5
+  46:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c ****         } else {
+ 122              		.loc 1 46 13 is_stmt 1 view .LVU38
+  46:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c ****         } else {
+ 123              		.loc 1 46 21 is_stmt 0 view .LVU39
+ 124 0050 1046     		mov	r0, r2
+ 125              	.LVL9:
+  46:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c ****         } else {
+ 126              		.loc 1 46 21 view .LVU40
+ 127 0052 F3E7     		b	.L5
+ 128              	.LVL10:
+ 129              	.L10:
+  44:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c ****         } else if ((size_t)new_pos > f->data_sz) {
+ 130              		.loc 1 44 21 view .LVU41
+ 131 0054 0020     		movs	r0, #0
+ 132 0056 F1E7     		b	.L5
+ 133              		.cfi_endproc
+ 134              	.LFE18:
+ 136              		.section	.text.tell_raw,"ax",%progbits
+ 137              		.align	1
+ 138              		.syntax unified
+ 139              		.thumb
+ 140              		.thumb_func
+ 142              	tell_raw:
+ 143              	.LVL11:
+ 144              	.LFB19:
+  65:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c **** 
+  66:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c **** static size_t tell_raw(frogfs_fh_t *f)
+  67:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c **** {
+ 145              		.loc 1 67 1 is_stmt 1 view -0
+ 146              		.cfi_startproc
+ 147              		@ args = 0, pretend = 0, frame = 0
+ 148              		@ frame_needed = 0, uses_anonymous_args = 0
+ 149              		@ link register save eliminated.
+  68:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c ****     return (char *)f->data_ptr - (char *)f->data_start;
+ 150              		.loc 1 68 5 view .LVU43
+ 151              		.loc 1 68 21 is_stmt 0 view .LVU44
+ 152 0000 C268     		ldr	r2, [r0, #12]
+ 153              		.loc 1 68 43 view .LVU45
+ARM GAS  /tmp/ccHgNvNg.s 			page 5
+
+
+ 154 0002 8068     		ldr	r0, [r0, #8]
+ 155              	.LVL12:
+  69:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c **** }
+ 156              		.loc 1 69 1 view .LVU46
+ 157 0004 101A     		subs	r0, r2, r0
+ 158 0006 7047     		bx	lr
+ 159              		.cfi_endproc
+ 160              	.LFE19:
+ 162              		.section	.text.read_raw,"ax",%progbits
+ 163              		.align	1
+ 164              		.syntax unified
+ 165              		.thumb
+ 166              		.thumb_func
+ 168              	read_raw:
+ 169              	.LVL13:
+ 170              	.LFB17:
+  15:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c ****     size_t remaining = f->data_sz - ((char *)f->data_ptr - (char *)f->data_start);
+ 171              		.loc 1 15 1 is_stmt 1 view -0
+ 172              		.cfi_startproc
+ 173              		@ args = 0, pretend = 0, frame = 0
+ 174              		@ frame_needed = 0, uses_anonymous_args = 0
+  15:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c ****     size_t remaining = f->data_sz - ((char *)f->data_ptr - (char *)f->data_start);
+ 175              		.loc 1 15 1 is_stmt 0 view .LVU48
+ 176 0000 38B5     		push	{r3, r4, r5, lr}
+ 177              	.LCFI1:
+ 178              		.cfi_def_cfa_offset 16
+ 179              		.cfi_offset 3, -16
+ 180              		.cfi_offset 4, -12
+ 181              		.cfi_offset 5, -8
+ 182              		.cfi_offset 14, -4
+ 183 0002 0446     		mov	r4, r0
+ 184 0004 0846     		mov	r0, r1
+ 185              	.LVL14:
+  16:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c **** 
+ 186              		.loc 1 16 5 is_stmt 1 view .LVU49
+  16:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c **** 
+ 187              		.loc 1 16 25 is_stmt 0 view .LVU50
+ 188 0006 2569     		ldr	r5, [r4, #16]
+  16:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c **** 
+ 189              		.loc 1 16 47 view .LVU51
+ 190 0008 E168     		ldr	r1, [r4, #12]
+ 191              	.LVL15:
+  16:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c **** 
+ 192              		.loc 1 16 69 view .LVU52
+ 193 000a A368     		ldr	r3, [r4, #8]
+  16:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c **** 
+ 194              		.loc 1 16 58 view .LVU53
+ 195 000c CB1A     		subs	r3, r1, r3
+  16:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c **** 
+ 196              		.loc 1 16 12 view .LVU54
+ 197 000e ED1A     		subs	r5, r5, r3
+ 198              	.LVL16:
+  18:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c ****         len = remaining;
+ 199              		.loc 1 18 5 is_stmt 1 view .LVU55
+  18:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c ****         len = remaining;
+ 200              		.loc 1 18 8 is_stmt 0 view .LVU56
+ 201 0010 9542     		cmp	r5, r2
+ARM GAS  /tmp/ccHgNvNg.s 			page 6
+
+
+ 202 0012 00D3     		bcc	.L16
+ 203 0014 1546     		mov	r5, r2
+ 204              	.LVL17:
+ 205              	.L16:
+  22:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c ****         lv_memcpy(buf, f->data_ptr, len);
+ 206              		.loc 1 22 5 is_stmt 1 view .LVU57
+  22:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c ****         lv_memcpy(buf, f->data_ptr, len);
+ 207              		.loc 1 22 8 is_stmt 0 view .LVU58
+ 208 0016 10B1     		cbz	r0, .L17
+  23:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c ****     }
+ 209              		.loc 1 23 9 is_stmt 1 view .LVU59
+ 210 0018 2A46     		mov	r2, r5
+ 211 001a FFF7FEFF 		bl	lv_memcpy
+ 212              	.LVL18:
+ 213              	.L17:
+  25:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c **** 
+ 214              		.loc 1 25 5 view .LVU60
+  25:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c **** 
+ 215              		.loc 1 25 28 is_stmt 0 view .LVU61
+ 216 001e E368     		ldr	r3, [r4, #12]
+  25:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c **** 
+ 217              		.loc 1 25 39 view .LVU62
+ 218 0020 2B44     		add	r3, r3, r5
+  25:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c **** 
+ 219              		.loc 1 25 17 view .LVU63
+ 220 0022 E360     		str	r3, [r4, #12]
+  27:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c **** }
+ 221              		.loc 1 27 5 is_stmt 1 view .LVU64
+  28:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c **** 
+ 222              		.loc 1 28 1 is_stmt 0 view .LVU65
+ 223 0024 2846     		mov	r0, r5
+ 224 0026 38BD     		pop	{r3, r4, r5, pc}
+  28:Drivers/lvgl/src/libs/frogfs/src/decomp_raw.c **** 
+ 225              		.loc 1 28 1 view .LVU66
+ 226              		.cfi_endproc
+ 227              	.LFE17:
+ 229              		.global	frogfs_decomp_raw
+ 230              		.section	.rodata.frogfs_decomp_raw,"a"
+ 231              		.align	2
+ 234              	frogfs_decomp_raw:
+ 235 0000 00000000 		.space	8
+ 235      00000000 
+ 236 0008 00000000 		.word	read_raw
+ 237 000c 00000000 		.word	seek_raw
+ 238 0010 00000000 		.word	tell_raw
+ 239              		.text
+ 240              	.Letext0:
+ 241              		.file 2 "/usr/arm-none-eabi/include/machine/_default_types.h"
+ 242              		.file 3 "/usr/arm-none-eabi/include/sys/_stdint.h"
+ 243              		.file 4 "/usr/lib/gcc/arm-none-eabi/16.2.0/include/stddef.h"
+ 244              		.file 5 "Drivers/lvgl/src/libs/frogfs/src/../../../../include/lvgl/core/../lv_types.h"
+ 245              		.file 6 "Drivers/lvgl/src/libs/frogfs/src/../../../../include/lvgl/core/../draw/../image/../fs/lv_
+ 246              		.file 7 "Drivers/lvgl/src/libs/frogfs/src/../../../../include/lvgl/core/../indev/lv_indev.h"
+ 247              		.file 8 "Drivers/lvgl/src/libs/frogfs/src/../../../../include/lvgl/widgets/lv_bar.h"
+ 248              		.file 9 "Drivers/lvgl/src/libs/frogfs/src/../include/frogfs/frogfs_types.h"
+ 249              		.file 10 "Drivers/lvgl/src/libs/frogfs/src/../include/frogfs/frogfs.h"
+ 250              		.file 11 "Drivers/lvgl/src/libs/frogfs/src/frogfs_format.h"
+ARM GAS  /tmp/ccHgNvNg.s 			page 7
+
+
+ 251              		.file 12 "Drivers/lvgl/src/libs/frogfs/src/frogfs_priv.h"
+ 252              		.file 13 "Drivers/lvgl/src/libs/frogfs/src/../../../../include/lvgl/core/../font/../draw/../stdlib
+ARM GAS  /tmp/ccHgNvNg.s 			page 8
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 decomp_raw.c
+     /tmp/ccHgNvNg.s:21     .text.seek_raw:00000000 $t
+     /tmp/ccHgNvNg.s:26     .text.seek_raw:00000000 seek_raw
+     /tmp/ccHgNvNg.s:137    .text.tell_raw:00000000 $t
+     /tmp/ccHgNvNg.s:142    .text.tell_raw:00000000 tell_raw
+     /tmp/ccHgNvNg.s:163    .text.read_raw:00000000 $t
+     /tmp/ccHgNvNg.s:168    .text.read_raw:00000000 read_raw
+     /tmp/ccHgNvNg.s:234    .rodata.frogfs_decomp_raw:00000000 frogfs_decomp_raw
+     /tmp/ccHgNvNg.s:231    .rodata.frogfs_decomp_raw:00000000 $d
+
+UNDEFINED SYMBOLS
+lv_memcpy

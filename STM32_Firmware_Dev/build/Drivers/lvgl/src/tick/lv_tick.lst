@@ -1,0 +1,577 @@
+ARM GAS  /tmp/ccsGkzKk.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.arch armv7e-m
+   3              		.fpu fpv4-sp-d16
+   4              		.eabi_attribute 27, 1
+   5              		.eabi_attribute 28, 1
+   6              		.eabi_attribute 20, 1
+   7              		.eabi_attribute 21, 1
+   8              		.eabi_attribute 23, 3
+   9              		.eabi_attribute 24, 1
+  10              		.eabi_attribute 25, 1
+  11              		.eabi_attribute 26, 1
+  12              		.eabi_attribute 30, 1
+  13              		.eabi_attribute 34, 1
+  14              		.eabi_attribute 18, 4
+  15              		.file	"lv_tick.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.file 1 "Drivers/lvgl/src/tick/lv_tick.c"
+  20              		.section	.text.lv_tick_inc,"ax",%progbits
+  21              		.align	1
+  22              		.global	lv_tick_inc
+  23              		.syntax unified
+  24              		.thumb
+  25              		.thumb_func
+  27              	lv_tick_inc:
+  28              	.LVL0:
+  29              	.LFB29:
+   1:Drivers/lvgl/src/tick/lv_tick.c **** /**
+   2:Drivers/lvgl/src/tick/lv_tick.c ****  * @file lv_tick.c
+   3:Drivers/lvgl/src/tick/lv_tick.c ****  * Provide access to the system tick with 1 millisecond resolution
+   4:Drivers/lvgl/src/tick/lv_tick.c ****  */
+   5:Drivers/lvgl/src/tick/lv_tick.c **** 
+   6:Drivers/lvgl/src/tick/lv_tick.c **** /*********************
+   7:Drivers/lvgl/src/tick/lv_tick.c ****  *      INCLUDES
+   8:Drivers/lvgl/src/tick/lv_tick.c ****  *********************/
+   9:Drivers/lvgl/src/tick/lv_tick.c **** #include "lv_tick_private.h"
+  10:Drivers/lvgl/src/tick/lv_tick.c **** #include "../core/lv_global.h"
+  11:Drivers/lvgl/src/tick/lv_tick.c **** 
+  12:Drivers/lvgl/src/tick/lv_tick.c **** /*********************
+  13:Drivers/lvgl/src/tick/lv_tick.c ****  *      DEFINES
+  14:Drivers/lvgl/src/tick/lv_tick.c ****  *********************/
+  15:Drivers/lvgl/src/tick/lv_tick.c **** #define state LV_GLOBAL_DEFAULT()->tick_state
+  16:Drivers/lvgl/src/tick/lv_tick.c **** 
+  17:Drivers/lvgl/src/tick/lv_tick.c **** /**********************
+  18:Drivers/lvgl/src/tick/lv_tick.c ****  *      TYPEDEFS
+  19:Drivers/lvgl/src/tick/lv_tick.c ****  **********************/
+  20:Drivers/lvgl/src/tick/lv_tick.c **** 
+  21:Drivers/lvgl/src/tick/lv_tick.c **** /**********************
+  22:Drivers/lvgl/src/tick/lv_tick.c ****  *  STATIC PROTOTYPES
+  23:Drivers/lvgl/src/tick/lv_tick.c ****  **********************/
+  24:Drivers/lvgl/src/tick/lv_tick.c **** 
+  25:Drivers/lvgl/src/tick/lv_tick.c **** /**********************
+  26:Drivers/lvgl/src/tick/lv_tick.c ****  *  STATIC VARIABLES
+  27:Drivers/lvgl/src/tick/lv_tick.c ****  **********************/
+  28:Drivers/lvgl/src/tick/lv_tick.c **** 
+  29:Drivers/lvgl/src/tick/lv_tick.c **** /**********************
+ARM GAS  /tmp/ccsGkzKk.s 			page 2
+
+
+  30:Drivers/lvgl/src/tick/lv_tick.c ****  *      MACROS
+  31:Drivers/lvgl/src/tick/lv_tick.c ****  **********************/
+  32:Drivers/lvgl/src/tick/lv_tick.c **** 
+  33:Drivers/lvgl/src/tick/lv_tick.c **** /**********************
+  34:Drivers/lvgl/src/tick/lv_tick.c ****  *   GLOBAL FUNCTIONS
+  35:Drivers/lvgl/src/tick/lv_tick.c ****  **********************/
+  36:Drivers/lvgl/src/tick/lv_tick.c **** 
+  37:Drivers/lvgl/src/tick/lv_tick.c **** LV_ATTRIBUTE_TICK_INC void lv_tick_inc(uint32_t tick_period)
+  38:Drivers/lvgl/src/tick/lv_tick.c **** {
+  30              		.loc 1 38 1 view -0
+  31              		.cfi_startproc
+  32              		@ args = 0, pretend = 0, frame = 0
+  33              		@ frame_needed = 0, uses_anonymous_args = 0
+  34              		@ link register save eliminated.
+  39:Drivers/lvgl/src/tick/lv_tick.c ****     lv_tick_state_t * state_p = &state;
+  35              		.loc 1 39 5 view .LVU1
+  40:Drivers/lvgl/src/tick/lv_tick.c **** 
+  41:Drivers/lvgl/src/tick/lv_tick.c ****     state_p->sys_irq_flag = 0;
+  36              		.loc 1 41 5 view .LVU2
+  37              		.loc 1 41 27 is_stmt 0 view .LVU3
+  38 0000 044B     		ldr	r3, .L2
+  39 0002 0022     		movs	r2, #0
+  40 0004 83F8C420 		strb	r2, [r3, #196]
+  42:Drivers/lvgl/src/tick/lv_tick.c ****     state_p->sys_time += tick_period;
+  41              		.loc 1 42 5 is_stmt 1 view .LVU4
+  42              		.loc 1 42 12 is_stmt 0 view .LVU5
+  43 0008 D3F8C020 		ldr	r2, [r3, #192]
+  44              		.loc 1 42 23 view .LVU6
+  45 000c 0244     		add	r2, r2, r0
+  46 000e C3F8C020 		str	r2, [r3, #192]
+  43:Drivers/lvgl/src/tick/lv_tick.c **** }
+  47              		.loc 1 43 1 view .LVU7
+  48 0012 7047     		bx	lr
+  49              	.L3:
+  50              		.align	2
+  51              	.L2:
+  52 0014 00000000 		.word	lv_global
+  53              		.cfi_endproc
+  54              	.LFE29:
+  56              		.section	.text.lv_tick_get,"ax",%progbits
+  57              		.align	1
+  58              		.global	lv_tick_get
+  59              		.syntax unified
+  60              		.thumb
+  61              		.thumb_func
+  63              	lv_tick_get:
+  64              	.LFB30:
+  44:Drivers/lvgl/src/tick/lv_tick.c **** 
+  45:Drivers/lvgl/src/tick/lv_tick.c **** uint32_t lv_tick_get(void)
+  46:Drivers/lvgl/src/tick/lv_tick.c **** {
+  65              		.loc 1 46 1 is_stmt 1 view -0
+  66              		.cfi_startproc
+  67              		@ args = 0, pretend = 0, frame = 0
+  68              		@ frame_needed = 0, uses_anonymous_args = 0
+  69 0000 08B5     		push	{r3, lr}
+  70              	.LCFI0:
+  71              		.cfi_def_cfa_offset 8
+ARM GAS  /tmp/ccsGkzKk.s 			page 3
+
+
+  72              		.cfi_offset 3, -8
+  73              		.cfi_offset 14, -4
+  47:Drivers/lvgl/src/tick/lv_tick.c ****     lv_tick_state_t * state_p = &state;
+  74              		.loc 1 47 5 view .LVU9
+  75              	.LVL1:
+  48:Drivers/lvgl/src/tick/lv_tick.c **** 
+  49:Drivers/lvgl/src/tick/lv_tick.c ****     if(state_p->tick_get_cb)
+  76              		.loc 1 49 5 view .LVU10
+  77              		.loc 1 49 15 is_stmt 0 view .LVU11
+  78 0002 084B     		ldr	r3, .L8
+  79 0004 D3F8C830 		ldr	r3, [r3, #200]
+  80              		.loc 1 49 7 view .LVU12
+  81 0008 0BB1     		cbz	r3, .L5
+  50:Drivers/lvgl/src/tick/lv_tick.c ****         return state_p->tick_get_cb();
+  82              		.loc 1 50 9 is_stmt 1 view .LVU13
+  83              		.loc 1 50 16 is_stmt 0 view .LVU14
+  84 000a 9847     		blx	r3
+  85              	.LVL2:
+  86              	.L4:
+  51:Drivers/lvgl/src/tick/lv_tick.c **** 
+  52:Drivers/lvgl/src/tick/lv_tick.c ****     /*If `lv_tick_inc` is called from an interrupt while `sys_time` is read
+  53:Drivers/lvgl/src/tick/lv_tick.c ****      *the result might be corrupted.
+  54:Drivers/lvgl/src/tick/lv_tick.c ****      *This loop detects if `lv_tick_inc` was called while reading `sys_time`.
+  55:Drivers/lvgl/src/tick/lv_tick.c ****      *If `tick_irq_flag` was cleared in `lv_tick_inc` try to read again
+  56:Drivers/lvgl/src/tick/lv_tick.c ****      *until `tick_irq_flag` remains `1`.*/
+  57:Drivers/lvgl/src/tick/lv_tick.c ****     uint32_t result;
+  58:Drivers/lvgl/src/tick/lv_tick.c ****     do {
+  59:Drivers/lvgl/src/tick/lv_tick.c ****         state_p->sys_irq_flag = 1;
+  60:Drivers/lvgl/src/tick/lv_tick.c ****         result        = state_p->sys_time;
+  61:Drivers/lvgl/src/tick/lv_tick.c ****     } while(!state_p->sys_irq_flag); /*Continue until see a non interrupted cycle*/
+  62:Drivers/lvgl/src/tick/lv_tick.c **** 
+  63:Drivers/lvgl/src/tick/lv_tick.c ****     return result;
+  64:Drivers/lvgl/src/tick/lv_tick.c **** }
+  87              		.loc 1 64 1 view .LVU15
+  88 000c 08BD     		pop	{r3, pc}
+  89              	.L5:
+  57:Drivers/lvgl/src/tick/lv_tick.c ****     do {
+  90              		.loc 1 57 5 is_stmt 1 view .LVU16
+  58:Drivers/lvgl/src/tick/lv_tick.c ****         state_p->sys_irq_flag = 1;
+  91              		.loc 1 58 5 view .LVU17
+  59:Drivers/lvgl/src/tick/lv_tick.c ****         result        = state_p->sys_time;
+  92              		.loc 1 59 9 view .LVU18
+  59:Drivers/lvgl/src/tick/lv_tick.c ****         result        = state_p->sys_time;
+  93              		.loc 1 59 31 is_stmt 0 view .LVU19
+  94 000e 054B     		ldr	r3, .L8
+  95 0010 0122     		movs	r2, #1
+  96 0012 83F8C420 		strb	r2, [r3, #196]
+  60:Drivers/lvgl/src/tick/lv_tick.c ****     } while(!state_p->sys_irq_flag); /*Continue until see a non interrupted cycle*/
+  97              		.loc 1 60 9 is_stmt 1 view .LVU20
+  60:Drivers/lvgl/src/tick/lv_tick.c ****     } while(!state_p->sys_irq_flag); /*Continue until see a non interrupted cycle*/
+  98              		.loc 1 60 23 is_stmt 0 view .LVU21
+  99 0016 D3F8C000 		ldr	r0, [r3, #192]
+ 100              	.LVL3:
+  61:Drivers/lvgl/src/tick/lv_tick.c **** 
+ 101              		.loc 1 61 13 is_stmt 1 view .LVU22
+  61:Drivers/lvgl/src/tick/lv_tick.c **** 
+ 102              		.loc 1 61 21 is_stmt 0 view .LVU23
+ARM GAS  /tmp/ccsGkzKk.s 			page 4
+
+
+ 103 001a 93F8C430 		ldrb	r3, [r3, #196]	@ zero_extendqisi2
+  61:Drivers/lvgl/src/tick/lv_tick.c **** 
+ 104              		.loc 1 61 13 view .LVU24
+ 105 001e 002B     		cmp	r3, #0
+ 106 0020 F5D0     		beq	.L5
+ 107 0022 F3E7     		b	.L4
+ 108              	.L9:
+ 109              		.align	2
+ 110              	.L8:
+ 111 0024 00000000 		.word	lv_global
+ 112              		.cfi_endproc
+ 113              	.LFE30:
+ 115              		.section	.text.lv_tick_diff,"ax",%progbits
+ 116              		.align	1
+ 117              		.global	lv_tick_diff
+ 118              		.syntax unified
+ 119              		.thumb
+ 120              		.thumb_func
+ 122              	lv_tick_diff:
+ 123              	.LVL4:
+ 124              	.LFB32:
+  65:Drivers/lvgl/src/tick/lv_tick.c **** 
+  66:Drivers/lvgl/src/tick/lv_tick.c **** uint32_t lv_tick_elaps(uint32_t prev_tick)
+  67:Drivers/lvgl/src/tick/lv_tick.c **** {
+  68:Drivers/lvgl/src/tick/lv_tick.c ****     return lv_tick_diff(lv_tick_get(), prev_tick);
+  69:Drivers/lvgl/src/tick/lv_tick.c **** }
+  70:Drivers/lvgl/src/tick/lv_tick.c **** 
+  71:Drivers/lvgl/src/tick/lv_tick.c **** uint32_t lv_tick_diff(uint32_t tick, uint32_t prev_tick)
+  72:Drivers/lvgl/src/tick/lv_tick.c **** {
+ 125              		.loc 1 72 1 is_stmt 1 view -0
+ 126              		.cfi_startproc
+ 127              		@ args = 0, pretend = 0, frame = 0
+ 128              		@ frame_needed = 0, uses_anonymous_args = 0
+ 129              		@ link register save eliminated.
+  73:Drivers/lvgl/src/tick/lv_tick.c ****     /*Unsigned overflow is well-defined and works for a single wrap around*/
+  74:Drivers/lvgl/src/tick/lv_tick.c ****     return tick - prev_tick;
+ 130              		.loc 1 74 5 view .LVU26
+  75:Drivers/lvgl/src/tick/lv_tick.c **** }
+ 131              		.loc 1 75 1 is_stmt 0 view .LVU27
+ 132 0000 401A     		subs	r0, r0, r1
+ 133              	.LVL5:
+ 134              		.loc 1 75 1 view .LVU28
+ 135 0002 7047     		bx	lr
+ 136              		.cfi_endproc
+ 137              	.LFE32:
+ 139              		.section	.text.lv_tick_elaps,"ax",%progbits
+ 140              		.align	1
+ 141              		.global	lv_tick_elaps
+ 142              		.syntax unified
+ 143              		.thumb
+ 144              		.thumb_func
+ 146              	lv_tick_elaps:
+ 147              	.LVL6:
+ 148              	.LFB31:
+  67:Drivers/lvgl/src/tick/lv_tick.c ****     return lv_tick_diff(lv_tick_get(), prev_tick);
+ 149              		.loc 1 67 1 is_stmt 1 view -0
+ 150              		.cfi_startproc
+ARM GAS  /tmp/ccsGkzKk.s 			page 5
+
+
+ 151              		@ args = 0, pretend = 0, frame = 0
+ 152              		@ frame_needed = 0, uses_anonymous_args = 0
+  67:Drivers/lvgl/src/tick/lv_tick.c ****     return lv_tick_diff(lv_tick_get(), prev_tick);
+ 153              		.loc 1 67 1 is_stmt 0 view .LVU30
+ 154 0000 10B5     		push	{r4, lr}
+ 155              	.LCFI1:
+ 156              		.cfi_def_cfa_offset 8
+ 157              		.cfi_offset 4, -8
+ 158              		.cfi_offset 14, -4
+ 159 0002 0446     		mov	r4, r0
+  68:Drivers/lvgl/src/tick/lv_tick.c **** }
+ 160              		.loc 1 68 5 is_stmt 1 view .LVU31
+  68:Drivers/lvgl/src/tick/lv_tick.c **** }
+ 161              		.loc 1 68 12 is_stmt 0 view .LVU32
+ 162 0004 FFF7FEFF 		bl	lv_tick_get
+ 163              	.LVL7:
+  68:Drivers/lvgl/src/tick/lv_tick.c **** }
+ 164              		.loc 1 68 12 discriminator 1 view .LVU33
+ 165 0008 2146     		mov	r1, r4
+ 166 000a FFF7FEFF 		bl	lv_tick_diff
+ 167              	.LVL8:
+  69:Drivers/lvgl/src/tick/lv_tick.c **** 
+ 168              		.loc 1 69 1 view .LVU34
+ 169 000e 10BD     		pop	{r4, pc}
+  69:Drivers/lvgl/src/tick/lv_tick.c **** 
+ 170              		.loc 1 69 1 view .LVU35
+ 171              		.cfi_endproc
+ 172              	.LFE31:
+ 174              		.section	.text.lv_delay_ms,"ax",%progbits
+ 175              		.align	1
+ 176              		.global	lv_delay_ms
+ 177              		.syntax unified
+ 178              		.thumb
+ 179              		.thumb_func
+ 181              	lv_delay_ms:
+ 182              	.LVL9:
+ 183              	.LFB33:
+  76:Drivers/lvgl/src/tick/lv_tick.c **** 
+  77:Drivers/lvgl/src/tick/lv_tick.c **** void lv_delay_ms(uint32_t ms)
+  78:Drivers/lvgl/src/tick/lv_tick.c **** {
+ 184              		.loc 1 78 1 is_stmt 1 view -0
+ 185              		.cfi_startproc
+ 186              		@ args = 0, pretend = 0, frame = 8
+ 187              		@ frame_needed = 0, uses_anonymous_args = 0
+ 188              		.loc 1 78 1 is_stmt 0 view .LVU37
+ 189 0000 30B5     		push	{r4, r5, lr}
+ 190              	.LCFI2:
+ 191              		.cfi_def_cfa_offset 12
+ 192              		.cfi_offset 4, -12
+ 193              		.cfi_offset 5, -8
+ 194              		.cfi_offset 14, -4
+ 195 0002 83B0     		sub	sp, sp, #12
+ 196              	.LCFI3:
+ 197              		.cfi_def_cfa_offset 24
+ 198 0004 0446     		mov	r4, r0
+  79:Drivers/lvgl/src/tick/lv_tick.c ****     if(state.delay_cb) {
+ 199              		.loc 1 79 5 is_stmt 1 view .LVU38
+ARM GAS  /tmp/ccsGkzKk.s 			page 6
+
+
+ 200              		.loc 1 79 13 is_stmt 0 view .LVU39
+ 201 0006 0F4B     		ldr	r3, .L21
+ 202 0008 D3F8CC30 		ldr	r3, [r3, #204]
+ 203              		.loc 1 79 7 view .LVU40
+ 204 000c 13B1     		cbz	r3, .L14
+  80:Drivers/lvgl/src/tick/lv_tick.c ****         state.delay_cb(ms);
+ 205              		.loc 1 80 9 is_stmt 1 view .LVU41
+ 206 000e 9847     		blx	r3
+ 207              	.LVL10:
+ 208              	.L13:
+  81:Drivers/lvgl/src/tick/lv_tick.c ****     }
+  82:Drivers/lvgl/src/tick/lv_tick.c ****     else {
+  83:Drivers/lvgl/src/tick/lv_tick.c ****         uint32_t t = lv_tick_get();
+  84:Drivers/lvgl/src/tick/lv_tick.c ****         while(lv_tick_elaps(t) < ms) {
+  85:Drivers/lvgl/src/tick/lv_tick.c ****             /*Do something to no call `lv_tick_elaps` too often as it might interfere with interrup
+  86:Drivers/lvgl/src/tick/lv_tick.c ****             volatile uint32_t i;
+  87:Drivers/lvgl/src/tick/lv_tick.c ****             volatile uint32_t x = ms;
+  88:Drivers/lvgl/src/tick/lv_tick.c ****             for(i = 0; i < 100; i++) {
+  89:Drivers/lvgl/src/tick/lv_tick.c ****                 x = x * 3;
+  90:Drivers/lvgl/src/tick/lv_tick.c ****             }
+  91:Drivers/lvgl/src/tick/lv_tick.c ****         }
+  92:Drivers/lvgl/src/tick/lv_tick.c ****     }
+  93:Drivers/lvgl/src/tick/lv_tick.c **** }
+ 209              		.loc 1 93 1 is_stmt 0 view .LVU42
+ 210 0010 03B0     		add	sp, sp, #12
+ 211              	.LCFI4:
+ 212              		.cfi_remember_state
+ 213              		.cfi_def_cfa_offset 12
+ 214              		@ sp needed
+ 215 0012 30BD     		pop	{r4, r5, pc}
+ 216              	.LVL11:
+ 217              	.L14:
+ 218              	.LCFI5:
+ 219              		.cfi_restore_state
+ 220              	.LBB2:
+  83:Drivers/lvgl/src/tick/lv_tick.c ****         while(lv_tick_elaps(t) < ms) {
+ 221              		.loc 1 83 9 is_stmt 1 view .LVU43
+  83:Drivers/lvgl/src/tick/lv_tick.c ****         while(lv_tick_elaps(t) < ms) {
+ 222              		.loc 1 83 22 is_stmt 0 view .LVU44
+ 223 0014 FFF7FEFF 		bl	lv_tick_get
+ 224              	.LVL12:
+  83:Drivers/lvgl/src/tick/lv_tick.c ****         while(lv_tick_elaps(t) < ms) {
+ 225              		.loc 1 83 22 view .LVU45
+ 226 0018 0546     		mov	r5, r0
+ 227              	.LVL13:
+  84:Drivers/lvgl/src/tick/lv_tick.c ****             /*Do something to no call `lv_tick_elaps` too often as it might interfere with interrup
+ 228              		.loc 1 84 9 is_stmt 1 view .LVU46
+  84:Drivers/lvgl/src/tick/lv_tick.c ****             /*Do something to no call `lv_tick_elaps` too often as it might interfere with interrup
+ 229              		.loc 1 84 14 is_stmt 0 view .LVU47
+ 230 001a 09E0     		b	.L16
+ 231              	.LVL14:
+ 232              	.L18:
+ 233              	.LBB3:
+  89:Drivers/lvgl/src/tick/lv_tick.c ****             }
+ 234              		.loc 1 89 17 is_stmt 1 view .LVU48
+  89:Drivers/lvgl/src/tick/lv_tick.c ****             }
+ 235              		.loc 1 89 23 is_stmt 0 view .LVU49
+ARM GAS  /tmp/ccsGkzKk.s 			page 7
+
+
+ 236 001c 019B     		ldr	r3, [sp, #4]
+ 237 001e 03EB4303 		add	r3, r3, r3, lsl #1
+  89:Drivers/lvgl/src/tick/lv_tick.c ****             }
+ 238              		.loc 1 89 19 view .LVU50
+ 239 0022 0193     		str	r3, [sp, #4]
+  88:Drivers/lvgl/src/tick/lv_tick.c ****                 x = x * 3;
+ 240              		.loc 1 88 34 is_stmt 1 discriminator 1 view .LVU51
+ 241 0024 009B     		ldr	r3, [sp]
+ 242 0026 0133     		adds	r3, r3, #1
+ 243 0028 0093     		str	r3, [sp]
+ 244              	.L17:
+  88:Drivers/lvgl/src/tick/lv_tick.c ****                 x = x * 3;
+ 245              		.loc 1 88 26 discriminator 2 view .LVU52
+ 246 002a 009B     		ldr	r3, [sp]
+ 247 002c 632B     		cmp	r3, #99
+ 248 002e F5D9     		bls	.L18
+ 249              	.L16:
+  88:Drivers/lvgl/src/tick/lv_tick.c ****                 x = x * 3;
+ 250              		.loc 1 88 26 is_stmt 0 discriminator 2 view .LVU53
+ 251              	.LBE3:
+  84:Drivers/lvgl/src/tick/lv_tick.c ****             /*Do something to no call `lv_tick_elaps` too often as it might interfere with interrup
+ 252              		.loc 1 84 32 is_stmt 1 discriminator 1 view .LVU54
+  84:Drivers/lvgl/src/tick/lv_tick.c ****             /*Do something to no call `lv_tick_elaps` too often as it might interfere with interrup
+ 253              		.loc 1 84 15 is_stmt 0 discriminator 1 view .LVU55
+ 254 0030 2846     		mov	r0, r5
+ 255 0032 FFF7FEFF 		bl	lv_tick_elaps
+ 256              	.LVL15:
+  84:Drivers/lvgl/src/tick/lv_tick.c ****             /*Do something to no call `lv_tick_elaps` too often as it might interfere with interrup
+ 257              		.loc 1 84 32 discriminator 2 view .LVU56
+ 258 0036 A042     		cmp	r0, r4
+ 259 0038 EAD2     		bcs	.L13
+ 260              	.LBB4:
+  86:Drivers/lvgl/src/tick/lv_tick.c ****             volatile uint32_t x = ms;
+ 261              		.loc 1 86 13 is_stmt 1 view .LVU57
+  87:Drivers/lvgl/src/tick/lv_tick.c ****             for(i = 0; i < 100; i++) {
+ 262              		.loc 1 87 13 view .LVU58
+  87:Drivers/lvgl/src/tick/lv_tick.c ****             for(i = 0; i < 100; i++) {
+ 263              		.loc 1 87 31 is_stmt 0 view .LVU59
+ 264 003a 0194     		str	r4, [sp, #4]
+  88:Drivers/lvgl/src/tick/lv_tick.c ****                 x = x * 3;
+ 265              		.loc 1 88 13 is_stmt 1 view .LVU60
+  88:Drivers/lvgl/src/tick/lv_tick.c ****                 x = x * 3;
+ 266              		.loc 1 88 19 is_stmt 0 view .LVU61
+ 267 003c 0023     		movs	r3, #0
+ 268 003e 0093     		str	r3, [sp]
+  88:Drivers/lvgl/src/tick/lv_tick.c ****                 x = x * 3;
+ 269              		.loc 1 88 13 view .LVU62
+ 270 0040 F3E7     		b	.L17
+ 271              	.L22:
+ 272 0042 00BF     		.align	2
+ 273              	.L21:
+ 274 0044 00000000 		.word	lv_global
+ 275              	.LBE4:
+ 276              	.LBE2:
+ 277              		.cfi_endproc
+ 278              	.LFE33:
+ 280              		.section	.text.lv_tick_set_cb,"ax",%progbits
+ARM GAS  /tmp/ccsGkzKk.s 			page 8
+
+
+ 281              		.align	1
+ 282              		.global	lv_tick_set_cb
+ 283              		.syntax unified
+ 284              		.thumb
+ 285              		.thumb_func
+ 287              	lv_tick_set_cb:
+ 288              	.LVL16:
+ 289              	.LFB34:
+  94:Drivers/lvgl/src/tick/lv_tick.c **** 
+  95:Drivers/lvgl/src/tick/lv_tick.c **** void lv_tick_set_cb(lv_tick_get_cb_t cb)
+  96:Drivers/lvgl/src/tick/lv_tick.c **** {
+ 290              		.loc 1 96 1 is_stmt 1 view -0
+ 291              		.cfi_startproc
+ 292              		@ args = 0, pretend = 0, frame = 0
+ 293              		@ frame_needed = 0, uses_anonymous_args = 0
+ 294              		@ link register save eliminated.
+  97:Drivers/lvgl/src/tick/lv_tick.c ****     state.tick_get_cb = cb;
+ 295              		.loc 1 97 5 view .LVU64
+ 296              		.loc 1 97 23 is_stmt 0 view .LVU65
+ 297 0000 014B     		ldr	r3, .L24
+ 298 0002 C3F8C800 		str	r0, [r3, #200]
+  98:Drivers/lvgl/src/tick/lv_tick.c **** }
+ 299              		.loc 1 98 1 view .LVU66
+ 300 0006 7047     		bx	lr
+ 301              	.L25:
+ 302              		.align	2
+ 303              	.L24:
+ 304 0008 00000000 		.word	lv_global
+ 305              		.cfi_endproc
+ 306              	.LFE34:
+ 308              		.section	.text.lv_tick_get_cb,"ax",%progbits
+ 309              		.align	1
+ 310              		.global	lv_tick_get_cb
+ 311              		.syntax unified
+ 312              		.thumb
+ 313              		.thumb_func
+ 315              	lv_tick_get_cb:
+ 316              	.LFB35:
+  99:Drivers/lvgl/src/tick/lv_tick.c **** 
+ 100:Drivers/lvgl/src/tick/lv_tick.c **** lv_tick_get_cb_t lv_tick_get_cb(void)
+ 101:Drivers/lvgl/src/tick/lv_tick.c **** {
+ 317              		.loc 1 101 1 is_stmt 1 view -0
+ 318              		.cfi_startproc
+ 319              		@ args = 0, pretend = 0, frame = 0
+ 320              		@ frame_needed = 0, uses_anonymous_args = 0
+ 321              		@ link register save eliminated.
+ 102:Drivers/lvgl/src/tick/lv_tick.c ****     return state.tick_get_cb;
+ 322              		.loc 1 102 5 view .LVU68
+ 103:Drivers/lvgl/src/tick/lv_tick.c **** }
+ 323              		.loc 1 103 1 is_stmt 0 view .LVU69
+ 324 0000 014B     		ldr	r3, .L27
+ 325 0002 D3F8C800 		ldr	r0, [r3, #200]
+ 326 0006 7047     		bx	lr
+ 327              	.L28:
+ 328              		.align	2
+ 329              	.L27:
+ 330 0008 00000000 		.word	lv_global
+ARM GAS  /tmp/ccsGkzKk.s 			page 9
+
+
+ 331              		.cfi_endproc
+ 332              	.LFE35:
+ 334              		.section	.text.lv_delay_set_cb,"ax",%progbits
+ 335              		.align	1
+ 336              		.global	lv_delay_set_cb
+ 337              		.syntax unified
+ 338              		.thumb
+ 339              		.thumb_func
+ 341              	lv_delay_set_cb:
+ 342              	.LVL17:
+ 343              	.LFB36:
+ 104:Drivers/lvgl/src/tick/lv_tick.c **** 
+ 105:Drivers/lvgl/src/tick/lv_tick.c **** void lv_delay_set_cb(lv_delay_cb_t cb)
+ 106:Drivers/lvgl/src/tick/lv_tick.c **** {
+ 344              		.loc 1 106 1 is_stmt 1 view -0
+ 345              		.cfi_startproc
+ 346              		@ args = 0, pretend = 0, frame = 0
+ 347              		@ frame_needed = 0, uses_anonymous_args = 0
+ 348              		@ link register save eliminated.
+ 107:Drivers/lvgl/src/tick/lv_tick.c ****     state.delay_cb = cb;
+ 349              		.loc 1 107 5 view .LVU71
+ 350              		.loc 1 107 20 is_stmt 0 view .LVU72
+ 351 0000 014B     		ldr	r3, .L30
+ 352 0002 C3F8CC00 		str	r0, [r3, #204]
+ 108:Drivers/lvgl/src/tick/lv_tick.c **** }
+ 353              		.loc 1 108 1 view .LVU73
+ 354 0006 7047     		bx	lr
+ 355              	.L31:
+ 356              		.align	2
+ 357              	.L30:
+ 358 0008 00000000 		.word	lv_global
+ 359              		.cfi_endproc
+ 360              	.LFE36:
+ 362              		.text
+ 363              	.Letext0:
+ 364              		.file 2 "/usr/arm-none-eabi/include/machine/_default_types.h"
+ 365              		.file 3 "/usr/arm-none-eabi/include/sys/_stdint.h"
+ 366              		.file 4 "/usr/lib/gcc/arm-none-eabi/16.2.0/include/stddef.h"
+ 367              		.file 5 "Drivers/lvgl/src/tick/../../include/lvgl/core/../lv_types.h"
+ 368              		.file 6 "Drivers/lvgl/src/tick/../../include/lvgl/core/../draw/lv_draw.h"
+ 369              		.file 7 "Drivers/lvgl/src/tick/../core/../draw/sw/../lv_draw_private.h"
+ 370              		.file 8 "Drivers/lvgl/src/tick/../core/../misc/lv_timer_private.h"
+ 371              		.file 9 "Drivers/lvgl/src/tick/../core/../draw/lv_draw_buf_private.h"
+ 372              		.file 10 "Drivers/lvgl/src/tick/../../include/lvgl/core/../font/../draw/lv_draw_buf.h"
+ 373              		.file 11 "Drivers/lvgl/src/tick/../../include/lvgl/core/lv_area.h"
+ 374              		.file 12 "Drivers/lvgl/src/tick/../../include/lvgl/core/../font/../draw/lv_color.h"
+ 375              		.file 13 "Drivers/lvgl/src/tick/../../include/lvgl/core/../font/../draw/lv_image_dsc.h"
+ 376              		.file 14 "Drivers/lvgl/src/tick/../../include/lvgl/core/../layouts/lv_layout.h"
+ 377              		.file 15 "Drivers/lvgl/src/tick/../../include/lvgl/core/../display/../core/lv_timer.h"
+ 378              		.file 16 "Drivers/lvgl/src/tick/../../include/lvgl/core/../misc/lv_ll.h"
+ 379              		.file 17 "Drivers/lvgl/src/tick/../../include/lvgl/tick/lv_tick.h"
+ 380              		.file 18 "Drivers/lvgl/src/tick/lv_tick_private.h"
+ 381              		.file 19 "Drivers/lvgl/src/tick/../core/../draw/sw/../../osal/lv_os_none.h"
+ 382              		.file 20 "Drivers/lvgl/src/tick/../core/../draw/sw/../../misc/cache/../lv_iter_private.h"
+ 383              		.file 21 "Drivers/lvgl/src/tick/../core/../draw/sw/../../misc/cache/lv_cache.h"
+ 384              		.file 22 "Drivers/lvgl/src/tick/../core/../stdlib/builtin/lv_tlsf.h"
+ 385              		.file 23 "Drivers/lvgl/src/tick/../core/../misc/lv_anim_private.h"
+ARM GAS  /tmp/ccsGkzKk.s 			page 10
+
+
+ 386              		.file 24 "Drivers/lvgl/src/tick/../core/../draw/sw/lv_draw_sw_mask_private.h"
+ 387              		.file 25 "Drivers/lvgl/src/tick/../core/../stdlib/builtin/lv_tlsf_private.h"
+ 388              		.file 26 "Drivers/lvgl/src/tick/../core/../layouts/lv_layout_private.h"
+ 389              		.file 27 "Drivers/lvgl/src/tick/../core/lv_global.h"
+ARM GAS  /tmp/ccsGkzKk.s 			page 11
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 lv_tick.c
+     /tmp/ccsGkzKk.s:21     .text.lv_tick_inc:00000000 $t
+     /tmp/ccsGkzKk.s:27     .text.lv_tick_inc:00000000 lv_tick_inc
+     /tmp/ccsGkzKk.s:52     .text.lv_tick_inc:00000014 $d
+     /tmp/ccsGkzKk.s:57     .text.lv_tick_get:00000000 $t
+     /tmp/ccsGkzKk.s:63     .text.lv_tick_get:00000000 lv_tick_get
+     /tmp/ccsGkzKk.s:111    .text.lv_tick_get:00000024 $d
+     /tmp/ccsGkzKk.s:116    .text.lv_tick_diff:00000000 $t
+     /tmp/ccsGkzKk.s:122    .text.lv_tick_diff:00000000 lv_tick_diff
+     /tmp/ccsGkzKk.s:140    .text.lv_tick_elaps:00000000 $t
+     /tmp/ccsGkzKk.s:146    .text.lv_tick_elaps:00000000 lv_tick_elaps
+     /tmp/ccsGkzKk.s:175    .text.lv_delay_ms:00000000 $t
+     /tmp/ccsGkzKk.s:181    .text.lv_delay_ms:00000000 lv_delay_ms
+     /tmp/ccsGkzKk.s:274    .text.lv_delay_ms:00000044 $d
+     /tmp/ccsGkzKk.s:281    .text.lv_tick_set_cb:00000000 $t
+     /tmp/ccsGkzKk.s:287    .text.lv_tick_set_cb:00000000 lv_tick_set_cb
+     /tmp/ccsGkzKk.s:304    .text.lv_tick_set_cb:00000008 $d
+     /tmp/ccsGkzKk.s:309    .text.lv_tick_get_cb:00000000 $t
+     /tmp/ccsGkzKk.s:315    .text.lv_tick_get_cb:00000000 lv_tick_get_cb
+     /tmp/ccsGkzKk.s:330    .text.lv_tick_get_cb:00000008 $d
+     /tmp/ccsGkzKk.s:335    .text.lv_delay_set_cb:00000000 $t
+     /tmp/ccsGkzKk.s:341    .text.lv_delay_set_cb:00000000 lv_delay_set_cb
+     /tmp/ccsGkzKk.s:358    .text.lv_delay_set_cb:00000008 $d
+
+UNDEFINED SYMBOLS
+lv_global

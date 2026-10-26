@@ -1,0 +1,2811 @@
+ARM GAS  /tmp/ccX8ljiu.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.arch armv7e-m
+   3              		.fpu fpv4-sp-d16
+   4              		.eabi_attribute 27, 1
+   5              		.eabi_attribute 28, 1
+   6              		.eabi_attribute 20, 1
+   7              		.eabi_attribute 21, 1
+   8              		.eabi_attribute 23, 3
+   9              		.eabi_attribute 24, 1
+  10              		.eabi_attribute 25, 1
+  11              		.eabi_attribute 26, 1
+  12              		.eabi_attribute 30, 1
+  13              		.eabi_attribute 34, 1
+  14              		.eabi_attribute 18, 4
+  15              		.file	"sd_spi.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.file 1 "Core/Src/sd_spi.c"
+  20              		.section	.text.SD_SPI_SetSlowClock,"ax",%progbits
+  21              		.align	1
+  22              		.syntax unified
+  23              		.thumb
+  24              		.thumb_func
+  26              	SD_SPI_SetSlowClock:
+  27              	.LFB136:
+   1:Core/Src/sd_spi.c **** /**
+   2:Core/Src/sd_spi.c ****   ******************************************************************************
+   3:Core/Src/sd_spi.c ****   * @file    Core/Src/sd_spi.c
+   4:Core/Src/sd_spi.c ****   * @brief   Bare-metal SPI5 microSD driver + FatFs diskio implementation.
+   5:Core/Src/sd_spi.c ****   *          Supports SDSC, SDHC, and SDXC cards (FAT16 / FAT32 / exFAT).
+   6:Core/Src/sd_spi.c ****   ******************************************************************************
+   7:Core/Src/sd_spi.c ****   */
+   8:Core/Src/sd_spi.c **** 
+   9:Core/Src/sd_spi.c **** #include "sd_spi.h"
+  10:Core/Src/sd_spi.c **** #include "stm32f429i_discovery.h"
+  11:Core/Src/sd_spi.c **** 
+  12:Core/Src/sd_spi.c **** /* SD SPI Commands */
+  13:Core/Src/sd_spi.c **** #define CMD0    (0)         /* GO_IDLE_STATE */
+  14:Core/Src/sd_spi.c **** #define CMD1    (1)         /* SEND_OP_COND (MMC) */
+  15:Core/Src/sd_spi.c **** #define ACMD41  (0x80+41)   /* SEND_OP_COND (SDC) */
+  16:Core/Src/sd_spi.c **** #define CMD8    (8)         /* SEND_IF_COND */
+  17:Core/Src/sd_spi.c **** #define CMD9    (9)         /* SEND_CSD */
+  18:Core/Src/sd_spi.c **** #define CMD12   (12)        /* STOP_TRANSMISSION */
+  19:Core/Src/sd_spi.c **** #define CMD16   (16)        /* SET_BLOCKLEN */
+  20:Core/Src/sd_spi.c **** #define CMD17   (17)        /* READ_SINGLE_BLOCK */
+  21:Core/Src/sd_spi.c **** #define CMD18   (18)        /* READ_MULTIPLE_BLOCK */
+  22:Core/Src/sd_spi.c **** #define ACMD23  (0x80+23)   /* SET_WR_BLK_ERASE_COUNT (SDC) */
+  23:Core/Src/sd_spi.c **** #define CMD24   (24)        /* WRITE_BLOCK */
+  24:Core/Src/sd_spi.c **** #define CMD25   (25)        /* WRITE_MULTIPLE_BLOCK */
+  25:Core/Src/sd_spi.c **** #define CMD55   (55)        /* APP_CMD */
+  26:Core/Src/sd_spi.c **** #define CMD58   (58)        /* READ_OCR */
+  27:Core/Src/sd_spi.c **** 
+  28:Core/Src/sd_spi.c **** static volatile DSTATUS Stat = STA_NOINIT;
+  29:Core/Src/sd_spi.c **** static uint8_t CardType = 0;
+  30:Core/Src/sd_spi.c **** 
+  31:Core/Src/sd_spi.c **** /*----------------------------------------------------------------------------
+ARM GAS  /tmp/ccX8ljiu.s 			page 2
+
+
+  32:Core/Src/sd_spi.c ****  * Low-Level SPI5 Helpers
+  33:Core/Src/sd_spi.c ****  *----------------------------------------------------------------------------*/
+  34:Core/Src/sd_spi.c **** static inline void SD_CS_Low(void)
+  35:Core/Src/sd_spi.c **** {
+  36:Core/Src/sd_spi.c ****   /* Keep LCD D/CX (PD13) HIGH so ILI9341 never treats SD SPI bytes as commands */
+  37:Core/Src/sd_spi.c ****   LCD_WRX_HIGH();
+  38:Core/Src/sd_spi.c ****   HAL_GPIO_WritePin(SD_CS_GPIO_PORT, SD_CS_PIN, GPIO_PIN_RESET);
+  39:Core/Src/sd_spi.c **** }
+  40:Core/Src/sd_spi.c **** 
+  41:Core/Src/sd_spi.c **** static inline void SD_CS_High(void)
+  42:Core/Src/sd_spi.c **** {
+  43:Core/Src/sd_spi.c ****   HAL_GPIO_WritePin(SD_CS_GPIO_PORT, SD_CS_PIN, GPIO_PIN_SET);
+  44:Core/Src/sd_spi.c ****   LCD_WRX_HIGH();
+  45:Core/Src/sd_spi.c **** }
+  46:Core/Src/sd_spi.c **** 
+  47:Core/Src/sd_spi.c **** static void SD_SPI_SetSlowClock(void)
+  48:Core/Src/sd_spi.c **** {
+  28              		.loc 1 48 1 view -0
+  29              		.cfi_startproc
+  30              		@ args = 0, pretend = 0, frame = 0
+  31              		@ frame_needed = 0, uses_anonymous_args = 0
+  32              		@ link register save eliminated.
+  49:Core/Src/sd_spi.c ****   /* PCLK2 = 90 MHz -> /256 = 351.5 kHz (< 400 kHz required for SD init) */
+  50:Core/Src/sd_spi.c ****   CLEAR_BIT(SPI5->CR1, SPI_CR1_SPE);
+  33              		.loc 1 50 3 view .LVU1
+  34 0000 064B     		ldr	r3, .L2
+  35 0002 1A68     		ldr	r2, [r3]
+  36 0004 22F04002 		bic	r2, r2, #64
+  37 0008 1A60     		str	r2, [r3]
+  51:Core/Src/sd_spi.c ****   MODIFY_REG(SPI5->CR1, SPI_CR1_BR, SPI_BAUDRATEPRESCALER_256);
+  38              		.loc 1 51 3 view .LVU2
+  39 000a 1A68     		ldr	r2, [r3]
+  40 000c 42F03802 		orr	r2, r2, #56
+  41 0010 1A60     		str	r2, [r3]
+  52:Core/Src/sd_spi.c ****   SET_BIT(SPI5->CR1, SPI_CR1_SPE);
+  42              		.loc 1 52 3 view .LVU3
+  43 0012 1A68     		ldr	r2, [r3]
+  44 0014 42F04002 		orr	r2, r2, #64
+  45 0018 1A60     		str	r2, [r3]
+  53:Core/Src/sd_spi.c **** }
+  46              		.loc 1 53 1 is_stmt 0 view .LVU4
+  47 001a 7047     		bx	lr
+  48              	.L3:
+  49              		.align	2
+  50              	.L2:
+  51 001c 00500140 		.word	1073827840
+  52              		.cfi_endproc
+  53              	.LFE136:
+  55              		.section	.text.SD_SPI_SetFastClock,"ax",%progbits
+  56              		.align	1
+  57              		.syntax unified
+  58              		.thumb
+  59              		.thumb_func
+  61              	SD_SPI_SetFastClock:
+  62              	.LFB137:
+  54:Core/Src/sd_spi.c **** 
+  55:Core/Src/sd_spi.c **** static void SD_SPI_SetFastClock(void)
+ARM GAS  /tmp/ccX8ljiu.s 			page 3
+
+
+  56:Core/Src/sd_spi.c **** {
+  63              		.loc 1 56 1 is_stmt 1 view -0
+  64              		.cfi_startproc
+  65              		@ args = 0, pretend = 0, frame = 0
+  66              		@ frame_needed = 0, uses_anonymous_args = 0
+  67              		@ link register save eliminated.
+  57:Core/Src/sd_spi.c ****   /* PCLK2 = 90 MHz -> /8 = 11.25 MHz */
+  58:Core/Src/sd_spi.c ****   CLEAR_BIT(SPI5->CR1, SPI_CR1_SPE);
+  68              		.loc 1 58 3 view .LVU6
+  69 0000 074B     		ldr	r3, .L5
+  70 0002 1A68     		ldr	r2, [r3]
+  71 0004 22F04002 		bic	r2, r2, #64
+  72 0008 1A60     		str	r2, [r3]
+  59:Core/Src/sd_spi.c ****   MODIFY_REG(SPI5->CR1, SPI_CR1_BR, SPI_BAUDRATEPRESCALER_8);
+  73              		.loc 1 59 3 view .LVU7
+  74 000a 1A68     		ldr	r2, [r3]
+  75 000c 22F03802 		bic	r2, r2, #56
+  76 0010 42F01002 		orr	r2, r2, #16
+  77 0014 1A60     		str	r2, [r3]
+  60:Core/Src/sd_spi.c ****   SET_BIT(SPI5->CR1, SPI_CR1_SPE);
+  78              		.loc 1 60 3 view .LVU8
+  79 0016 1A68     		ldr	r2, [r3]
+  80 0018 42F04002 		orr	r2, r2, #64
+  81 001c 1A60     		str	r2, [r3]
+  61:Core/Src/sd_spi.c **** }
+  82              		.loc 1 61 1 is_stmt 0 view .LVU9
+  83 001e 7047     		bx	lr
+  84              	.L6:
+  85              		.align	2
+  86              	.L5:
+  87 0020 00500140 		.word	1073827840
+  88              		.cfi_endproc
+  89              	.LFE137:
+  91              		.section	.text.SD_SPI_TxRxByte,"ax",%progbits
+  92              		.align	1
+  93              		.syntax unified
+  94              		.thumb
+  95              		.thumb_func
+  97              	SD_SPI_TxRxByte:
+  98              	.LFB138:
+  62:Core/Src/sd_spi.c **** 
+  63:Core/Src/sd_spi.c **** static uint8_t SD_SPI_TxRxByte(uint8_t data)
+  64:Core/Src/sd_spi.c **** {
+  99              		.loc 1 64 1 is_stmt 1 view -0
+ 100              		.cfi_startproc
+ 101              		@ args = 0, pretend = 0, frame = 0
+ 102              		@ frame_needed = 0, uses_anonymous_args = 0
+ 103              		@ link register save eliminated.
+ 104              	.LVL0:
+ 105              	.L8:
+  65:Core/Src/sd_spi.c ****   while (!(SPI5->SR & SPI_SR_TXE)) {}
+ 106              		.loc 1 65 37 discriminator 1 view .LVU11
+ 107              		.loc 1 65 10 discriminator 1 view .LVU12
+ 108              		.loc 1 65 16 is_stmt 0 discriminator 1 view .LVU13
+ 109 0000 074B     		ldr	r3, .L10
+ 110 0002 9B68     		ldr	r3, [r3, #8]
+ 111              		.loc 1 65 10 discriminator 1 view .LVU14
+ARM GAS  /tmp/ccX8ljiu.s 			page 4
+
+
+ 112 0004 13F0020F 		tst	r3, #2
+ 113 0008 FAD0     		beq	.L8
+  66:Core/Src/sd_spi.c ****   *(__IO uint8_t *)&SPI5->DR = data;
+ 114              		.loc 1 66 3 is_stmt 1 view .LVU15
+ 115              		.loc 1 66 30 is_stmt 0 view .LVU16
+ 116 000a 054B     		ldr	r3, .L10
+ 117 000c 1873     		strb	r0, [r3, #12]
+  67:Core/Src/sd_spi.c ****   while (!(SPI5->SR & SPI_SR_RXNE)) {}
+ 118              		.loc 1 67 3 is_stmt 1 view .LVU17
+ 119              	.L9:
+ 120              		.loc 1 67 38 discriminator 1 view .LVU18
+ 121              		.loc 1 67 10 discriminator 1 view .LVU19
+ 122              		.loc 1 67 16 is_stmt 0 discriminator 1 view .LVU20
+ 123 000e 044B     		ldr	r3, .L10
+ 124 0010 9B68     		ldr	r3, [r3, #8]
+ 125              		.loc 1 67 10 discriminator 1 view .LVU21
+ 126 0012 13F0010F 		tst	r3, #1
+ 127 0016 FAD0     		beq	.L9
+  68:Core/Src/sd_spi.c ****   return *(__IO uint8_t *)&SPI5->DR;
+ 128              		.loc 1 68 3 is_stmt 1 view .LVU22
+  69:Core/Src/sd_spi.c **** }
+ 129              		.loc 1 69 1 is_stmt 0 view .LVU23
+ 130 0018 014B     		ldr	r3, .L10
+ 131 001a 187B     		ldrb	r0, [r3, #12]	@ zero_extendqisi2
+ 132              	.LVL1:
+ 133              		.loc 1 69 1 view .LVU24
+ 134 001c 7047     		bx	lr
+ 135              	.L11:
+ 136 001e 00BF     		.align	2
+ 137              	.L10:
+ 138 0020 00500140 		.word	1073827840
+ 139              		.cfi_endproc
+ 140              	.LFE138:
+ 142              		.section	.text.SD_WaitReady,"ax",%progbits
+ 143              		.align	1
+ 144              		.syntax unified
+ 145              		.thumb
+ 146              		.thumb_func
+ 148              	SD_WaitReady:
+ 149              	.LVL2:
+ 150              	.LFB140:
+  70:Core/Src/sd_spi.c **** 
+  71:Core/Src/sd_spi.c **** static void SD_SPI_InitBus(void)
+  72:Core/Src/sd_spi.c **** {
+  73:Core/Src/sd_spi.c ****   GPIO_InitTypeDef gpio = {0};
+  74:Core/Src/sd_spi.c **** 
+  75:Core/Src/sd_spi.c ****   /* 1. Deselect onboard L3GD20 Gyroscope (PC1) so it never drives MISO (PF8) */
+  76:Core/Src/sd_spi.c ****   GYRO_CS_GPIO_CLK_ENABLE();
+  77:Core/Src/sd_spi.c ****   gpio.Pin   = GYRO_CS_PIN;
+  78:Core/Src/sd_spi.c ****   gpio.Mode  = GPIO_MODE_OUTPUT_PP;
+  79:Core/Src/sd_spi.c ****   gpio.Pull  = GPIO_PULLUP;
+  80:Core/Src/sd_spi.c ****   gpio.Speed = GPIO_SPEED_FAST;
+  81:Core/Src/sd_spi.c ****   HAL_GPIO_Init(GYRO_CS_GPIO_PORT, &gpio);
+  82:Core/Src/sd_spi.c ****   GYRO_CS_HIGH();
+  83:Core/Src/sd_spi.c **** 
+  84:Core/Src/sd_spi.c ****   /* 2. Force LCD_WRX (PD13) HIGH so ILI9341 ignores MOSI when PC2 goes LOW */
+  85:Core/Src/sd_spi.c ****   LCD_WRX_GPIO_CLK_ENABLE();
+ARM GAS  /tmp/ccX8ljiu.s 			page 5
+
+
+  86:Core/Src/sd_spi.c ****   LCD_WRX_HIGH();
+  87:Core/Src/sd_spi.c **** 
+  88:Core/Src/sd_spi.c ****   /* 3. Ensure SD_CS (PC2) is configured as push-pull output and starts HIGH */
+  89:Core/Src/sd_spi.c ****   SD_CS_GPIO_CLK_ENABLE();
+  90:Core/Src/sd_spi.c ****   gpio.Pin   = SD_CS_PIN;
+  91:Core/Src/sd_spi.c ****   gpio.Mode  = GPIO_MODE_OUTPUT_PP;
+  92:Core/Src/sd_spi.c ****   gpio.Pull  = GPIO_PULLUP;
+  93:Core/Src/sd_spi.c ****   gpio.Speed = GPIO_SPEED_FAST;
+  94:Core/Src/sd_spi.c ****   HAL_GPIO_Init(SD_CS_GPIO_PORT, &gpio);
+  95:Core/Src/sd_spi.c ****   SD_CS_High();
+  96:Core/Src/sd_spi.c **** 
+  97:Core/Src/sd_spi.c ****   /* 4. Enable internal pull-up on SPI5 SCK/MISO/MOSI (PF7, PF8, PF9) */
+  98:Core/Src/sd_spi.c ****   DISCOVERY_SPIx_GPIO_CLK_ENABLE();
+  99:Core/Src/sd_spi.c ****   gpio.Pin       = DISCOVERY_SPIx_SCK_PIN | DISCOVERY_SPIx_MISO_PIN | DISCOVERY_SPIx_MOSI_PIN;
+ 100:Core/Src/sd_spi.c ****   gpio.Mode      = GPIO_MODE_AF_PP;
+ 101:Core/Src/sd_spi.c ****   gpio.Pull      = GPIO_PULLUP;
+ 102:Core/Src/sd_spi.c ****   gpio.Speed     = GPIO_SPEED_FAST;
+ 103:Core/Src/sd_spi.c ****   gpio.Alternate = DISCOVERY_SPIx_AF;
+ 104:Core/Src/sd_spi.c ****   HAL_GPIO_Init(DISCOVERY_SPIx_GPIO_PORT, &gpio);
+ 105:Core/Src/sd_spi.c **** 
+ 106:Core/Src/sd_spi.c ****   /* Ensure SPI5 peripheral is enabled */
+ 107:Core/Src/sd_spi.c ****   DISCOVERY_SPIx_CLK_ENABLE();
+ 108:Core/Src/sd_spi.c ****   SET_BIT(SPI5->CR1, SPI_CR1_SPE);
+ 109:Core/Src/sd_spi.c **** }
+ 110:Core/Src/sd_spi.c **** 
+ 111:Core/Src/sd_spi.c **** /*----------------------------------------------------------------------------
+ 112:Core/Src/sd_spi.c ****  * SD Card Protocol Helpers
+ 113:Core/Src/sd_spi.c ****  *----------------------------------------------------------------------------*/
+ 114:Core/Src/sd_spi.c **** static int SD_WaitReady(uint32_t timeout_ms)
+ 115:Core/Src/sd_spi.c **** {
+ 151              		.loc 1 115 1 is_stmt 1 view -0
+ 152              		.cfi_startproc
+ 153              		@ args = 0, pretend = 0, frame = 0
+ 154              		@ frame_needed = 0, uses_anonymous_args = 0
+ 155              		.loc 1 115 1 is_stmt 0 view .LVU26
+ 156 0000 38B5     		push	{r3, r4, r5, lr}
+ 157              	.LCFI0:
+ 158              		.cfi_def_cfa_offset 16
+ 159              		.cfi_offset 3, -16
+ 160              		.cfi_offset 4, -12
+ 161              		.cfi_offset 5, -8
+ 162              		.cfi_offset 14, -4
+ 163 0002 0546     		mov	r5, r0
+ 116:Core/Src/sd_spi.c ****   uint32_t start = HAL_GetTick();
+ 164              		.loc 1 116 3 is_stmt 1 view .LVU27
+ 165              		.loc 1 116 20 is_stmt 0 view .LVU28
+ 166 0004 FFF7FEFF 		bl	HAL_GetTick
+ 167              	.LVL3:
+ 168              		.loc 1 116 20 view .LVU29
+ 169 0008 0446     		mov	r4, r0
+ 170              	.LVL4:
+ 171              	.L14:
+ 117:Core/Src/sd_spi.c ****   uint8_t d;
+ 172              		.loc 1 117 3 is_stmt 1 view .LVU30
+ 118:Core/Src/sd_spi.c ****   do
+ 173              		.loc 1 118 3 view .LVU31
+ 119:Core/Src/sd_spi.c ****   {
+ARM GAS  /tmp/ccX8ljiu.s 			page 6
+
+
+ 120:Core/Src/sd_spi.c ****     d = SD_SPI_TxRxByte(0xFF);
+ 174              		.loc 1 120 5 view .LVU32
+ 175              		.loc 1 120 9 is_stmt 0 view .LVU33
+ 176 000a FF20     		movs	r0, #255
+ 177 000c FFF7FEFF 		bl	SD_SPI_TxRxByte
+ 178              	.LVL5:
+ 121:Core/Src/sd_spi.c ****     if (d == 0xFF)
+ 179              		.loc 1 121 5 is_stmt 1 view .LVU34
+ 180              		.loc 1 121 8 is_stmt 0 view .LVU35
+ 181 0010 FF28     		cmp	r0, #255
+ 182 0012 06D0     		beq	.L15
+ 122:Core/Src/sd_spi.c ****     {
+ 123:Core/Src/sd_spi.c ****       return 1;
+ 124:Core/Src/sd_spi.c ****     }
+ 125:Core/Src/sd_spi.c ****   } while ((HAL_GetTick() - start) < timeout_ms);
+ 183              		.loc 1 125 36 is_stmt 1 view .LVU36
+ 184              		.loc 1 125 13 is_stmt 0 view .LVU37
+ 185 0014 FFF7FEFF 		bl	HAL_GetTick
+ 186              	.LVL6:
+ 187              		.loc 1 125 27 discriminator 1 view .LVU38
+ 188 0018 001B     		subs	r0, r0, r4
+ 189              		.loc 1 125 36 discriminator 1 view .LVU39
+ 190 001a A842     		cmp	r0, r5
+ 191 001c F5D3     		bcc	.L14
+ 126:Core/Src/sd_spi.c **** 
+ 127:Core/Src/sd_spi.c ****   return 0;
+ 192              		.loc 1 127 10 view .LVU40
+ 193 001e 0020     		movs	r0, #0
+ 194 0020 00E0     		b	.L12
+ 195              	.LVL7:
+ 196              	.L15:
+ 123:Core/Src/sd_spi.c ****     }
+ 197              		.loc 1 123 14 view .LVU41
+ 198 0022 0120     		movs	r0, #1
+ 199              	.LVL8:
+ 200              	.L12:
+ 128:Core/Src/sd_spi.c **** }
+ 201              		.loc 1 128 1 view .LVU42
+ 202 0024 38BD     		pop	{r3, r4, r5, pc}
+ 203              		.loc 1 128 1 view .LVU43
+ 204              		.cfi_endproc
+ 205              	.LFE140:
+ 207              		.section	.text.SD_SendDataBlock,"ax",%progbits
+ 208              		.align	1
+ 209              		.syntax unified
+ 210              		.thumb
+ 211              		.thumb_func
+ 213              	SD_SendDataBlock:
+ 214              	.LVL9:
+ 215              	.LFB144:
+ 129:Core/Src/sd_spi.c **** 
+ 130:Core/Src/sd_spi.c **** static void SD_Deselect(void)
+ 131:Core/Src/sd_spi.c **** {
+ 132:Core/Src/sd_spi.c ****   SD_CS_High();
+ 133:Core/Src/sd_spi.c ****   SD_SPI_TxRxByte(0xFF); /* Provide 8 extra clocks for card to release MISO */
+ 134:Core/Src/sd_spi.c **** }
+ 135:Core/Src/sd_spi.c **** 
+ARM GAS  /tmp/ccX8ljiu.s 			page 7
+
+
+ 136:Core/Src/sd_spi.c **** static int SD_Select(void)
+ 137:Core/Src/sd_spi.c **** {
+ 138:Core/Src/sd_spi.c ****   SD_CS_Low();
+ 139:Core/Src/sd_spi.c ****   SD_SPI_TxRxByte(0xFF);
+ 140:Core/Src/sd_spi.c ****   if (SD_WaitReady(500))
+ 141:Core/Src/sd_spi.c ****   {
+ 142:Core/Src/sd_spi.c ****     return 1;
+ 143:Core/Src/sd_spi.c ****   }
+ 144:Core/Src/sd_spi.c ****   SD_Deselect();
+ 145:Core/Src/sd_spi.c ****   return 0;
+ 146:Core/Src/sd_spi.c **** }
+ 147:Core/Src/sd_spi.c **** 
+ 148:Core/Src/sd_spi.c **** static int SD_ReceiveDataBlock(uint8_t *buff, UINT btr)
+ 149:Core/Src/sd_spi.c **** {
+ 150:Core/Src/sd_spi.c ****   uint8_t token;
+ 151:Core/Src/sd_spi.c ****   uint32_t start = HAL_GetTick();
+ 152:Core/Src/sd_spi.c **** 
+ 153:Core/Src/sd_spi.c ****   /* Wait for data packet token (0xFE) */
+ 154:Core/Src/sd_spi.c ****   do
+ 155:Core/Src/sd_spi.c ****   {
+ 156:Core/Src/sd_spi.c ****     token = SD_SPI_TxRxByte(0xFF);
+ 157:Core/Src/sd_spi.c ****   } while ((token == 0xFF) && ((HAL_GetTick() - start) < 200));
+ 158:Core/Src/sd_spi.c **** 
+ 159:Core/Src/sd_spi.c ****   if (token != 0xFE)
+ 160:Core/Src/sd_spi.c ****   {
+ 161:Core/Src/sd_spi.c ****     return 0;
+ 162:Core/Src/sd_spi.c ****   }
+ 163:Core/Src/sd_spi.c **** 
+ 164:Core/Src/sd_spi.c ****   /* Read data block */
+ 165:Core/Src/sd_spi.c ****   for (UINT i = 0; i < btr; i++)
+ 166:Core/Src/sd_spi.c ****   {
+ 167:Core/Src/sd_spi.c ****     buff[i] = SD_SPI_TxRxByte(0xFF);
+ 168:Core/Src/sd_spi.c ****   }
+ 169:Core/Src/sd_spi.c **** 
+ 170:Core/Src/sd_spi.c ****   /* Discard 2-byte CRC */
+ 171:Core/Src/sd_spi.c ****   SD_SPI_TxRxByte(0xFF);
+ 172:Core/Src/sd_spi.c ****   SD_SPI_TxRxByte(0xFF);
+ 173:Core/Src/sd_spi.c **** 
+ 174:Core/Src/sd_spi.c ****   return 1;
+ 175:Core/Src/sd_spi.c **** }
+ 176:Core/Src/sd_spi.c **** 
+ 177:Core/Src/sd_spi.c **** #if _USE_WRITE == 1
+ 178:Core/Src/sd_spi.c **** static int SD_SendDataBlock(const uint8_t *buff, uint8_t token)
+ 179:Core/Src/sd_spi.c **** {
+ 216              		.loc 1 179 1 is_stmt 1 view -0
+ 217              		.cfi_startproc
+ 218              		@ args = 0, pretend = 0, frame = 0
+ 219              		@ frame_needed = 0, uses_anonymous_args = 0
+ 220              		.loc 1 179 1 is_stmt 0 view .LVU45
+ 221 0000 38B5     		push	{r3, r4, r5, lr}
+ 222              	.LCFI1:
+ 223              		.cfi_def_cfa_offset 16
+ 224              		.cfi_offset 3, -16
+ 225              		.cfi_offset 4, -12
+ 226              		.cfi_offset 5, -8
+ 227              		.cfi_offset 14, -4
+ 228 0002 0546     		mov	r5, r0
+ARM GAS  /tmp/ccX8ljiu.s 			page 8
+
+
+ 229 0004 0C46     		mov	r4, r1
+ 180:Core/Src/sd_spi.c ****   if (!SD_WaitReady(500))
+ 230              		.loc 1 180 3 is_stmt 1 view .LVU46
+ 231              		.loc 1 180 8 is_stmt 0 view .LVU47
+ 232 0006 4FF4FA70 		mov	r0, #500
+ 233              	.LVL10:
+ 234              		.loc 1 180 8 view .LVU48
+ 235 000a FFF7FEFF 		bl	SD_WaitReady
+ 236              	.LVL11:
+ 237              		.loc 1 180 6 discriminator 1 view .LVU49
+ 238 000e 00B9     		cbnz	r0, .L24
+ 239              	.LVL12:
+ 240              	.L17:
+ 181:Core/Src/sd_spi.c ****   {
+ 182:Core/Src/sd_spi.c ****     return 0;
+ 183:Core/Src/sd_spi.c ****   }
+ 184:Core/Src/sd_spi.c **** 
+ 185:Core/Src/sd_spi.c ****   SD_SPI_TxRxByte(token);
+ 186:Core/Src/sd_spi.c ****   if (token != 0xFD)
+ 187:Core/Src/sd_spi.c ****   {
+ 188:Core/Src/sd_spi.c ****     for (UINT i = 0; i < 512; i++)
+ 189:Core/Src/sd_spi.c ****     {
+ 190:Core/Src/sd_spi.c ****       SD_SPI_TxRxByte(buff[i]);
+ 191:Core/Src/sd_spi.c ****     }
+ 192:Core/Src/sd_spi.c ****     /* Dummy CRC */
+ 193:Core/Src/sd_spi.c ****     SD_SPI_TxRxByte(0xFF);
+ 194:Core/Src/sd_spi.c ****     SD_SPI_TxRxByte(0xFF);
+ 195:Core/Src/sd_spi.c **** 
+ 196:Core/Src/sd_spi.c ****     uint8_t resp = SD_SPI_TxRxByte(0xFF);
+ 197:Core/Src/sd_spi.c ****     if ((resp & 0x1F) != 0x05)
+ 198:Core/Src/sd_spi.c ****     {
+ 199:Core/Src/sd_spi.c ****       return 0;
+ 200:Core/Src/sd_spi.c ****     }
+ 201:Core/Src/sd_spi.c ****   }
+ 202:Core/Src/sd_spi.c ****   return 1;
+ 203:Core/Src/sd_spi.c **** }
+ 241              		.loc 1 203 1 view .LVU50
+ 242 0010 38BD     		pop	{r3, r4, r5, pc}
+ 243              	.LVL13:
+ 244              	.L24:
+ 185:Core/Src/sd_spi.c ****   if (token != 0xFD)
+ 245              		.loc 1 185 3 is_stmt 1 view .LVU51
+ 246 0012 2046     		mov	r0, r4
+ 247 0014 FFF7FEFF 		bl	SD_SPI_TxRxByte
+ 248              	.LVL14:
+ 186:Core/Src/sd_spi.c ****   {
+ 249              		.loc 1 186 3 view .LVU52
+ 186:Core/Src/sd_spi.c ****   {
+ 250              		.loc 1 186 6 is_stmt 0 view .LVU53
+ 251 0018 FD2C     		cmp	r4, #253
+ 252 001a 01D0     		beq	.L25
+ 253              	.LBB2:
+ 254              	.LBB3:
+ 188:Core/Src/sd_spi.c ****     {
+ 255              		.loc 1 188 15 view .LVU54
+ 256 001c 0024     		movs	r4, #0
+ 257 001e 05E0     		b	.L19
+ARM GAS  /tmp/ccX8ljiu.s 			page 9
+
+
+ 258              	.L25:
+ 259              	.LBE3:
+ 260              	.LBE2:
+ 202:Core/Src/sd_spi.c **** }
+ 261              		.loc 1 202 10 view .LVU55
+ 262 0020 0120     		movs	r0, #1
+ 263 0022 F5E7     		b	.L17
+ 264              	.LVL15:
+ 265              	.L20:
+ 266              	.LBB5:
+ 267              	.LBB4:
+ 190:Core/Src/sd_spi.c ****     }
+ 268              		.loc 1 190 7 is_stmt 1 view .LVU56
+ 269 0024 285D     		ldrb	r0, [r5, r4]	@ zero_extendqisi2
+ 270 0026 FFF7FEFF 		bl	SD_SPI_TxRxByte
+ 271              	.LVL16:
+ 188:Core/Src/sd_spi.c ****     {
+ 272              		.loc 1 188 32 discriminator 1 view .LVU57
+ 273 002a 0134     		adds	r4, r4, #1
+ 274              	.LVL17:
+ 275              	.L19:
+ 188:Core/Src/sd_spi.c ****     {
+ 276              		.loc 1 188 24 discriminator 2 view .LVU58
+ 277 002c B4F5007F 		cmp	r4, #512
+ 278 0030 F8D3     		bcc	.L20
+ 279              	.LBE4:
+ 193:Core/Src/sd_spi.c ****     SD_SPI_TxRxByte(0xFF);
+ 280              		.loc 1 193 5 view .LVU59
+ 281 0032 FF20     		movs	r0, #255
+ 282 0034 FFF7FEFF 		bl	SD_SPI_TxRxByte
+ 283              	.LVL18:
+ 194:Core/Src/sd_spi.c **** 
+ 284              		.loc 1 194 5 view .LVU60
+ 285 0038 FF20     		movs	r0, #255
+ 286 003a FFF7FEFF 		bl	SD_SPI_TxRxByte
+ 287              	.LVL19:
+ 196:Core/Src/sd_spi.c ****     if ((resp & 0x1F) != 0x05)
+ 288              		.loc 1 196 5 view .LVU61
+ 196:Core/Src/sd_spi.c ****     if ((resp & 0x1F) != 0x05)
+ 289              		.loc 1 196 20 is_stmt 0 view .LVU62
+ 290 003e FF20     		movs	r0, #255
+ 291 0040 FFF7FEFF 		bl	SD_SPI_TxRxByte
+ 292              	.LVL20:
+ 197:Core/Src/sd_spi.c ****     {
+ 293              		.loc 1 197 5 is_stmt 1 view .LVU63
+ 197:Core/Src/sd_spi.c ****     {
+ 294              		.loc 1 197 8 is_stmt 0 view .LVU64
+ 295 0044 00F01F03 		and	r3, r0, #31
+ 296 0048 052B     		cmp	r3, #5
+ 297 004a 01D1     		bne	.L22
+ 298              	.LBE5:
+ 202:Core/Src/sd_spi.c **** }
+ 299              		.loc 1 202 10 view .LVU65
+ 300 004c 0120     		movs	r0, #1
+ 301              	.LVL21:
+ 202:Core/Src/sd_spi.c **** }
+ 302              		.loc 1 202 10 view .LVU66
+ARM GAS  /tmp/ccX8ljiu.s 			page 10
+
+
+ 303 004e DFE7     		b	.L17
+ 304              	.LVL22:
+ 305              	.L22:
+ 306              	.LBB6:
+ 199:Core/Src/sd_spi.c ****     }
+ 307              		.loc 1 199 14 view .LVU67
+ 308 0050 0020     		movs	r0, #0
+ 309              	.LVL23:
+ 199:Core/Src/sd_spi.c ****     }
+ 310              		.loc 1 199 14 view .LVU68
+ 311 0052 DDE7     		b	.L17
+ 312              	.LBE6:
+ 313              		.cfi_endproc
+ 314              	.LFE144:
+ 316              		.section	.text.SD_ReceiveDataBlock,"ax",%progbits
+ 317              		.align	1
+ 318              		.syntax unified
+ 319              		.thumb
+ 320              		.thumb_func
+ 322              	SD_ReceiveDataBlock:
+ 323              	.LVL24:
+ 324              	.LFB143:
+ 149:Core/Src/sd_spi.c ****   uint8_t token;
+ 325              		.loc 1 149 1 is_stmt 1 view -0
+ 326              		.cfi_startproc
+ 327              		@ args = 0, pretend = 0, frame = 0
+ 328              		@ frame_needed = 0, uses_anonymous_args = 0
+ 149:Core/Src/sd_spi.c ****   uint8_t token;
+ 329              		.loc 1 149 1 is_stmt 0 view .LVU70
+ 330 0000 F8B5     		push	{r3, r4, r5, r6, r7, lr}
+ 331              	.LCFI2:
+ 332              		.cfi_def_cfa_offset 24
+ 333              		.cfi_offset 3, -24
+ 334              		.cfi_offset 4, -20
+ 335              		.cfi_offset 5, -16
+ 336              		.cfi_offset 6, -12
+ 337              		.cfi_offset 7, -8
+ 338              		.cfi_offset 14, -4
+ 339 0002 0746     		mov	r7, r0
+ 340 0004 0E46     		mov	r6, r1
+ 150:Core/Src/sd_spi.c ****   uint32_t start = HAL_GetTick();
+ 341              		.loc 1 150 3 is_stmt 1 view .LVU71
+ 151:Core/Src/sd_spi.c **** 
+ 342              		.loc 1 151 3 view .LVU72
+ 151:Core/Src/sd_spi.c **** 
+ 343              		.loc 1 151 20 is_stmt 0 view .LVU73
+ 344 0006 FFF7FEFF 		bl	HAL_GetTick
+ 345              	.LVL25:
+ 151:Core/Src/sd_spi.c **** 
+ 346              		.loc 1 151 20 view .LVU74
+ 347 000a 0546     		mov	r5, r0
+ 348              	.LVL26:
+ 349              	.L28:
+ 154:Core/Src/sd_spi.c ****   {
+ 350              		.loc 1 154 3 is_stmt 1 view .LVU75
+ 156:Core/Src/sd_spi.c ****   } while ((token == 0xFF) && ((HAL_GetTick() - start) < 200));
+ 351              		.loc 1 156 5 view .LVU76
+ARM GAS  /tmp/ccX8ljiu.s 			page 11
+
+
+ 156:Core/Src/sd_spi.c ****   } while ((token == 0xFF) && ((HAL_GetTick() - start) < 200));
+ 352              		.loc 1 156 13 is_stmt 0 view .LVU77
+ 353 000c FF20     		movs	r0, #255
+ 354 000e FFF7FEFF 		bl	SD_SPI_TxRxByte
+ 355              	.LVL27:
+ 356 0012 0446     		mov	r4, r0
+ 357              	.LVL28:
+ 157:Core/Src/sd_spi.c **** 
+ 358              		.loc 1 157 28 is_stmt 1 view .LVU78
+ 359 0014 FF28     		cmp	r0, #255
+ 360 0016 04D1     		bne	.L27
+ 157:Core/Src/sd_spi.c **** 
+ 361              		.loc 1 157 33 is_stmt 0 discriminator 1 view .LVU79
+ 362 0018 FFF7FEFF 		bl	HAL_GetTick
+ 363              	.LVL29:
+ 157:Core/Src/sd_spi.c **** 
+ 364              		.loc 1 157 47 discriminator 2 view .LVU80
+ 365 001c 401B     		subs	r0, r0, r5
+ 157:Core/Src/sd_spi.c **** 
+ 366              		.loc 1 157 28 discriminator 2 view .LVU81
+ 367 001e C728     		cmp	r0, #199
+ 368 0020 F4D9     		bls	.L28
+ 369              	.L27:
+ 159:Core/Src/sd_spi.c ****   {
+ 370              		.loc 1 159 3 is_stmt 1 view .LVU82
+ 159:Core/Src/sd_spi.c ****   {
+ 371              		.loc 1 159 6 is_stmt 0 view .LVU83
+ 372 0022 FE2C     		cmp	r4, #254
+ 373 0024 10D1     		bne	.L32
+ 374              	.LBB7:
+ 165:Core/Src/sd_spi.c ****   {
+ 375              		.loc 1 165 13 view .LVU84
+ 376 0026 0024     		movs	r4, #0
+ 377 0028 04E0     		b	.L30
+ 378              	.LVL30:
+ 379              	.L31:
+ 167:Core/Src/sd_spi.c ****   }
+ 380              		.loc 1 167 5 is_stmt 1 view .LVU85
+ 167:Core/Src/sd_spi.c ****   }
+ 381              		.loc 1 167 15 is_stmt 0 view .LVU86
+ 382 002a FF20     		movs	r0, #255
+ 383 002c FFF7FEFF 		bl	SD_SPI_TxRxByte
+ 384              	.LVL31:
+ 167:Core/Src/sd_spi.c ****   }
+ 385              		.loc 1 167 13 discriminator 1 view .LVU87
+ 386 0030 3855     		strb	r0, [r7, r4]
+ 165:Core/Src/sd_spi.c ****   {
+ 387              		.loc 1 165 30 is_stmt 1 discriminator 1 view .LVU88
+ 388 0032 0134     		adds	r4, r4, #1
+ 389              	.LVL32:
+ 390              	.L30:
+ 165:Core/Src/sd_spi.c ****   {
+ 391              		.loc 1 165 22 discriminator 2 view .LVU89
+ 392 0034 B442     		cmp	r4, r6
+ 393 0036 F8D3     		bcc	.L31
+ 394              	.LBE7:
+ 171:Core/Src/sd_spi.c ****   SD_SPI_TxRxByte(0xFF);
+ARM GAS  /tmp/ccX8ljiu.s 			page 12
+
+
+ 395              		.loc 1 171 3 view .LVU90
+ 396 0038 FF20     		movs	r0, #255
+ 397 003a FFF7FEFF 		bl	SD_SPI_TxRxByte
+ 398              	.LVL33:
+ 172:Core/Src/sd_spi.c **** 
+ 399              		.loc 1 172 3 view .LVU91
+ 400 003e FF20     		movs	r0, #255
+ 401 0040 FFF7FEFF 		bl	SD_SPI_TxRxByte
+ 402              	.LVL34:
+ 174:Core/Src/sd_spi.c **** }
+ 403              		.loc 1 174 3 view .LVU92
+ 174:Core/Src/sd_spi.c **** }
+ 404              		.loc 1 174 10 is_stmt 0 view .LVU93
+ 405 0044 0120     		movs	r0, #1
+ 406              	.LVL35:
+ 407              	.L26:
+ 175:Core/Src/sd_spi.c **** 
+ 408              		.loc 1 175 1 view .LVU94
+ 409 0046 F8BD     		pop	{r3, r4, r5, r6, r7, pc}
+ 410              	.LVL36:
+ 411              	.L32:
+ 161:Core/Src/sd_spi.c ****   }
+ 412              		.loc 1 161 12 view .LVU95
+ 413 0048 0020     		movs	r0, #0
+ 414 004a FCE7     		b	.L26
+ 415              		.cfi_endproc
+ 416              	.LFE143:
+ 418              		.section	.text.SD_CS_High,"ax",%progbits
+ 419              		.align	1
+ 420              		.syntax unified
+ 421              		.thumb
+ 422              		.thumb_func
+ 424              	SD_CS_High:
+ 425              	.LFB135:
+  42:Core/Src/sd_spi.c ****   HAL_GPIO_WritePin(SD_CS_GPIO_PORT, SD_CS_PIN, GPIO_PIN_SET);
+ 426              		.loc 1 42 1 is_stmt 1 view -0
+ 427              		.cfi_startproc
+ 428              		@ args = 0, pretend = 0, frame = 0
+ 429              		@ frame_needed = 0, uses_anonymous_args = 0
+ 430 0000 08B5     		push	{r3, lr}
+ 431              	.LCFI3:
+ 432              		.cfi_def_cfa_offset 8
+ 433              		.cfi_offset 3, -8
+ 434              		.cfi_offset 14, -4
+  43:Core/Src/sd_spi.c ****   LCD_WRX_HIGH();
+ 435              		.loc 1 43 3 view .LVU97
+ 436 0002 0122     		movs	r2, #1
+ 437 0004 0421     		movs	r1, #4
+ 438 0006 0548     		ldr	r0, .L36
+ 439 0008 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 440              	.LVL37:
+  44:Core/Src/sd_spi.c **** }
+ 441              		.loc 1 44 3 view .LVU98
+ 442 000c 0122     		movs	r2, #1
+ 443 000e 4FF40051 		mov	r1, #8192
+ 444 0012 0348     		ldr	r0, .L36+4
+ 445 0014 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ARM GAS  /tmp/ccX8ljiu.s 			page 13
+
+
+ 446              	.LVL38:
+  45:Core/Src/sd_spi.c **** 
+ 447              		.loc 1 45 1 is_stmt 0 view .LVU99
+ 448 0018 08BD     		pop	{r3, pc}
+ 449              	.L37:
+ 450 001a 00BF     		.align	2
+ 451              	.L36:
+ 452 001c 00080240 		.word	1073874944
+ 453 0020 000C0240 		.word	1073875968
+ 454              		.cfi_endproc
+ 455              	.LFE135:
+ 457              		.section	.text.SD_Deselect,"ax",%progbits
+ 458              		.align	1
+ 459              		.syntax unified
+ 460              		.thumb
+ 461              		.thumb_func
+ 463              	SD_Deselect:
+ 464              	.LFB141:
+ 131:Core/Src/sd_spi.c ****   SD_CS_High();
+ 465              		.loc 1 131 1 is_stmt 1 view -0
+ 466              		.cfi_startproc
+ 467              		@ args = 0, pretend = 0, frame = 0
+ 468              		@ frame_needed = 0, uses_anonymous_args = 0
+ 469 0000 08B5     		push	{r3, lr}
+ 470              	.LCFI4:
+ 471              		.cfi_def_cfa_offset 8
+ 472              		.cfi_offset 3, -8
+ 473              		.cfi_offset 14, -4
+ 132:Core/Src/sd_spi.c ****   SD_SPI_TxRxByte(0xFF); /* Provide 8 extra clocks for card to release MISO */
+ 474              		.loc 1 132 3 view .LVU101
+ 475 0002 FFF7FEFF 		bl	SD_CS_High
+ 476              	.LVL39:
+ 133:Core/Src/sd_spi.c **** }
+ 477              		.loc 1 133 3 view .LVU102
+ 478 0006 FF20     		movs	r0, #255
+ 479 0008 FFF7FEFF 		bl	SD_SPI_TxRxByte
+ 480              	.LVL40:
+ 134:Core/Src/sd_spi.c **** 
+ 481              		.loc 1 134 1 is_stmt 0 view .LVU103
+ 482 000c 08BD     		pop	{r3, pc}
+ 483              		.cfi_endproc
+ 484              	.LFE141:
+ 486              		.section	.text.SD_SPI_InitBus,"ax",%progbits
+ 487              		.align	1
+ 488              		.syntax unified
+ 489              		.thumb
+ 490              		.thumb_func
+ 492              	SD_SPI_InitBus:
+ 493              	.LFB139:
+  72:Core/Src/sd_spi.c ****   GPIO_InitTypeDef gpio = {0};
+ 494              		.loc 1 72 1 is_stmt 1 view -0
+ 495              		.cfi_startproc
+ 496              		@ args = 0, pretend = 0, frame = 40
+ 497              		@ frame_needed = 0, uses_anonymous_args = 0
+ 498 0000 2DE9F043 		push	{r4, r5, r6, r7, r8, r9, lr}
+ 499              	.LCFI5:
+ 500              		.cfi_def_cfa_offset 28
+ARM GAS  /tmp/ccX8ljiu.s 			page 14
+
+
+ 501              		.cfi_offset 4, -28
+ 502              		.cfi_offset 5, -24
+ 503              		.cfi_offset 6, -20
+ 504              		.cfi_offset 7, -16
+ 505              		.cfi_offset 8, -12
+ 506              		.cfi_offset 9, -8
+ 507              		.cfi_offset 14, -4
+ 508 0004 8BB0     		sub	sp, sp, #44
+ 509              	.LCFI6:
+ 510              		.cfi_def_cfa_offset 72
+  73:Core/Src/sd_spi.c **** 
+ 511              		.loc 1 73 3 view .LVU105
+  73:Core/Src/sd_spi.c **** 
+ 512              		.loc 1 73 20 is_stmt 0 view .LVU106
+ 513 0006 05AE     		add	r6, sp, #20
+ 514 0008 0025     		movs	r5, #0
+ 515 000a 0595     		str	r5, [sp, #20]
+ 516 000c 0695     		str	r5, [sp, #24]
+ 517 000e 0795     		str	r5, [sp, #28]
+ 518 0010 0895     		str	r5, [sp, #32]
+ 519 0012 0995     		str	r5, [sp, #36]
+  76:Core/Src/sd_spi.c ****   gpio.Pin   = GYRO_CS_PIN;
+ 520              		.loc 1 76 3 is_stmt 1 view .LVU107
+ 521              	.LBB8:
+  76:Core/Src/sd_spi.c ****   gpio.Pin   = GYRO_CS_PIN;
+ 522              		.loc 1 76 3 view .LVU108
+ 523 0014 0095     		str	r5, [sp]
+  76:Core/Src/sd_spi.c ****   gpio.Pin   = GYRO_CS_PIN;
+ 524              		.loc 1 76 3 view .LVU109
+ 525 0016 374C     		ldr	r4, .L42
+ 526 0018 236B     		ldr	r3, [r4, #48]
+ 527 001a 43F00403 		orr	r3, r3, #4
+ 528 001e 2363     		str	r3, [r4, #48]
+  76:Core/Src/sd_spi.c ****   gpio.Pin   = GYRO_CS_PIN;
+ 529              		.loc 1 76 3 view .LVU110
+ 530 0020 236B     		ldr	r3, [r4, #48]
+ 531 0022 03F00403 		and	r3, r3, #4
+ 532 0026 0093     		str	r3, [sp]
+  76:Core/Src/sd_spi.c ****   gpio.Pin   = GYRO_CS_PIN;
+ 533              		.loc 1 76 3 view .LVU111
+ 534 0028 009B     		ldr	r3, [sp]
+ 535              	.LBE8:
+  76:Core/Src/sd_spi.c ****   gpio.Pin   = GYRO_CS_PIN;
+ 536              		.loc 1 76 3 view .LVU112
+  77:Core/Src/sd_spi.c ****   gpio.Mode  = GPIO_MODE_OUTPUT_PP;
+ 537              		.loc 1 77 3 view .LVU113
+  77:Core/Src/sd_spi.c ****   gpio.Mode  = GPIO_MODE_OUTPUT_PP;
+ 538              		.loc 1 77 14 is_stmt 0 view .LVU114
+ 539 002a 4FF00208 		mov	r8, #2
+ 540 002e CDF81480 		str	r8, [sp, #20]
+  78:Core/Src/sd_spi.c ****   gpio.Pull  = GPIO_PULLUP;
+ 541              		.loc 1 78 3 is_stmt 1 view .LVU115
+  78:Core/Src/sd_spi.c ****   gpio.Pull  = GPIO_PULLUP;
+ 542              		.loc 1 78 14 is_stmt 0 view .LVU116
+ 543 0032 0127     		movs	r7, #1
+ 544 0034 0697     		str	r7, [sp, #24]
+  79:Core/Src/sd_spi.c ****   gpio.Speed = GPIO_SPEED_FAST;
+ARM GAS  /tmp/ccX8ljiu.s 			page 15
+
+
+ 545              		.loc 1 79 3 is_stmt 1 view .LVU117
+  79:Core/Src/sd_spi.c ****   gpio.Speed = GPIO_SPEED_FAST;
+ 546              		.loc 1 79 14 is_stmt 0 view .LVU118
+ 547 0036 0797     		str	r7, [sp, #28]
+  80:Core/Src/sd_spi.c ****   HAL_GPIO_Init(GYRO_CS_GPIO_PORT, &gpio);
+ 548              		.loc 1 80 3 is_stmt 1 view .LVU119
+  80:Core/Src/sd_spi.c ****   HAL_GPIO_Init(GYRO_CS_GPIO_PORT, &gpio);
+ 549              		.loc 1 80 14 is_stmt 0 view .LVU120
+ 550 0038 CDF82080 		str	r8, [sp, #32]
+  81:Core/Src/sd_spi.c ****   GYRO_CS_HIGH();
+ 551              		.loc 1 81 3 is_stmt 1 view .LVU121
+ 552 003c DFF8C490 		ldr	r9, .L42+16
+ 553 0040 3146     		mov	r1, r6
+ 554 0042 4846     		mov	r0, r9
+ 555 0044 FFF7FEFF 		bl	HAL_GPIO_Init
+ 556              	.LVL41:
+  82:Core/Src/sd_spi.c **** 
+ 557              		.loc 1 82 3 view .LVU122
+ 558 0048 3A46     		mov	r2, r7
+ 559 004a 4146     		mov	r1, r8
+ 560 004c 4846     		mov	r0, r9
+ 561 004e FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 562              	.LVL42:
+  85:Core/Src/sd_spi.c ****   LCD_WRX_HIGH();
+ 563              		.loc 1 85 3 view .LVU123
+ 564              	.LBB9:
+  85:Core/Src/sd_spi.c ****   LCD_WRX_HIGH();
+ 565              		.loc 1 85 3 view .LVU124
+ 566 0052 0195     		str	r5, [sp, #4]
+  85:Core/Src/sd_spi.c ****   LCD_WRX_HIGH();
+ 567              		.loc 1 85 3 view .LVU125
+ 568 0054 236B     		ldr	r3, [r4, #48]
+ 569 0056 43F00803 		orr	r3, r3, #8
+ 570 005a 2363     		str	r3, [r4, #48]
+  85:Core/Src/sd_spi.c ****   LCD_WRX_HIGH();
+ 571              		.loc 1 85 3 view .LVU126
+ 572 005c 236B     		ldr	r3, [r4, #48]
+ 573 005e 03F00803 		and	r3, r3, #8
+ 574 0062 0193     		str	r3, [sp, #4]
+  85:Core/Src/sd_spi.c ****   LCD_WRX_HIGH();
+ 575              		.loc 1 85 3 view .LVU127
+ 576 0064 019B     		ldr	r3, [sp, #4]
+ 577              	.LBE9:
+  85:Core/Src/sd_spi.c ****   LCD_WRX_HIGH();
+ 578              		.loc 1 85 3 view .LVU128
+  86:Core/Src/sd_spi.c **** 
+ 579              		.loc 1 86 3 view .LVU129
+ 580 0066 3A46     		mov	r2, r7
+ 581 0068 4FF40051 		mov	r1, #8192
+ 582 006c 2248     		ldr	r0, .L42+4
+ 583 006e FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 584              	.LVL43:
+  89:Core/Src/sd_spi.c ****   gpio.Pin   = SD_CS_PIN;
+ 585              		.loc 1 89 3 view .LVU130
+ 586              	.LBB10:
+  89:Core/Src/sd_spi.c ****   gpio.Pin   = SD_CS_PIN;
+ 587              		.loc 1 89 3 view .LVU131
+ARM GAS  /tmp/ccX8ljiu.s 			page 16
+
+
+ 588 0072 0295     		str	r5, [sp, #8]
+  89:Core/Src/sd_spi.c ****   gpio.Pin   = SD_CS_PIN;
+ 589              		.loc 1 89 3 view .LVU132
+ 590 0074 236B     		ldr	r3, [r4, #48]
+ 591 0076 43F00403 		orr	r3, r3, #4
+ 592 007a 2363     		str	r3, [r4, #48]
+  89:Core/Src/sd_spi.c ****   gpio.Pin   = SD_CS_PIN;
+ 593              		.loc 1 89 3 view .LVU133
+ 594 007c 236B     		ldr	r3, [r4, #48]
+ 595 007e 03F00403 		and	r3, r3, #4
+ 596 0082 0293     		str	r3, [sp, #8]
+  89:Core/Src/sd_spi.c ****   gpio.Pin   = SD_CS_PIN;
+ 597              		.loc 1 89 3 view .LVU134
+ 598 0084 029B     		ldr	r3, [sp, #8]
+ 599              	.LBE10:
+  89:Core/Src/sd_spi.c ****   gpio.Pin   = SD_CS_PIN;
+ 600              		.loc 1 89 3 view .LVU135
+  90:Core/Src/sd_spi.c ****   gpio.Mode  = GPIO_MODE_OUTPUT_PP;
+ 601              		.loc 1 90 3 view .LVU136
+  90:Core/Src/sd_spi.c ****   gpio.Mode  = GPIO_MODE_OUTPUT_PP;
+ 602              		.loc 1 90 14 is_stmt 0 view .LVU137
+ 603 0086 0423     		movs	r3, #4
+ 604 0088 0593     		str	r3, [sp, #20]
+  91:Core/Src/sd_spi.c ****   gpio.Pull  = GPIO_PULLUP;
+ 605              		.loc 1 91 3 is_stmt 1 view .LVU138
+  91:Core/Src/sd_spi.c ****   gpio.Pull  = GPIO_PULLUP;
+ 606              		.loc 1 91 14 is_stmt 0 view .LVU139
+ 607 008a 0697     		str	r7, [sp, #24]
+  92:Core/Src/sd_spi.c ****   gpio.Speed = GPIO_SPEED_FAST;
+ 608              		.loc 1 92 3 is_stmt 1 view .LVU140
+  92:Core/Src/sd_spi.c ****   gpio.Speed = GPIO_SPEED_FAST;
+ 609              		.loc 1 92 14 is_stmt 0 view .LVU141
+ 610 008c 0797     		str	r7, [sp, #28]
+  93:Core/Src/sd_spi.c ****   HAL_GPIO_Init(SD_CS_GPIO_PORT, &gpio);
+ 611              		.loc 1 93 3 is_stmt 1 view .LVU142
+  93:Core/Src/sd_spi.c ****   HAL_GPIO_Init(SD_CS_GPIO_PORT, &gpio);
+ 612              		.loc 1 93 14 is_stmt 0 view .LVU143
+ 613 008e CDF82080 		str	r8, [sp, #32]
+  94:Core/Src/sd_spi.c ****   SD_CS_High();
+ 614              		.loc 1 94 3 is_stmt 1 view .LVU144
+ 615 0092 3146     		mov	r1, r6
+ 616 0094 4846     		mov	r0, r9
+ 617 0096 FFF7FEFF 		bl	HAL_GPIO_Init
+ 618              	.LVL44:
+  95:Core/Src/sd_spi.c **** 
+ 619              		.loc 1 95 3 view .LVU145
+ 620 009a FFF7FEFF 		bl	SD_CS_High
+ 621              	.LVL45:
+  98:Core/Src/sd_spi.c ****   gpio.Pin       = DISCOVERY_SPIx_SCK_PIN | DISCOVERY_SPIx_MISO_PIN | DISCOVERY_SPIx_MOSI_PIN;
+ 622              		.loc 1 98 3 view .LVU146
+ 623              	.LBB11:
+  98:Core/Src/sd_spi.c ****   gpio.Pin       = DISCOVERY_SPIx_SCK_PIN | DISCOVERY_SPIx_MISO_PIN | DISCOVERY_SPIx_MOSI_PIN;
+ 624              		.loc 1 98 3 view .LVU147
+ 625 009e 0395     		str	r5, [sp, #12]
+  98:Core/Src/sd_spi.c ****   gpio.Pin       = DISCOVERY_SPIx_SCK_PIN | DISCOVERY_SPIx_MISO_PIN | DISCOVERY_SPIx_MOSI_PIN;
+ 626              		.loc 1 98 3 view .LVU148
+ 627 00a0 236B     		ldr	r3, [r4, #48]
+ARM GAS  /tmp/ccX8ljiu.s 			page 17
+
+
+ 628 00a2 43F02003 		orr	r3, r3, #32
+ 629 00a6 2363     		str	r3, [r4, #48]
+  98:Core/Src/sd_spi.c ****   gpio.Pin       = DISCOVERY_SPIx_SCK_PIN | DISCOVERY_SPIx_MISO_PIN | DISCOVERY_SPIx_MOSI_PIN;
+ 630              		.loc 1 98 3 view .LVU149
+ 631 00a8 236B     		ldr	r3, [r4, #48]
+ 632 00aa 03F02003 		and	r3, r3, #32
+ 633 00ae 0393     		str	r3, [sp, #12]
+  98:Core/Src/sd_spi.c ****   gpio.Pin       = DISCOVERY_SPIx_SCK_PIN | DISCOVERY_SPIx_MISO_PIN | DISCOVERY_SPIx_MOSI_PIN;
+ 634              		.loc 1 98 3 view .LVU150
+ 635 00b0 039B     		ldr	r3, [sp, #12]
+ 636              	.LBE11:
+  98:Core/Src/sd_spi.c ****   gpio.Pin       = DISCOVERY_SPIx_SCK_PIN | DISCOVERY_SPIx_MISO_PIN | DISCOVERY_SPIx_MOSI_PIN;
+ 637              		.loc 1 98 3 view .LVU151
+  99:Core/Src/sd_spi.c ****   gpio.Mode      = GPIO_MODE_AF_PP;
+ 638              		.loc 1 99 3 view .LVU152
+  99:Core/Src/sd_spi.c ****   gpio.Mode      = GPIO_MODE_AF_PP;
+ 639              		.loc 1 99 18 is_stmt 0 view .LVU153
+ 640 00b2 4FF46073 		mov	r3, #896
+ 641 00b6 0593     		str	r3, [sp, #20]
+ 100:Core/Src/sd_spi.c ****   gpio.Pull      = GPIO_PULLUP;
+ 642              		.loc 1 100 3 is_stmt 1 view .LVU154
+ 100:Core/Src/sd_spi.c ****   gpio.Pull      = GPIO_PULLUP;
+ 643              		.loc 1 100 18 is_stmt 0 view .LVU155
+ 644 00b8 CDF81880 		str	r8, [sp, #24]
+ 101:Core/Src/sd_spi.c ****   gpio.Speed     = GPIO_SPEED_FAST;
+ 645              		.loc 1 101 3 is_stmt 1 view .LVU156
+ 101:Core/Src/sd_spi.c ****   gpio.Speed     = GPIO_SPEED_FAST;
+ 646              		.loc 1 101 18 is_stmt 0 view .LVU157
+ 647 00bc 0797     		str	r7, [sp, #28]
+ 102:Core/Src/sd_spi.c ****   gpio.Alternate = DISCOVERY_SPIx_AF;
+ 648              		.loc 1 102 3 is_stmt 1 view .LVU158
+ 102:Core/Src/sd_spi.c ****   gpio.Alternate = DISCOVERY_SPIx_AF;
+ 649              		.loc 1 102 18 is_stmt 0 view .LVU159
+ 650 00be CDF82080 		str	r8, [sp, #32]
+ 103:Core/Src/sd_spi.c ****   HAL_GPIO_Init(DISCOVERY_SPIx_GPIO_PORT, &gpio);
+ 651              		.loc 1 103 3 is_stmt 1 view .LVU160
+ 103:Core/Src/sd_spi.c ****   HAL_GPIO_Init(DISCOVERY_SPIx_GPIO_PORT, &gpio);
+ 652              		.loc 1 103 18 is_stmt 0 view .LVU161
+ 653 00c2 0523     		movs	r3, #5
+ 654 00c4 0993     		str	r3, [sp, #36]
+ 104:Core/Src/sd_spi.c **** 
+ 655              		.loc 1 104 3 is_stmt 1 view .LVU162
+ 656 00c6 3146     		mov	r1, r6
+ 657 00c8 0C48     		ldr	r0, .L42+8
+ 658 00ca FFF7FEFF 		bl	HAL_GPIO_Init
+ 659              	.LVL46:
+ 107:Core/Src/sd_spi.c ****   SET_BIT(SPI5->CR1, SPI_CR1_SPE);
+ 660              		.loc 1 107 3 view .LVU163
+ 661              	.LBB12:
+ 107:Core/Src/sd_spi.c ****   SET_BIT(SPI5->CR1, SPI_CR1_SPE);
+ 662              		.loc 1 107 3 view .LVU164
+ 663 00ce 0495     		str	r5, [sp, #16]
+ 107:Core/Src/sd_spi.c ****   SET_BIT(SPI5->CR1, SPI_CR1_SPE);
+ 664              		.loc 1 107 3 view .LVU165
+ 665 00d0 636C     		ldr	r3, [r4, #68]
+ 666 00d2 43F48013 		orr	r3, r3, #1048576
+ 667 00d6 6364     		str	r3, [r4, #68]
+ARM GAS  /tmp/ccX8ljiu.s 			page 18
+
+
+ 107:Core/Src/sd_spi.c ****   SET_BIT(SPI5->CR1, SPI_CR1_SPE);
+ 668              		.loc 1 107 3 view .LVU166
+ 669 00d8 636C     		ldr	r3, [r4, #68]
+ 670 00da 03F48013 		and	r3, r3, #1048576
+ 671 00de 0493     		str	r3, [sp, #16]
+ 107:Core/Src/sd_spi.c ****   SET_BIT(SPI5->CR1, SPI_CR1_SPE);
+ 672              		.loc 1 107 3 view .LVU167
+ 673 00e0 049B     		ldr	r3, [sp, #16]
+ 674              	.LBE12:
+ 107:Core/Src/sd_spi.c ****   SET_BIT(SPI5->CR1, SPI_CR1_SPE);
+ 675              		.loc 1 107 3 view .LVU168
+ 108:Core/Src/sd_spi.c **** }
+ 676              		.loc 1 108 3 view .LVU169
+ 677 00e2 074A     		ldr	r2, .L42+12
+ 678 00e4 1368     		ldr	r3, [r2]
+ 679 00e6 43F04003 		orr	r3, r3, #64
+ 680 00ea 1360     		str	r3, [r2]
+ 109:Core/Src/sd_spi.c **** 
+ 681              		.loc 1 109 1 is_stmt 0 view .LVU170
+ 682 00ec 0BB0     		add	sp, sp, #44
+ 683              	.LCFI7:
+ 684              		.cfi_def_cfa_offset 28
+ 685              		@ sp needed
+ 686 00ee BDE8F083 		pop	{r4, r5, r6, r7, r8, r9, pc}
+ 687              	.L43:
+ 688 00f2 00BF     		.align	2
+ 689              	.L42:
+ 690 00f4 00380240 		.word	1073887232
+ 691 00f8 000C0240 		.word	1073875968
+ 692 00fc 00140240 		.word	1073878016
+ 693 0100 00500140 		.word	1073827840
+ 694 0104 00080240 		.word	1073874944
+ 695              		.cfi_endproc
+ 696              	.LFE139:
+ 698              		.section	.text.SD_CS_Low,"ax",%progbits
+ 699              		.align	1
+ 700              		.syntax unified
+ 701              		.thumb
+ 702              		.thumb_func
+ 704              	SD_CS_Low:
+ 705              	.LFB134:
+  35:Core/Src/sd_spi.c ****   /* Keep LCD D/CX (PD13) HIGH so ILI9341 never treats SD SPI bytes as commands */
+ 706              		.loc 1 35 1 is_stmt 1 view -0
+ 707              		.cfi_startproc
+ 708              		@ args = 0, pretend = 0, frame = 0
+ 709              		@ frame_needed = 0, uses_anonymous_args = 0
+ 710 0000 08B5     		push	{r3, lr}
+ 711              	.LCFI8:
+ 712              		.cfi_def_cfa_offset 8
+ 713              		.cfi_offset 3, -8
+ 714              		.cfi_offset 14, -4
+  37:Core/Src/sd_spi.c ****   HAL_GPIO_WritePin(SD_CS_GPIO_PORT, SD_CS_PIN, GPIO_PIN_RESET);
+ 715              		.loc 1 37 3 view .LVU172
+ 716 0002 0122     		movs	r2, #1
+ 717 0004 4FF40051 		mov	r1, #8192
+ 718 0008 0448     		ldr	r0, .L46
+ 719 000a FFF7FEFF 		bl	HAL_GPIO_WritePin
+ARM GAS  /tmp/ccX8ljiu.s 			page 19
+
+
+ 720              	.LVL47:
+  38:Core/Src/sd_spi.c **** }
+ 721              		.loc 1 38 3 view .LVU173
+ 722 000e 0022     		movs	r2, #0
+ 723 0010 0421     		movs	r1, #4
+ 724 0012 0348     		ldr	r0, .L46+4
+ 725 0014 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 726              	.LVL48:
+  39:Core/Src/sd_spi.c **** 
+ 727              		.loc 1 39 1 is_stmt 0 view .LVU174
+ 728 0018 08BD     		pop	{r3, pc}
+ 729              	.L47:
+ 730 001a 00BF     		.align	2
+ 731              	.L46:
+ 732 001c 000C0240 		.word	1073875968
+ 733 0020 00080240 		.word	1073874944
+ 734              		.cfi_endproc
+ 735              	.LFE134:
+ 737              		.section	.text.SD_Select,"ax",%progbits
+ 738              		.align	1
+ 739              		.syntax unified
+ 740              		.thumb
+ 741              		.thumb_func
+ 743              	SD_Select:
+ 744              	.LFB142:
+ 137:Core/Src/sd_spi.c ****   SD_CS_Low();
+ 745              		.loc 1 137 1 is_stmt 1 view -0
+ 746              		.cfi_startproc
+ 747              		@ args = 0, pretend = 0, frame = 0
+ 748              		@ frame_needed = 0, uses_anonymous_args = 0
+ 749 0000 10B5     		push	{r4, lr}
+ 750              	.LCFI9:
+ 751              		.cfi_def_cfa_offset 8
+ 752              		.cfi_offset 4, -8
+ 753              		.cfi_offset 14, -4
+ 138:Core/Src/sd_spi.c ****   SD_SPI_TxRxByte(0xFF);
+ 754              		.loc 1 138 3 view .LVU176
+ 755 0002 FFF7FEFF 		bl	SD_CS_Low
+ 756              	.LVL49:
+ 139:Core/Src/sd_spi.c ****   if (SD_WaitReady(500))
+ 757              		.loc 1 139 3 view .LVU177
+ 758 0006 FF20     		movs	r0, #255
+ 759 0008 FFF7FEFF 		bl	SD_SPI_TxRxByte
+ 760              	.LVL50:
+ 140:Core/Src/sd_spi.c ****   {
+ 761              		.loc 1 140 3 view .LVU178
+ 140:Core/Src/sd_spi.c ****   {
+ 762              		.loc 1 140 7 is_stmt 0 view .LVU179
+ 763 000c 4FF4FA70 		mov	r0, #500
+ 764 0010 FFF7FEFF 		bl	SD_WaitReady
+ 765              	.LVL51:
+ 140:Core/Src/sd_spi.c ****   {
+ 766              		.loc 1 140 6 discriminator 1 view .LVU180
+ 767 0014 18B1     		cbz	r0, .L52
+ 142:Core/Src/sd_spi.c ****   }
+ 768              		.loc 1 142 12 view .LVU181
+ 769 0016 0123     		movs	r3, #1
+ARM GAS  /tmp/ccX8ljiu.s 			page 20
+
+
+ 770 0018 1C46     		mov	r4, r3
+ 771              	.L48:
+ 146:Core/Src/sd_spi.c **** 
+ 772              		.loc 1 146 1 view .LVU182
+ 773 001a 2046     		mov	r0, r4
+ 774 001c 10BD     		pop	{r4, pc}
+ 775              	.L52:
+ 776 001e 0446     		mov	r4, r0
+ 144:Core/Src/sd_spi.c ****   return 0;
+ 777              		.loc 1 144 3 is_stmt 1 view .LVU183
+ 778 0020 FFF7FEFF 		bl	SD_Deselect
+ 779              	.LVL52:
+ 145:Core/Src/sd_spi.c **** }
+ 780              		.loc 1 145 3 view .LVU184
+ 145:Core/Src/sd_spi.c **** }
+ 781              		.loc 1 145 10 is_stmt 0 view .LVU185
+ 782 0024 F9E7     		b	.L48
+ 783              		.cfi_endproc
+ 784              	.LFE142:
+ 786              		.section	.text.SD_SendCmd,"ax",%progbits
+ 787              		.align	1
+ 788              		.syntax unified
+ 789              		.thumb
+ 790              		.thumb_func
+ 792              	SD_SendCmd:
+ 793              	.LVL53:
+ 794              	.LFB145:
+ 204:Core/Src/sd_spi.c **** #endif
+ 205:Core/Src/sd_spi.c **** 
+ 206:Core/Src/sd_spi.c **** static uint8_t SD_SendCmd(uint8_t cmd, uint32_t arg)
+ 207:Core/Src/sd_spi.c **** {
+ 795              		.loc 1 207 1 is_stmt 1 view -0
+ 796              		.cfi_startproc
+ 797              		@ args = 0, pretend = 0, frame = 0
+ 798              		@ frame_needed = 0, uses_anonymous_args = 0
+ 799              		.loc 1 207 1 is_stmt 0 view .LVU187
+ 800 0000 38B5     		push	{r3, r4, r5, lr}
+ 801              	.LCFI10:
+ 802              		.cfi_def_cfa_offset 16
+ 803              		.cfi_offset 3, -16
+ 804              		.cfi_offset 4, -12
+ 805              		.cfi_offset 5, -8
+ 806              		.cfi_offset 14, -4
+ 807 0002 0446     		mov	r4, r0
+ 808 0004 0D46     		mov	r5, r1
+ 208:Core/Src/sd_spi.c ****   uint8_t n, res;
+ 809              		.loc 1 208 3 is_stmt 1 view .LVU188
+ 209:Core/Src/sd_spi.c **** 
+ 210:Core/Src/sd_spi.c ****   /* ACMD<n> is the command sequence of CMD55 + CMD<n> */
+ 211:Core/Src/sd_spi.c ****   if (cmd & 0x80)
+ 810              		.loc 1 211 3 view .LVU189
+ 811              		.loc 1 211 6 is_stmt 0 view .LVU190
+ 812 0006 10F0800F 		tst	r0, #128
+ 813 000a 20D1     		bne	.L66
+ 814              	.LVL54:
+ 815              	.L54:
+ 212:Core/Src/sd_spi.c ****   {
+ARM GAS  /tmp/ccX8ljiu.s 			page 21
+
+
+ 213:Core/Src/sd_spi.c ****     cmd &= 0x7F;
+ 214:Core/Src/sd_spi.c ****     res = SD_SendCmd(CMD55, 0);
+ 215:Core/Src/sd_spi.c ****     if (res > 1)
+ 216:Core/Src/sd_spi.c ****     {
+ 217:Core/Src/sd_spi.c ****       return res;
+ 218:Core/Src/sd_spi.c ****     }
+ 219:Core/Src/sd_spi.c ****   }
+ 220:Core/Src/sd_spi.c **** 
+ 221:Core/Src/sd_spi.c ****   /* Select the card and wait for ready, except for CMD12/CMD0 */
+ 222:Core/Src/sd_spi.c ****   if (cmd != CMD12)
+ 816              		.loc 1 222 3 is_stmt 1 view .LVU191
+ 817              		.loc 1 222 6 is_stmt 0 view .LVU192
+ 818 000c 0C2C     		cmp	r4, #12
+ 819 000e 07D0     		beq	.L56
+ 223:Core/Src/sd_spi.c ****   {
+ 224:Core/Src/sd_spi.c ****     SD_Deselect();
+ 820              		.loc 1 224 5 is_stmt 1 view .LVU193
+ 821 0010 FFF7FEFF 		bl	SD_Deselect
+ 822              	.LVL55:
+ 225:Core/Src/sd_spi.c ****     if (cmd == CMD0)
+ 823              		.loc 1 225 5 view .LVU194
+ 824              		.loc 1 225 8 is_stmt 0 view .LVU195
+ 825 0014 24BB     		cbnz	r4, .L57
+ 226:Core/Src/sd_spi.c ****     {
+ 227:Core/Src/sd_spi.c ****       SD_CS_Low();
+ 826              		.loc 1 227 7 is_stmt 1 view .LVU196
+ 827 0016 FFF7FEFF 		bl	SD_CS_Low
+ 828              	.LVL56:
+ 228:Core/Src/sd_spi.c ****       SD_SPI_TxRxByte(0xFF);
+ 829              		.loc 1 228 7 view .LVU197
+ 830 001a FF20     		movs	r0, #255
+ 831 001c FFF7FEFF 		bl	SD_SPI_TxRxByte
+ 832              	.LVL57:
+ 833              	.L56:
+ 229:Core/Src/sd_spi.c ****     }
+ 230:Core/Src/sd_spi.c ****     else if (!SD_Select())
+ 231:Core/Src/sd_spi.c ****     {
+ 232:Core/Src/sd_spi.c ****       return 0xFF;
+ 233:Core/Src/sd_spi.c ****     }
+ 234:Core/Src/sd_spi.c ****   }
+ 235:Core/Src/sd_spi.c **** 
+ 236:Core/Src/sd_spi.c ****   /* Send 6-byte command packet */
+ 237:Core/Src/sd_spi.c ****   SD_SPI_TxRxByte(0x40 | cmd);
+ 834              		.loc 1 237 3 view .LVU198
+ 835 0020 44F04000 		orr	r0, r4, #64
+ 836 0024 FFF7FEFF 		bl	SD_SPI_TxRxByte
+ 837              	.LVL58:
+ 238:Core/Src/sd_spi.c ****   SD_SPI_TxRxByte((uint8_t)(arg >> 24));
+ 838              		.loc 1 238 3 view .LVU199
+ 839 0028 280E     		lsrs	r0, r5, #24
+ 840 002a FFF7FEFF 		bl	SD_SPI_TxRxByte
+ 841              	.LVL59:
+ 239:Core/Src/sd_spi.c ****   SD_SPI_TxRxByte((uint8_t)(arg >> 16));
+ 842              		.loc 1 239 3 view .LVU200
+ 843 002e C5F30740 		ubfx	r0, r5, #16, #8
+ 844 0032 FFF7FEFF 		bl	SD_SPI_TxRxByte
+ 845              	.LVL60:
+ARM GAS  /tmp/ccX8ljiu.s 			page 22
+
+
+ 240:Core/Src/sd_spi.c ****   SD_SPI_TxRxByte((uint8_t)(arg >> 8));
+ 846              		.loc 1 240 3 view .LVU201
+ 847 0036 C5F30720 		ubfx	r0, r5, #8, #8
+ 848 003a FFF7FEFF 		bl	SD_SPI_TxRxByte
+ 849              	.LVL61:
+ 241:Core/Src/sd_spi.c ****   SD_SPI_TxRxByte((uint8_t)arg);
+ 850              		.loc 1 241 3 view .LVU202
+ 851 003e E8B2     		uxtb	r0, r5
+ 852 0040 FFF7FEFF 		bl	SD_SPI_TxRxByte
+ 853              	.LVL62:
+ 242:Core/Src/sd_spi.c **** 
+ 243:Core/Src/sd_spi.c ****   n = 0x01; /* Dummy CRC + Stop */
+ 854              		.loc 1 243 3 view .LVU203
+ 244:Core/Src/sd_spi.c ****   if (cmd == CMD0) n = 0x95; /* Valid CRC for CMD0(0) */
+ 855              		.loc 1 244 3 view .LVU204
+ 856              		.loc 1 244 6 is_stmt 0 view .LVU205
+ 857 0044 94B1     		cbz	r4, .L63
+ 245:Core/Src/sd_spi.c ****   if (cmd == CMD8) n = 0x87; /* Valid CRC for CMD8(0x1AA) */
+ 858              		.loc 1 245 3 is_stmt 1 view .LVU206
+ 859              		.loc 1 245 6 is_stmt 0 view .LVU207
+ 860 0046 082C     		cmp	r4, #8
+ 861 0048 21D0     		beq	.L64
+ 862 004a 0120     		movs	r0, #1
+ 863 004c 0FE0     		b	.L58
+ 864              	.LVL63:
+ 865              	.L66:
+ 213:Core/Src/sd_spi.c ****     res = SD_SendCmd(CMD55, 0);
+ 866              		.loc 1 213 5 is_stmt 1 view .LVU208
+ 213:Core/Src/sd_spi.c ****     res = SD_SendCmd(CMD55, 0);
+ 867              		.loc 1 213 9 is_stmt 0 view .LVU209
+ 868 004e 00F07F04 		and	r4, r0, #127
+ 869              	.LVL64:
+ 214:Core/Src/sd_spi.c ****     if (res > 1)
+ 870              		.loc 1 214 5 is_stmt 1 view .LVU210
+ 214:Core/Src/sd_spi.c ****     if (res > 1)
+ 871              		.loc 1 214 11 is_stmt 0 view .LVU211
+ 872 0052 0021     		movs	r1, #0
+ 873              	.LVL65:
+ 214:Core/Src/sd_spi.c ****     if (res > 1)
+ 874              		.loc 1 214 11 view .LVU212
+ 875 0054 3720     		movs	r0, #55
+ 876 0056 FFF7D3FF 		bl	SD_SendCmd
+ 877              	.LVL66:
+ 215:Core/Src/sd_spi.c ****     {
+ 878              		.loc 1 215 5 is_stmt 1 view .LVU213
+ 215:Core/Src/sd_spi.c ****     {
+ 879              		.loc 1 215 8 is_stmt 0 view .LVU214
+ 880 005a 0128     		cmp	r0, #1
+ 881 005c D6D9     		bls	.L54
+ 882 005e 15E0     		b	.L55
+ 883              	.LVL67:
+ 884              	.L57:
+ 230:Core/Src/sd_spi.c ****     {
+ 885              		.loc 1 230 10 is_stmt 1 view .LVU215
+ 230:Core/Src/sd_spi.c ****     {
+ 886              		.loc 1 230 15 is_stmt 0 view .LVU216
+ 887 0060 FFF7FEFF 		bl	SD_Select
+ARM GAS  /tmp/ccX8ljiu.s 			page 23
+
+
+ 888              	.LVL68:
+ 230:Core/Src/sd_spi.c ****     {
+ 889              		.loc 1 230 13 discriminator 1 view .LVU217
+ 890 0064 0028     		cmp	r0, #0
+ 891 0066 DBD1     		bne	.L56
+ 232:Core/Src/sd_spi.c ****     }
+ 892              		.loc 1 232 14 view .LVU218
+ 893 0068 FF20     		movs	r0, #255
+ 894 006a 0FE0     		b	.L55
+ 895              	.LVL69:
+ 896              	.L63:
+ 244:Core/Src/sd_spi.c ****   if (cmd == CMD8) n = 0x87; /* Valid CRC for CMD8(0x1AA) */
+ 897              		.loc 1 244 22 discriminator 1 view .LVU219
+ 898 006c 9520     		movs	r0, #149
+ 899              	.L58:
+ 900              	.LVL70:
+ 246:Core/Src/sd_spi.c ****   SD_SPI_TxRxByte(n);
+ 901              		.loc 1 246 3 is_stmt 1 view .LVU220
+ 902 006e FFF7FEFF 		bl	SD_SPI_TxRxByte
+ 903              	.LVL71:
+ 247:Core/Src/sd_spi.c **** 
+ 248:Core/Src/sd_spi.c ****   /* Skip a stuff byte when stopping reading */
+ 249:Core/Src/sd_spi.c ****   if (cmd == CMD12)
+ 904              		.loc 1 249 3 view .LVU221
+ 905              		.loc 1 249 6 is_stmt 0 view .LVU222
+ 906 0072 0C2C     		cmp	r4, #12
+ 907 0074 0DD0     		beq	.L67
+ 908              	.L59:
+ 250:Core/Src/sd_spi.c ****   {
+ 251:Core/Src/sd_spi.c ****     SD_SPI_TxRxByte(0xFF);
+ 252:Core/Src/sd_spi.c ****   }
+ 253:Core/Src/sd_spi.c **** 
+ 254:Core/Src/sd_spi.c ****   /* Wait for R1 response (bit 7 == 0) within 10 bytes */
+ 255:Core/Src/sd_spi.c ****   n = 10;
+ 909              		.loc 1 255 3 is_stmt 1 view .LVU223
+ 910              	.LVL72:
+ 911              		.loc 1 255 5 is_stmt 0 view .LVU224
+ 912 0076 0A24     		movs	r4, #10
+ 913              	.LVL73:
+ 914              	.L61:
+ 256:Core/Src/sd_spi.c ****   do
+ 915              		.loc 1 256 3 is_stmt 1 view .LVU225
+ 257:Core/Src/sd_spi.c ****   {
+ 258:Core/Src/sd_spi.c ****     res = SD_SPI_TxRxByte(0xFF);
+ 916              		.loc 1 258 5 view .LVU226
+ 917              		.loc 1 258 11 is_stmt 0 view .LVU227
+ 918 0078 FF20     		movs	r0, #255
+ 919 007a FFF7FEFF 		bl	SD_SPI_TxRxByte
+ 920              	.LVL74:
+ 259:Core/Src/sd_spi.c ****   } while ((res & 0x80) && --n);
+ 921              		.loc 1 259 25 is_stmt 1 view .LVU228
+ 922 007e 10F0800F 		tst	r0, #128
+ 923 0082 03D0     		beq	.L55
+ 924              		.loc 1 259 25 is_stmt 0 discriminator 1 view .LVU229
+ 925 0084 631E     		subs	r3, r4, #1
+ 926              	.LVL75:
+ 927              		.loc 1 259 25 discriminator 1 view .LVU230
+ARM GAS  /tmp/ccX8ljiu.s 			page 24
+
+
+ 928 0086 13F0FF04 		ands	r4, r3, #255
+ 929 008a F5D1     		bne	.L61
+ 930              	.LVL76:
+ 931              	.L55:
+ 260:Core/Src/sd_spi.c **** 
+ 261:Core/Src/sd_spi.c ****   return res;
+ 262:Core/Src/sd_spi.c **** }
+ 932              		.loc 1 262 1 view .LVU231
+ 933 008c 38BD     		pop	{r3, r4, r5, pc}
+ 934              	.LVL77:
+ 935              	.L64:
+ 245:Core/Src/sd_spi.c ****   SD_SPI_TxRxByte(n);
+ 936              		.loc 1 245 22 discriminator 1 view .LVU232
+ 937 008e 8720     		movs	r0, #135
+ 938 0090 EDE7     		b	.L58
+ 939              	.LVL78:
+ 940              	.L67:
+ 251:Core/Src/sd_spi.c ****   }
+ 941              		.loc 1 251 5 is_stmt 1 view .LVU233
+ 942 0092 FF20     		movs	r0, #255
+ 943 0094 FFF7FEFF 		bl	SD_SPI_TxRxByte
+ 944              	.LVL79:
+ 945 0098 EDE7     		b	.L59
+ 946              		.cfi_endproc
+ 947              	.LFE145:
+ 949              		.section	.text.SD_SPI_GetCardType,"ax",%progbits
+ 950              		.align	1
+ 951              		.global	SD_SPI_GetCardType
+ 952              		.syntax unified
+ 953              		.thumb
+ 954              		.thumb_func
+ 956              	SD_SPI_GetCardType:
+ 957              	.LFB146:
+ 263:Core/Src/sd_spi.c **** 
+ 264:Core/Src/sd_spi.c **** uint8_t SD_SPI_GetCardType(void)
+ 265:Core/Src/sd_spi.c **** {
+ 958              		.loc 1 265 1 view -0
+ 959              		.cfi_startproc
+ 960              		@ args = 0, pretend = 0, frame = 0
+ 961              		@ frame_needed = 0, uses_anonymous_args = 0
+ 962              		@ link register save eliminated.
+ 266:Core/Src/sd_spi.c ****   return CardType;
+ 963              		.loc 1 266 3 view .LVU235
+ 267:Core/Src/sd_spi.c **** }
+ 964              		.loc 1 267 1 is_stmt 0 view .LVU236
+ 965 0000 014B     		ldr	r3, .L69
+ 966 0002 1878     		ldrb	r0, [r3]	@ zero_extendqisi2
+ 967 0004 7047     		bx	lr
+ 968              	.L70:
+ 969 0006 00BF     		.align	2
+ 970              	.L69:
+ 971 0008 00000000 		.word	CardType
+ 972              		.cfi_endproc
+ 973              	.LFE146:
+ 975              		.section	.text.disk_status,"ax",%progbits
+ 976              		.align	1
+ 977              		.global	disk_status
+ARM GAS  /tmp/ccX8ljiu.s 			page 25
+
+
+ 978              		.syntax unified
+ 979              		.thumb
+ 980              		.thumb_func
+ 982              	disk_status:
+ 983              	.LVL80:
+ 984              	.LFB147:
+ 268:Core/Src/sd_spi.c **** 
+ 269:Core/Src/sd_spi.c **** /*----------------------------------------------------------------------------
+ 270:Core/Src/sd_spi.c ****  * FatFs DiskIO Interface Functions
+ 271:Core/Src/sd_spi.c ****  *----------------------------------------------------------------------------*/
+ 272:Core/Src/sd_spi.c **** DSTATUS disk_status(BYTE pdrv)
+ 273:Core/Src/sd_spi.c **** {
+ 985              		.loc 1 273 1 is_stmt 1 view -0
+ 986              		.cfi_startproc
+ 987              		@ args = 0, pretend = 0, frame = 0
+ 988              		@ frame_needed = 0, uses_anonymous_args = 0
+ 989              		@ link register save eliminated.
+ 274:Core/Src/sd_spi.c ****   if (pdrv != 0) return STA_NOINIT;
+ 990              		.loc 1 274 3 view .LVU238
+ 991              		.loc 1 274 6 is_stmt 0 view .LVU239
+ 992 0000 10B9     		cbnz	r0, .L73
+ 275:Core/Src/sd_spi.c ****   return Stat;
+ 993              		.loc 1 275 3 is_stmt 1 view .LVU240
+ 994              		.loc 1 275 10 is_stmt 0 view .LVU241
+ 995 0002 024B     		ldr	r3, .L74
+ 996 0004 1878     		ldrb	r0, [r3]	@ zero_extendqisi2
+ 997              	.LVL81:
+ 998              		.loc 1 275 10 view .LVU242
+ 999 0006 7047     		bx	lr
+ 1000              	.LVL82:
+ 1001              	.L73:
+ 274:Core/Src/sd_spi.c ****   if (pdrv != 0) return STA_NOINIT;
+ 1002              		.loc 1 274 25 discriminator 1 view .LVU243
+ 1003 0008 0120     		movs	r0, #1
+ 1004              	.LVL83:
+ 276:Core/Src/sd_spi.c **** }
+ 1005              		.loc 1 276 1 view .LVU244
+ 1006 000a 7047     		bx	lr
+ 1007              	.L75:
+ 1008              		.align	2
+ 1009              	.L74:
+ 1010 000c 00000000 		.word	Stat
+ 1011              		.cfi_endproc
+ 1012              	.LFE147:
+ 1014              		.section	.text.disk_initialize,"ax",%progbits
+ 1015              		.align	1
+ 1016              		.global	disk_initialize
+ 1017              		.syntax unified
+ 1018              		.thumb
+ 1019              		.thumb_func
+ 1021              	disk_initialize:
+ 1022              	.LVL84:
+ 1023              	.LFB148:
+ 277:Core/Src/sd_spi.c **** 
+ 278:Core/Src/sd_spi.c **** DSTATUS disk_initialize(BYTE pdrv)
+ 279:Core/Src/sd_spi.c **** {
+ 1024              		.loc 1 279 1 is_stmt 1 view -0
+ARM GAS  /tmp/ccX8ljiu.s 			page 26
+
+
+ 1025              		.cfi_startproc
+ 1026              		@ args = 0, pretend = 0, frame = 8
+ 1027              		@ frame_needed = 0, uses_anonymous_args = 0
+ 280:Core/Src/sd_spi.c ****   uint8_t n, cmd, ty, ocr[4];
+ 1028              		.loc 1 280 3 view .LVU246
+ 281:Core/Src/sd_spi.c ****   uint32_t start;
+ 1029              		.loc 1 281 3 view .LVU247
+ 282:Core/Src/sd_spi.c **** 
+ 283:Core/Src/sd_spi.c ****   if (pdrv != 0) return STA_NOINIT;
+ 1030              		.loc 1 283 3 view .LVU248
+ 1031              		.loc 1 283 6 is_stmt 0 view .LVU249
+ 1032 0000 08B1     		cbz	r0, .L107
+ 1033              		.loc 1 283 25 discriminator 1 view .LVU250
+ 1034 0002 0120     		movs	r0, #1
+ 1035              	.LVL85:
+ 284:Core/Src/sd_spi.c **** 
+ 285:Core/Src/sd_spi.c ****   SD_SPI_InitBus();
+ 286:Core/Src/sd_spi.c ****   SD_SPI_SetSlowClock();
+ 287:Core/Src/sd_spi.c **** 
+ 288:Core/Src/sd_spi.c ****   /* Send 80 dummy clock cycles with CS HIGH to wake card into native mode */
+ 289:Core/Src/sd_spi.c ****   SD_CS_High();
+ 290:Core/Src/sd_spi.c ****   for (n = 0; n < 10; n++)
+ 291:Core/Src/sd_spi.c ****   {
+ 292:Core/Src/sd_spi.c ****     SD_SPI_TxRxByte(0xFF);
+ 293:Core/Src/sd_spi.c ****   }
+ 294:Core/Src/sd_spi.c **** 
+ 295:Core/Src/sd_spi.c ****   ty = 0;
+ 296:Core/Src/sd_spi.c ****   /* Put card into SPI Idle State (CMD0) - retry up to 5 times */
+ 297:Core/Src/sd_spi.c ****   uint8_t r1 = 0xFF;
+ 298:Core/Src/sd_spi.c ****   for (n = 0; n < 5; n++)
+ 299:Core/Src/sd_spi.c ****   {
+ 300:Core/Src/sd_spi.c ****     r1 = SD_SendCmd(CMD0, 0);
+ 301:Core/Src/sd_spi.c ****     if (r1 == 1) break;
+ 302:Core/Src/sd_spi.c ****     HAL_Delay(10);
+ 303:Core/Src/sd_spi.c ****   }
+ 304:Core/Src/sd_spi.c **** 
+ 305:Core/Src/sd_spi.c ****   if (r1 == 1)
+ 306:Core/Src/sd_spi.c ****   {
+ 307:Core/Src/sd_spi.c ****     start = HAL_GetTick();
+ 308:Core/Src/sd_spi.c ****     if (SD_SendCmd(CMD8, 0x1AA) == 1)
+ 309:Core/Src/sd_spi.c ****     {
+ 310:Core/Src/sd_spi.c ****       /* SDv2 (SDSC or SDHC/SDXC) */
+ 311:Core/Src/sd_spi.c ****       for (n = 0; n < 4; n++) ocr[n] = SD_SPI_TxRxByte(0xFF);
+ 312:Core/Src/sd_spi.c ****       if (ocr[2] == 0x01 && ocr[3] == 0xAA)
+ 313:Core/Src/sd_spi.c ****       {
+ 314:Core/Src/sd_spi.c ****         /* Wait for leaving idle state (ACMD41 with HCS bit) */
+ 315:Core/Src/sd_spi.c ****         while (((HAL_GetTick() - start) < 1000) && SD_SendCmd(ACMD41, 1UL << 30)) {}
+ 316:Core/Src/sd_spi.c ****         if (((HAL_GetTick() - start) < 1000) && SD_SendCmd(CMD58, 0) == 0)
+ 317:Core/Src/sd_spi.c ****         {
+ 318:Core/Src/sd_spi.c ****           for (n = 0; n < 4; n++) ocr[n] = SD_SPI_TxRxByte(0xFF);
+ 319:Core/Src/sd_spi.c ****           ty = (ocr[0] & 0x40) ? (CT_SD2 | CT_BLOCK) : CT_SD2;
+ 320:Core/Src/sd_spi.c ****         }
+ 321:Core/Src/sd_spi.c ****       }
+ 322:Core/Src/sd_spi.c ****     }
+ 323:Core/Src/sd_spi.c ****     else
+ 324:Core/Src/sd_spi.c ****     {
+ 325:Core/Src/sd_spi.c ****       /* SDv1 or MMCv3 */
+ARM GAS  /tmp/ccX8ljiu.s 			page 27
+
+
+ 326:Core/Src/sd_spi.c ****       if (SD_SendCmd(ACMD41, 0) <= 1)
+ 327:Core/Src/sd_spi.c ****       {
+ 328:Core/Src/sd_spi.c ****         ty = CT_SD1;
+ 329:Core/Src/sd_spi.c ****         cmd = ACMD41;
+ 330:Core/Src/sd_spi.c ****       }
+ 331:Core/Src/sd_spi.c ****       else
+ 332:Core/Src/sd_spi.c ****       {
+ 333:Core/Src/sd_spi.c ****         ty = CT_MMC;
+ 334:Core/Src/sd_spi.c ****         cmd = CMD1;
+ 335:Core/Src/sd_spi.c ****       }
+ 336:Core/Src/sd_spi.c ****       while (((HAL_GetTick() - start) < 1000) && SD_SendCmd(cmd, 0)) {}
+ 337:Core/Src/sd_spi.c ****       if (((HAL_GetTick() - start) >= 1000) || SD_SendCmd(CMD16, 512) != 0)
+ 338:Core/Src/sd_spi.c ****       {
+ 339:Core/Src/sd_spi.c ****         ty = 0;
+ 340:Core/Src/sd_spi.c ****       }
+ 341:Core/Src/sd_spi.c ****     }
+ 342:Core/Src/sd_spi.c ****   }
+ 343:Core/Src/sd_spi.c **** 
+ 344:Core/Src/sd_spi.c ****   CardType = ty;
+ 345:Core/Src/sd_spi.c ****   SD_Deselect();
+ 346:Core/Src/sd_spi.c **** 
+ 347:Core/Src/sd_spi.c ****   if (ty)
+ 348:Core/Src/sd_spi.c ****   {
+ 349:Core/Src/sd_spi.c ****     Stat &= ~STA_NOINIT;
+ 350:Core/Src/sd_spi.c ****     SD_SPI_SetFastClock();
+ 351:Core/Src/sd_spi.c ****   }
+ 352:Core/Src/sd_spi.c ****   else
+ 353:Core/Src/sd_spi.c ****   {
+ 354:Core/Src/sd_spi.c ****     Stat = STA_NOINIT;
+ 355:Core/Src/sd_spi.c ****   }
+ 356:Core/Src/sd_spi.c **** 
+ 357:Core/Src/sd_spi.c ****   return Stat;
+ 358:Core/Src/sd_spi.c **** }
+ 1036              		.loc 1 358 1 view .LVU251
+ 1037 0004 7047     		bx	lr
+ 1038              	.LVL86:
+ 1039              	.L107:
+ 279:Core/Src/sd_spi.c ****   uint8_t n, cmd, ty, ocr[4];
+ 1040              		.loc 1 279 1 view .LVU252
+ 1041 0006 F0B5     		push	{r4, r5, r6, r7, lr}
+ 1042              	.LCFI11:
+ 1043              		.cfi_def_cfa_offset 20
+ 1044              		.cfi_offset 4, -20
+ 1045              		.cfi_offset 5, -16
+ 1046              		.cfi_offset 6, -12
+ 1047              		.cfi_offset 7, -8
+ 1048              		.cfi_offset 14, -4
+ 1049 0008 83B0     		sub	sp, sp, #12
+ 1050              	.LCFI12:
+ 1051              		.cfi_def_cfa_offset 32
+ 1052 000a 0446     		mov	r4, r0
+ 1053 000c 0646     		mov	r6, r0
+ 285:Core/Src/sd_spi.c ****   SD_SPI_SetSlowClock();
+ 1054              		.loc 1 285 3 is_stmt 1 view .LVU253
+ 1055 000e FFF7FEFF 		bl	SD_SPI_InitBus
+ 1056              	.LVL87:
+ 286:Core/Src/sd_spi.c **** 
+ARM GAS  /tmp/ccX8ljiu.s 			page 28
+
+
+ 1057              		.loc 1 286 3 view .LVU254
+ 1058 0012 FFF7FEFF 		bl	SD_SPI_SetSlowClock
+ 1059              	.LVL88:
+ 289:Core/Src/sd_spi.c ****   for (n = 0; n < 10; n++)
+ 1060              		.loc 1 289 3 view .LVU255
+ 1061 0016 FFF7FEFF 		bl	SD_CS_High
+ 1062              	.LVL89:
+ 290:Core/Src/sd_spi.c ****   {
+ 1063              		.loc 1 290 3 view .LVU256
+ 290:Core/Src/sd_spi.c ****   {
+ 1064              		.loc 1 290 3 is_stmt 0 view .LVU257
+ 1065 001a 04E0     		b	.L78
+ 1066              	.LVL90:
+ 1067              	.L79:
+ 292:Core/Src/sd_spi.c ****   }
+ 1068              		.loc 1 292 5 is_stmt 1 view .LVU258
+ 1069 001c FF20     		movs	r0, #255
+ 1070 001e FFF7FEFF 		bl	SD_SPI_TxRxByte
+ 1071              	.LVL91:
+ 290:Core/Src/sd_spi.c ****   {
+ 1072              		.loc 1 290 24 discriminator 1 view .LVU259
+ 1073 0022 0134     		adds	r4, r4, #1
+ 1074              	.LVL92:
+ 290:Core/Src/sd_spi.c ****   {
+ 1075              		.loc 1 290 24 is_stmt 0 discriminator 1 view .LVU260
+ 1076 0024 E4B2     		uxtb	r4, r4
+ 1077              	.LVL93:
+ 1078              	.L78:
+ 290:Core/Src/sd_spi.c ****   {
+ 1079              		.loc 1 290 17 is_stmt 1 discriminator 2 view .LVU261
+ 1080 0026 092C     		cmp	r4, #9
+ 1081 0028 F8D9     		bls	.L79
+ 298:Core/Src/sd_spi.c ****   {
+ 1082              		.loc 1 298 10 is_stmt 0 view .LVU262
+ 1083 002a 3446     		mov	r4, r6
+ 1084              	.LVL94:
+ 297:Core/Src/sd_spi.c ****   for (n = 0; n < 5; n++)
+ 1085              		.loc 1 297 11 view .LVU263
+ 1086 002c FF25     		movs	r5, #255
+ 1087              	.LVL95:
+ 1088              	.L80:
+ 298:Core/Src/sd_spi.c ****   {
+ 1089              		.loc 1 298 17 is_stmt 1 discriminator 2 view .LVU264
+ 1090 002e 042C     		cmp	r4, #4
+ 1091 0030 0CD8     		bhi	.L81
+ 300:Core/Src/sd_spi.c ****     if (r1 == 1) break;
+ 1092              		.loc 1 300 5 view .LVU265
+ 300:Core/Src/sd_spi.c ****     if (r1 == 1) break;
+ 1093              		.loc 1 300 10 is_stmt 0 view .LVU266
+ 1094 0032 0021     		movs	r1, #0
+ 1095 0034 0846     		mov	r0, r1
+ 1096 0036 FFF7FEFF 		bl	SD_SendCmd
+ 1097              	.LVL96:
+ 1098 003a 0546     		mov	r5, r0
+ 1099              	.LVL97:
+ 301:Core/Src/sd_spi.c ****     HAL_Delay(10);
+ 1100              		.loc 1 301 5 is_stmt 1 view .LVU267
+ARM GAS  /tmp/ccX8ljiu.s 			page 29
+
+
+ 301:Core/Src/sd_spi.c ****     HAL_Delay(10);
+ 1101              		.loc 1 301 8 is_stmt 0 view .LVU268
+ 1102 003c 0128     		cmp	r0, #1
+ 1103 003e 05D0     		beq	.L81
+ 302:Core/Src/sd_spi.c ****   }
+ 1104              		.loc 1 302 5 is_stmt 1 view .LVU269
+ 1105 0040 0A20     		movs	r0, #10
+ 1106              	.LVL98:
+ 302:Core/Src/sd_spi.c ****   }
+ 1107              		.loc 1 302 5 is_stmt 0 view .LVU270
+ 1108 0042 FFF7FEFF 		bl	HAL_Delay
+ 1109              	.LVL99:
+ 298:Core/Src/sd_spi.c ****   {
+ 1110              		.loc 1 298 23 is_stmt 1 discriminator 1 view .LVU271
+ 1111 0046 0134     		adds	r4, r4, #1
+ 1112              	.LVL100:
+ 298:Core/Src/sd_spi.c ****   {
+ 1113              		.loc 1 298 23 is_stmt 0 discriminator 1 view .LVU272
+ 1114 0048 E4B2     		uxtb	r4, r4
+ 1115              	.LVL101:
+ 298:Core/Src/sd_spi.c ****   {
+ 1116              		.loc 1 298 23 discriminator 1 view .LVU273
+ 1117 004a F0E7     		b	.L80
+ 1118              	.LVL102:
+ 1119              	.L81:
+ 305:Core/Src/sd_spi.c ****   {
+ 1120              		.loc 1 305 3 is_stmt 1 view .LVU274
+ 305:Core/Src/sd_spi.c ****   {
+ 1121              		.loc 1 305 6 is_stmt 0 view .LVU275
+ 1122 004c 012D     		cmp	r5, #1
+ 1123 004e 0CD0     		beq	.L108
+ 1124              	.LVL103:
+ 1125              	.L84:
+ 344:Core/Src/sd_spi.c ****   SD_Deselect();
+ 1126              		.loc 1 344 3 is_stmt 1 view .LVU276
+ 344:Core/Src/sd_spi.c ****   SD_Deselect();
+ 1127              		.loc 1 344 12 is_stmt 0 view .LVU277
+ 1128 0050 454B     		ldr	r3, .L112
+ 1129 0052 1E70     		strb	r6, [r3]
+ 345:Core/Src/sd_spi.c **** 
+ 1130              		.loc 1 345 3 is_stmt 1 view .LVU278
+ 1131 0054 FFF7FEFF 		bl	SD_Deselect
+ 1132              	.LVL104:
+ 347:Core/Src/sd_spi.c ****   {
+ 1133              		.loc 1 347 3 view .LVU279
+ 347:Core/Src/sd_spi.c ****   {
+ 1134              		.loc 1 347 6 is_stmt 0 view .LVU280
+ 1135 0058 002E     		cmp	r6, #0
+ 1136 005a 7CD1     		bne	.L109
+ 354:Core/Src/sd_spi.c ****   }
+ 1137              		.loc 1 354 5 is_stmt 1 view .LVU281
+ 354:Core/Src/sd_spi.c ****   }
+ 1138              		.loc 1 354 10 is_stmt 0 view .LVU282
+ 1139 005c 434B     		ldr	r3, .L112+4
+ 1140 005e 0122     		movs	r2, #1
+ 1141 0060 1A70     		strb	r2, [r3]
+ 1142              	.L97:
+ARM GAS  /tmp/ccX8ljiu.s 			page 30
+
+
+ 357:Core/Src/sd_spi.c **** }
+ 1143              		.loc 1 357 3 is_stmt 1 view .LVU283
+ 357:Core/Src/sd_spi.c **** }
+ 1144              		.loc 1 357 10 is_stmt 0 view .LVU284
+ 1145 0062 424B     		ldr	r3, .L112+4
+ 1146 0064 1878     		ldrb	r0, [r3]	@ zero_extendqisi2
+ 1147              		.loc 1 358 1 view .LVU285
+ 1148 0066 03B0     		add	sp, sp, #12
+ 1149              	.LCFI13:
+ 1150              		.cfi_remember_state
+ 1151              		.cfi_def_cfa_offset 20
+ 1152              		@ sp needed
+ 1153 0068 F0BD     		pop	{r4, r5, r6, r7, pc}
+ 1154              	.LVL105:
+ 1155              	.L108:
+ 1156              	.LCFI14:
+ 1157              		.cfi_restore_state
+ 307:Core/Src/sd_spi.c ****     if (SD_SendCmd(CMD8, 0x1AA) == 1)
+ 1158              		.loc 1 307 5 is_stmt 1 view .LVU286
+ 307:Core/Src/sd_spi.c ****     if (SD_SendCmd(CMD8, 0x1AA) == 1)
+ 1159              		.loc 1 307 13 is_stmt 0 view .LVU287
+ 1160 006a FFF7FEFF 		bl	HAL_GetTick
+ 1161              	.LVL106:
+ 1162 006e 0746     		mov	r7, r0
+ 1163              	.LVL107:
+ 308:Core/Src/sd_spi.c ****     {
+ 1164              		.loc 1 308 5 is_stmt 1 view .LVU288
+ 308:Core/Src/sd_spi.c ****     {
+ 1165              		.loc 1 308 9 is_stmt 0 view .LVU289
+ 1166 0070 4FF4D571 		mov	r1, #426
+ 1167 0074 0820     		movs	r0, #8
+ 1168              	.LVL108:
+ 308:Core/Src/sd_spi.c ****     {
+ 1169              		.loc 1 308 9 view .LVU290
+ 1170 0076 FFF7FEFF 		bl	SD_SendCmd
+ 1171              	.LVL109:
+ 308:Core/Src/sd_spi.c ****     {
+ 1172              		.loc 1 308 8 discriminator 1 view .LVU291
+ 1173 007a 0128     		cmp	r0, #1
+ 1174 007c 43D1     		bne	.L110
+ 311:Core/Src/sd_spi.c ****       if (ocr[2] == 0x01 && ocr[3] == 0xAA)
+ 1175              		.loc 1 311 14 view .LVU292
+ 1176 007e 3446     		mov	r4, r6
+ 1177              	.LVL110:
+ 311:Core/Src/sd_spi.c ****       if (ocr[2] == 0x01 && ocr[3] == 0xAA)
+ 1178              		.loc 1 311 14 view .LVU293
+ 1179 0080 09E0     		b	.L85
+ 1180              	.LVL111:
+ 1181              	.L87:
+ 311:Core/Src/sd_spi.c ****       if (ocr[2] == 0x01 && ocr[3] == 0xAA)
+ 1182              		.loc 1 311 31 is_stmt 1 discriminator 1 view .LVU294
+ 311:Core/Src/sd_spi.c ****       if (ocr[2] == 0x01 && ocr[3] == 0xAA)
+ 1183              		.loc 1 311 40 is_stmt 0 discriminator 1 view .LVU295
+ 1184 0082 FF20     		movs	r0, #255
+ 1185 0084 FFF7FEFF 		bl	SD_SPI_TxRxByte
+ 1186              	.LVL112:
+ 311:Core/Src/sd_spi.c ****       if (ocr[2] == 0x01 && ocr[3] == 0xAA)
+ARM GAS  /tmp/ccX8ljiu.s 			page 31
+
+
+ 1187              		.loc 1 311 38 discriminator 2 view .LVU296
+ 1188 0088 04F10803 		add	r3, r4, #8
+ 1189 008c 6B44     		add	r3, sp, r3
+ 1190 008e 03F8040C 		strb	r0, [r3, #-4]
+ 311:Core/Src/sd_spi.c ****       if (ocr[2] == 0x01 && ocr[3] == 0xAA)
+ 1191              		.loc 1 311 27 is_stmt 1 discriminator 2 view .LVU297
+ 1192 0092 0134     		adds	r4, r4, #1
+ 1193              	.LVL113:
+ 311:Core/Src/sd_spi.c ****       if (ocr[2] == 0x01 && ocr[3] == 0xAA)
+ 1194              		.loc 1 311 27 is_stmt 0 discriminator 2 view .LVU298
+ 1195 0094 E4B2     		uxtb	r4, r4
+ 1196              	.LVL114:
+ 1197              	.L85:
+ 311:Core/Src/sd_spi.c ****       if (ocr[2] == 0x01 && ocr[3] == 0xAA)
+ 1198              		.loc 1 311 21 is_stmt 1 discriminator 3 view .LVU299
+ 1199 0096 032C     		cmp	r4, #3
+ 1200 0098 F3D9     		bls	.L87
+ 312:Core/Src/sd_spi.c ****       {
+ 1201              		.loc 1 312 7 view .LVU300
+ 312:Core/Src/sd_spi.c ****       {
+ 1202              		.loc 1 312 14 is_stmt 0 view .LVU301
+ 1203 009a 9DF80630 		ldrb	r3, [sp, #6]	@ zero_extendqisi2
+ 312:Core/Src/sd_spi.c ****       {
+ 1204              		.loc 1 312 10 view .LVU302
+ 1205 009e 012B     		cmp	r3, #1
+ 1206 00a0 D6D1     		bne	.L84
+ 312:Core/Src/sd_spi.c ****       {
+ 1207              		.loc 1 312 32 discriminator 1 view .LVU303
+ 1208 00a2 9DF80730 		ldrb	r3, [sp, #7]	@ zero_extendqisi2
+ 312:Core/Src/sd_spi.c ****       {
+ 1209              		.loc 1 312 26 discriminator 1 view .LVU304
+ 1210 00a6 AA2B     		cmp	r3, #170
+ 1211 00a8 D2D1     		bne	.L84
+ 1212              	.L90:
+ 315:Core/Src/sd_spi.c ****         if (((HAL_GetTick() - start) < 1000) && SD_SendCmd(CMD58, 0) == 0)
+ 1213              		.loc 1 315 84 is_stmt 1 discriminator 1 view .LVU305
+ 315:Core/Src/sd_spi.c ****         if (((HAL_GetTick() - start) < 1000) && SD_SendCmd(CMD58, 0) == 0)
+ 1214              		.loc 1 315 49 discriminator 1 view .LVU306
+ 315:Core/Src/sd_spi.c ****         if (((HAL_GetTick() - start) < 1000) && SD_SendCmd(CMD58, 0) == 0)
+ 1215              		.loc 1 315 18 is_stmt 0 discriminator 1 view .LVU307
+ 1216 00aa FFF7FEFF 		bl	HAL_GetTick
+ 1217              	.LVL115:
+ 315:Core/Src/sd_spi.c ****         if (((HAL_GetTick() - start) < 1000) && SD_SendCmd(CMD58, 0) == 0)
+ 1218              		.loc 1 315 32 discriminator 2 view .LVU308
+ 1219 00ae C31B     		subs	r3, r0, r7
+ 315:Core/Src/sd_spi.c ****         if (((HAL_GetTick() - start) < 1000) && SD_SendCmd(CMD58, 0) == 0)
+ 1220              		.loc 1 315 49 discriminator 2 view .LVU309
+ 1221 00b0 B3F57A7F 		cmp	r3, #1000
+ 1222 00b4 06D2     		bcs	.L89
+ 315:Core/Src/sd_spi.c ****         if (((HAL_GetTick() - start) < 1000) && SD_SendCmd(CMD58, 0) == 0)
+ 1223              		.loc 1 315 52 discriminator 3 view .LVU310
+ 1224 00b6 4FF08041 		mov	r1, #1073741824
+ 1225 00ba A920     		movs	r0, #169
+ 1226 00bc FFF7FEFF 		bl	SD_SendCmd
+ 1227              	.LVL116:
+ 315:Core/Src/sd_spi.c ****         if (((HAL_GetTick() - start) < 1000) && SD_SendCmd(CMD58, 0) == 0)
+ 1228              		.loc 1 315 49 discriminator 4 view .LVU311
+ARM GAS  /tmp/ccX8ljiu.s 			page 32
+
+
+ 1229 00c0 0028     		cmp	r0, #0
+ 1230 00c2 F2D1     		bne	.L90
+ 1231              	.L89:
+ 316:Core/Src/sd_spi.c ****         {
+ 1232              		.loc 1 316 9 is_stmt 1 view .LVU312
+ 316:Core/Src/sd_spi.c ****         {
+ 1233              		.loc 1 316 15 is_stmt 0 view .LVU313
+ 1234 00c4 FFF7FEFF 		bl	HAL_GetTick
+ 1235              	.LVL117:
+ 316:Core/Src/sd_spi.c ****         {
+ 1236              		.loc 1 316 29 discriminator 1 view .LVU314
+ 1237 00c8 C31B     		subs	r3, r0, r7
+ 316:Core/Src/sd_spi.c ****         {
+ 1238              		.loc 1 316 12 discriminator 1 view .LVU315
+ 1239 00ca B3F57A7F 		cmp	r3, #1000
+ 1240 00ce BFD2     		bcs	.L84
+ 316:Core/Src/sd_spi.c ****         {
+ 1241              		.loc 1 316 49 discriminator 2 view .LVU316
+ 1242 00d0 0021     		movs	r1, #0
+ 1243 00d2 3A20     		movs	r0, #58
+ 1244 00d4 FFF7FEFF 		bl	SD_SendCmd
+ 1245              	.LVL118:
+ 316:Core/Src/sd_spi.c ****         {
+ 1246              		.loc 1 316 46 discriminator 3 view .LVU317
+ 1247 00d8 0446     		mov	r4, r0
+ 1248              	.LVL119:
+ 316:Core/Src/sd_spi.c ****         {
+ 1249              		.loc 1 316 46 discriminator 3 view .LVU318
+ 1250 00da 50B1     		cbz	r0, .L91
+ 1251 00dc B8E7     		b	.L84
+ 1252              	.LVL120:
+ 1253              	.L92:
+ 318:Core/Src/sd_spi.c ****           ty = (ocr[0] & 0x40) ? (CT_SD2 | CT_BLOCK) : CT_SD2;
+ 1254              		.loc 1 318 35 is_stmt 1 discriminator 1 view .LVU319
+ 318:Core/Src/sd_spi.c ****           ty = (ocr[0] & 0x40) ? (CT_SD2 | CT_BLOCK) : CT_SD2;
+ 1255              		.loc 1 318 44 is_stmt 0 discriminator 1 view .LVU320
+ 1256 00de FF20     		movs	r0, #255
+ 1257 00e0 FFF7FEFF 		bl	SD_SPI_TxRxByte
+ 1258              	.LVL121:
+ 318:Core/Src/sd_spi.c ****           ty = (ocr[0] & 0x40) ? (CT_SD2 | CT_BLOCK) : CT_SD2;
+ 1259              		.loc 1 318 42 discriminator 2 view .LVU321
+ 1260 00e4 04F10803 		add	r3, r4, #8
+ 1261 00e8 6B44     		add	r3, sp, r3
+ 1262 00ea 03F8040C 		strb	r0, [r3, #-4]
+ 318:Core/Src/sd_spi.c ****           ty = (ocr[0] & 0x40) ? (CT_SD2 | CT_BLOCK) : CT_SD2;
+ 1263              		.loc 1 318 31 is_stmt 1 discriminator 2 view .LVU322
+ 1264 00ee 0134     		adds	r4, r4, #1
+ 1265              	.LVL122:
+ 318:Core/Src/sd_spi.c ****           ty = (ocr[0] & 0x40) ? (CT_SD2 | CT_BLOCK) : CT_SD2;
+ 1266              		.loc 1 318 31 is_stmt 0 discriminator 2 view .LVU323
+ 1267 00f0 E4B2     		uxtb	r4, r4
+ 1268              	.LVL123:
+ 1269              	.L91:
+ 318:Core/Src/sd_spi.c ****           ty = (ocr[0] & 0x40) ? (CT_SD2 | CT_BLOCK) : CT_SD2;
+ 1270              		.loc 1 318 25 is_stmt 1 discriminator 3 view .LVU324
+ 1271 00f2 032C     		cmp	r4, #3
+ 1272 00f4 F3D9     		bls	.L92
+ARM GAS  /tmp/ccX8ljiu.s 			page 33
+
+
+ 319:Core/Src/sd_spi.c ****         }
+ 1273              		.loc 1 319 11 view .LVU325
+ 319:Core/Src/sd_spi.c ****         }
+ 1274              		.loc 1 319 20 is_stmt 0 view .LVU326
+ 1275 00f6 9DF80430 		ldrb	r3, [sp, #4]	@ zero_extendqisi2
+ 319:Core/Src/sd_spi.c ****         }
+ 1276              		.loc 1 319 14 view .LVU327
+ 1277 00fa 13F0400F 		tst	r3, #64
+ 1278 00fe 27D0     		beq	.L100
+ 319:Core/Src/sd_spi.c ****         }
+ 1279              		.loc 1 319 14 discriminator 1 view .LVU328
+ 1280 0100 0C23     		movs	r3, #12
+ 1281 0102 1E46     		mov	r6, r3
+ 1282 0104 A4E7     		b	.L84
+ 1283              	.L110:
+ 326:Core/Src/sd_spi.c ****       {
+ 1284              		.loc 1 326 7 is_stmt 1 view .LVU329
+ 326:Core/Src/sd_spi.c ****       {
+ 1285              		.loc 1 326 11 is_stmt 0 view .LVU330
+ 1286 0106 0021     		movs	r1, #0
+ 1287 0108 A920     		movs	r0, #169
+ 1288 010a FFF7FEFF 		bl	SD_SendCmd
+ 1289              	.LVL124:
+ 326:Core/Src/sd_spi.c ****       {
+ 1290              		.loc 1 326 10 discriminator 1 view .LVU331
+ 1291 010e 0128     		cmp	r0, #1
+ 1292 0110 1BD9     		bls	.L111
+ 333:Core/Src/sd_spi.c ****         cmd = CMD1;
+ 1293              		.loc 1 333 12 view .LVU332
+ 1294 0112 2C46     		mov	r4, r5
+ 1295              	.LVL125:
+ 1296              	.L95:
+ 336:Core/Src/sd_spi.c ****       if (((HAL_GetTick() - start) >= 1000) || SD_SendCmd(CMD16, 512) != 0)
+ 1297              		.loc 1 336 71 is_stmt 1 discriminator 1 view .LVU333
+ 336:Core/Src/sd_spi.c ****       if (((HAL_GetTick() - start) >= 1000) || SD_SendCmd(CMD16, 512) != 0)
+ 1298              		.loc 1 336 47 discriminator 1 view .LVU334
+ 336:Core/Src/sd_spi.c ****       if (((HAL_GetTick() - start) >= 1000) || SD_SendCmd(CMD16, 512) != 0)
+ 1299              		.loc 1 336 16 is_stmt 0 discriminator 1 view .LVU335
+ 1300 0114 FFF7FEFF 		bl	HAL_GetTick
+ 1301              	.LVL126:
+ 336:Core/Src/sd_spi.c ****       if (((HAL_GetTick() - start) >= 1000) || SD_SendCmd(CMD16, 512) != 0)
+ 1302              		.loc 1 336 30 discriminator 2 view .LVU336
+ 1303 0118 C01B     		subs	r0, r0, r7
+ 336:Core/Src/sd_spi.c ****       if (((HAL_GetTick() - start) >= 1000) || SD_SendCmd(CMD16, 512) != 0)
+ 1304              		.loc 1 336 47 discriminator 2 view .LVU337
+ 1305 011a B0F57A7F 		cmp	r0, #1000
+ 1306 011e 05D2     		bcs	.L94
+ 336:Core/Src/sd_spi.c ****       if (((HAL_GetTick() - start) >= 1000) || SD_SendCmd(CMD16, 512) != 0)
+ 1307              		.loc 1 336 50 discriminator 3 view .LVU338
+ 1308 0120 0021     		movs	r1, #0
+ 1309 0122 2846     		mov	r0, r5
+ 1310 0124 FFF7FEFF 		bl	SD_SendCmd
+ 1311              	.LVL127:
+ 336:Core/Src/sd_spi.c ****       if (((HAL_GetTick() - start) >= 1000) || SD_SendCmd(CMD16, 512) != 0)
+ 1312              		.loc 1 336 47 discriminator 4 view .LVU339
+ 1313 0128 0028     		cmp	r0, #0
+ 1314 012a F3D1     		bne	.L95
+ARM GAS  /tmp/ccX8ljiu.s 			page 34
+
+
+ 1315              	.L94:
+ 337:Core/Src/sd_spi.c ****       {
+ 1316              		.loc 1 337 7 is_stmt 1 view .LVU340
+ 337:Core/Src/sd_spi.c ****       {
+ 1317              		.loc 1 337 13 is_stmt 0 view .LVU341
+ 1318 012c FFF7FEFF 		bl	HAL_GetTick
+ 1319              	.LVL128:
+ 337:Core/Src/sd_spi.c ****       {
+ 1320              		.loc 1 337 27 discriminator 1 view .LVU342
+ 1321 0130 C31B     		subs	r3, r0, r7
+ 337:Core/Src/sd_spi.c ****       {
+ 1322              		.loc 1 337 10 discriminator 1 view .LVU343
+ 1323 0132 B3F57A7F 		cmp	r3, #1000
+ 1324 0136 8BD2     		bcs	.L84
+ 337:Core/Src/sd_spi.c ****       {
+ 1325              		.loc 1 337 48 discriminator 2 view .LVU344
+ 1326 0138 4FF40071 		mov	r1, #512
+ 1327 013c 1020     		movs	r0, #16
+ 1328 013e FFF7FEFF 		bl	SD_SendCmd
+ 1329              	.LVL129:
+ 337:Core/Src/sd_spi.c ****       {
+ 1330              		.loc 1 337 45 discriminator 3 view .LVU345
+ 1331 0142 0028     		cmp	r0, #0
+ 1332 0144 84D1     		bne	.L84
+ 1333 0146 2646     		mov	r6, r4
+ 1334 0148 82E7     		b	.L84
+ 1335              	.LVL130:
+ 1336              	.L111:
+ 328:Core/Src/sd_spi.c ****         cmd = ACMD41;
+ 1337              		.loc 1 328 12 view .LVU346
+ 1338 014a 0224     		movs	r4, #2
+ 1339              	.LVL131:
+ 329:Core/Src/sd_spi.c ****       }
+ 1340              		.loc 1 329 13 view .LVU347
+ 1341 014c A925     		movs	r5, #169
+ 1342              	.LVL132:
+ 329:Core/Src/sd_spi.c ****       }
+ 1343              		.loc 1 329 13 view .LVU348
+ 1344 014e E1E7     		b	.L95
+ 1345              	.LVL133:
+ 1346              	.L100:
+ 319:Core/Src/sd_spi.c ****         }
+ 1347              		.loc 1 319 14 discriminator 2 view .LVU349
+ 1348 0150 0423     		movs	r3, #4
+ 1349 0152 1E46     		mov	r6, r3
+ 1350 0154 7CE7     		b	.L84
+ 1351              	.LVL134:
+ 1352              	.L109:
+ 349:Core/Src/sd_spi.c ****     SD_SPI_SetFastClock();
+ 1353              		.loc 1 349 5 is_stmt 1 view .LVU350
+ 349:Core/Src/sd_spi.c ****     SD_SPI_SetFastClock();
+ 1354              		.loc 1 349 10 is_stmt 0 view .LVU351
+ 1355 0156 054A     		ldr	r2, .L112+4
+ 1356 0158 1378     		ldrb	r3, [r2]	@ zero_extendqisi2
+ 1357 015a 03F0FE03 		and	r3, r3, #254
+ 1358 015e 1370     		strb	r3, [r2]
+ 350:Core/Src/sd_spi.c ****   }
+ARM GAS  /tmp/ccX8ljiu.s 			page 35
+
+
+ 1359              		.loc 1 350 5 is_stmt 1 view .LVU352
+ 1360 0160 FFF7FEFF 		bl	SD_SPI_SetFastClock
+ 1361              	.LVL135:
+ 1362 0164 7DE7     		b	.L97
+ 1363              	.L113:
+ 1364 0166 00BF     		.align	2
+ 1365              	.L112:
+ 1366 0168 00000000 		.word	CardType
+ 1367 016c 00000000 		.word	Stat
+ 1368              		.cfi_endproc
+ 1369              	.LFE148:
+ 1371              		.section	.text.disk_read,"ax",%progbits
+ 1372              		.align	1
+ 1373              		.global	disk_read
+ 1374              		.syntax unified
+ 1375              		.thumb
+ 1376              		.thumb_func
+ 1378              	disk_read:
+ 1379              	.LVL136:
+ 1380              	.LFB149:
+ 359:Core/Src/sd_spi.c **** 
+ 360:Core/Src/sd_spi.c **** DRESULT disk_read(BYTE pdrv, BYTE *buff, DWORD sector, UINT count)
+ 361:Core/Src/sd_spi.c **** {
+ 1381              		.loc 1 361 1 view -0
+ 1382              		.cfi_startproc
+ 1383              		@ args = 0, pretend = 0, frame = 0
+ 1384              		@ frame_needed = 0, uses_anonymous_args = 0
+ 362:Core/Src/sd_spi.c ****   if (pdrv != 0 || !count) return RES_PARERR;
+ 1385              		.loc 1 362 3 view .LVU354
+ 1386              		.loc 1 362 6 is_stmt 0 view .LVU355
+ 1387 0000 0028     		cmp	r0, #0
+ 1388 0002 3CD1     		bne	.L127
+ 361:Core/Src/sd_spi.c ****   if (pdrv != 0 || !count) return RES_PARERR;
+ 1389              		.loc 1 361 1 view .LVU356
+ 1390 0004 38B5     		push	{r3, r4, r5, lr}
+ 1391              	.LCFI15:
+ 1392              		.cfi_def_cfa_offset 16
+ 1393              		.cfi_offset 3, -16
+ 1394              		.cfi_offset 4, -12
+ 1395              		.cfi_offset 5, -8
+ 1396              		.cfi_offset 14, -4
+ 1397 0006 0D46     		mov	r5, r1
+ 1398 0008 1C46     		mov	r4, r3
+ 1399              		.loc 1 362 17 discriminator 1 view .LVU357
+ 1400 000a 2BB3     		cbz	r3, .L130
+ 363:Core/Src/sd_spi.c ****   if (Stat & STA_NOINIT) return RES_NOTRDY;
+ 1401              		.loc 1 363 3 is_stmt 1 view .LVU358
+ 1402              		.loc 1 363 12 is_stmt 0 view .LVU359
+ 1403 000c 1D4B     		ldr	r3, .L132
+ 1404              	.LVL137:
+ 1405              		.loc 1 363 12 view .LVU360
+ 1406 000e 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 1407              		.loc 1 363 6 view .LVU361
+ 1408 0010 13F0010F 		tst	r3, #1
+ 1409 0014 31D1     		bne	.L124
+ 364:Core/Src/sd_spi.c **** 
+ 365:Core/Src/sd_spi.c ****   /* Convert LBA to byte address for non-block-addressed (SDSC) cards */
+ARM GAS  /tmp/ccX8ljiu.s 			page 36
+
+
+ 366:Core/Src/sd_spi.c ****   if (!(CardType & CT_BLOCK))
+ 1410              		.loc 1 366 3 is_stmt 1 view .LVU362
+ 1411              		.loc 1 366 18 is_stmt 0 view .LVU363
+ 1412 0016 1C4B     		ldr	r3, .L132+4
+ 1413 0018 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 1414              		.loc 1 366 6 view .LVU364
+ 1415 001a 13F0080F 		tst	r3, #8
+ 1416 001e 00D1     		bne	.L118
+ 367:Core/Src/sd_spi.c ****   {
+ 368:Core/Src/sd_spi.c ****     sector *= 512;
+ 1417              		.loc 1 368 5 is_stmt 1 view .LVU365
+ 1418              		.loc 1 368 12 is_stmt 0 view .LVU366
+ 1419 0020 5202     		lsls	r2, r2, #9
+ 1420              	.LVL138:
+ 1421              	.L118:
+ 369:Core/Src/sd_spi.c ****   }
+ 370:Core/Src/sd_spi.c **** 
+ 371:Core/Src/sd_spi.c ****   if (count == 1)
+ 1422              		.loc 1 371 3 is_stmt 1 view .LVU367
+ 1423              		.loc 1 371 6 is_stmt 0 view .LVU368
+ 1424 0022 012C     		cmp	r4, #1
+ 1425 0024 1AD0     		beq	.L131
+ 372:Core/Src/sd_spi.c ****   {
+ 373:Core/Src/sd_spi.c ****     if ((SD_SendCmd(CMD17, sector) == 0) && SD_ReceiveDataBlock(buff, 512))
+ 374:Core/Src/sd_spi.c ****     {
+ 375:Core/Src/sd_spi.c ****       count = 0;
+ 376:Core/Src/sd_spi.c ****     }
+ 377:Core/Src/sd_spi.c ****   }
+ 378:Core/Src/sd_spi.c ****   else
+ 379:Core/Src/sd_spi.c ****   {
+ 380:Core/Src/sd_spi.c ****     if (SD_SendCmd(CMD18, sector) == 0)
+ 1426              		.loc 1 380 5 is_stmt 1 view .LVU369
+ 1427              		.loc 1 380 9 is_stmt 0 view .LVU370
+ 1428 0026 1146     		mov	r1, r2
+ 1429              	.LVL139:
+ 1430              		.loc 1 380 9 view .LVU371
+ 1431 0028 1220     		movs	r0, #18
+ 1432              	.LVL140:
+ 1433              		.loc 1 380 9 view .LVU372
+ 1434 002a FFF7FEFF 		bl	SD_SendCmd
+ 1435              	.LVL141:
+ 1436              		.loc 1 380 8 discriminator 1 view .LVU373
+ 1437 002e 68B9     		cbnz	r0, .L121
+ 1438              	.L122:
+ 381:Core/Src/sd_spi.c ****     {
+ 382:Core/Src/sd_spi.c ****       do
+ 1439              		.loc 1 382 7 is_stmt 1 view .LVU374
+ 383:Core/Src/sd_spi.c ****       {
+ 384:Core/Src/sd_spi.c ****         if (!SD_ReceiveDataBlock(buff, 512)) break;
+ 1440              		.loc 1 384 9 view .LVU375
+ 1441              		.loc 1 384 14 is_stmt 0 view .LVU376
+ 1442 0030 4FF40071 		mov	r1, #512
+ 1443 0034 2846     		mov	r0, r5
+ 1444 0036 FFF7FEFF 		bl	SD_ReceiveDataBlock
+ 1445              	.LVL142:
+ 1446              		.loc 1 384 12 discriminator 1 view .LVU377
+ 1447 003a 18B1     		cbz	r0, .L123
+ARM GAS  /tmp/ccX8ljiu.s 			page 37
+
+
+ 385:Core/Src/sd_spi.c ****         buff += 512;
+ 1448              		.loc 1 385 9 is_stmt 1 view .LVU378
+ 1449              		.loc 1 385 14 is_stmt 0 view .LVU379
+ 1450 003c 05F50075 		add	r5, r5, #512
+ 1451              	.LVL143:
+ 386:Core/Src/sd_spi.c ****       } while (--count);
+ 1452              		.loc 1 386 16 is_stmt 1 view .LVU380
+ 1453              		.loc 1 386 16 is_stmt 0 view .LVU381
+ 1454 0040 013C     		subs	r4, r4, #1
+ 1455              	.LVL144:
+ 1456              		.loc 1 386 16 view .LVU382
+ 1457 0042 F5D1     		bne	.L122
+ 1458              	.L123:
+ 387:Core/Src/sd_spi.c ****       SD_SendCmd(CMD12, 0);
+ 1459              		.loc 1 387 7 is_stmt 1 view .LVU383
+ 1460 0044 0021     		movs	r1, #0
+ 1461 0046 0C20     		movs	r0, #12
+ 1462 0048 FFF7FEFF 		bl	SD_SendCmd
+ 1463              	.LVL145:
+ 1464              	.L121:
+ 388:Core/Src/sd_spi.c ****     }
+ 389:Core/Src/sd_spi.c ****   }
+ 390:Core/Src/sd_spi.c **** 
+ 391:Core/Src/sd_spi.c ****   SD_Deselect();
+ 1465              		.loc 1 391 3 view .LVU384
+ 1466 004c FFF7FEFF 		bl	SD_Deselect
+ 1467              	.LVL146:
+ 392:Core/Src/sd_spi.c ****   return count ? RES_ERROR : RES_OK;
+ 1468              		.loc 1 392 3 view .LVU385
+ 1469              		.loc 1 392 28 is_stmt 0 view .LVU386
+ 1470 0050 201E     		subs	r0, r4, #0
+ 1471 0052 18BF     		it	ne
+ 1472 0054 0120     		movne	r0, #1
+ 1473              	.LVL147:
+ 1474              	.L117:
+ 393:Core/Src/sd_spi.c **** }
+ 1475              		.loc 1 393 1 view .LVU387
+ 1476 0056 38BD     		pop	{r3, r4, r5, pc}
+ 1477              	.LVL148:
+ 1478              	.L130:
+ 362:Core/Src/sd_spi.c ****   if (Stat & STA_NOINIT) return RES_NOTRDY;
+ 1479              		.loc 1 362 35 discriminator 2 view .LVU388
+ 1480 0058 0420     		movs	r0, #4
+ 1481              	.LVL149:
+ 362:Core/Src/sd_spi.c ****   if (Stat & STA_NOINIT) return RES_NOTRDY;
+ 1482              		.loc 1 362 35 discriminator 2 view .LVU389
+ 1483 005a FCE7     		b	.L117
+ 1484              	.LVL150:
+ 1485              	.L131:
+ 373:Core/Src/sd_spi.c ****     {
+ 1486              		.loc 1 373 5 is_stmt 1 view .LVU390
+ 373:Core/Src/sd_spi.c ****     {
+ 1487              		.loc 1 373 10 is_stmt 0 view .LVU391
+ 1488 005c 1146     		mov	r1, r2
+ 1489              	.LVL151:
+ 373:Core/Src/sd_spi.c ****     {
+ 1490              		.loc 1 373 10 view .LVU392
+ARM GAS  /tmp/ccX8ljiu.s 			page 38
+
+
+ 1491 005e 1120     		movs	r0, #17
+ 1492              	.LVL152:
+ 373:Core/Src/sd_spi.c ****     {
+ 1493              		.loc 1 373 10 view .LVU393
+ 1494 0060 FFF7FEFF 		bl	SD_SendCmd
+ 1495              	.LVL153:
+ 373:Core/Src/sd_spi.c ****     {
+ 1496              		.loc 1 373 8 discriminator 1 view .LVU394
+ 1497 0064 0028     		cmp	r0, #0
+ 1498 0066 F1D1     		bne	.L121
+ 373:Core/Src/sd_spi.c ****     {
+ 1499              		.loc 1 373 45 discriminator 2 view .LVU395
+ 1500 0068 4FF40071 		mov	r1, #512
+ 1501 006c 2846     		mov	r0, r5
+ 1502 006e FFF7FEFF 		bl	SD_ReceiveDataBlock
+ 1503              	.LVL154:
+ 373:Core/Src/sd_spi.c ****     {
+ 1504              		.loc 1 373 42 discriminator 3 view .LVU396
+ 1505 0072 0028     		cmp	r0, #0
+ 1506 0074 EAD0     		beq	.L121
+ 375:Core/Src/sd_spi.c ****     }
+ 1507              		.loc 1 375 13 view .LVU397
+ 1508 0076 0024     		movs	r4, #0
+ 1509              	.LVL155:
+ 375:Core/Src/sd_spi.c ****     }
+ 1510              		.loc 1 375 13 view .LVU398
+ 1511 0078 E8E7     		b	.L121
+ 1512              	.LVL156:
+ 1513              	.L124:
+ 363:Core/Src/sd_spi.c **** 
+ 1514              		.loc 1 363 33 discriminator 1 view .LVU399
+ 1515 007a 0320     		movs	r0, #3
+ 1516              	.LVL157:
+ 363:Core/Src/sd_spi.c **** 
+ 1517              		.loc 1 363 33 discriminator 1 view .LVU400
+ 1518 007c EBE7     		b	.L117
+ 1519              	.LVL158:
+ 1520              	.L127:
+ 1521              	.LCFI16:
+ 1522              		.cfi_def_cfa_offset 0
+ 1523              		.cfi_restore 3
+ 1524              		.cfi_restore 4
+ 1525              		.cfi_restore 5
+ 1526              		.cfi_restore 14
+ 362:Core/Src/sd_spi.c ****   if (Stat & STA_NOINIT) return RES_NOTRDY;
+ 1527              		.loc 1 362 35 discriminator 2 view .LVU401
+ 1528 007e 0420     		movs	r0, #4
+ 1529              	.LVL159:
+ 1530              		.loc 1 393 1 view .LVU402
+ 1531 0080 7047     		bx	lr
+ 1532              	.L133:
+ 1533 0082 00BF     		.align	2
+ 1534              	.L132:
+ 1535 0084 00000000 		.word	Stat
+ 1536 0088 00000000 		.word	CardType
+ 1537              		.cfi_endproc
+ 1538              	.LFE149:
+ARM GAS  /tmp/ccX8ljiu.s 			page 39
+
+
+ 1540              		.section	.text.disk_write,"ax",%progbits
+ 1541              		.align	1
+ 1542              		.global	disk_write
+ 1543              		.syntax unified
+ 1544              		.thumb
+ 1545              		.thumb_func
+ 1547              	disk_write:
+ 1548              	.LVL160:
+ 1549              	.LFB150:
+ 394:Core/Src/sd_spi.c **** 
+ 395:Core/Src/sd_spi.c **** #if _USE_WRITE == 1
+ 396:Core/Src/sd_spi.c **** DRESULT disk_write(BYTE pdrv, const BYTE *buff, DWORD sector, UINT count)
+ 397:Core/Src/sd_spi.c **** {
+ 1550              		.loc 1 397 1 is_stmt 1 view -0
+ 1551              		.cfi_startproc
+ 1552              		@ args = 0, pretend = 0, frame = 0
+ 1553              		@ frame_needed = 0, uses_anonymous_args = 0
+ 398:Core/Src/sd_spi.c ****   if (pdrv != 0 || !count) return RES_PARERR;
+ 1554              		.loc 1 398 3 view .LVU404
+ 1555              		.loc 1 398 6 is_stmt 0 view .LVU405
+ 1556 0000 0028     		cmp	r0, #0
+ 1557 0002 47D1     		bne	.L149
+ 397:Core/Src/sd_spi.c ****   if (pdrv != 0 || !count) return RES_PARERR;
+ 1558              		.loc 1 397 1 view .LVU406
+ 1559 0004 70B5     		push	{r4, r5, r6, lr}
+ 1560              	.LCFI17:
+ 1561              		.cfi_def_cfa_offset 16
+ 1562              		.cfi_offset 4, -16
+ 1563              		.cfi_offset 5, -12
+ 1564              		.cfi_offset 6, -8
+ 1565              		.cfi_offset 14, -4
+ 1566 0006 0D46     		mov	r5, r1
+ 1567 0008 1646     		mov	r6, r2
+ 1568 000a 1C46     		mov	r4, r3
+ 1569              		.loc 1 398 17 discriminator 1 view .LVU407
+ 1570 000c 4BB3     		cbz	r3, .L152
+ 399:Core/Src/sd_spi.c ****   if (Stat & STA_NOINIT) return RES_NOTRDY;
+ 1571              		.loc 1 399 3 is_stmt 1 view .LVU408
+ 1572              		.loc 1 399 12 is_stmt 0 view .LVU409
+ 1573 000e 224B     		ldr	r3, .L155
+ 1574              	.LVL161:
+ 1575              		.loc 1 399 12 view .LVU410
+ 1576 0010 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 1577              		.loc 1 399 6 view .LVU411
+ 1578 0012 13F0010F 		tst	r3, #1
+ 1579 0016 3BD1     		bne	.L145
+ 400:Core/Src/sd_spi.c **** 
+ 401:Core/Src/sd_spi.c ****   if (!(CardType & CT_BLOCK))
+ 1580              		.loc 1 401 3 is_stmt 1 view .LVU412
+ 1581              		.loc 1 401 18 is_stmt 0 view .LVU413
+ 1582 0018 204B     		ldr	r3, .L155+4
+ 1583 001a 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 1584              		.loc 1 401 6 view .LVU414
+ 1585 001c 13F0080F 		tst	r3, #8
+ 1586 0020 01D1     		bne	.L138
+ 402:Core/Src/sd_spi.c ****   {
+ 403:Core/Src/sd_spi.c ****     sector *= 512;
+ARM GAS  /tmp/ccX8ljiu.s 			page 40
+
+
+ 1587              		.loc 1 403 5 is_stmt 1 view .LVU415
+ 1588              		.loc 1 403 12 is_stmt 0 view .LVU416
+ 1589 0022 5202     		lsls	r2, r2, #9
+ 1590              	.LVL162:
+ 1591              		.loc 1 403 12 view .LVU417
+ 1592 0024 1646     		mov	r6, r2
+ 1593              	.LVL163:
+ 1594              	.L138:
+ 404:Core/Src/sd_spi.c ****   }
+ 405:Core/Src/sd_spi.c **** 
+ 406:Core/Src/sd_spi.c ****   if (count == 1)
+ 1595              		.loc 1 406 3 is_stmt 1 view .LVU418
+ 1596              		.loc 1 406 6 is_stmt 0 view .LVU419
+ 1597 0026 012C     		cmp	r4, #1
+ 1598 0028 1DD0     		beq	.L153
+ 407:Core/Src/sd_spi.c ****   {
+ 408:Core/Src/sd_spi.c ****     if ((SD_SendCmd(CMD24, sector) == 0) && SD_SendDataBlock(buff, 0xFE))
+ 409:Core/Src/sd_spi.c ****     {
+ 410:Core/Src/sd_spi.c ****       count = 0;
+ 411:Core/Src/sd_spi.c ****     }
+ 412:Core/Src/sd_spi.c ****   }
+ 413:Core/Src/sd_spi.c ****   else
+ 414:Core/Src/sd_spi.c ****   {
+ 415:Core/Src/sd_spi.c ****     if (CardType & CT_SDC) SD_SendCmd(ACMD23, count);
+ 1599              		.loc 1 415 5 is_stmt 1 view .LVU420
+ 1600              		.loc 1 415 8 is_stmt 0 view .LVU421
+ 1601 002a 13F0060F 		tst	r3, #6
+ 1602 002e 28D1     		bne	.L154
+ 1603              	.LVL164:
+ 1604              	.L142:
+ 416:Core/Src/sd_spi.c ****     if (SD_SendCmd(CMD25, sector) == 0)
+ 1605              		.loc 1 416 5 is_stmt 1 view .LVU422
+ 1606              		.loc 1 416 9 is_stmt 0 view .LVU423
+ 1607 0030 3146     		mov	r1, r6
+ 1608 0032 1920     		movs	r0, #25
+ 1609 0034 FFF7FEFF 		bl	SD_SendCmd
+ 1610              	.LVL165:
+ 1611              		.loc 1 416 8 discriminator 1 view .LVU424
+ 1612 0038 68B9     		cbnz	r0, .L141
+ 1613              	.L143:
+ 417:Core/Src/sd_spi.c ****     {
+ 418:Core/Src/sd_spi.c ****       do
+ 1614              		.loc 1 418 7 is_stmt 1 view .LVU425
+ 419:Core/Src/sd_spi.c ****       {
+ 420:Core/Src/sd_spi.c ****         if (!SD_SendDataBlock(buff, 0xFC)) break;
+ 1615              		.loc 1 420 9 view .LVU426
+ 1616              		.loc 1 420 14 is_stmt 0 view .LVU427
+ 1617 003a FC21     		movs	r1, #252
+ 1618 003c 2846     		mov	r0, r5
+ 1619 003e FFF7FEFF 		bl	SD_SendDataBlock
+ 1620              	.LVL166:
+ 1621              		.loc 1 420 12 discriminator 1 view .LVU428
+ 1622 0042 18B1     		cbz	r0, .L144
+ 421:Core/Src/sd_spi.c ****         buff += 512;
+ 1623              		.loc 1 421 9 is_stmt 1 view .LVU429
+ 1624              		.loc 1 421 14 is_stmt 0 view .LVU430
+ 1625 0044 05F50075 		add	r5, r5, #512
+ARM GAS  /tmp/ccX8ljiu.s 			page 41
+
+
+ 1626              	.LVL167:
+ 422:Core/Src/sd_spi.c ****       } while (--count);
+ 1627              		.loc 1 422 16 is_stmt 1 view .LVU431
+ 1628              		.loc 1 422 16 is_stmt 0 view .LVU432
+ 1629 0048 013C     		subs	r4, r4, #1
+ 1630              	.LVL168:
+ 1631              		.loc 1 422 16 view .LVU433
+ 1632 004a F6D1     		bne	.L143
+ 1633              	.L144:
+ 423:Core/Src/sd_spi.c ****       if (!SD_SendDataBlock(0, 0xFD)) count = 1;
+ 1634              		.loc 1 423 7 is_stmt 1 view .LVU434
+ 1635              		.loc 1 423 12 is_stmt 0 view .LVU435
+ 1636 004c FD21     		movs	r1, #253
+ 1637 004e 0020     		movs	r0, #0
+ 1638 0050 FFF7FEFF 		bl	SD_SendDataBlock
+ 1639              	.LVL169:
+ 1640              		.loc 1 423 10 discriminator 1 view .LVU436
+ 1641 0054 D0B1     		cbz	r0, .L147
+ 1642              	.LVL170:
+ 1643              	.L141:
+ 424:Core/Src/sd_spi.c ****     }
+ 425:Core/Src/sd_spi.c ****   }
+ 426:Core/Src/sd_spi.c **** 
+ 427:Core/Src/sd_spi.c ****   SD_Deselect();
+ 1644              		.loc 1 427 3 is_stmt 1 view .LVU437
+ 1645 0056 FFF7FEFF 		bl	SD_Deselect
+ 1646              	.LVL171:
+ 428:Core/Src/sd_spi.c ****   return count ? RES_ERROR : RES_OK;
+ 1647              		.loc 1 428 3 view .LVU438
+ 1648              		.loc 1 428 28 is_stmt 0 view .LVU439
+ 1649 005a 201E     		subs	r0, r4, #0
+ 1650 005c 18BF     		it	ne
+ 1651 005e 0120     		movne	r0, #1
+ 1652              	.L137:
+ 429:Core/Src/sd_spi.c **** }
+ 1653              		.loc 1 429 1 view .LVU440
+ 1654 0060 70BD     		pop	{r4, r5, r6, pc}
+ 1655              	.LVL172:
+ 1656              	.L152:
+ 398:Core/Src/sd_spi.c ****   if (Stat & STA_NOINIT) return RES_NOTRDY;
+ 1657              		.loc 1 398 35 discriminator 2 view .LVU441
+ 1658 0062 0420     		movs	r0, #4
+ 1659              	.LVL173:
+ 398:Core/Src/sd_spi.c ****   if (Stat & STA_NOINIT) return RES_NOTRDY;
+ 1660              		.loc 1 398 35 discriminator 2 view .LVU442
+ 1661 0064 FCE7     		b	.L137
+ 1662              	.LVL174:
+ 1663              	.L153:
+ 408:Core/Src/sd_spi.c ****     {
+ 1664              		.loc 1 408 5 is_stmt 1 view .LVU443
+ 408:Core/Src/sd_spi.c ****     {
+ 1665              		.loc 1 408 10 is_stmt 0 view .LVU444
+ 1666 0066 3146     		mov	r1, r6
+ 1667              	.LVL175:
+ 408:Core/Src/sd_spi.c ****     {
+ 1668              		.loc 1 408 10 view .LVU445
+ 1669 0068 1820     		movs	r0, #24
+ARM GAS  /tmp/ccX8ljiu.s 			page 42
+
+
+ 1670              	.LVL176:
+ 408:Core/Src/sd_spi.c ****     {
+ 1671              		.loc 1 408 10 view .LVU446
+ 1672 006a FFF7FEFF 		bl	SD_SendCmd
+ 1673              	.LVL177:
+ 408:Core/Src/sd_spi.c ****     {
+ 1674              		.loc 1 408 8 discriminator 1 view .LVU447
+ 1675 006e 0028     		cmp	r0, #0
+ 1676 0070 F1D1     		bne	.L141
+ 408:Core/Src/sd_spi.c ****     {
+ 1677              		.loc 1 408 45 discriminator 2 view .LVU448
+ 1678 0072 FE21     		movs	r1, #254
+ 1679 0074 2846     		mov	r0, r5
+ 1680 0076 FFF7FEFF 		bl	SD_SendDataBlock
+ 1681              	.LVL178:
+ 408:Core/Src/sd_spi.c ****     {
+ 1682              		.loc 1 408 42 discriminator 3 view .LVU449
+ 1683 007a 0028     		cmp	r0, #0
+ 1684 007c EBD0     		beq	.L141
+ 410:Core/Src/sd_spi.c ****     }
+ 1685              		.loc 1 410 13 view .LVU450
+ 1686 007e 0024     		movs	r4, #0
+ 1687              	.LVL179:
+ 410:Core/Src/sd_spi.c ****     }
+ 1688              		.loc 1 410 13 view .LVU451
+ 1689 0080 E9E7     		b	.L141
+ 1690              	.LVL180:
+ 1691              	.L154:
+ 415:Core/Src/sd_spi.c ****     if (SD_SendCmd(CMD25, sector) == 0)
+ 1692              		.loc 1 415 28 is_stmt 1 discriminator 1 view .LVU452
+ 1693 0082 2146     		mov	r1, r4
+ 1694              	.LVL181:
+ 415:Core/Src/sd_spi.c ****     if (SD_SendCmd(CMD25, sector) == 0)
+ 1695              		.loc 1 415 28 is_stmt 0 discriminator 1 view .LVU453
+ 1696 0084 9720     		movs	r0, #151
+ 1697              	.LVL182:
+ 415:Core/Src/sd_spi.c ****     if (SD_SendCmd(CMD25, sector) == 0)
+ 1698              		.loc 1 415 28 discriminator 1 view .LVU454
+ 1699 0086 FFF7FEFF 		bl	SD_SendCmd
+ 1700              	.LVL183:
+ 1701 008a D1E7     		b	.L142
+ 1702              	.L147:
+ 423:Core/Src/sd_spi.c ****     }
+ 1703              		.loc 1 423 45 discriminator 2 view .LVU455
+ 1704 008c 0124     		movs	r4, #1
+ 1705              	.LVL184:
+ 423:Core/Src/sd_spi.c ****     }
+ 1706              		.loc 1 423 45 discriminator 2 view .LVU456
+ 1707 008e E2E7     		b	.L141
+ 1708              	.LVL185:
+ 1709              	.L145:
+ 399:Core/Src/sd_spi.c **** 
+ 1710              		.loc 1 399 33 discriminator 1 view .LVU457
+ 1711 0090 0320     		movs	r0, #3
+ 1712              	.LVL186:
+ 399:Core/Src/sd_spi.c **** 
+ 1713              		.loc 1 399 33 discriminator 1 view .LVU458
+ARM GAS  /tmp/ccX8ljiu.s 			page 43
+
+
+ 1714 0092 E5E7     		b	.L137
+ 1715              	.LVL187:
+ 1716              	.L149:
+ 1717              	.LCFI18:
+ 1718              		.cfi_def_cfa_offset 0
+ 1719              		.cfi_restore 4
+ 1720              		.cfi_restore 5
+ 1721              		.cfi_restore 6
+ 1722              		.cfi_restore 14
+ 398:Core/Src/sd_spi.c ****   if (Stat & STA_NOINIT) return RES_NOTRDY;
+ 1723              		.loc 1 398 35 discriminator 2 view .LVU459
+ 1724 0094 0420     		movs	r0, #4
+ 1725              	.LVL188:
+ 1726              		.loc 1 429 1 view .LVU460
+ 1727 0096 7047     		bx	lr
+ 1728              	.L156:
+ 1729              		.align	2
+ 1730              	.L155:
+ 1731 0098 00000000 		.word	Stat
+ 1732 009c 00000000 		.word	CardType
+ 1733              		.cfi_endproc
+ 1734              	.LFE150:
+ 1736              		.section	.text.disk_ioctl,"ax",%progbits
+ 1737              		.align	1
+ 1738              		.global	disk_ioctl
+ 1739              		.syntax unified
+ 1740              		.thumb
+ 1741              		.thumb_func
+ 1743              	disk_ioctl:
+ 1744              	.LVL189:
+ 1745              	.LFB151:
+ 430:Core/Src/sd_spi.c **** #endif
+ 431:Core/Src/sd_spi.c **** 
+ 432:Core/Src/sd_spi.c **** #if _USE_IOCTL == 1
+ 433:Core/Src/sd_spi.c **** DRESULT disk_ioctl(BYTE pdrv, BYTE cmd, void *buff)
+ 434:Core/Src/sd_spi.c **** {
+ 1746              		.loc 1 434 1 is_stmt 1 view -0
+ 1747              		.cfi_startproc
+ 1748              		@ args = 0, pretend = 0, frame = 0
+ 1749              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1750              		.loc 1 434 1 is_stmt 0 view .LVU462
+ 1751 0000 38B5     		push	{r3, r4, r5, lr}
+ 1752              	.LCFI19:
+ 1753              		.cfi_def_cfa_offset 16
+ 1754              		.cfi_offset 3, -16
+ 1755              		.cfi_offset 4, -12
+ 1756              		.cfi_offset 5, -8
+ 1757              		.cfi_offset 14, -4
+ 435:Core/Src/sd_spi.c ****   DRESULT res = RES_ERROR;
+ 1758              		.loc 1 435 3 is_stmt 1 view .LVU463
+ 1759              	.LVL190:
+ 436:Core/Src/sd_spi.c **** 
+ 437:Core/Src/sd_spi.c ****   if (pdrv != 0) return RES_PARERR;
+ 1760              		.loc 1 437 3 view .LVU464
+ 1761              		.loc 1 437 6 is_stmt 0 view .LVU465
+ 1762 0002 00BB     		cbnz	r0, .L163
+ 1763 0004 0D46     		mov	r5, r1
+ARM GAS  /tmp/ccX8ljiu.s 			page 44
+
+
+ 438:Core/Src/sd_spi.c ****   if (Stat & STA_NOINIT) return RES_NOTRDY;
+ 1764              		.loc 1 438 3 is_stmt 1 view .LVU466
+ 1765              		.loc 1 438 12 is_stmt 0 view .LVU467
+ 1766 0006 134B     		ldr	r3, .L168
+ 1767 0008 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 1768              		.loc 1 438 6 view .LVU468
+ 1769 000a 13F00100 		ands	r0, r3, #1
+ 1770              	.LVL191:
+ 1771              		.loc 1 438 6 view .LVU469
+ 1772 000e 0446     		mov	r4, r0
+ 1773 0010 1CD1     		bne	.L164
+ 439:Core/Src/sd_spi.c **** 
+ 440:Core/Src/sd_spi.c ****   switch (cmd)
+ 1774              		.loc 1 440 3 is_stmt 1 view .LVU470
+ 1775 0012 0229     		cmp	r1, #2
+ 1776 0014 08D0     		beq	.L159
+ 1777 0016 0329     		cmp	r1, #3
+ 1778 0018 0DD0     		beq	.L160
+ 1779 001a 79B9     		cbnz	r1, .L165
+ 441:Core/Src/sd_spi.c ****   {
+ 442:Core/Src/sd_spi.c ****     case CTRL_SYNC:
+ 443:Core/Src/sd_spi.c ****       if (SD_Select()) res = RES_OK;
+ 1780              		.loc 1 443 7 view .LVU471
+ 1781              		.loc 1 443 11 is_stmt 0 view .LVU472
+ 1782 001c FFF7FEFF 		bl	SD_Select
+ 1783              	.LVL192:
+ 1784              		.loc 1 443 10 discriminator 1 view .LVU473
+ 1785 0020 78B9     		cbnz	r0, .L166
+ 435:Core/Src/sd_spi.c **** 
+ 1786              		.loc 1 435 11 view .LVU474
+ 1787 0022 0123     		movs	r3, #1
+ 1788 0024 1C46     		mov	r4, r3
+ 1789 0026 02E0     		b	.L161
+ 1790              	.LVL193:
+ 1791              	.L159:
+ 444:Core/Src/sd_spi.c ****       break;
+ 445:Core/Src/sd_spi.c ****     case GET_SECTOR_SIZE:
+ 446:Core/Src/sd_spi.c ****       *(WORD *)buff = 512;
+ 1792              		.loc 1 446 7 is_stmt 1 view .LVU475
+ 1793              		.loc 1 446 21 is_stmt 0 view .LVU476
+ 1794 0028 4FF40073 		mov	r3, #512
+ 1795 002c 1380     		strh	r3, [r2]	@ movhi
+ 447:Core/Src/sd_spi.c ****       res = RES_OK;
+ 1796              		.loc 1 447 7 is_stmt 1 view .LVU477
+ 1797              	.LVL194:
+ 448:Core/Src/sd_spi.c ****       break;
+ 1798              		.loc 1 448 7 view .LVU478
+ 1799              	.L161:
+ 449:Core/Src/sd_spi.c ****     case GET_BLOCK_SIZE:
+ 450:Core/Src/sd_spi.c ****       *(DWORD *)buff = 1;
+ 451:Core/Src/sd_spi.c ****       res = RES_OK;
+ 452:Core/Src/sd_spi.c ****       break;
+ 453:Core/Src/sd_spi.c ****     default:
+ 454:Core/Src/sd_spi.c ****       res = RES_PARERR;
+ 455:Core/Src/sd_spi.c ****       break;
+ 456:Core/Src/sd_spi.c ****   }
+ 457:Core/Src/sd_spi.c **** 
+ARM GAS  /tmp/ccX8ljiu.s 			page 45
+
+
+ 458:Core/Src/sd_spi.c ****   SD_Deselect();
+ 1800              		.loc 1 458 3 view .LVU479
+ 1801 002e FFF7FEFF 		bl	SD_Deselect
+ 1802              	.LVL195:
+ 459:Core/Src/sd_spi.c ****   return res;
+ 1803              		.loc 1 459 3 view .LVU480
+ 1804              	.L158:
+ 460:Core/Src/sd_spi.c **** }
+ 1805              		.loc 1 460 1 is_stmt 0 view .LVU481
+ 1806 0032 2046     		mov	r0, r4
+ 1807 0034 38BD     		pop	{r3, r4, r5, pc}
+ 1808              	.LVL196:
+ 1809              	.L160:
+ 450:Core/Src/sd_spi.c ****       res = RES_OK;
+ 1810              		.loc 1 450 7 is_stmt 1 view .LVU482
+ 450:Core/Src/sd_spi.c ****       res = RES_OK;
+ 1811              		.loc 1 450 22 is_stmt 0 view .LVU483
+ 1812 0036 0123     		movs	r3, #1
+ 1813 0038 1360     		str	r3, [r2]
+ 451:Core/Src/sd_spi.c ****       break;
+ 1814              		.loc 1 451 7 is_stmt 1 view .LVU484
+ 1815              	.LVL197:
+ 452:Core/Src/sd_spi.c ****     default:
+ 1816              		.loc 1 452 7 view .LVU485
+ 1817 003a F8E7     		b	.L161
+ 1818              	.LVL198:
+ 1819              	.L165:
+ 440:Core/Src/sd_spi.c ****   {
+ 1820              		.loc 1 440 3 is_stmt 0 view .LVU486
+ 1821 003c 0423     		movs	r3, #4
+ 1822 003e 1C46     		mov	r4, r3
+ 1823 0040 F5E7     		b	.L161
+ 1824              	.LVL199:
+ 1825              	.L166:
+ 443:Core/Src/sd_spi.c ****       break;
+ 1826              		.loc 1 443 28 discriminator 2 view .LVU487
+ 1827 0042 2C46     		mov	r4, r5
+ 1828 0044 F3E7     		b	.L161
+ 1829              	.LVL200:
+ 1830              	.L163:
+ 437:Core/Src/sd_spi.c ****   if (Stat & STA_NOINIT) return RES_NOTRDY;
+ 1831              		.loc 1 437 25 discriminator 1 view .LVU488
+ 1832 0046 0423     		movs	r3, #4
+ 1833 0048 1C46     		mov	r4, r3
+ 1834 004a F2E7     		b	.L158
+ 1835              	.LVL201:
+ 1836              	.L164:
+ 438:Core/Src/sd_spi.c **** 
+ 1837              		.loc 1 438 33 discriminator 1 view .LVU489
+ 1838 004c 0323     		movs	r3, #3
+ 1839 004e 1C46     		mov	r4, r3
+ 1840 0050 EFE7     		b	.L158
+ 1841              	.L169:
+ 1842 0052 00BF     		.align	2
+ 1843              	.L168:
+ 1844 0054 00000000 		.word	Stat
+ 1845              		.cfi_endproc
+ARM GAS  /tmp/ccX8ljiu.s 			page 46
+
+
+ 1846              	.LFE151:
+ 1848              		.section	.text.get_fattime,"ax",%progbits
+ 1849              		.align	1
+ 1850              		.global	get_fattime
+ 1851              		.syntax unified
+ 1852              		.thumb
+ 1853              		.thumb_func
+ 1855              	get_fattime:
+ 1856              	.LFB152:
+ 461:Core/Src/sd_spi.c **** #endif
+ 462:Core/Src/sd_spi.c **** 
+ 463:Core/Src/sd_spi.c **** DWORD get_fattime(void)
+ 464:Core/Src/sd_spi.c **** {
+ 1857              		.loc 1 464 1 is_stmt 1 view -0
+ 1858              		.cfi_startproc
+ 1859              		@ args = 0, pretend = 0, frame = 0
+ 1860              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1861              		@ link register save eliminated.
+ 465:Core/Src/sd_spi.c ****   return 0;
+ 1862              		.loc 1 465 3 view .LVU491
+ 466:Core/Src/sd_spi.c **** }
+ 1863              		.loc 1 466 1 is_stmt 0 view .LVU492
+ 1864 0000 0020     		movs	r0, #0
+ 1865 0002 7047     		bx	lr
+ 1866              		.cfi_endproc
+ 1867              	.LFE152:
+ 1869              		.section	.bss.CardType,"aw",%nobits
+ 1872              	CardType:
+ 1873 0000 00       		.space	1
+ 1874              		.section	.data.Stat,"aw"
+ 1877              	Stat:
+ 1878 0000 01       		.byte	1
+ 1879              		.text
+ 1880              	.Letext0:
+ 1881              		.file 2 "/usr/arm-none-eabi/include/machine/_default_types.h"
+ 1882              		.file 3 "/usr/arm-none-eabi/include/sys/_stdint.h"
+ 1883              		.file 4 "Drivers/CMSIS/Device/ST/STM32F4xx/Include/stm32f429xx.h"
+ 1884              		.file 5 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_gpio.h"
+ 1885              		.file 6 "Middlewares/Third_Party/FatFs/src/integer.h"
+ 1886              		.file 7 "Middlewares/Third_Party/FatFs/src/diskio.h"
+ 1887              		.file 8 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h"
+ARM GAS  /tmp/ccX8ljiu.s 			page 47
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 sd_spi.c
+     /tmp/ccX8ljiu.s:21     .text.SD_SPI_SetSlowClock:00000000 $t
+     /tmp/ccX8ljiu.s:26     .text.SD_SPI_SetSlowClock:00000000 SD_SPI_SetSlowClock
+     /tmp/ccX8ljiu.s:51     .text.SD_SPI_SetSlowClock:0000001c $d
+     /tmp/ccX8ljiu.s:56     .text.SD_SPI_SetFastClock:00000000 $t
+     /tmp/ccX8ljiu.s:61     .text.SD_SPI_SetFastClock:00000000 SD_SPI_SetFastClock
+     /tmp/ccX8ljiu.s:87     .text.SD_SPI_SetFastClock:00000020 $d
+     /tmp/ccX8ljiu.s:92     .text.SD_SPI_TxRxByte:00000000 $t
+     /tmp/ccX8ljiu.s:97     .text.SD_SPI_TxRxByte:00000000 SD_SPI_TxRxByte
+     /tmp/ccX8ljiu.s:138    .text.SD_SPI_TxRxByte:00000020 $d
+     /tmp/ccX8ljiu.s:143    .text.SD_WaitReady:00000000 $t
+     /tmp/ccX8ljiu.s:148    .text.SD_WaitReady:00000000 SD_WaitReady
+     /tmp/ccX8ljiu.s:208    .text.SD_SendDataBlock:00000000 $t
+     /tmp/ccX8ljiu.s:213    .text.SD_SendDataBlock:00000000 SD_SendDataBlock
+     /tmp/ccX8ljiu.s:317    .text.SD_ReceiveDataBlock:00000000 $t
+     /tmp/ccX8ljiu.s:322    .text.SD_ReceiveDataBlock:00000000 SD_ReceiveDataBlock
+     /tmp/ccX8ljiu.s:419    .text.SD_CS_High:00000000 $t
+     /tmp/ccX8ljiu.s:424    .text.SD_CS_High:00000000 SD_CS_High
+     /tmp/ccX8ljiu.s:452    .text.SD_CS_High:0000001c $d
+     /tmp/ccX8ljiu.s:458    .text.SD_Deselect:00000000 $t
+     /tmp/ccX8ljiu.s:463    .text.SD_Deselect:00000000 SD_Deselect
+     /tmp/ccX8ljiu.s:487    .text.SD_SPI_InitBus:00000000 $t
+     /tmp/ccX8ljiu.s:492    .text.SD_SPI_InitBus:00000000 SD_SPI_InitBus
+     /tmp/ccX8ljiu.s:690    .text.SD_SPI_InitBus:000000f4 $d
+     /tmp/ccX8ljiu.s:699    .text.SD_CS_Low:00000000 $t
+     /tmp/ccX8ljiu.s:704    .text.SD_CS_Low:00000000 SD_CS_Low
+     /tmp/ccX8ljiu.s:732    .text.SD_CS_Low:0000001c $d
+     /tmp/ccX8ljiu.s:738    .text.SD_Select:00000000 $t
+     /tmp/ccX8ljiu.s:743    .text.SD_Select:00000000 SD_Select
+     /tmp/ccX8ljiu.s:787    .text.SD_SendCmd:00000000 $t
+     /tmp/ccX8ljiu.s:792    .text.SD_SendCmd:00000000 SD_SendCmd
+     /tmp/ccX8ljiu.s:950    .text.SD_SPI_GetCardType:00000000 $t
+     /tmp/ccX8ljiu.s:956    .text.SD_SPI_GetCardType:00000000 SD_SPI_GetCardType
+     /tmp/ccX8ljiu.s:971    .text.SD_SPI_GetCardType:00000008 $d
+     /tmp/ccX8ljiu.s:1872   .bss.CardType:00000000 CardType
+     /tmp/ccX8ljiu.s:976    .text.disk_status:00000000 $t
+     /tmp/ccX8ljiu.s:982    .text.disk_status:00000000 disk_status
+     /tmp/ccX8ljiu.s:1010   .text.disk_status:0000000c $d
+     /tmp/ccX8ljiu.s:1877   .data.Stat:00000000 Stat
+     /tmp/ccX8ljiu.s:1015   .text.disk_initialize:00000000 $t
+     /tmp/ccX8ljiu.s:1021   .text.disk_initialize:00000000 disk_initialize
+     /tmp/ccX8ljiu.s:1366   .text.disk_initialize:00000168 $d
+     /tmp/ccX8ljiu.s:1372   .text.disk_read:00000000 $t
+     /tmp/ccX8ljiu.s:1378   .text.disk_read:00000000 disk_read
+     /tmp/ccX8ljiu.s:1535   .text.disk_read:00000084 $d
+     /tmp/ccX8ljiu.s:1541   .text.disk_write:00000000 $t
+     /tmp/ccX8ljiu.s:1547   .text.disk_write:00000000 disk_write
+     /tmp/ccX8ljiu.s:1731   .text.disk_write:00000098 $d
+     /tmp/ccX8ljiu.s:1737   .text.disk_ioctl:00000000 $t
+     /tmp/ccX8ljiu.s:1743   .text.disk_ioctl:00000000 disk_ioctl
+     /tmp/ccX8ljiu.s:1844   .text.disk_ioctl:00000054 $d
+     /tmp/ccX8ljiu.s:1849   .text.get_fattime:00000000 $t
+     /tmp/ccX8ljiu.s:1855   .text.get_fattime:00000000 get_fattime
+     /tmp/ccX8ljiu.s:1873   .bss.CardType:00000000 $d
+
+UNDEFINED SYMBOLS
+ARM GAS  /tmp/ccX8ljiu.s 			page 48
+
+
+HAL_GetTick
+HAL_GPIO_WritePin
+HAL_GPIO_Init
+HAL_Delay

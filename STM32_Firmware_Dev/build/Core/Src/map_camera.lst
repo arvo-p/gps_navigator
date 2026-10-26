@@ -1,0 +1,1492 @@
+ARM GAS  /tmp/ccVEfvEu.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.arch armv7e-m
+   3              		.fpu fpv4-sp-d16
+   4              		.eabi_attribute 27, 1
+   5              		.eabi_attribute 28, 1
+   6              		.eabi_attribute 20, 1
+   7              		.eabi_attribute 21, 1
+   8              		.eabi_attribute 23, 3
+   9              		.eabi_attribute 24, 1
+  10              		.eabi_attribute 25, 1
+  11              		.eabi_attribute 26, 1
+  12              		.eabi_attribute 30, 1
+  13              		.eabi_attribute 34, 1
+  14              		.eabi_attribute 18, 4
+  15              		.file	"map_camera.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.file 1 "Core/Src/map_camera.c"
+  20              		.section	.text.map_camera_init,"ax",%progbits
+  21              		.align	1
+  22              		.global	map_camera_init
+  23              		.syntax unified
+  24              		.thumb
+  25              		.thumb_func
+  27              	map_camera_init:
+  28              	.LVL0:
+  29              	.LFB0:
+   1:Core/Src/map_camera.c **** /**
+   2:Core/Src/map_camera.c ****  * @file map_camera.c
+   3:Core/Src/map_camera.c ****  * @brief Pure fixed-point / integer map camera and viewport algorithms.
+   4:Core/Src/map_camera.c ****  *
+   5:Core/Src/map_camera.c ****  * NOTE: Strictly zero float / double! Standard C99 integer math only.
+   6:Core/Src/map_camera.c ****  */
+   7:Core/Src/map_camera.c **** 
+   8:Core/Src/map_camera.c **** #include "map_camera.h"
+   9:Core/Src/map_camera.c **** 
+  10:Core/Src/map_camera.c **** void map_camera_init(MapCamera *cam, GeoCoord center, int32_t zoom, int32_t vp_w, int32_t vp_h) {
+  30              		.loc 1 10 97 view -0
+  31              		.cfi_startproc
+  32              		@ args = 8, pretend = 0, frame = 16
+  33              		@ frame_needed = 0, uses_anonymous_args = 0
+  34              		.loc 1 10 97 is_stmt 0 view .LVU1
+  35 0000 70B5     		push	{r4, r5, r6, lr}
+  36              	.LCFI0:
+  37              		.cfi_def_cfa_offset 16
+  38              		.cfi_offset 4, -16
+  39              		.cfi_offset 5, -12
+  40              		.cfi_offset 6, -8
+  41              		.cfi_offset 14, -4
+  42 0002 84B0     		sub	sp, sp, #16
+  43              	.LCFI1:
+  44              		.cfi_def_cfa_offset 32
+  45 0004 04AC     		add	r4, sp, #16
+  46 0006 04E90600 		stmdb	r4, {r1, r2}
+  11:Core/Src/map_camera.c ****     if (!cam) return;
+  47              		.loc 1 11 5 is_stmt 1 view .LVU2
+ARM GAS  /tmp/ccVEfvEu.s 			page 2
+
+
+  48              		.loc 1 11 8 is_stmt 0 view .LVU3
+  49 000a 18B3     		cbz	r0, .L1
+  50 000c 1E46     		mov	r6, r3
+  51 000e 0446     		mov	r4, r0
+  12:Core/Src/map_camera.c **** 
+  13:Core/Src/map_camera.c ****     cam->center = geo_coord_make(center.lat_e7, center.lon_e7);
+  52              		.loc 1 13 5 is_stmt 1 view .LVU4
+  53              		.loc 1 13 19 is_stmt 0 view .LVU5
+  54 0010 6846     		mov	r0, sp
+  55              	.LVL1:
+  56              		.loc 1 13 19 view .LVU6
+  57 0012 FFF7FEFF 		bl	geo_coord_make
+  58              	.LVL2:
+  59              		.loc 1 13 19 view .LVU7
+  60 0016 DDE90001 		ldrd	r0, r1, [sp]
+  61 001a 84E80300 		stm	r4, {r0, r1}
+  14:Core/Src/map_camera.c ****     cam->zoom = (zoom < 1) ? 1 : ((zoom > 20) ? 20 : zoom);
+  62              		.loc 1 14 5 is_stmt 1 view .LVU8
+  63              		.loc 1 14 52 is_stmt 0 view .LVU9
+  64 001e 3346     		mov	r3, r6
+  65 0020 142E     		cmp	r6, #20
+  66 0022 A8BF     		it	ge
+  67 0024 1423     		movge	r3, #20
+  68              		.loc 1 14 32 view .LVU10
+  69 0026 012B     		cmp	r3, #1
+  70 0028 B8BF     		it	lt
+  71 002a 0123     		movlt	r3, #1
+  72              		.loc 1 14 15 view .LVU11
+  73 002c 2361     		str	r3, [r4, #16]
+  15:Core/Src/map_camera.c ****     cam->viewport_width = (vp_w > 0) ? vp_w : 800;
+  74              		.loc 1 15 5 is_stmt 1 view .LVU12
+  75              		.loc 1 15 45 is_stmt 0 view .LVU13
+  76 002e 089B     		ldr	r3, [sp, #32]
+  77 0030 002B     		cmp	r3, #0
+  78 0032 11DD     		ble	.L8
+  79              	.LVL3:
+  80              	.L3:
+  81              		.loc 1 15 25 discriminator 3 view .LVU14
+  82 0034 089B     		ldr	r3, [sp, #32]
+  83 0036 6361     		str	r3, [r4, #20]
+  16:Core/Src/map_camera.c ****     cam->viewport_height = (vp_h > 0) ? vp_h : 600;
+  84              		.loc 1 16 5 is_stmt 1 view .LVU15
+  85              		.loc 1 16 46 is_stmt 0 view .LVU16
+  86 0038 099B     		ldr	r3, [sp, #36]
+  87 003a 002B     		cmp	r3, #0
+  88 003c 10DD     		ble	.L9
+  89              	.LVL4:
+  90              	.L4:
+  91              		.loc 1 16 26 discriminator 3 view .LVU17
+  92 003e 099B     		ldr	r3, [sp, #36]
+  93 0040 A361     		str	r3, [r4, #24]
+  17:Core/Src/map_camera.c ****     cam->pan_speed_px_per_sec = 400;
+  94              		.loc 1 17 5 is_stmt 1 view .LVU18
+  95              		.loc 1 17 31 is_stmt 0 view .LVU19
+  96 0042 4FF4C873 		mov	r3, #400
+  97 0046 E361     		str	r3, [r4, #28]
+  18:Core/Src/map_camera.c **** 
+ARM GAS  /tmp/ccVEfvEu.s 			page 3
+
+
+  19:Core/Src/map_camera.c ****     geo_latlon_to_world_point32(cam->center, &cam->center_wp32);
+  98              		.loc 1 19 5 is_stmt 1 view .LVU20
+  99 0048 04F10802 		add	r2, r4, #8
+ 100 004c 94E80300 		ldm	r4, {r0, r1}
+ 101 0050 FFF7FEFF 		bl	geo_latlon_to_world_point32
+ 102              	.LVL5:
+ 103              	.L1:
+  20:Core/Src/map_camera.c **** }
+ 104              		.loc 1 20 1 is_stmt 0 view .LVU21
+ 105 0054 04B0     		add	sp, sp, #16
+ 106              	.LCFI2:
+ 107              		.cfi_remember_state
+ 108              		.cfi_def_cfa_offset 16
+ 109              		@ sp needed
+ 110 0056 70BD     		pop	{r4, r5, r6, pc}
+ 111              	.LVL6:
+ 112              	.L8:
+ 113              	.LCFI3:
+ 114              		.cfi_restore_state
+  15:Core/Src/map_camera.c ****     cam->viewport_height = (vp_h > 0) ? vp_h : 600;
+ 115              		.loc 1 15 45 discriminator 2 view .LVU22
+ 116 0058 4FF44873 		mov	r3, #800
+ 117 005c 0893     		str	r3, [sp, #32]
+ 118              	.LVL7:
+  15:Core/Src/map_camera.c ****     cam->viewport_height = (vp_h > 0) ? vp_h : 600;
+ 119              		.loc 1 15 45 discriminator 2 view .LVU23
+ 120 005e E9E7     		b	.L3
+ 121              	.L9:
+  16:Core/Src/map_camera.c ****     cam->pan_speed_px_per_sec = 400;
+ 122              		.loc 1 16 46 discriminator 2 view .LVU24
+ 123 0060 4FF41673 		mov	r3, #600
+ 124 0064 0993     		str	r3, [sp, #36]
+ 125              	.LVL8:
+  16:Core/Src/map_camera.c ****     cam->pan_speed_px_per_sec = 400;
+ 126              		.loc 1 16 46 discriminator 2 view .LVU25
+ 127 0066 EAE7     		b	.L4
+ 128              		.cfi_endproc
+ 129              	.LFE0:
+ 131              		.section	.text.map_camera_set_viewport,"ax",%progbits
+ 132              		.align	1
+ 133              		.global	map_camera_set_viewport
+ 134              		.syntax unified
+ 135              		.thumb
+ 136              		.thumb_func
+ 138              	map_camera_set_viewport:
+ 139              	.LVL9:
+ 140              	.LFB1:
+  21:Core/Src/map_camera.c **** 
+  22:Core/Src/map_camera.c **** void map_camera_set_viewport(MapCamera *cam, int32_t vp_w, int32_t vp_h) {
+ 141              		.loc 1 22 74 is_stmt 1 view -0
+ 142              		.cfi_startproc
+ 143              		@ args = 0, pretend = 0, frame = 0
+ 144              		@ frame_needed = 0, uses_anonymous_args = 0
+ 145              		@ link register save eliminated.
+  23:Core/Src/map_camera.c ****     if (!cam) return;
+ 146              		.loc 1 23 5 view .LVU27
+ 147              		.loc 1 23 8 is_stmt 0 view .LVU28
+ARM GAS  /tmp/ccVEfvEu.s 			page 4
+
+
+ 148 0000 0346     		mov	r3, r0
+ 149 0002 28B1     		cbz	r0, .L10
+  24:Core/Src/map_camera.c ****     if (vp_w > 0) cam->viewport_width = vp_w;
+ 150              		.loc 1 24 5 is_stmt 1 view .LVU29
+ 151              		.loc 1 24 8 is_stmt 0 view .LVU30
+ 152 0004 0029     		cmp	r1, #0
+ 153 0006 00DD     		ble	.L12
+ 154              		.loc 1 24 19 is_stmt 1 discriminator 1 view .LVU31
+ 155              		.loc 1 24 39 is_stmt 0 discriminator 1 view .LVU32
+ 156 0008 4161     		str	r1, [r0, #20]
+ 157              	.L12:
+  25:Core/Src/map_camera.c ****     if (vp_h > 0) cam->viewport_height = vp_h;
+ 158              		.loc 1 25 5 is_stmt 1 view .LVU33
+ 159              		.loc 1 25 8 is_stmt 0 view .LVU34
+ 160 000a 002A     		cmp	r2, #0
+ 161 000c 00DD     		ble	.L10
+ 162              		.loc 1 25 19 is_stmt 1 discriminator 1 view .LVU35
+ 163              		.loc 1 25 40 is_stmt 0 discriminator 1 view .LVU36
+ 164 000e 9A61     		str	r2, [r3, #24]
+ 165              	.L10:
+  26:Core/Src/map_camera.c **** }
+ 166              		.loc 1 26 1 view .LVU37
+ 167 0010 7047     		bx	lr
+ 168              		.cfi_endproc
+ 169              	.LFE1:
+ 171              		.section	.text.map_camera_set_zoom,"ax",%progbits
+ 172              		.align	1
+ 173              		.global	map_camera_set_zoom
+ 174              		.syntax unified
+ 175              		.thumb
+ 176              		.thumb_func
+ 178              	map_camera_set_zoom:
+ 179              	.LVL10:
+ 180              	.LFB2:
+  27:Core/Src/map_camera.c **** 
+  28:Core/Src/map_camera.c **** void map_camera_set_zoom(MapCamera *cam, int32_t new_zoom) {
+ 181              		.loc 1 28 60 is_stmt 1 view -0
+ 182              		.cfi_startproc
+ 183              		@ args = 0, pretend = 0, frame = 0
+ 184              		@ frame_needed = 0, uses_anonymous_args = 0
+  29:Core/Src/map_camera.c ****     if (!cam) return;
+ 185              		.loc 1 29 5 view .LVU39
+ 186              		.loc 1 29 8 is_stmt 0 view .LVU40
+ 187 0000 80B1     		cbz	r0, .L19
+  28:Core/Src/map_camera.c ****     if (!cam) return;
+ 188              		.loc 1 28 60 view .LVU41
+ 189 0002 08B5     		push	{r3, lr}
+ 190              	.LCFI4:
+ 191              		.cfi_def_cfa_offset 8
+ 192              		.cfi_offset 3, -8
+ 193              		.cfi_offset 14, -4
+ 194 0004 0346     		mov	r3, r0
+  30:Core/Src/map_camera.c ****     if (new_zoom < 1) new_zoom = 1;
+ 195              		.loc 1 30 5 is_stmt 1 view .LVU42
+ 196              		.loc 1 30 8 is_stmt 0 view .LVU43
+ 197 0006 0029     		cmp	r1, #0
+ 198 0008 03DD     		ble	.L16
+ARM GAS  /tmp/ccVEfvEu.s 			page 5
+
+
+  31:Core/Src/map_camera.c ****     if (new_zoom > 20) new_zoom = 20;
+ 199              		.loc 1 31 5 is_stmt 1 view .LVU44
+ 200              		.loc 1 31 8 is_stmt 0 view .LVU45
+ 201 000a 1429     		cmp	r1, #20
+ 202 000c 02DD     		ble	.L15
+ 203              		.loc 1 31 33 discriminator 1 view .LVU46
+ 204 000e 1421     		movs	r1, #20
+ 205              	.LVL11:
+ 206              		.loc 1 31 33 discriminator 1 view .LVU47
+ 207 0010 00E0     		b	.L15
+ 208              	.LVL12:
+ 209              	.L16:
+  30:Core/Src/map_camera.c ****     if (new_zoom < 1) new_zoom = 1;
+ 210              		.loc 1 30 32 discriminator 1 view .LVU48
+ 211 0012 0121     		movs	r1, #1
+ 212              	.LVL13:
+ 213              	.L15:
+  32:Core/Src/map_camera.c **** 
+  33:Core/Src/map_camera.c ****     cam->zoom = new_zoom;
+ 214              		.loc 1 33 5 is_stmt 1 view .LVU49
+ 215              		.loc 1 33 15 is_stmt 0 view .LVU50
+ 216 0014 1961     		str	r1, [r3, #16]
+  34:Core/Src/map_camera.c ****     /* Invariant center coordinate: re-project to 32-bit world point */
+  35:Core/Src/map_camera.c ****     geo_latlon_to_world_point32(cam->center, &cam->center_wp32);
+ 217              		.loc 1 35 5 is_stmt 1 view .LVU51
+ 218 0016 03F10802 		add	r2, r3, #8
+ 219 001a 93E80300 		ldm	r3, {r0, r1}
+ 220              	.LVL14:
+ 221              		.loc 1 35 5 is_stmt 0 view .LVU52
+ 222 001e FFF7FEFF 		bl	geo_latlon_to_world_point32
+ 223              	.LVL15:
+  36:Core/Src/map_camera.c **** }
+ 224              		.loc 1 36 1 view .LVU53
+ 225 0022 08BD     		pop	{r3, pc}
+ 226              	.LVL16:
+ 227              	.L19:
+ 228              	.LCFI5:
+ 229              		.cfi_def_cfa_offset 0
+ 230              		.cfi_restore 3
+ 231              		.cfi_restore 14
+ 232              		.loc 1 36 1 view .LVU54
+ 233 0024 7047     		bx	lr
+ 234              		.cfi_endproc
+ 235              	.LFE2:
+ 237              		.section	.text.map_camera_set_center,"ax",%progbits
+ 238              		.align	1
+ 239              		.global	map_camera_set_center
+ 240              		.syntax unified
+ 241              		.thumb
+ 242              		.thumb_func
+ 244              	map_camera_set_center:
+ 245              	.LVL17:
+ 246              	.LFB3:
+  37:Core/Src/map_camera.c **** 
+  38:Core/Src/map_camera.c **** void map_camera_set_center(MapCamera *cam, GeoCoord new_center) {
+ 247              		.loc 1 38 65 is_stmt 1 view -0
+ 248              		.cfi_startproc
+ARM GAS  /tmp/ccVEfvEu.s 			page 6
+
+
+ 249              		@ args = 0, pretend = 0, frame = 16
+ 250              		@ frame_needed = 0, uses_anonymous_args = 0
+ 251              		.loc 1 38 65 is_stmt 0 view .LVU56
+ 252 0000 30B5     		push	{r4, r5, lr}
+ 253              	.LCFI6:
+ 254              		.cfi_def_cfa_offset 12
+ 255              		.cfi_offset 4, -12
+ 256              		.cfi_offset 5, -8
+ 257              		.cfi_offset 14, -4
+ 258 0002 85B0     		sub	sp, sp, #20
+ 259              	.LCFI7:
+ 260              		.cfi_def_cfa_offset 32
+ 261 0004 04AB     		add	r3, sp, #16
+ 262 0006 03E90600 		stmdb	r3, {r1, r2}
+  39:Core/Src/map_camera.c ****     if (!cam) return;
+ 263              		.loc 1 39 5 is_stmt 1 view .LVU57
+ 264              		.loc 1 39 8 is_stmt 0 view .LVU58
+ 265 000a 58B1     		cbz	r0, .L22
+ 266 000c 0446     		mov	r4, r0
+  40:Core/Src/map_camera.c ****     cam->center = geo_coord_make(new_center.lat_e7, new_center.lon_e7);
+ 267              		.loc 1 40 5 is_stmt 1 view .LVU59
+ 268              		.loc 1 40 19 is_stmt 0 view .LVU60
+ 269 000e 6846     		mov	r0, sp
+ 270              	.LVL18:
+ 271              		.loc 1 40 19 view .LVU61
+ 272 0010 FFF7FEFF 		bl	geo_coord_make
+ 273              	.LVL19:
+ 274 0014 DDE90001 		ldrd	r0, r1, [sp]
+ 275 0018 84E80300 		stm	r4, {r0, r1}
+  41:Core/Src/map_camera.c ****     geo_latlon_to_world_point32(cam->center, &cam->center_wp32);
+ 276              		.loc 1 41 5 is_stmt 1 view .LVU62
+ 277 001c 04F10802 		add	r2, r4, #8
+ 278 0020 FFF7FEFF 		bl	geo_latlon_to_world_point32
+ 279              	.LVL20:
+ 280              	.L22:
+  42:Core/Src/map_camera.c **** }
+ 281              		.loc 1 42 1 is_stmt 0 view .LVU63
+ 282 0024 05B0     		add	sp, sp, #20
+ 283              	.LCFI8:
+ 284              		.cfi_def_cfa_offset 12
+ 285              		@ sp needed
+ 286 0026 30BD     		pop	{r4, r5, pc}
+ 287              		.cfi_endproc
+ 288              	.LFE3:
+ 290              		.section	.text.map_camera_pan_pixels,"ax",%progbits
+ 291              		.align	1
+ 292              		.global	map_camera_pan_pixels
+ 293              		.syntax unified
+ 294              		.thumb
+ 295              		.thumb_func
+ 297              	map_camera_pan_pixels:
+ 298              	.LVL21:
+ 299              	.LFB4:
+  43:Core/Src/map_camera.c **** 
+  44:Core/Src/map_camera.c **** void map_camera_pan_pixels(MapCamera *cam, int32_t dx_px, int32_t dy_px) {
+ 300              		.loc 1 44 74 is_stmt 1 view -0
+ 301              		.cfi_startproc
+ARM GAS  /tmp/ccVEfvEu.s 			page 7
+
+
+ 302              		@ args = 0, pretend = 0, frame = 0
+ 303              		@ frame_needed = 0, uses_anonymous_args = 0
+  45:Core/Src/map_camera.c ****     if (!cam) return;
+ 304              		.loc 1 45 5 view .LVU65
+ 305              		.loc 1 45 8 is_stmt 0 view .LVU66
+ 306 0000 0028     		cmp	r0, #0
+ 307 0002 5AD0     		beq	.L35
+  44:Core/Src/map_camera.c ****     if (!cam) return;
+ 308              		.loc 1 44 74 view .LVU67
+ 309 0004 10B5     		push	{r4, lr}
+ 310              	.LCFI9:
+ 311              		.cfi_def_cfa_offset 8
+ 312              		.cfi_offset 4, -8
+ 313              		.cfi_offset 14, -4
+ 314 0006 9446     		mov	ip, r2
+ 315 0008 0246     		mov	r2, r0
+ 316              	.LVL22:
+  46:Core/Src/map_camera.c **** 
+  47:Core/Src/map_camera.c ****     int32_t shift = 24 - cam->zoom;
+ 317              		.loc 1 47 5 is_stmt 1 view .LVU68
+ 318              		.loc 1 47 29 is_stmt 0 view .LVU69
+ 319 000a 0369     		ldr	r3, [r0, #16]
+ 320              		.loc 1 47 13 view .LVU70
+ 321 000c C3F1180E 		rsb	lr, r3, #24
+ 322              	.LVL23:
+  48:Core/Src/map_camera.c ****     int64_t delta_x32 = 0;
+ 323              		.loc 1 48 5 is_stmt 1 view .LVU71
+  49:Core/Src/map_camera.c ****     int64_t delta_y32 = 0;
+ 324              		.loc 1 49 5 view .LVU72
+  50:Core/Src/map_camera.c **** 
+  51:Core/Src/map_camera.c ****     if (shift >= 0) {
+ 325              		.loc 1 51 5 view .LVU73
+ 326              		.loc 1 51 8 is_stmt 0 view .LVU74
+ 327 0010 182B     		cmp	r3, #24
+ 328 0012 25DC     		bgt	.L27
+  52:Core/Src/map_camera.c ****         delta_x32 = (int64_t)dx_px << shift;
+ 329              		.loc 1 52 9 is_stmt 1 view .LVU75
+ 330              		.loc 1 52 19 is_stmt 0 view .LVU76
+ 331 0014 01FA0EF1 		lsl	r1, r1, lr
+ 332              	.LVL24:
+  53:Core/Src/map_camera.c ****         delta_y32 = (int64_t)dy_px << shift;
+ 333              		.loc 1 53 9 is_stmt 1 view .LVU77
+ 334              		.loc 1 53 21 is_stmt 0 view .LVU78
+ 335 0018 4FEAEC70 		asr	r0, ip, #31
+ 336              	.LVL25:
+ 337              		.loc 1 53 19 view .LVU79
+ 338 001c AEF12004 		sub	r4, lr, #32
+ 339 0020 CEF12003 		rsb	r3, lr, #32
+ 340 0024 00FA0EF0 		lsl	r0, r0, lr
+ 341 0028 0CFA04F4 		lsl	r4, ip, r4
+ 342 002c 2043     		orrs	r0, r0, r4
+ 343 002e 2CFA03F3 		lsr	r3, ip, r3
+ 344 0032 1843     		orrs	r0, r0, r3
+ 345 0034 0CFA0EFC 		lsl	ip, ip, lr
+ 346              	.LVL26:
+ 347              	.L28:
+  54:Core/Src/map_camera.c ****     } else {
+ARM GAS  /tmp/ccVEfvEu.s 			page 8
+
+
+  55:Core/Src/map_camera.c ****         delta_x32 = (int64_t)dx_px >> (-shift);
+  56:Core/Src/map_camera.c ****         delta_y32 = (int64_t)dy_px >> (-shift);
+  57:Core/Src/map_camera.c ****     }
+  58:Core/Src/map_camera.c **** 
+  59:Core/Src/map_camera.c ****     /* Wrap horizontally around the globe */
+  60:Core/Src/map_camera.c ****     cam->center_wp32.x = (uint32_t)((int64_t)cam->center_wp32.x + delta_x32);
+ 348              		.loc 1 60 5 is_stmt 1 view .LVU80
+ 349              		.loc 1 60 62 is_stmt 0 view .LVU81
+ 350 0038 9368     		ldr	r3, [r2, #8]
+ 351              		.loc 1 60 26 view .LVU82
+ 352 003a 0B44     		add	r3, r3, r1
+ 353              		.loc 1 60 24 view .LVU83
+ 354 003c 9360     		str	r3, [r2, #8]
+  61:Core/Src/map_camera.c **** 
+  62:Core/Src/map_camera.c ****     /* Clamp vertically within valid Mercator range */
+  63:Core/Src/map_camera.c ****     int64_t new_y = (int64_t)cam->center_wp32.y + delta_y32;
+ 355              		.loc 1 63 5 is_stmt 1 view .LVU84
+ 356              		.loc 1 63 46 is_stmt 0 view .LVU85
+ 357 003e D368     		ldr	r3, [r2, #12]
+ 358              		.loc 1 63 13 view .LVU86
+ 359 0040 13EB0C03 		adds	r3, r3, ip
+ 360 0044 40F10000 		adc	r0, r0, #0
+ 361              	.LVL27:
+  64:Core/Src/map_camera.c ****     if (new_y < 0) new_y = 0;
+ 362              		.loc 1 64 5 is_stmt 1 view .LVU87
+ 363              		.loc 1 64 8 is_stmt 0 view .LVU88
+ 364 0048 0028     		cmp	r0, #0
+ 365 004a 2DDB     		blt	.L32
+  65:Core/Src/map_camera.c ****     if (new_y > 4294967295LL) new_y = 4294967295LL;
+ 366              		.loc 1 65 5 is_stmt 1 view .LVU89
+ 367              		.loc 1 65 8 is_stmt 0 view .LVU90
+ 368 004c 4FF0FF31 		mov	r1, #-1
+ 369              		.loc 1 65 8 view .LVU91
+ 370 0050 9942     		cmp	r1, r3
+ 371 0052 4FF00001 		mov	r1, #0
+ 372 0056 8141     		sbcs	r1, r1, r0
+ 373 0058 27DA     		bge	.L31
+ 374              		.loc 1 65 37 discriminator 1 view .LVU92
+ 375 005a 4FF0FF33 		mov	r3, #-1
+ 376              	.LVL28:
+ 377              		.loc 1 65 37 discriminator 1 view .LVU93
+ 378 005e 24E0     		b	.L31
+ 379              	.LVL29:
+ 380              	.L27:
+  55:Core/Src/map_camera.c ****         delta_y32 = (int64_t)dy_px >> (-shift);
+ 381              		.loc 1 55 9 is_stmt 1 view .LVU94
+  55:Core/Src/map_camera.c ****         delta_y32 = (int64_t)dy_px >> (-shift);
+ 382              		.loc 1 55 21 is_stmt 0 view .LVU95
+ 383 0060 CC17     		asrs	r4, r1, #31
+  55:Core/Src/map_camera.c ****         delta_y32 = (int64_t)dy_px >> (-shift);
+ 384              		.loc 1 55 40 view .LVU96
+ 385 0062 A3F1180E 		sub	lr, r3, #24
+ 386              	.LVL30:
+  55:Core/Src/map_camera.c ****         delta_y32 = (int64_t)dy_px >> (-shift);
+ 387              		.loc 1 55 19 view .LVU97
+ 388 0066 C3F13803 		rsb	r3, r3, #56
+ 389              	.LVL31:
+ARM GAS  /tmp/ccVEfvEu.s 			page 9
+
+
+  55:Core/Src/map_camera.c ****         delta_y32 = (int64_t)dy_px >> (-shift);
+ 390              		.loc 1 55 19 view .LVU98
+ 391 006a BEF12000 		subs	r0, lr, #32
+ 392              	.LVL32:
+  55:Core/Src/map_camera.c ****         delta_y32 = (int64_t)dy_px >> (-shift);
+ 393              		.loc 1 55 19 view .LVU99
+ 394 006e 21FA0EF1 		lsr	r1, r1, lr
+ 395              	.LVL33:
+  55:Core/Src/map_camera.c ****         delta_y32 = (int64_t)dy_px >> (-shift);
+ 396              		.loc 1 55 19 view .LVU100
+ 397 0072 04FA03F3 		lsl	r3, r4, r3
+ 398 0076 41EA0301 		orr	r1, r1, r3
+ 399 007a 01D4     		bmi	.L29
+ 400 007c 0441     		asrs	r4, r4, r0
+ 401 007e 2143     		orrs	r1, r1, r4
+ 402              	.L29:
+ 403              	.LVL34:
+  56:Core/Src/map_camera.c ****     }
+ 404              		.loc 1 56 9 is_stmt 1 view .LVU101
+  56:Core/Src/map_camera.c ****     }
+ 405              		.loc 1 56 21 is_stmt 0 view .LVU102
+ 406 0080 4FEAEC70 		asr	r0, ip, #31
+  56:Core/Src/map_camera.c ****     }
+ 407              		.loc 1 56 19 view .LVU103
+ 408 0084 CEF12003 		rsb	r3, lr, #32
+ 409 0088 BEF12004 		subs	r4, lr, #32
+ 410 008c 2CFA0EFC 		lsr	ip, ip, lr
+ 411              	.LVL35:
+  56:Core/Src/map_camera.c ****     }
+ 412              		.loc 1 56 19 view .LVU104
+ 413 0090 00FA03F3 		lsl	r3, r0, r3
+ 414 0094 4CEA030C 		orr	ip, ip, r3
+ 415 0098 03D4     		bmi	.L30
+ 416 009a 40FA04F3 		asr	r3, r0, r4
+ 417 009e 4CEA030C 		orr	ip, ip, r3
+ 418              	.L30:
+ 419 00a2 40FA0EF0 		asr	r0, r0, lr
+ 420 00a6 C7E7     		b	.L28
+ 421              	.LVL36:
+ 422              	.L32:
+  64:Core/Src/map_camera.c ****     if (new_y > 4294967295LL) new_y = 4294967295LL;
+ 423              		.loc 1 64 26 discriminator 1 view .LVU105
+ 424 00a8 0023     		movs	r3, #0
+ 425              	.LVL37:
+ 426              	.L31:
+  66:Core/Src/map_camera.c ****     cam->center_wp32.y = (uint32_t)new_y;
+ 427              		.loc 1 66 5 is_stmt 1 view .LVU106
+ 428              		.loc 1 66 24 is_stmt 0 view .LVU107
+ 429 00aa D360     		str	r3, [r2, #12]
+  67:Core/Src/map_camera.c **** 
+  68:Core/Src/map_camera.c ****     /* Update center geographic coordinate */
+  69:Core/Src/map_camera.c ****     geo_world_point32_to_latlon(cam->center_wp32, &cam->center);
+ 430              		.loc 1 69 5 is_stmt 1 view .LVU108
+ 431 00ac 02F10803 		add	r3, r2, #8
+ 432              		.loc 1 69 5 is_stmt 0 view .LVU109
+ 433 00b0 93E80300 		ldm	r3, {r0, r1}
+ 434 00b4 FFF7FEFF 		bl	geo_world_point32_to_latlon
+ARM GAS  /tmp/ccVEfvEu.s 			page 10
+
+
+ 435              	.LVL38:
+  70:Core/Src/map_camera.c **** }
+ 436              		.loc 1 70 1 view .LVU110
+ 437 00b8 10BD     		pop	{r4, pc}
+ 438              	.LVL39:
+ 439              	.L35:
+ 440              	.LCFI10:
+ 441              		.cfi_def_cfa_offset 0
+ 442              		.cfi_restore 4
+ 443              		.cfi_restore 14
+ 444              		.loc 1 70 1 view .LVU111
+ 445 00ba 7047     		bx	lr
+ 446              		.cfi_endproc
+ 447              	.LFE4:
+ 449              		.section	.text.map_camera_move_direction,"ax",%progbits
+ 450              		.align	1
+ 451              		.global	map_camera_move_direction
+ 452              		.syntax unified
+ 453              		.thumb
+ 454              		.thumb_func
+ 456              	map_camera_move_direction:
+ 457              	.LVL40:
+ 458              	.LFB5:
+  71:Core/Src/map_camera.c **** 
+  72:Core/Src/map_camera.c **** void map_camera_move_direction(MapCamera *cam, int32_t dir_x, int32_t dir_y, int32_t dt_ms, int32_t
+ 459              		.loc 1 72 119 is_stmt 1 view -0
+ 460              		.cfi_startproc
+ 461              		@ args = 4, pretend = 0, frame = 0
+ 462              		@ frame_needed = 0, uses_anonymous_args = 0
+ 463              		.loc 1 72 119 is_stmt 0 view .LVU113
+ 464 0000 70B5     		push	{r4, r5, r6, lr}
+ 465              	.LCFI11:
+ 466              		.cfi_def_cfa_offset 16
+ 467              		.cfi_offset 4, -16
+ 468              		.cfi_offset 5, -12
+ 469              		.cfi_offset 6, -8
+ 470              		.cfi_offset 14, -4
+ 471 0002 0D46     		mov	r5, r1
+ 472 0004 0499     		ldr	r1, [sp, #16]
+ 473              	.LVL41:
+  73:Core/Src/map_camera.c ****     if (!cam || dt_ms <= 0) return;
+ 474              		.loc 1 73 5 is_stmt 1 view .LVU114
+ 475              		.loc 1 73 8 is_stmt 0 view .LVU115
+ 476 0006 68B3     		cbz	r0, .L38
+ 477 0008 1646     		mov	r6, r2
+ 478 000a 0446     		mov	r4, r0
+ 479              		.loc 1 73 14 discriminator 1 view .LVU116
+ 480 000c 002B     		cmp	r3, #0
+ 481 000e 29DD     		ble	.L38
+  74:Core/Src/map_camera.c **** 
+  75:Core/Src/map_camera.c ****     if (dir_x == 0 && dir_y == 0) return;
+ 482              		.loc 1 75 5 is_stmt 1 view .LVU117
+ 483              		.loc 1 75 8 is_stmt 0 view .LVU118
+ 484 0010 05B9     		cbnz	r5, .L40
+ 485              		.loc 1 75 20 discriminator 1 view .LVU119
+ 486 0012 3AB3     		cbz	r2, .L38
+ 487              	.L40:
+ARM GAS  /tmp/ccVEfvEu.s 			page 11
+
+
+  76:Core/Src/map_camera.c **** 
+  77:Core/Src/map_camera.c ****     int32_t dist = (int32_t)(((int64_t)cam->pan_speed_px_per_sec * (int64_t)speed_multiplier * (int
+ 488              		.loc 1 77 5 is_stmt 1 view .LVU120
+ 489              		.loc 1 77 43 is_stmt 0 view .LVU121
+ 490 0014 E069     		ldr	r0, [r4, #28]
+ 491              	.LVL42:
+ 492              		.loc 1 77 31 view .LVU122
+ 493 0016 4FEAE07C 		asr	ip, r0, #31
+ 494              		.loc 1 77 68 view .LVU123
+ 495 001a CA17     		asrs	r2, r1, #31
+ 496              	.LVL43:
+ 497              		.loc 1 77 66 view .LVU124
+ 498 001c 00FB02F2 		mul	r2, r0, r2
+ 499 0020 01FB0C22 		mla	r2, r1, ip, r2
+ 500 0024 A0FB0101 		umull	r0, r1, r0, r1
+ 501 0028 0A44     		add	r2, r2, r1
+ 502              		.loc 1 77 96 view .LVU125
+ 503 002a D917     		asrs	r1, r3, #31
+ 504              		.loc 1 77 94 view .LVU126
+ 505 002c 00FB01F1 		mul	r1, r0, r1
+ 506 0030 03FB0211 		mla	r1, r3, r2, r1
+ 507 0034 A0FB030C 		umull	r0, ip, r0, r3
+ 508              		.loc 1 77 112 view .LVU127
+ 509 0038 4FF47A72 		mov	r2, #1000
+ 510 003c 0023     		movs	r3, #0
+ 511              	.LVL44:
+ 512              		.loc 1 77 112 view .LVU128
+ 513 003e 6144     		add	r1, r1, ip
+ 514 0040 FFF7FEFF 		bl	__aeabi_ldivmod
+ 515              	.LVL45:
+ 516              		.loc 1 77 13 view .LVU129
+ 517 0044 0146     		mov	r1, r0
+ 518              	.LVL46:
+  78:Core/Src/map_camera.c **** 
+  79:Core/Src/map_camera.c ****     /* Normalize diagonal velocity (1 / sqrt(2) ≈ 724 / 1024) */
+  80:Core/Src/map_camera.c ****     if (dir_x != 0 && dir_y != 0) {
+ 519              		.loc 1 80 5 is_stmt 1 view .LVU130
+ 520              		.loc 1 80 8 is_stmt 0 view .LVU131
+ 521 0046 2DB1     		cbz	r5, .L42
+ 522              		.loc 1 80 20 discriminator 1 view .LVU132
+ 523 0048 26B1     		cbz	r6, .L42
+  81:Core/Src/map_camera.c ****         dist = (dist * 724) >> 10;
+ 524              		.loc 1 81 9 is_stmt 1 view .LVU133
+ 525              		.loc 1 81 22 is_stmt 0 view .LVU134
+ 526 004a 4FF43573 		mov	r3, #724
+ 527 004e 03FB00F0 		mul	r0, r3, r0
+ 528              	.LVL47:
+ 529              		.loc 1 81 14 view .LVU135
+ 530 0052 8112     		asrs	r1, r0, #10
+ 531              	.LVL48:
+ 532              	.L42:
+  82:Core/Src/map_camera.c ****     }
+  83:Core/Src/map_camera.c **** 
+  84:Core/Src/map_camera.c ****     map_camera_pan_pixels(cam, dir_x * dist, dir_y * dist);
+ 533              		.loc 1 84 5 is_stmt 1 view .LVU136
+ 534 0054 3246     		mov	r2, r6
+ 535 0056 01FB02F2 		mul	r2, r1, r2
+ARM GAS  /tmp/ccVEfvEu.s 			page 12
+
+
+ 536 005a 05FB01F1 		mul	r1, r5, r1
+ 537              	.LVL49:
+ 538              		.loc 1 84 5 is_stmt 0 view .LVU137
+ 539 005e 2046     		mov	r0, r4
+ 540 0060 FFF7FEFF 		bl	map_camera_pan_pixels
+ 541              	.LVL50:
+ 542              	.L38:
+  85:Core/Src/map_camera.c **** }
+ 543              		.loc 1 85 1 view .LVU138
+ 544 0064 70BD     		pop	{r4, r5, r6, pc}
+ 545              		.loc 1 85 1 view .LVU139
+ 546              		.cfi_endproc
+ 547              	.LFE5:
+ 549              		.section	.text.map_camera_screen_to_latlon,"ax",%progbits
+ 550              		.align	1
+ 551              		.global	map_camera_screen_to_latlon
+ 552              		.syntax unified
+ 553              		.thumb
+ 554              		.thumb_func
+ 556              	map_camera_screen_to_latlon:
+ 557              	.LVL51:
+ 558              	.LFB6:
+  86:Core/Src/map_camera.c **** 
+  87:Core/Src/map_camera.c **** void map_camera_screen_to_latlon(const MapCamera *cam, int32_t sx, int32_t sy, GeoCoord *out_coord)
+ 559              		.loc 1 87 101 is_stmt 1 view -0
+ 560              		.cfi_startproc
+ 561              		@ args = 0, pretend = 0, frame = 8
+ 562              		@ frame_needed = 0, uses_anonymous_args = 0
+  88:Core/Src/map_camera.c ****     if (!cam || !out_coord) return;
+ 563              		.loc 1 88 5 view .LVU141
+ 564              		.loc 1 88 8 is_stmt 0 view .LVU142
+ 565 0000 0028     		cmp	r0, #0
+ 566 0002 44D0     		beq	.L53
+  87:Core/Src/map_camera.c ****     if (!cam || !out_coord) return;
+ 567              		.loc 1 87 101 view .LVU143
+ 568 0004 30B5     		push	{r4, r5, lr}
+ 569              	.LCFI12:
+ 570              		.cfi_def_cfa_offset 12
+ 571              		.cfi_offset 4, -12
+ 572              		.cfi_offset 5, -8
+ 573              		.cfi_offset 14, -4
+ 574 0006 83B0     		sub	sp, sp, #12
+ 575              	.LCFI13:
+ 576              		.cfi_def_cfa_offset 24
+ 577 0008 0D46     		mov	r5, r1
+ 578 000a 1446     		mov	r4, r2
+ 579 000c 1A46     		mov	r2, r3
+ 580              	.LVL52:
+  87:Core/Src/map_camera.c ****     if (!cam || !out_coord) return;
+ 581              		.loc 1 87 101 view .LVU144
+ 582 000e 0346     		mov	r3, r0
+ 583              	.LVL53:
+ 584              		.loc 1 88 14 discriminator 1 view .LVU145
+ 585 0010 002A     		cmp	r2, #0
+ 586 0012 3AD0     		beq	.L45
+  89:Core/Src/map_camera.c **** 
+  90:Core/Src/map_camera.c ****     int32_t shift = 24 - cam->zoom;
+ARM GAS  /tmp/ccVEfvEu.s 			page 13
+
+
+ 587              		.loc 1 90 5 is_stmt 1 view .LVU146
+ 588              		.loc 1 90 29 is_stmt 0 view .LVU147
+ 589 0014 0069     		ldr	r0, [r0, #16]
+ 590              	.LVL54:
+ 591              		.loc 1 90 13 view .LVU148
+ 592 0016 C0F1180C 		rsb	ip, r0, #24
+ 593              	.LVL55:
+  91:Core/Src/map_camera.c ****     int32_t cx = (int32_t)(cam->center_wp32.x >> shift);
+ 594              		.loc 1 91 5 is_stmt 1 view .LVU149
+ 595              		.loc 1 91 44 is_stmt 0 view .LVU150
+ 596 001a 9868     		ldr	r0, [r3, #8]
+ 597              		.loc 1 91 47 view .LVU151
+ 598 001c 20FA0CFE 		lsr	lr, r0, ip
+ 599              	.LVL56:
+  92:Core/Src/map_camera.c ****     int32_t cy = (int32_t)(cam->center_wp32.y >> shift);
+ 600              		.loc 1 92 5 is_stmt 1 view .LVU152
+ 601              		.loc 1 92 44 is_stmt 0 view .LVU153
+ 602 0020 D868     		ldr	r0, [r3, #12]
+ 603              		.loc 1 92 47 view .LVU154
+ 604 0022 20FA0CF0 		lsr	r0, r0, ip
+ 605              	.LVL57:
+  93:Core/Src/map_camera.c **** 
+  94:Core/Src/map_camera.c ****     int32_t tl_x = cx - cam->viewport_width / 2;
+ 606              		.loc 1 94 5 is_stmt 1 view .LVU155
+ 607              		.loc 1 94 28 is_stmt 0 view .LVU156
+ 608 0026 5969     		ldr	r1, [r3, #20]
+ 609              	.LVL58:
+ 610              		.loc 1 94 45 view .LVU157
+ 611 0028 01EBD171 		add	r1, r1, r1, lsr #31
+ 612              		.loc 1 94 13 view .LVU158
+ 613 002c AEEB610E 		sub	lr, lr, r1, asr #1
+ 614              	.LVL59:
+  95:Core/Src/map_camera.c ****     int32_t tl_y = cy - cam->viewport_height / 2;
+ 615              		.loc 1 95 5 is_stmt 1 view .LVU159
+ 616              		.loc 1 95 28 is_stmt 0 view .LVU160
+ 617 0030 9B69     		ldr	r3, [r3, #24]
+ 618              	.LVL60:
+ 619              		.loc 1 95 46 view .LVU161
+ 620 0032 03EBD373 		add	r3, r3, r3, lsr #31
+ 621              		.loc 1 95 13 view .LVU162
+ 622 0036 A0EB6300 		sub	r0, r0, r3, asr #1
+ 623              	.LVL61:
+  96:Core/Src/map_camera.c **** 
+  97:Core/Src/map_camera.c ****     int32_t wx = tl_x + sx;
+ 624              		.loc 1 97 5 is_stmt 1 view .LVU163
+ 625              		.loc 1 97 13 is_stmt 0 view .LVU164
+ 626 003a 2946     		mov	r1, r5
+ 627 003c 7144     		add	r1, r1, lr
+ 628              	.LVL62:
+  98:Core/Src/map_camera.c ****     int32_t wy = tl_y + sy;
+ 629              		.loc 1 98 5 is_stmt 1 view .LVU165
+ 630              		.loc 1 98 13 is_stmt 0 view .LVU166
+ 631 003e 2044     		add	r0, r0, r4
+ 632              	.LVL63:
+  99:Core/Src/map_camera.c **** 
+ 100:Core/Src/map_camera.c ****     WorldPoint32 wp;
+ 633              		.loc 1 100 5 is_stmt 1 view .LVU167
+ARM GAS  /tmp/ccVEfvEu.s 			page 14
+
+
+ 101:Core/Src/map_camera.c ****     wp.x = (uint32_t)((int64_t)wx << shift);
+ 634              		.loc 1 101 5 view .LVU168
+ 635              		.loc 1 101 35 is_stmt 0 view .LVU169
+ 636 0040 01FA0CF1 		lsl	r1, r1, ip
+ 637              	.LVL64:
+ 638              		.loc 1 101 10 view .LVU170
+ 639 0044 0091     		str	r1, [sp]
+ 102:Core/Src/map_camera.c ****     int64_t wy32 = (int64_t)wy << shift;
+ 640              		.loc 1 102 5 is_stmt 1 view .LVU171
+ 641              		.loc 1 102 20 is_stmt 0 view .LVU172
+ 642 0046 C117     		asrs	r1, r0, #31
+ 643              		.loc 1 102 13 view .LVU173
+ 644 0048 ACF1200E 		sub	lr, ip, #32
+ 645              	.LVL65:
+ 646              		.loc 1 102 13 view .LVU174
+ 647 004c CCF12003 		rsb	r3, ip, #32
+ 648              	.LVL66:
+ 649              		.loc 1 102 13 view .LVU175
+ 650 0050 01FA0CF1 		lsl	r1, r1, ip
+ 651 0054 00FA0EFE 		lsl	lr, r0, lr
+ 652 0058 41EA0E01 		orr	r1, r1, lr
+ 653 005c 20FA03F3 		lsr	r3, r0, r3
+ 654 0060 00FA0CF0 		lsl	r0, r0, ip
+ 655              	.LVL67:
+ 103:Core/Src/map_camera.c ****     if (wy32 < 0) wy32 = 0;
+ 656              		.loc 1 103 5 is_stmt 1 view .LVU176
+ 657              		.loc 1 103 8 is_stmt 0 view .LVU177
+ 658 0064 1943     		orrs	r1, r1, r3
+ 659              	.LVL68:
+ 660              		.loc 1 103 8 view .LVU178
+ 661 0066 09D4     		bmi	.L50
+ 104:Core/Src/map_camera.c ****     if (wy32 > 4294967295LL) wy32 = 4294967295LL;
+ 662              		.loc 1 104 5 is_stmt 1 view .LVU179
+ 663              		.loc 1 104 8 is_stmt 0 view .LVU180
+ 664 0068 4FF0FF33 		mov	r3, #-1
+ 665 006c 8342     		cmp	r3, r0
+ 666 006e 4FF00003 		mov	r3, #0
+ 667 0072 8B41     		sbcs	r3, r3, r1
+ 668 0074 03DA     		bge	.L49
+ 669              		.loc 1 104 35 discriminator 1 view .LVU181
+ 670 0076 4FF0FF30 		mov	r0, #-1
+ 671              	.LVL69:
+ 672              		.loc 1 104 35 discriminator 1 view .LVU182
+ 673 007a 00E0     		b	.L49
+ 674              	.LVL70:
+ 675              	.L50:
+ 103:Core/Src/map_camera.c ****     if (wy32 < 0) wy32 = 0;
+ 676              		.loc 1 103 24 discriminator 1 view .LVU183
+ 677 007c 0020     		movs	r0, #0
+ 678              	.LVL71:
+ 679              	.L49:
+ 105:Core/Src/map_camera.c ****     wp.y = (uint32_t)wy32;
+ 680              		.loc 1 105 5 is_stmt 1 view .LVU184
+ 681              		.loc 1 105 10 is_stmt 0 view .LVU185
+ 682 007e 0190     		str	r0, [sp, #4]
+ 106:Core/Src/map_camera.c **** 
+ 107:Core/Src/map_camera.c ****     geo_world_point32_to_latlon(wp, out_coord);
+ARM GAS  /tmp/ccVEfvEu.s 			page 15
+
+
+ 683              		.loc 1 107 5 is_stmt 1 view .LVU186
+ 684 0080 02AB     		add	r3, sp, #8
+ 685 0082 13E90300 		ldmdb	r3, {r0, r1}
+ 686              		.loc 1 107 5 is_stmt 0 view .LVU187
+ 687 0086 FFF7FEFF 		bl	geo_world_point32_to_latlon
+ 688              	.LVL72:
+ 689              	.L45:
+ 108:Core/Src/map_camera.c **** }
+ 690              		.loc 1 108 1 view .LVU188
+ 691 008a 03B0     		add	sp, sp, #12
+ 692              	.LCFI14:
+ 693              		.cfi_def_cfa_offset 12
+ 694              		@ sp needed
+ 695 008c 30BD     		pop	{r4, r5, pc}
+ 696              	.LVL73:
+ 697              	.L53:
+ 698              	.LCFI15:
+ 699              		.cfi_def_cfa_offset 0
+ 700              		.cfi_restore 4
+ 701              		.cfi_restore 5
+ 702              		.cfi_restore 14
+ 703              		.loc 1 108 1 view .LVU189
+ 704 008e 7047     		bx	lr
+ 705              		.cfi_endproc
+ 706              	.LFE6:
+ 708              		.section	.text.map_camera_latlon_to_screen,"ax",%progbits
+ 709              		.align	1
+ 710              		.global	map_camera_latlon_to_screen
+ 711              		.syntax unified
+ 712              		.thumb
+ 713              		.thumb_func
+ 715              	map_camera_latlon_to_screen:
+ 716              	.LVL74:
+ 717              	.LFB7:
+ 109:Core/Src/map_camera.c **** 
+ 110:Core/Src/map_camera.c **** void map_camera_latlon_to_screen(const MapCamera *cam, GeoCoord coord, int32_t *out_sx, int32_t *ou
+ 718              		.loc 1 110 106 is_stmt 1 view -0
+ 719              		.cfi_startproc
+ 720              		@ args = 4, pretend = 0, frame = 16
+ 721              		@ frame_needed = 0, uses_anonymous_args = 0
+ 722              		.loc 1 110 106 is_stmt 0 view .LVU191
+ 723 0000 30B5     		push	{r4, r5, lr}
+ 724              	.LCFI16:
+ 725              		.cfi_def_cfa_offset 12
+ 726              		.cfi_offset 4, -12
+ 727              		.cfi_offset 5, -8
+ 728              		.cfi_offset 14, -4
+ 729 0002 85B0     		sub	sp, sp, #20
+ 730              	.LCFI17:
+ 731              		.cfi_def_cfa_offset 32
+ 732 0004 CDE90012 		strd	r1, r2, [sp]
+ 111:Core/Src/map_camera.c ****     if (!cam) return;
+ 733              		.loc 1 111 5 is_stmt 1 view .LVU192
+ 734              		.loc 1 111 8 is_stmt 0 view .LVU193
+ 735 0008 20B3     		cbz	r0, .L56
+ 736 000a 1D46     		mov	r5, r3
+ 737 000c 0446     		mov	r4, r0
+ARM GAS  /tmp/ccVEfvEu.s 			page 16
+
+
+ 112:Core/Src/map_camera.c **** 
+ 113:Core/Src/map_camera.c ****     WorldPoint32 wp;
+ 738              		.loc 1 113 5 is_stmt 1 view .LVU194
+ 114:Core/Src/map_camera.c ****     geo_latlon_to_world_point32(coord, &wp);
+ 739              		.loc 1 114 5 view .LVU195
+ 740 000e 02AA     		add	r2, sp, #8
+ 741 0010 DDE90001 		ldrd	r0, r1, [sp]
+ 742              	.LVL75:
+ 743              		.loc 1 114 5 is_stmt 0 view .LVU196
+ 744 0014 FFF7FEFF 		bl	geo_latlon_to_world_point32
+ 745              	.LVL76:
+ 115:Core/Src/map_camera.c **** 
+ 116:Core/Src/map_camera.c ****     int32_t shift = 24 - cam->zoom;
+ 746              		.loc 1 116 5 is_stmt 1 view .LVU197
+ 747              		.loc 1 116 29 is_stmt 0 view .LVU198
+ 748 0018 2269     		ldr	r2, [r4, #16]
+ 749              		.loc 1 116 13 view .LVU199
+ 750 001a C2F11802 		rsb	r2, r2, #24
+ 751              	.LVL77:
+ 117:Core/Src/map_camera.c ****     int32_t cx = (int32_t)(cam->center_wp32.x >> shift);
+ 752              		.loc 1 117 5 is_stmt 1 view .LVU200
+ 753              		.loc 1 117 44 is_stmt 0 view .LVU201
+ 754 001e A368     		ldr	r3, [r4, #8]
+ 755              		.loc 1 117 47 view .LVU202
+ 756 0020 23FA02F1 		lsr	r1, r3, r2
+ 757              	.LVL78:
+ 118:Core/Src/map_camera.c ****     int32_t cy = (int32_t)(cam->center_wp32.y >> shift);
+ 758              		.loc 1 118 5 is_stmt 1 view .LVU203
+ 759              		.loc 1 118 44 is_stmt 0 view .LVU204
+ 760 0024 E368     		ldr	r3, [r4, #12]
+ 761              		.loc 1 118 47 view .LVU205
+ 762 0026 D340     		lsrs	r3, r3, r2
+ 763              	.LVL79:
+ 119:Core/Src/map_camera.c **** 
+ 120:Core/Src/map_camera.c ****     int32_t tl_x = cx - cam->viewport_width / 2;
+ 764              		.loc 1 120 5 is_stmt 1 view .LVU206
+ 765              		.loc 1 120 28 is_stmt 0 view .LVU207
+ 766 0028 6069     		ldr	r0, [r4, #20]
+ 767              		.loc 1 120 45 view .LVU208
+ 768 002a 00EBD070 		add	r0, r0, r0, lsr #31
+ 769              		.loc 1 120 13 view .LVU209
+ 770 002e A1EB6001 		sub	r1, r1, r0, asr #1
+ 771              	.LVL80:
+ 121:Core/Src/map_camera.c ****     int32_t tl_y = cy - cam->viewport_height / 2;
+ 772              		.loc 1 121 5 is_stmt 1 view .LVU210
+ 773              		.loc 1 121 28 is_stmt 0 view .LVU211
+ 774 0032 A069     		ldr	r0, [r4, #24]
+ 775              		.loc 1 121 46 view .LVU212
+ 776 0034 00EBD070 		add	r0, r0, r0, lsr #31
+ 777              		.loc 1 121 13 view .LVU213
+ 778 0038 A3EB6003 		sub	r3, r3, r0, asr #1
+ 779              	.LVL81:
+ 122:Core/Src/map_camera.c **** 
+ 123:Core/Src/map_camera.c ****     int32_t px = (int32_t)(wp.x >> shift);
+ 780              		.loc 1 123 5 is_stmt 1 view .LVU214
+ 781              		.loc 1 123 30 is_stmt 0 view .LVU215
+ 782 003c 0298     		ldr	r0, [sp, #8]
+ARM GAS  /tmp/ccVEfvEu.s 			page 17
+
+
+ 783              		.loc 1 123 33 view .LVU216
+ 784 003e 20FA02F4 		lsr	r4, r0, r2
+ 785              	.LVL82:
+ 124:Core/Src/map_camera.c ****     int32_t py = (int32_t)(wp.y >> shift);
+ 786              		.loc 1 124 5 is_stmt 1 view .LVU217
+ 787              		.loc 1 124 30 is_stmt 0 view .LVU218
+ 788 0042 0398     		ldr	r0, [sp, #12]
+ 789              		.loc 1 124 33 view .LVU219
+ 790 0044 D040     		lsrs	r0, r0, r2
+ 791              	.LVL83:
+ 125:Core/Src/map_camera.c **** 
+ 126:Core/Src/map_camera.c ****     if (out_sx) *out_sx = px - tl_x;
+ 792              		.loc 1 126 5 is_stmt 1 view .LVU220
+ 793              		.loc 1 126 8 is_stmt 0 view .LVU221
+ 794 0046 0DB1     		cbz	r5, .L59
+ 795              		.loc 1 126 17 is_stmt 1 discriminator 1 view .LVU222
+ 796              		.loc 1 126 30 is_stmt 0 discriminator 1 view .LVU223
+ 797 0048 641A     		subs	r4, r4, r1
+ 798              	.LVL84:
+ 799              		.loc 1 126 25 discriminator 1 view .LVU224
+ 800 004a 2C60     		str	r4, [r5]
+ 801              	.LVL85:
+ 802              	.L59:
+ 127:Core/Src/map_camera.c ****     if (out_sy) *out_sy = py - tl_y;
+ 803              		.loc 1 127 5 is_stmt 1 view .LVU225
+ 804              		.loc 1 127 8 is_stmt 0 view .LVU226
+ 805 004c 089A     		ldr	r2, [sp, #32]
+ 806              	.LVL86:
+ 807              		.loc 1 127 8 view .LVU227
+ 808 004e 0AB1     		cbz	r2, .L56
+ 809              		.loc 1 127 17 is_stmt 1 discriminator 1 view .LVU228
+ 810              		.loc 1 127 30 is_stmt 0 discriminator 1 view .LVU229
+ 811 0050 C01A     		subs	r0, r0, r3
+ 812              	.LVL87:
+ 813              		.loc 1 127 25 discriminator 1 view .LVU230
+ 814 0052 1060     		str	r0, [r2]
+ 815              	.LVL88:
+ 816              	.L56:
+ 128:Core/Src/map_camera.c **** }
+ 817              		.loc 1 128 1 view .LVU231
+ 818 0054 05B0     		add	sp, sp, #20
+ 819              	.LCFI18:
+ 820              		.cfi_def_cfa_offset 12
+ 821              		@ sp needed
+ 822 0056 30BD     		pop	{r4, r5, pc}
+ 823              		.loc 1 128 1 view .LVU232
+ 824              		.cfi_endproc
+ 825              	.LFE7:
+ 827              		.section	.text.map_camera_get_visible_tiles,"ax",%progbits
+ 828              		.align	1
+ 829              		.global	map_camera_get_visible_tiles
+ 830              		.syntax unified
+ 831              		.thumb
+ 832              		.thumb_func
+ 834              	map_camera_get_visible_tiles:
+ 835              	.LVL89:
+ 836              	.LFB8:
+ARM GAS  /tmp/ccVEfvEu.s 			page 18
+
+
+ 129:Core/Src/map_camera.c **** 
+ 130:Core/Src/map_camera.c **** void map_camera_get_visible_tiles(const MapCamera *cam, VisibleTileList *out_list) {
+ 837              		.loc 1 130 84 is_stmt 1 view -0
+ 838              		.cfi_startproc
+ 839              		@ args = 0, pretend = 0, frame = 0
+ 840              		@ frame_needed = 0, uses_anonymous_args = 0
+ 131:Core/Src/map_camera.c ****     if (!cam || !out_list) return;
+ 841              		.loc 1 131 5 view .LVU234
+ 842              		.loc 1 131 8 is_stmt 0 view .LVU235
+ 843 0000 0028     		cmp	r0, #0
+ 844 0002 76D0     		beq	.L77
+ 845 0004 0346     		mov	r3, r0
+ 846              		.loc 1 131 14 discriminator 1 view .LVU236
+ 847 0006 0029     		cmp	r1, #0
+ 848 0008 73D0     		beq	.L77
+ 130:Core/Src/map_camera.c ****     if (!cam || !out_list) return;
+ 849              		.loc 1 130 84 view .LVU237
+ 850 000a 2DE9F04F 		push	{r4, r5, r6, r7, r8, r9, r10, fp, lr}
+ 851              	.LCFI19:
+ 852              		.cfi_def_cfa_offset 36
+ 853              		.cfi_offset 4, -36
+ 854              		.cfi_offset 5, -32
+ 855              		.cfi_offset 6, -28
+ 856              		.cfi_offset 7, -24
+ 857              		.cfi_offset 8, -20
+ 858              		.cfi_offset 9, -16
+ 859              		.cfi_offset 10, -12
+ 860              		.cfi_offset 11, -8
+ 861              		.cfi_offset 14, -4
+ 132:Core/Src/map_camera.c **** 
+ 133:Core/Src/map_camera.c ****     out_list->count = 0;
+ 862              		.loc 1 133 5 is_stmt 1 view .LVU238
+ 863              		.loc 1 133 21 is_stmt 0 view .LVU239
+ 864 000e 01F58052 		add	r2, r1, #4096
+ 865 0012 0020     		movs	r0, #0
+ 866              	.LVL90:
+ 867              		.loc 1 133 21 view .LVU240
+ 868 0014 C2F8000C 		str	r0, [r2, #3072]
+ 134:Core/Src/map_camera.c **** 
+ 135:Core/Src/map_camera.c ****     int32_t shift = 24 - cam->zoom;
+ 869              		.loc 1 135 5 is_stmt 1 view .LVU241
+ 870              		.loc 1 135 29 is_stmt 0 view .LVU242
+ 871 0018 1C69     		ldr	r4, [r3, #16]
+ 872              		.loc 1 135 13 view .LVU243
+ 873 001a C4F11800 		rsb	r0, r4, #24
+ 874              	.LVL91:
+ 136:Core/Src/map_camera.c ****     int32_t cx = (int32_t)(cam->center_wp32.x >> shift);
+ 875              		.loc 1 136 5 is_stmt 1 view .LVU244
+ 876              		.loc 1 136 44 is_stmt 0 view .LVU245
+ 877 001e 9A68     		ldr	r2, [r3, #8]
+ 878              		.loc 1 136 47 view .LVU246
+ 879 0020 22FA00F7 		lsr	r7, r2, r0
+ 880              	.LVL92:
+ 137:Core/Src/map_camera.c ****     int32_t cy = (int32_t)(cam->center_wp32.y >> shift);
+ 881              		.loc 1 137 5 is_stmt 1 view .LVU247
+ 882              		.loc 1 137 44 is_stmt 0 view .LVU248
+ 883 0024 DA68     		ldr	r2, [r3, #12]
+ARM GAS  /tmp/ccVEfvEu.s 			page 19
+
+
+ 884              		.loc 1 137 47 view .LVU249
+ 885 0026 22FA00F6 		lsr	r6, r2, r0
+ 886              	.LVL93:
+ 138:Core/Src/map_camera.c **** 
+ 139:Core/Src/map_camera.c ****     int32_t tl_x = cx - cam->viewport_width / 2;
+ 887              		.loc 1 139 5 is_stmt 1 view .LVU250
+ 888              		.loc 1 139 28 is_stmt 0 view .LVU251
+ 889 002a 5869     		ldr	r0, [r3, #20]
+ 890              	.LVL94:
+ 891              		.loc 1 139 45 view .LVU252
+ 892 002c 00EBD072 		add	r2, r0, r0, lsr #31
+ 893              		.loc 1 139 13 view .LVU253
+ 894 0030 A7EB6207 		sub	r7, r7, r2, asr #1
+ 895              	.LVL95:
+ 140:Core/Src/map_camera.c ****     int32_t tl_y = cy - cam->viewport_height / 2;
+ 896              		.loc 1 140 5 is_stmt 1 view .LVU254
+ 897              		.loc 1 140 28 is_stmt 0 view .LVU255
+ 898 0034 9A69     		ldr	r2, [r3, #24]
+ 899              		.loc 1 140 46 view .LVU256
+ 900 0036 02EBD275 		add	r5, r2, r2, lsr #31
+ 901              		.loc 1 140 13 view .LVU257
+ 902 003a A6EB6506 		sub	r6, r6, r5, asr #1
+ 903              	.LVL96:
+ 141:Core/Src/map_camera.c ****     int32_t br_x = tl_x + cam->viewport_width;
+ 904              		.loc 1 141 5 is_stmt 1 view .LVU258
+ 905              		.loc 1 141 13 is_stmt 0 view .LVU259
+ 906 003e 3844     		add	r0, r0, r7
+ 907              	.LVL97:
+ 142:Core/Src/map_camera.c ****     int32_t br_y = tl_y + cam->viewport_height;
+ 908              		.loc 1 142 5 is_stmt 1 view .LVU260
+ 909              		.loc 1 142 13 is_stmt 0 view .LVU261
+ 910 0040 3244     		add	r2, r2, r6
+ 911              	.LVL98:
+ 143:Core/Src/map_camera.c **** 
+ 144:Core/Src/map_camera.c ****     int32_t min_tx = tl_x >> 8;
+ 912              		.loc 1 144 5 is_stmt 1 view .LVU262
+ 913              		.loc 1 144 13 is_stmt 0 view .LVU263
+ 914 0042 3D12     		asrs	r5, r7, #8
+ 915 0044 AB46     		mov	fp, r5
+ 916              	.LVL99:
+ 145:Core/Src/map_camera.c ****     int32_t max_tx = br_x >> 8;
+ 917              		.loc 1 145 5 is_stmt 1 view .LVU264
+ 918              		.loc 1 145 13 is_stmt 0 view .LVU265
+ 919 0046 0512     		asrs	r5, r0, #8
+ 920              	.LVL100:
+ 146:Core/Src/map_camera.c ****     int32_t min_ty = tl_y >> 8;
+ 921              		.loc 1 146 5 is_stmt 1 view .LVU266
+ 147:Core/Src/map_camera.c ****     int32_t max_ty = br_y >> 8;
+ 922              		.loc 1 147 5 view .LVU267
+ 923              		.loc 1 147 13 is_stmt 0 view .LVU268
+ 924 0048 4FEA2228 		asr	r8, r2, #8
+ 925              	.LVL101:
+ 148:Core/Src/map_camera.c **** 
+ 149:Core/Src/map_camera.c ****     int32_t max_tile_idx = (1 << cam->zoom) - 1;
+ 926              		.loc 1 149 5 is_stmt 1 view .LVU269
+ 927              		.loc 1 149 31 is_stmt 0 view .LVU270
+ 928 004c 4FF0010C 		mov	ip, #1
+ARM GAS  /tmp/ccVEfvEu.s 			page 20
+
+
+ 929 0050 0CFA04FC 		lsl	ip, ip, r4
+ 930              		.loc 1 149 13 view .LVU271
+ 931 0054 0CF1FF3C 		add	ip, ip, #-1
+ 932              	.LVL102:
+ 150:Core/Src/map_camera.c **** 
+ 151:Core/Src/map_camera.c ****     /* Clamp vertical tile bounds */
+ 152:Core/Src/map_camera.c ****     if (min_ty < 0) min_ty = 0;
+ 933              		.loc 1 152 5 is_stmt 1 view .LVU272
+ 934              		.loc 1 152 8 is_stmt 0 view .LVU273
+ 935 0058 3412     		asrs	r4, r6, #8
+ 936              	.LVL103:
+ 937              		.loc 1 152 8 view .LVU274
+ 938 005a 03D4     		bmi	.L80
+ 939              	.LVL104:
+ 940              	.L64:
+ 153:Core/Src/map_camera.c ****     if (max_ty > max_tile_idx) max_ty = max_tile_idx;
+ 941              		.loc 1 153 5 is_stmt 1 view .LVU275
+ 942              		.loc 1 153 8 is_stmt 0 view .LVU276
+ 943 005c E045     		cmp	r8, ip
+ 944 005e 42DD     		ble	.L66
+ 945              		.loc 1 153 39 discriminator 1 view .LVU277
+ 946 0060 E046     		mov	r8, ip
+ 947              	.LVL105:
+ 154:Core/Src/map_camera.c **** 
+ 155:Core/Src/map_camera.c ****     for (int32_t ty = min_ty; ty <= max_ty; ++ty) {
+ 948              		.loc 1 155 5 is_stmt 1 view .LVU278
+ 949              	.LBB2:
+ 950              		.loc 1 155 10 view .LVU279
+ 951              		.loc 1 155 5 is_stmt 0 view .LVU280
+ 952 0062 40E0     		b	.L66
+ 953              	.LVL106:
+ 954              	.L80:
+ 955              		.loc 1 155 5 view .LVU281
+ 956              	.LBE2:
+ 152:Core/Src/map_camera.c ****     if (max_ty > max_tile_idx) max_ty = max_tile_idx;
+ 957              		.loc 1 152 28 discriminator 1 view .LVU282
+ 958 0064 0024     		movs	r4, #0
+ 959              	.LVL107:
+ 152:Core/Src/map_camera.c ****     if (max_ty > max_tile_idx) max_ty = max_tile_idx;
+ 960              		.loc 1 152 28 discriminator 1 view .LVU283
+ 961 0066 F9E7     		b	.L64
+ 962              	.LVL108:
+ 963              	.L68:
+ 964              	.LBB7:
+ 965              	.LBB3:
+ 966              	.LBB4:
+ 156:Core/Src/map_camera.c ****         for (int32_t tx = min_tx; tx <= max_tx; ++tx) {
+ 157:Core/Src/map_camera.c ****             if (out_list->count >= MAP_MAX_VISIBLE_TILES) {
+ 158:Core/Src/map_camera.c ****                 return;
+ 159:Core/Src/map_camera.c ****             }
+ 160:Core/Src/map_camera.c **** 
+ 161:Core/Src/map_camera.c ****             int32_t wrapped_tx = tx;
+ 162:Core/Src/map_camera.c ****             while (wrapped_tx < 0) wrapped_tx += (1 << cam->zoom);
+ 967              		.loc 1 162 36 is_stmt 1 discriminator 1 view .LVU284
+ 968              		.loc 1 162 59 is_stmt 0 discriminator 1 view .LVU285
+ 969 0068 1A69     		ldr	r2, [r3, #16]
+ 970              		.loc 1 162 53 discriminator 1 view .LVU286
+ARM GAS  /tmp/ccVEfvEu.s 			page 21
+
+
+ 971 006a 4FF0010A 		mov	r10, #1
+ 972 006e 0AFA02F2 		lsl	r2, r10, r2
+ 973              		.loc 1 162 47 discriminator 1 view .LVU287
+ 974 0072 9144     		add	r9, r9, r2
+ 975              	.LVL109:
+ 976              	.L67:
+ 977              		.loc 1 162 31 is_stmt 1 discriminator 2 view .LVU288
+ 978 0074 B9F1000F 		cmp	r9, #0
+ 979 0078 F6DB     		blt	.L68
+ 980 007a 06E0     		b	.L69
+ 981              	.L70:
+ 163:Core/Src/map_camera.c ****             while (wrapped_tx > max_tile_idx) wrapped_tx -= (1 << cam->zoom);
+ 982              		.loc 1 163 47 discriminator 1 view .LVU289
+ 983              		.loc 1 163 70 is_stmt 0 discriminator 1 view .LVU290
+ 984 007c 1A69     		ldr	r2, [r3, #16]
+ 985              		.loc 1 163 64 discriminator 1 view .LVU291
+ 986 007e 4FF0010A 		mov	r10, #1
+ 987 0082 0AFA02F2 		lsl	r2, r10, r2
+ 988              		.loc 1 163 58 discriminator 1 view .LVU292
+ 989 0086 A9EB0209 		sub	r9, r9, r2
+ 990              	.LVL110:
+ 991              	.L69:
+ 992              		.loc 1 163 31 is_stmt 1 discriminator 2 view .LVU293
+ 993 008a E145     		cmp	r9, ip
+ 994 008c F6DC     		bgt	.L70
+ 164:Core/Src/map_camera.c **** 
+ 165:Core/Src/map_camera.c ****             VisibleTile *vt = &out_list->tiles[out_list->count++];
+ 995              		.loc 1 165 13 view .LVU294
+ 996              		.loc 1 165 63 is_stmt 0 view .LVU295
+ 997 008e 01F58052 		add	r2, r1, #4096
+ 998 0092 00F1010A 		add	r10, r0, #1
+ 999 0096 C2F800AC 		str	r10, [r2, #3072]
+ 1000              	.LVL111:
+ 166:Core/Src/map_camera.c ****             vt->tile.x = wrapped_tx;
+ 1001              		.loc 1 166 13 is_stmt 1 view .LVU296
+ 1002              		.loc 1 166 24 is_stmt 0 view .LVU297
+ 1003 009a C0EBC002 		rsb	r2, r0, r0, lsl #3
+ 1004 009e 01EB820A 		add	r10, r1, r2, lsl #2
+ 1005 00a2 41F82290 		str	r9, [r1, r2, lsl #2]
+ 167:Core/Src/map_camera.c ****             vt->tile.y = ty;
+ 1006              		.loc 1 167 13 is_stmt 1 view .LVU298
+ 1007              		.loc 1 167 24 is_stmt 0 view .LVU299
+ 1008 00a6 CAF80440 		str	r4, [r10, #4]
+ 168:Core/Src/map_camera.c ****             vt->tile.zoom = cam->zoom;
+ 1009              		.loc 1 168 13 is_stmt 1 view .LVU300
+ 1010              		.loc 1 168 32 is_stmt 0 view .LVU301
+ 1011 00aa 1A69     		ldr	r2, [r3, #16]
+ 1012              		.loc 1 168 27 view .LVU302
+ 1013 00ac CAF80820 		str	r2, [r10, #8]
+ 169:Core/Src/map_camera.c **** 
+ 170:Core/Src/map_camera.c ****             vt->screen_x = (tx << 8) - tl_x;
+ 1014              		.loc 1 170 13 is_stmt 1 view .LVU303
+ 1015              		.loc 1 170 38 is_stmt 0 view .LVU304
+ 1016 00b0 C7EB0E22 		rsb	r2, r7, lr, lsl #8
+ 1017              		.loc 1 170 26 view .LVU305
+ 1018 00b4 CAF80C20 		str	r2, [r10, #12]
+ 171:Core/Src/map_camera.c ****             vt->screen_y = (ty << 8) - tl_y;
+ARM GAS  /tmp/ccVEfvEu.s 			page 22
+
+
+ 1019              		.loc 1 171 13 is_stmt 1 view .LVU306
+ 1020              		.loc 1 171 38 is_stmt 0 view .LVU307
+ 1021 00b8 C6EB0422 		rsb	r2, r6, r4, lsl #8
+ 1022              		.loc 1 171 26 view .LVU308
+ 1023 00bc CAF81020 		str	r2, [r10, #16]
+ 172:Core/Src/map_camera.c ****             vt->width = GEO_TILE_SIZE_PX;
+ 1024              		.loc 1 172 13 is_stmt 1 view .LVU309
+ 1025              		.loc 1 172 23 is_stmt 0 view .LVU310
+ 1026 00c0 4FF48072 		mov	r2, #256
+ 1027 00c4 CAF81420 		str	r2, [r10, #20]
+ 173:Core/Src/map_camera.c ****             vt->height = GEO_TILE_SIZE_PX;
+ 1028              		.loc 1 173 13 is_stmt 1 view .LVU311
+ 1029              		.loc 1 173 24 is_stmt 0 view .LVU312
+ 1030 00c8 CAF81820 		str	r2, [r10, #24]
+ 1031              	.LBE4:
+ 156:Core/Src/map_camera.c ****             if (out_list->count >= MAP_MAX_VISIBLE_TILES) {
+ 1032              		.loc 1 156 49 is_stmt 1 discriminator 1 view .LVU313
+ 1033 00cc 0EF1010E 		add	lr, lr, #1
+ 1034              	.LVL112:
+ 1035              	.L72:
+ 156:Core/Src/map_camera.c ****             if (out_list->count >= MAP_MAX_VISIBLE_TILES) {
+ 1036              		.loc 1 156 38 discriminator 2 view .LVU314
+ 1037 00d0 AE45     		cmp	lr, r5
+ 1038 00d2 07DC     		bgt	.L81
+ 1039              	.LBB5:
+ 157:Core/Src/map_camera.c ****                 return;
+ 1040              		.loc 1 157 13 view .LVU315
+ 157:Core/Src/map_camera.c ****                 return;
+ 1041              		.loc 1 157 25 is_stmt 0 view .LVU316
+ 1042 00d4 01F58052 		add	r2, r1, #4096
+ 1043 00d8 D2F8000C 		ldr	r0, [r2, #3072]
+ 157:Core/Src/map_camera.c ****                 return;
+ 1044              		.loc 1 157 16 view .LVU317
+ 1045 00dc FF28     		cmp	r0, #255
+ 1046 00de 06DC     		bgt	.L62
+ 161:Core/Src/map_camera.c ****             while (wrapped_tx < 0) wrapped_tx += (1 << cam->zoom);
+ 1047              		.loc 1 161 21 view .LVU318
+ 1048 00e0 F146     		mov	r9, lr
+ 1049 00e2 C7E7     		b	.L67
+ 1050              	.L81:
+ 161:Core/Src/map_camera.c ****             while (wrapped_tx < 0) wrapped_tx += (1 << cam->zoom);
+ 1051              		.loc 1 161 21 view .LVU319
+ 1052              	.LBE5:
+ 1053              	.LBE3:
+ 155:Core/Src/map_camera.c ****         for (int32_t tx = min_tx; tx <= max_tx; ++tx) {
+ 1054              		.loc 1 155 45 is_stmt 1 discriminator 1 view .LVU320
+ 1055 00e4 0134     		adds	r4, r4, #1
+ 1056              	.LVL113:
+ 1057              	.L66:
+ 155:Core/Src/map_camera.c ****         for (int32_t tx = min_tx; tx <= max_tx; ++tx) {
+ 1058              		.loc 1 155 34 discriminator 2 view .LVU321
+ 1059 00e6 A045     		cmp	r8, r4
+ 1060 00e8 01DB     		blt	.L62
+ 1061              	.LBB6:
+ 156:Core/Src/map_camera.c ****             if (out_list->count >= MAP_MAX_VISIBLE_TILES) {
+ 1062              		.loc 1 156 22 is_stmt 0 view .LVU322
+ 1063 00ea DE46     		mov	lr, fp
+ARM GAS  /tmp/ccVEfvEu.s 			page 23
+
+
+ 1064 00ec F0E7     		b	.L72
+ 1065              	.L62:
+ 156:Core/Src/map_camera.c ****             if (out_list->count >= MAP_MAX_VISIBLE_TILES) {
+ 1066              		.loc 1 156 22 view .LVU323
+ 1067              	.LBE6:
+ 1068              	.LBE7:
+ 174:Core/Src/map_camera.c ****         }
+ 175:Core/Src/map_camera.c ****     }
+ 176:Core/Src/map_camera.c **** }
+ 1069              		.loc 1 176 1 view .LVU324
+ 1070 00ee BDE8F08F 		pop	{r4, r5, r6, r7, r8, r9, r10, fp, pc}
+ 1071              	.LVL114:
+ 1072              	.L77:
+ 1073              	.LCFI20:
+ 1074              		.cfi_def_cfa_offset 0
+ 1075              		.cfi_restore 4
+ 1076              		.cfi_restore 5
+ 1077              		.cfi_restore 6
+ 1078              		.cfi_restore 7
+ 1079              		.cfi_restore 8
+ 1080              		.cfi_restore 9
+ 1081              		.cfi_restore 10
+ 1082              		.cfi_restore 11
+ 1083              		.cfi_restore 14
+ 1084              		.loc 1 176 1 view .LVU325
+ 1085 00f2 7047     		bx	lr
+ 1086              		.cfi_endproc
+ 1087              	.LFE8:
+ 1089              		.section	.text.map_camera_get_visible_bbox,"ax",%progbits
+ 1090              		.align	1
+ 1091              		.global	map_camera_get_visible_bbox
+ 1092              		.syntax unified
+ 1093              		.thumb
+ 1094              		.thumb_func
+ 1096              	map_camera_get_visible_bbox:
+ 1097              	.LVL115:
+ 1098              	.LFB9:
+ 177:Core/Src/map_camera.c **** 
+ 178:Core/Src/map_camera.c **** void map_camera_get_visible_bbox(const MapCamera *cam, GeoBBox *out_bbox) {
+ 1099              		.loc 1 178 75 is_stmt 1 view -0
+ 1100              		.cfi_startproc
+ 1101              		@ args = 0, pretend = 0, frame = 16
+ 1102              		@ frame_needed = 0, uses_anonymous_args = 0
+ 179:Core/Src/map_camera.c ****     if (!cam || !out_bbox) return;
+ 1103              		.loc 1 179 5 view .LVU327
+ 1104              		.loc 1 179 8 is_stmt 0 view .LVU328
+ 1105 0000 C8B1     		cbz	r0, .L87
+ 178:Core/Src/map_camera.c ****     if (!cam || !out_bbox) return;
+ 1106              		.loc 1 178 75 view .LVU329
+ 1107 0002 30B5     		push	{r4, r5, lr}
+ 1108              	.LCFI21:
+ 1109              		.cfi_def_cfa_offset 12
+ 1110              		.cfi_offset 4, -12
+ 1111              		.cfi_offset 5, -8
+ 1112              		.cfi_offset 14, -4
+ 1113 0004 85B0     		sub	sp, sp, #20
+ 1114              	.LCFI22:
+ARM GAS  /tmp/ccVEfvEu.s 			page 24
+
+
+ 1115              		.cfi_def_cfa_offset 32
+ 1116 0006 0C46     		mov	r4, r1
+ 1117 0008 0546     		mov	r5, r0
+ 1118              		.loc 1 179 14 discriminator 1 view .LVU330
+ 1119 000a 91B1     		cbz	r1, .L82
+ 180:Core/Src/map_camera.c **** 
+ 181:Core/Src/map_camera.c ****     GeoCoord tl, br;
+ 1120              		.loc 1 181 5 is_stmt 1 view .LVU331
+ 182:Core/Src/map_camera.c ****     map_camera_screen_to_latlon(cam, 0, 0, &tl);
+ 1121              		.loc 1 182 5 view .LVU332
+ 1122 000c 02AB     		add	r3, sp, #8
+ 1123 000e 0022     		movs	r2, #0
+ 1124 0010 1146     		mov	r1, r2
+ 1125              	.LVL116:
+ 1126              		.loc 1 182 5 is_stmt 0 view .LVU333
+ 1127 0012 FFF7FEFF 		bl	map_camera_screen_to_latlon
+ 1128              	.LVL117:
+ 183:Core/Src/map_camera.c ****     map_camera_screen_to_latlon(cam, cam->viewport_width, cam->viewport_height, &br);
+ 1129              		.loc 1 183 5 is_stmt 1 view .LVU334
+ 1130 0016 6B46     		mov	r3, sp
+ 1131 0018 AA69     		ldr	r2, [r5, #24]
+ 1132 001a 6969     		ldr	r1, [r5, #20]
+ 1133 001c 2846     		mov	r0, r5
+ 1134 001e FFF7FEFF 		bl	map_camera_screen_to_latlon
+ 1135              	.LVL118:
+ 184:Core/Src/map_camera.c **** 
+ 185:Core/Src/map_camera.c ****     out_bbox->min_lat_e7 = br.lat_e7;
+ 1136              		.loc 1 185 5 view .LVU335
+ 1137              		.loc 1 185 30 is_stmt 0 view .LVU336
+ 1138 0022 009B     		ldr	r3, [sp]
+ 1139              		.loc 1 185 26 view .LVU337
+ 1140 0024 2360     		str	r3, [r4]
+ 186:Core/Src/map_camera.c ****     out_bbox->max_lat_e7 = tl.lat_e7;
+ 1141              		.loc 1 186 5 is_stmt 1 view .LVU338
+ 1142              		.loc 1 186 30 is_stmt 0 view .LVU339
+ 1143 0026 029B     		ldr	r3, [sp, #8]
+ 1144              		.loc 1 186 26 view .LVU340
+ 1145 0028 A360     		str	r3, [r4, #8]
+ 187:Core/Src/map_camera.c ****     out_bbox->min_lon_e7 = tl.lon_e7;
+ 1146              		.loc 1 187 5 is_stmt 1 view .LVU341
+ 1147              		.loc 1 187 30 is_stmt 0 view .LVU342
+ 1148 002a 039B     		ldr	r3, [sp, #12]
+ 1149              		.loc 1 187 26 view .LVU343
+ 1150 002c 6360     		str	r3, [r4, #4]
+ 188:Core/Src/map_camera.c ****     out_bbox->max_lon_e7 = br.lon_e7;
+ 1151              		.loc 1 188 5 is_stmt 1 view .LVU344
+ 1152              		.loc 1 188 30 is_stmt 0 view .LVU345
+ 1153 002e 019B     		ldr	r3, [sp, #4]
+ 1154              		.loc 1 188 26 view .LVU346
+ 1155 0030 E360     		str	r3, [r4, #12]
+ 1156              	.L82:
+ 189:Core/Src/map_camera.c **** }
+ 1157              		.loc 1 189 1 view .LVU347
+ 1158 0032 05B0     		add	sp, sp, #20
+ 1159              	.LCFI23:
+ 1160              		.cfi_def_cfa_offset 12
+ 1161              		@ sp needed
+ARM GAS  /tmp/ccVEfvEu.s 			page 25
+
+
+ 1162 0034 30BD     		pop	{r4, r5, pc}
+ 1163              	.LVL119:
+ 1164              	.L87:
+ 1165              	.LCFI24:
+ 1166              		.cfi_def_cfa_offset 0
+ 1167              		.cfi_restore 4
+ 1168              		.cfi_restore 5
+ 1169              		.cfi_restore 14
+ 1170              		.loc 1 189 1 view .LVU348
+ 1171 0036 7047     		bx	lr
+ 1172              		.cfi_endproc
+ 1173              	.LFE9:
+ 1175              		.text
+ 1176              	.Letext0:
+ 1177              		.file 2 "/usr/arm-none-eabi/include/machine/_default_types.h"
+ 1178              		.file 3 "/usr/arm-none-eabi/include/sys/_stdint.h"
+ 1179              		.file 4 "Core/Inc/geo_math.h"
+ 1180              		.file 5 "Core/Inc/map_camera.h"
+ARM GAS  /tmp/ccVEfvEu.s 			page 26
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 map_camera.c
+     /tmp/ccVEfvEu.s:21     .text.map_camera_init:00000000 $t
+     /tmp/ccVEfvEu.s:27     .text.map_camera_init:00000000 map_camera_init
+     /tmp/ccVEfvEu.s:132    .text.map_camera_set_viewport:00000000 $t
+     /tmp/ccVEfvEu.s:138    .text.map_camera_set_viewport:00000000 map_camera_set_viewport
+     /tmp/ccVEfvEu.s:172    .text.map_camera_set_zoom:00000000 $t
+     /tmp/ccVEfvEu.s:178    .text.map_camera_set_zoom:00000000 map_camera_set_zoom
+     /tmp/ccVEfvEu.s:238    .text.map_camera_set_center:00000000 $t
+     /tmp/ccVEfvEu.s:244    .text.map_camera_set_center:00000000 map_camera_set_center
+     /tmp/ccVEfvEu.s:291    .text.map_camera_pan_pixels:00000000 $t
+     /tmp/ccVEfvEu.s:297    .text.map_camera_pan_pixels:00000000 map_camera_pan_pixels
+     /tmp/ccVEfvEu.s:450    .text.map_camera_move_direction:00000000 $t
+     /tmp/ccVEfvEu.s:456    .text.map_camera_move_direction:00000000 map_camera_move_direction
+     /tmp/ccVEfvEu.s:550    .text.map_camera_screen_to_latlon:00000000 $t
+     /tmp/ccVEfvEu.s:556    .text.map_camera_screen_to_latlon:00000000 map_camera_screen_to_latlon
+     /tmp/ccVEfvEu.s:709    .text.map_camera_latlon_to_screen:00000000 $t
+     /tmp/ccVEfvEu.s:715    .text.map_camera_latlon_to_screen:00000000 map_camera_latlon_to_screen
+     /tmp/ccVEfvEu.s:828    .text.map_camera_get_visible_tiles:00000000 $t
+     /tmp/ccVEfvEu.s:834    .text.map_camera_get_visible_tiles:00000000 map_camera_get_visible_tiles
+     /tmp/ccVEfvEu.s:1090   .text.map_camera_get_visible_bbox:00000000 $t
+     /tmp/ccVEfvEu.s:1096   .text.map_camera_get_visible_bbox:00000000 map_camera_get_visible_bbox
+
+UNDEFINED SYMBOLS
+geo_coord_make
+geo_latlon_to_world_point32
+geo_world_point32_to_latlon
+__aeabi_ldivmod

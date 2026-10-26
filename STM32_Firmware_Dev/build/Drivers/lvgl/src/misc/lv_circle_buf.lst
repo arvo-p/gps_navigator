@@ -1,0 +1,1828 @@
+ARM GAS  /tmp/ccEsZFFf.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.arch armv7e-m
+   3              		.fpu fpv4-sp-d16
+   4              		.eabi_attribute 27, 1
+   5              		.eabi_attribute 28, 1
+   6              		.eabi_attribute 20, 1
+   7              		.eabi_attribute 21, 1
+   8              		.eabi_attribute 23, 3
+   9              		.eabi_attribute 24, 1
+  10              		.eabi_attribute 25, 1
+  11              		.eabi_attribute 26, 1
+  12              		.eabi_attribute 30, 1
+  13              		.eabi_attribute 34, 1
+  14              		.eabi_attribute 18, 4
+  15              		.file	"lv_circle_buf.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.file 1 "Drivers/lvgl/src/misc/lv_circle_buf.c"
+  20              		.section	.text.circle_buf_prepare_empty,"ax",%progbits
+  21              		.align	1
+  22              		.syntax unified
+  23              		.thumb
+  24              		.thumb_func
+  26              	circle_buf_prepare_empty:
+  27              	.LVL0:
+  28              	.LFB43:
+   1:Drivers/lvgl/src/misc/lv_circle_buf.c **** /**
+   2:Drivers/lvgl/src/misc/lv_circle_buf.c ****  * @file lv_circle_buf.c
+   3:Drivers/lvgl/src/misc/lv_circle_buf.c ****  *
+   4:Drivers/lvgl/src/misc/lv_circle_buf.c ****  */
+   5:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+   6:Drivers/lvgl/src/misc/lv_circle_buf.c **** /*********************
+   7:Drivers/lvgl/src/misc/lv_circle_buf.c ****  *      INCLUDES
+   8:Drivers/lvgl/src/misc/lv_circle_buf.c ****  *********************/
+   9:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+  10:Drivers/lvgl/src/misc/lv_circle_buf.c **** #include "lv_circle_buf_private.h"
+  11:Drivers/lvgl/src/misc/lv_circle_buf.c **** #include "../lvgl_public.h"
+  12:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+  13:Drivers/lvgl/src/misc/lv_circle_buf.c **** /*********************
+  14:Drivers/lvgl/src/misc/lv_circle_buf.c ****  *      DEFINES
+  15:Drivers/lvgl/src/misc/lv_circle_buf.c ****  *********************/
+  16:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+  17:Drivers/lvgl/src/misc/lv_circle_buf.c **** /**********************
+  18:Drivers/lvgl/src/misc/lv_circle_buf.c ****  *      TYPEDEFS
+  19:Drivers/lvgl/src/misc/lv_circle_buf.c ****  **********************/
+  20:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+  21:Drivers/lvgl/src/misc/lv_circle_buf.c **** struct _lv_circle_buf_t {
+  22:Drivers/lvgl/src/misc/lv_circle_buf.c ****     lv_array_t array;
+  23:Drivers/lvgl/src/misc/lv_circle_buf.c ****     uint32_t head;
+  24:Drivers/lvgl/src/misc/lv_circle_buf.c ****     uint32_t tail;    /**< The next write position */
+  25:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+  26:Drivers/lvgl/src/misc/lv_circle_buf.c ****     bool inner_alloc; /**< true: the array is allocated by the buffer, false: the array is created 
+  27:Drivers/lvgl/src/misc/lv_circle_buf.c **** };
+  28:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+  29:Drivers/lvgl/src/misc/lv_circle_buf.c **** /**********************
+  30:Drivers/lvgl/src/misc/lv_circle_buf.c ****  *  STATIC PROTOTYPES
+ARM GAS  /tmp/ccEsZFFf.s 			page 2
+
+
+  31:Drivers/lvgl/src/misc/lv_circle_buf.c ****  **********************/
+  32:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+  33:Drivers/lvgl/src/misc/lv_circle_buf.c **** static void circle_buf_prepare_empty(lv_circle_buf_t * circle_buf);
+  34:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+  35:Drivers/lvgl/src/misc/lv_circle_buf.c **** /**********************
+  36:Drivers/lvgl/src/misc/lv_circle_buf.c ****  *  GLOBAL VARIABLES
+  37:Drivers/lvgl/src/misc/lv_circle_buf.c ****  **********************/
+  38:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+  39:Drivers/lvgl/src/misc/lv_circle_buf.c **** /**********************
+  40:Drivers/lvgl/src/misc/lv_circle_buf.c ****  *  STATIC VARIABLES
+  41:Drivers/lvgl/src/misc/lv_circle_buf.c ****  **********************/
+  42:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+  43:Drivers/lvgl/src/misc/lv_circle_buf.c **** /**********************
+  44:Drivers/lvgl/src/misc/lv_circle_buf.c ****  *      MACROS
+  45:Drivers/lvgl/src/misc/lv_circle_buf.c ****  **********************/
+  46:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+  47:Drivers/lvgl/src/misc/lv_circle_buf.c **** /**********************
+  48:Drivers/lvgl/src/misc/lv_circle_buf.c ****  *   GLOBAL FUNCTIONS
+  49:Drivers/lvgl/src/misc/lv_circle_buf.c ****  **********************/
+  50:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+  51:Drivers/lvgl/src/misc/lv_circle_buf.c **** lv_circle_buf_t * lv_circle_buf_create(const uint32_t capacity, const uint32_t element_size)
+  52:Drivers/lvgl/src/misc/lv_circle_buf.c **** {
+  53:Drivers/lvgl/src/misc/lv_circle_buf.c ****     lv_circle_buf_t * circle_buf = lv_malloc(sizeof(lv_circle_buf_t));
+  54:Drivers/lvgl/src/misc/lv_circle_buf.c ****     LV_ASSERT_MALLOC(circle_buf);
+  55:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+  56:Drivers/lvgl/src/misc/lv_circle_buf.c ****     if(circle_buf == NULL) {
+  57:Drivers/lvgl/src/misc/lv_circle_buf.c ****         return NULL;
+  58:Drivers/lvgl/src/misc/lv_circle_buf.c ****     }
+  59:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+  60:Drivers/lvgl/src/misc/lv_circle_buf.c ****     lv_array_init(&circle_buf->array, capacity, element_size);
+  61:Drivers/lvgl/src/misc/lv_circle_buf.c ****     circle_buf->head = 0;
+  62:Drivers/lvgl/src/misc/lv_circle_buf.c ****     circle_buf->tail = 0;
+  63:Drivers/lvgl/src/misc/lv_circle_buf.c ****     circle_buf->inner_alloc = true;
+  64:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+  65:Drivers/lvgl/src/misc/lv_circle_buf.c ****     circle_buf_prepare_empty(circle_buf);
+  66:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+  67:Drivers/lvgl/src/misc/lv_circle_buf.c ****     return circle_buf;
+  68:Drivers/lvgl/src/misc/lv_circle_buf.c **** }
+  69:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+  70:Drivers/lvgl/src/misc/lv_circle_buf.c **** lv_circle_buf_t * lv_circle_buf_create_from_buf(void * buf, const uint32_t capacity, const uint32_t
+  71:Drivers/lvgl/src/misc/lv_circle_buf.c **** {
+  72:Drivers/lvgl/src/misc/lv_circle_buf.c ****     LV_ASSERT_NULL(buf);
+  73:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+  74:Drivers/lvgl/src/misc/lv_circle_buf.c ****     lv_circle_buf_t * circle_buf = lv_malloc(sizeof(lv_circle_buf_t));
+  75:Drivers/lvgl/src/misc/lv_circle_buf.c ****     LV_ASSERT_MALLOC(circle_buf);
+  76:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+  77:Drivers/lvgl/src/misc/lv_circle_buf.c ****     if(circle_buf == NULL) {
+  78:Drivers/lvgl/src/misc/lv_circle_buf.c ****         return NULL;
+  79:Drivers/lvgl/src/misc/lv_circle_buf.c ****     }
+  80:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+  81:Drivers/lvgl/src/misc/lv_circle_buf.c ****     lv_array_init_from_buf(&circle_buf->array, buf, capacity, element_size);
+  82:Drivers/lvgl/src/misc/lv_circle_buf.c ****     circle_buf->head = 0;
+  83:Drivers/lvgl/src/misc/lv_circle_buf.c ****     circle_buf->tail = 0;
+  84:Drivers/lvgl/src/misc/lv_circle_buf.c ****     circle_buf->inner_alloc = false;
+  85:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+  86:Drivers/lvgl/src/misc/lv_circle_buf.c ****     circle_buf_prepare_empty(circle_buf);
+  87:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ARM GAS  /tmp/ccEsZFFf.s 			page 3
+
+
+  88:Drivers/lvgl/src/misc/lv_circle_buf.c ****     return circle_buf;
+  89:Drivers/lvgl/src/misc/lv_circle_buf.c **** }
+  90:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+  91:Drivers/lvgl/src/misc/lv_circle_buf.c **** lv_circle_buf_t * lv_circle_buf_create_from_array(const lv_array_t * array)
+  92:Drivers/lvgl/src/misc/lv_circle_buf.c **** {
+  93:Drivers/lvgl/src/misc/lv_circle_buf.c ****     LV_ASSERT_NULL(array);
+  94:Drivers/lvgl/src/misc/lv_circle_buf.c ****     if(array == NULL) {
+  95:Drivers/lvgl/src/misc/lv_circle_buf.c ****         return NULL;
+  96:Drivers/lvgl/src/misc/lv_circle_buf.c ****     }
+  97:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+  98:Drivers/lvgl/src/misc/lv_circle_buf.c ****     lv_circle_buf_t * circle_buf = lv_malloc(sizeof(lv_circle_buf_t));
+  99:Drivers/lvgl/src/misc/lv_circle_buf.c ****     LV_ASSERT_MALLOC(circle_buf);
+ 100:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 101:Drivers/lvgl/src/misc/lv_circle_buf.c ****     if(circle_buf == NULL) {
+ 102:Drivers/lvgl/src/misc/lv_circle_buf.c ****         return NULL;
+ 103:Drivers/lvgl/src/misc/lv_circle_buf.c ****     }
+ 104:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 105:Drivers/lvgl/src/misc/lv_circle_buf.c ****     circle_buf->array = *array;
+ 106:Drivers/lvgl/src/misc/lv_circle_buf.c ****     circle_buf->head = 0;
+ 107:Drivers/lvgl/src/misc/lv_circle_buf.c ****     circle_buf->tail = 0;
+ 108:Drivers/lvgl/src/misc/lv_circle_buf.c ****     circle_buf->inner_alloc = false;
+ 109:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 110:Drivers/lvgl/src/misc/lv_circle_buf.c ****     circle_buf_prepare_empty(circle_buf);
+ 111:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 112:Drivers/lvgl/src/misc/lv_circle_buf.c ****     return circle_buf;
+ 113:Drivers/lvgl/src/misc/lv_circle_buf.c **** }
+ 114:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 115:Drivers/lvgl/src/misc/lv_circle_buf.c **** lv_result_t lv_circle_buf_resize(lv_circle_buf_t * circle_buf, const uint32_t capacity)
+ 116:Drivers/lvgl/src/misc/lv_circle_buf.c **** {
+ 117:Drivers/lvgl/src/misc/lv_circle_buf.c ****     LV_ASSERT_NULL(circle_buf);
+ 118:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 119:Drivers/lvgl/src/misc/lv_circle_buf.c ****     if(lv_array_resize(&circle_buf->array, capacity) == false) {
+ 120:Drivers/lvgl/src/misc/lv_circle_buf.c ****         return LV_RESULT_INVALID;
+ 121:Drivers/lvgl/src/misc/lv_circle_buf.c ****     }
+ 122:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 123:Drivers/lvgl/src/misc/lv_circle_buf.c ****     circle_buf->head = 0;
+ 124:Drivers/lvgl/src/misc/lv_circle_buf.c ****     circle_buf->tail = 0;
+ 125:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 126:Drivers/lvgl/src/misc/lv_circle_buf.c ****     circle_buf_prepare_empty(circle_buf);
+ 127:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 128:Drivers/lvgl/src/misc/lv_circle_buf.c ****     return LV_RESULT_OK;
+ 129:Drivers/lvgl/src/misc/lv_circle_buf.c **** }
+ 130:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 131:Drivers/lvgl/src/misc/lv_circle_buf.c **** void lv_circle_buf_destroy(lv_circle_buf_t * circle_buf)
+ 132:Drivers/lvgl/src/misc/lv_circle_buf.c **** {
+ 133:Drivers/lvgl/src/misc/lv_circle_buf.c ****     LV_ASSERT_NULL(circle_buf);
+ 134:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 135:Drivers/lvgl/src/misc/lv_circle_buf.c ****     lv_array_deinit(&circle_buf->array);
+ 136:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 137:Drivers/lvgl/src/misc/lv_circle_buf.c ****     lv_free(circle_buf);
+ 138:Drivers/lvgl/src/misc/lv_circle_buf.c **** }
+ 139:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 140:Drivers/lvgl/src/misc/lv_circle_buf.c **** uint32_t lv_circle_buf_size(const lv_circle_buf_t * circle_buf)
+ 141:Drivers/lvgl/src/misc/lv_circle_buf.c **** {
+ 142:Drivers/lvgl/src/misc/lv_circle_buf.c ****     LV_ASSERT_NULL(circle_buf);
+ 143:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 144:Drivers/lvgl/src/misc/lv_circle_buf.c ****     return circle_buf->tail - circle_buf->head;
+ARM GAS  /tmp/ccEsZFFf.s 			page 4
+
+
+ 145:Drivers/lvgl/src/misc/lv_circle_buf.c **** }
+ 146:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 147:Drivers/lvgl/src/misc/lv_circle_buf.c **** uint32_t lv_circle_buf_capacity(const lv_circle_buf_t * circle_buf)
+ 148:Drivers/lvgl/src/misc/lv_circle_buf.c **** {
+ 149:Drivers/lvgl/src/misc/lv_circle_buf.c ****     LV_ASSERT_NULL(circle_buf);
+ 150:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 151:Drivers/lvgl/src/misc/lv_circle_buf.c ****     return lv_array_capacity(&circle_buf->array);
+ 152:Drivers/lvgl/src/misc/lv_circle_buf.c **** }
+ 153:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 154:Drivers/lvgl/src/misc/lv_circle_buf.c **** uint32_t lv_circle_buf_remain(const lv_circle_buf_t * circle_buf)
+ 155:Drivers/lvgl/src/misc/lv_circle_buf.c **** {
+ 156:Drivers/lvgl/src/misc/lv_circle_buf.c ****     LV_ASSERT_NULL(circle_buf);
+ 157:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 158:Drivers/lvgl/src/misc/lv_circle_buf.c ****     return lv_circle_buf_capacity(circle_buf) - lv_circle_buf_size(circle_buf);
+ 159:Drivers/lvgl/src/misc/lv_circle_buf.c **** }
+ 160:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 161:Drivers/lvgl/src/misc/lv_circle_buf.c **** bool lv_circle_buf_is_empty(const lv_circle_buf_t * circle_buf)
+ 162:Drivers/lvgl/src/misc/lv_circle_buf.c **** {
+ 163:Drivers/lvgl/src/misc/lv_circle_buf.c ****     LV_ASSERT_NULL(circle_buf);
+ 164:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 165:Drivers/lvgl/src/misc/lv_circle_buf.c ****     return !lv_circle_buf_size(circle_buf);
+ 166:Drivers/lvgl/src/misc/lv_circle_buf.c **** }
+ 167:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 168:Drivers/lvgl/src/misc/lv_circle_buf.c **** bool lv_circle_buf_is_full(const lv_circle_buf_t * circle_buf)
+ 169:Drivers/lvgl/src/misc/lv_circle_buf.c **** {
+ 170:Drivers/lvgl/src/misc/lv_circle_buf.c ****     LV_ASSERT_NULL(circle_buf);
+ 171:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 172:Drivers/lvgl/src/misc/lv_circle_buf.c ****     return !lv_circle_buf_remain(circle_buf);
+ 173:Drivers/lvgl/src/misc/lv_circle_buf.c **** }
+ 174:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 175:Drivers/lvgl/src/misc/lv_circle_buf.c **** void lv_circle_buf_reset(lv_circle_buf_t * circle_buf)
+ 176:Drivers/lvgl/src/misc/lv_circle_buf.c **** {
+ 177:Drivers/lvgl/src/misc/lv_circle_buf.c ****     LV_ASSERT_NULL(circle_buf);
+ 178:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 179:Drivers/lvgl/src/misc/lv_circle_buf.c ****     circle_buf->head = 0;
+ 180:Drivers/lvgl/src/misc/lv_circle_buf.c ****     circle_buf->tail = 0;
+ 181:Drivers/lvgl/src/misc/lv_circle_buf.c **** }
+ 182:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 183:Drivers/lvgl/src/misc/lv_circle_buf.c **** void * lv_circle_buf_head(const lv_circle_buf_t * circle_buf)
+ 184:Drivers/lvgl/src/misc/lv_circle_buf.c **** {
+ 185:Drivers/lvgl/src/misc/lv_circle_buf.c ****     LV_ASSERT_NULL(circle_buf);
+ 186:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 187:Drivers/lvgl/src/misc/lv_circle_buf.c ****     uint32_t capacity = lv_circle_buf_capacity(circle_buf);
+ 188:Drivers/lvgl/src/misc/lv_circle_buf.c ****     LV_ASSERT_MSG(capacity > 0, "circle buffer capacity must be > 0");
+ 189:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 190:Drivers/lvgl/src/misc/lv_circle_buf.c ****     return lv_array_at(&circle_buf->array,
+ 191:Drivers/lvgl/src/misc/lv_circle_buf.c ****                        circle_buf->head % capacity);
+ 192:Drivers/lvgl/src/misc/lv_circle_buf.c **** }
+ 193:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 194:Drivers/lvgl/src/misc/lv_circle_buf.c **** void * lv_circle_buf_tail(const lv_circle_buf_t * circle_buf)
+ 195:Drivers/lvgl/src/misc/lv_circle_buf.c **** {
+ 196:Drivers/lvgl/src/misc/lv_circle_buf.c ****     LV_ASSERT_NULL(circle_buf);
+ 197:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 198:Drivers/lvgl/src/misc/lv_circle_buf.c ****     uint32_t capacity = lv_circle_buf_capacity(circle_buf);
+ 199:Drivers/lvgl/src/misc/lv_circle_buf.c ****     LV_ASSERT_MSG(capacity > 0, "circle buffer capacity must be > 0");
+ 200:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 201:Drivers/lvgl/src/misc/lv_circle_buf.c ****     return lv_array_at(&circle_buf->array,
+ARM GAS  /tmp/ccEsZFFf.s 			page 5
+
+
+ 202:Drivers/lvgl/src/misc/lv_circle_buf.c ****                        circle_buf->tail % capacity);
+ 203:Drivers/lvgl/src/misc/lv_circle_buf.c **** }
+ 204:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 205:Drivers/lvgl/src/misc/lv_circle_buf.c **** lv_result_t lv_circle_buf_read(lv_circle_buf_t * circle_buf, void * data)
+ 206:Drivers/lvgl/src/misc/lv_circle_buf.c **** {
+ 207:Drivers/lvgl/src/misc/lv_circle_buf.c ****     LV_ASSERT_NULL(circle_buf);
+ 208:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 209:Drivers/lvgl/src/misc/lv_circle_buf.c ****     if(lv_circle_buf_is_empty(circle_buf)) {
+ 210:Drivers/lvgl/src/misc/lv_circle_buf.c ****         circle_buf->head = 0;
+ 211:Drivers/lvgl/src/misc/lv_circle_buf.c ****         circle_buf->tail = 0;
+ 212:Drivers/lvgl/src/misc/lv_circle_buf.c ****         return LV_RESULT_INVALID;
+ 213:Drivers/lvgl/src/misc/lv_circle_buf.c ****     }
+ 214:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 215:Drivers/lvgl/src/misc/lv_circle_buf.c ****     lv_circle_buf_peek_at(circle_buf, 0, data);
+ 216:Drivers/lvgl/src/misc/lv_circle_buf.c ****     circle_buf->head++;
+ 217:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 218:Drivers/lvgl/src/misc/lv_circle_buf.c ****     return LV_RESULT_OK;
+ 219:Drivers/lvgl/src/misc/lv_circle_buf.c **** }
+ 220:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 221:Drivers/lvgl/src/misc/lv_circle_buf.c **** lv_result_t lv_circle_buf_write(lv_circle_buf_t * circle_buf, const void * data)
+ 222:Drivers/lvgl/src/misc/lv_circle_buf.c **** {
+ 223:Drivers/lvgl/src/misc/lv_circle_buf.c ****     LV_ASSERT_NULL(circle_buf);
+ 224:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 225:Drivers/lvgl/src/misc/lv_circle_buf.c ****     if(lv_circle_buf_is_full(circle_buf)) {
+ 226:Drivers/lvgl/src/misc/lv_circle_buf.c ****         return LV_RESULT_INVALID;
+ 227:Drivers/lvgl/src/misc/lv_circle_buf.c ****     }
+ 228:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 229:Drivers/lvgl/src/misc/lv_circle_buf.c ****     lv_array_assign(&circle_buf->array, circle_buf->tail % lv_circle_buf_capacity(circle_buf), data
+ 230:Drivers/lvgl/src/misc/lv_circle_buf.c ****     circle_buf->tail++;
+ 231:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 232:Drivers/lvgl/src/misc/lv_circle_buf.c ****     return LV_RESULT_OK;
+ 233:Drivers/lvgl/src/misc/lv_circle_buf.c **** }
+ 234:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 235:Drivers/lvgl/src/misc/lv_circle_buf.c **** uint32_t lv_circle_buf_fill(lv_circle_buf_t * circle_buf, uint32_t count, lv_circle_buf_fill_cb_t f
+ 236:Drivers/lvgl/src/misc/lv_circle_buf.c ****                             void * user_data)
+ 237:Drivers/lvgl/src/misc/lv_circle_buf.c **** {
+ 238:Drivers/lvgl/src/misc/lv_circle_buf.c ****     LV_ASSERT_NULL(circle_buf);
+ 239:Drivers/lvgl/src/misc/lv_circle_buf.c ****     LV_ASSERT_NULL(fill_cb);
+ 240:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 241:Drivers/lvgl/src/misc/lv_circle_buf.c ****     uint32_t filled = 0;
+ 242:Drivers/lvgl/src/misc/lv_circle_buf.c ****     while(count > 0 && !lv_circle_buf_is_full(circle_buf)) {
+ 243:Drivers/lvgl/src/misc/lv_circle_buf.c ****         void * data = lv_circle_buf_tail(circle_buf);
+ 244:Drivers/lvgl/src/misc/lv_circle_buf.c ****         if(fill_cb(data, circle_buf->array.element_size, (int32_t)filled, user_data) == LV_RESULT_O
+ 245:Drivers/lvgl/src/misc/lv_circle_buf.c ****             circle_buf->tail++;
+ 246:Drivers/lvgl/src/misc/lv_circle_buf.c ****             filled++;
+ 247:Drivers/lvgl/src/misc/lv_circle_buf.c ****         }
+ 248:Drivers/lvgl/src/misc/lv_circle_buf.c ****         else break;
+ 249:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 250:Drivers/lvgl/src/misc/lv_circle_buf.c ****         count--;
+ 251:Drivers/lvgl/src/misc/lv_circle_buf.c ****     }
+ 252:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 253:Drivers/lvgl/src/misc/lv_circle_buf.c ****     return filled;
+ 254:Drivers/lvgl/src/misc/lv_circle_buf.c **** }
+ 255:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 256:Drivers/lvgl/src/misc/lv_circle_buf.c **** lv_result_t lv_circle_buf_skip(lv_circle_buf_t * circle_buf)
+ 257:Drivers/lvgl/src/misc/lv_circle_buf.c **** {
+ 258:Drivers/lvgl/src/misc/lv_circle_buf.c ****     LV_ASSERT_NULL(circle_buf);
+ARM GAS  /tmp/ccEsZFFf.s 			page 6
+
+
+ 259:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 260:Drivers/lvgl/src/misc/lv_circle_buf.c ****     if(lv_circle_buf_is_empty(circle_buf)) {
+ 261:Drivers/lvgl/src/misc/lv_circle_buf.c ****         circle_buf->head = 0;
+ 262:Drivers/lvgl/src/misc/lv_circle_buf.c ****         circle_buf->tail = 0;
+ 263:Drivers/lvgl/src/misc/lv_circle_buf.c ****         return LV_RESULT_INVALID;
+ 264:Drivers/lvgl/src/misc/lv_circle_buf.c ****     }
+ 265:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 266:Drivers/lvgl/src/misc/lv_circle_buf.c ****     circle_buf->head++;
+ 267:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 268:Drivers/lvgl/src/misc/lv_circle_buf.c ****     return LV_RESULT_OK;
+ 269:Drivers/lvgl/src/misc/lv_circle_buf.c **** }
+ 270:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 271:Drivers/lvgl/src/misc/lv_circle_buf.c **** lv_result_t lv_circle_buf_peek(const lv_circle_buf_t * circle_buf, void * data)
+ 272:Drivers/lvgl/src/misc/lv_circle_buf.c **** {
+ 273:Drivers/lvgl/src/misc/lv_circle_buf.c ****     LV_ASSERT_NULL(circle_buf);
+ 274:Drivers/lvgl/src/misc/lv_circle_buf.c ****     LV_ASSERT_NULL(data);
+ 275:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 276:Drivers/lvgl/src/misc/lv_circle_buf.c ****     return lv_circle_buf_peek_at(circle_buf, 0, data);
+ 277:Drivers/lvgl/src/misc/lv_circle_buf.c **** }
+ 278:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 279:Drivers/lvgl/src/misc/lv_circle_buf.c **** lv_result_t lv_circle_buf_peek_at(const lv_circle_buf_t * circle_buf, const uint32_t index, void * 
+ 280:Drivers/lvgl/src/misc/lv_circle_buf.c **** {
+ 281:Drivers/lvgl/src/misc/lv_circle_buf.c ****     LV_ASSERT_NULL(circle_buf);
+ 282:Drivers/lvgl/src/misc/lv_circle_buf.c ****     LV_ASSERT_NULL(data);
+ 283:Drivers/lvgl/src/misc/lv_circle_buf.c ****     LV_ASSERT_MSG(lv_circle_buf_size(circle_buf) > 0, "can't peek into an empty buffer");
+ 284:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 285:Drivers/lvgl/src/misc/lv_circle_buf.c ****     const uint32_t real_index = (index % lv_circle_buf_size(circle_buf) + circle_buf->head) % lv_ci
+ 286:Drivers/lvgl/src/misc/lv_circle_buf.c ****                                     circle_buf);
+ 287:Drivers/lvgl/src/misc/lv_circle_buf.c ****     lv_memcpy(data, lv_array_at(&circle_buf->array, real_index), circle_buf->array.element_size);
+ 288:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 289:Drivers/lvgl/src/misc/lv_circle_buf.c ****     return LV_RESULT_OK;
+ 290:Drivers/lvgl/src/misc/lv_circle_buf.c **** }
+ 291:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 292:Drivers/lvgl/src/misc/lv_circle_buf.c **** /**********************
+ 293:Drivers/lvgl/src/misc/lv_circle_buf.c ****  *   STATIC FUNCTIONS
+ 294:Drivers/lvgl/src/misc/lv_circle_buf.c ****  **********************/
+ 295:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 296:Drivers/lvgl/src/misc/lv_circle_buf.c **** static void circle_buf_prepare_empty(lv_circle_buf_t * circle_buf)
+ 297:Drivers/lvgl/src/misc/lv_circle_buf.c **** {
+  29              		.loc 1 297 1 view -0
+  30              		.cfi_startproc
+  31              		@ args = 0, pretend = 0, frame = 0
+  32              		@ frame_needed = 0, uses_anonymous_args = 0
+  33              		.loc 1 297 1 is_stmt 0 view .LVU1
+  34 0000 70B5     		push	{r4, r5, r6, lr}
+  35              	.LCFI0:
+  36              		.cfi_def_cfa_offset 16
+  37              		.cfi_offset 4, -16
+  38              		.cfi_offset 5, -12
+  39              		.cfi_offset 6, -8
+  40              		.cfi_offset 14, -4
+  41 0002 0546     		mov	r5, r0
+ 298:Drivers/lvgl/src/misc/lv_circle_buf.c ****     const uint32_t required = lv_array_capacity(&circle_buf->array) - lv_array_size(&circle_buf->ar
+  42              		.loc 1 298 5 is_stmt 1 view .LVU2
+  43              	.LVL1:
+  44              	.LBB9:
+  45              	.LBI9:
+ARM GAS  /tmp/ccEsZFFf.s 			page 7
+
+
+  46              		.file 2 "Drivers/lvgl/src/misc/lv_array.h"
+   1:Drivers/lvgl/src/misc/lv_array.h **** /**
+   2:Drivers/lvgl/src/misc/lv_array.h ****  * @file lv_array.h
+   3:Drivers/lvgl/src/misc/lv_array.h ****  */
+   4:Drivers/lvgl/src/misc/lv_array.h **** 
+   5:Drivers/lvgl/src/misc/lv_array.h **** #ifndef LV_ARRAY_H
+   6:Drivers/lvgl/src/misc/lv_array.h **** #define LV_ARRAY_H
+   7:Drivers/lvgl/src/misc/lv_array.h **** 
+   8:Drivers/lvgl/src/misc/lv_array.h **** #ifdef __cplusplus
+   9:Drivers/lvgl/src/misc/lv_array.h **** extern "C" {
+  10:Drivers/lvgl/src/misc/lv_array.h **** #endif
+  11:Drivers/lvgl/src/misc/lv_array.h **** 
+  12:Drivers/lvgl/src/misc/lv_array.h **** /*********************
+  13:Drivers/lvgl/src/misc/lv_array.h ****  *      INCLUDES
+  14:Drivers/lvgl/src/misc/lv_array.h ****  *********************/
+  15:Drivers/lvgl/src/misc/lv_array.h **** #include "../lvgl_public.h"
+  16:Drivers/lvgl/src/misc/lv_array.h **** 
+  17:Drivers/lvgl/src/misc/lv_array.h **** /*********************
+  18:Drivers/lvgl/src/misc/lv_array.h ****  *      DEFINES
+  19:Drivers/lvgl/src/misc/lv_array.h ****  *********************/
+  20:Drivers/lvgl/src/misc/lv_array.h **** 
+  21:Drivers/lvgl/src/misc/lv_array.h **** #ifndef LV_ARRAY_DEFAULT_CAPACITY
+  22:Drivers/lvgl/src/misc/lv_array.h **** #define LV_ARRAY_DEFAULT_CAPACITY  4
+  23:Drivers/lvgl/src/misc/lv_array.h **** #endif
+  24:Drivers/lvgl/src/misc/lv_array.h **** 
+  25:Drivers/lvgl/src/misc/lv_array.h **** #ifndef LV_ARRAY_DEFAULT_SHRINK_RATIO
+  26:Drivers/lvgl/src/misc/lv_array.h **** #define LV_ARRAY_DEFAULT_SHRINK_RATIO 2
+  27:Drivers/lvgl/src/misc/lv_array.h **** #endif
+  28:Drivers/lvgl/src/misc/lv_array.h **** 
+  29:Drivers/lvgl/src/misc/lv_array.h **** /**********************
+  30:Drivers/lvgl/src/misc/lv_array.h ****  *      TYPEDEFS
+  31:Drivers/lvgl/src/misc/lv_array.h ****  **********************/
+  32:Drivers/lvgl/src/misc/lv_array.h **** 
+  33:Drivers/lvgl/src/misc/lv_array.h **** /** Description of a array*/
+  34:Drivers/lvgl/src/misc/lv_array.h **** typedef struct _lv_array_t {
+  35:Drivers/lvgl/src/misc/lv_array.h ****     uint8_t * data;
+  36:Drivers/lvgl/src/misc/lv_array.h ****     uint32_t size;
+  37:Drivers/lvgl/src/misc/lv_array.h ****     uint32_t capacity;
+  38:Drivers/lvgl/src/misc/lv_array.h ****     uint32_t element_size;
+  39:Drivers/lvgl/src/misc/lv_array.h **** 
+  40:Drivers/lvgl/src/misc/lv_array.h ****     bool inner_alloc; /* true: data is allocated by the array; false: data is allocated by the user
+  41:Drivers/lvgl/src/misc/lv_array.h **** } lv_array_t;
+  42:Drivers/lvgl/src/misc/lv_array.h **** 
+  43:Drivers/lvgl/src/misc/lv_array.h **** /**********************
+  44:Drivers/lvgl/src/misc/lv_array.h ****  * GLOBAL PROTOTYPES
+  45:Drivers/lvgl/src/misc/lv_array.h ****  **********************/
+  46:Drivers/lvgl/src/misc/lv_array.h **** 
+  47:Drivers/lvgl/src/misc/lv_array.h **** /**
+  48:Drivers/lvgl/src/misc/lv_array.h ****  * Init an array.
+  49:Drivers/lvgl/src/misc/lv_array.h ****  * @param array pointer to an `lv_array_t` variable to initialize
+  50:Drivers/lvgl/src/misc/lv_array.h ****  * @param capacity the initial capacity of the array
+  51:Drivers/lvgl/src/misc/lv_array.h ****  * @param element_size the size of an element in bytes
+  52:Drivers/lvgl/src/misc/lv_array.h ****  */
+  53:Drivers/lvgl/src/misc/lv_array.h **** lv_result_t lv_array_init(lv_array_t * array, uint32_t capacity, uint32_t element_size);
+  54:Drivers/lvgl/src/misc/lv_array.h **** 
+  55:Drivers/lvgl/src/misc/lv_array.h **** /**
+  56:Drivers/lvgl/src/misc/lv_array.h ****  * Init an array from a buffer.
+ARM GAS  /tmp/ccEsZFFf.s 			page 8
+
+
+  57:Drivers/lvgl/src/misc/lv_array.h ****  * @note The buffer must be large enough to store `capacity` elements. The array will not release t
+  58:Drivers/lvgl/src/misc/lv_array.h ****  *       The user must ensure that the buffer is valid during the lifetime of the array. And releas
+  59:Drivers/lvgl/src/misc/lv_array.h ****  * @param array pointer to an `lv_array_t` variable to initialize
+  60:Drivers/lvgl/src/misc/lv_array.h ****  * @param buf pointer to a buffer to use as the array's data
+  61:Drivers/lvgl/src/misc/lv_array.h ****  * @param capacity the initial capacity of the array
+  62:Drivers/lvgl/src/misc/lv_array.h ****  * @param element_size the size of an element in bytes
+  63:Drivers/lvgl/src/misc/lv_array.h ****  */
+  64:Drivers/lvgl/src/misc/lv_array.h **** void lv_array_init_from_buf(lv_array_t * array, void * buf, uint32_t capacity, uint32_t element_siz
+  65:Drivers/lvgl/src/misc/lv_array.h **** 
+  66:Drivers/lvgl/src/misc/lv_array.h **** /**
+  67:Drivers/lvgl/src/misc/lv_array.h ****  * Resize the array to the given capacity.
+  68:Drivers/lvgl/src/misc/lv_array.h ****  * @note if the new capacity is smaller than the current size, the array will be truncated.
+  69:Drivers/lvgl/src/misc/lv_array.h ****  * @param array pointer to an `lv_array_t` variable
+  70:Drivers/lvgl/src/misc/lv_array.h ****  * @param new_capacity the new capacity of the array
+  71:Drivers/lvgl/src/misc/lv_array.h ****  */
+  72:Drivers/lvgl/src/misc/lv_array.h **** bool lv_array_resize(lv_array_t * array, uint32_t new_capacity);
+  73:Drivers/lvgl/src/misc/lv_array.h **** 
+  74:Drivers/lvgl/src/misc/lv_array.h **** /**
+  75:Drivers/lvgl/src/misc/lv_array.h ****  * Deinit the array, and free the allocated memory
+  76:Drivers/lvgl/src/misc/lv_array.h ****  * @param array pointer to an `lv_array_t` variable to deinitialize
+  77:Drivers/lvgl/src/misc/lv_array.h ****  */
+  78:Drivers/lvgl/src/misc/lv_array.h **** void lv_array_deinit(lv_array_t * array);
+  79:Drivers/lvgl/src/misc/lv_array.h **** 
+  80:Drivers/lvgl/src/misc/lv_array.h **** /**
+  81:Drivers/lvgl/src/misc/lv_array.h ****  * Return how many elements are stored in the array.
+  82:Drivers/lvgl/src/misc/lv_array.h ****  * @param array pointer to an `lv_array_t` variable
+  83:Drivers/lvgl/src/misc/lv_array.h ****  * @return the number of elements stored in the array
+  84:Drivers/lvgl/src/misc/lv_array.h ****  */
+  85:Drivers/lvgl/src/misc/lv_array.h **** static inline uint32_t lv_array_size(const lv_array_t * array)
+  86:Drivers/lvgl/src/misc/lv_array.h **** {
+  87:Drivers/lvgl/src/misc/lv_array.h ****     return array->size;
+  88:Drivers/lvgl/src/misc/lv_array.h **** }
+  89:Drivers/lvgl/src/misc/lv_array.h **** 
+  90:Drivers/lvgl/src/misc/lv_array.h **** /**
+  91:Drivers/lvgl/src/misc/lv_array.h ****  * Return the capacity of the array, i.e. how many elements can be stored.
+  92:Drivers/lvgl/src/misc/lv_array.h ****  * @param array pointer to an `lv_array_t` variable
+  93:Drivers/lvgl/src/misc/lv_array.h ****  * @return the capacity of the array
+  94:Drivers/lvgl/src/misc/lv_array.h ****  */
+  95:Drivers/lvgl/src/misc/lv_array.h **** static inline uint32_t lv_array_capacity(const lv_array_t * array)
+  47              		.loc 2 95 24 view .LVU3
+  48              	.LBB10:
+  96:Drivers/lvgl/src/misc/lv_array.h **** {
+  97:Drivers/lvgl/src/misc/lv_array.h ****     return array->capacity;
+  49              		.loc 2 97 5 view .LVU4
+  50              		.loc 2 97 17 is_stmt 0 view .LVU5
+  51 0004 8668     		ldr	r6, [r0, #8]
+  52              	.LVL2:
+  53              		.loc 2 97 17 view .LVU6
+  54              	.LBE10:
+  55              	.LBE9:
+  56              	.LBB11:
+  57              	.LBI11:
+  85:Drivers/lvgl/src/misc/lv_array.h **** {
+  58              		.loc 2 85 24 is_stmt 1 view .LVU7
+  59              	.LBB12:
+  87:Drivers/lvgl/src/misc/lv_array.h **** }
+  60              		.loc 2 87 5 view .LVU8
+ARM GAS  /tmp/ccEsZFFf.s 			page 9
+
+
+  87:Drivers/lvgl/src/misc/lv_array.h **** }
+  61              		.loc 2 87 17 is_stmt 0 view .LVU9
+  62 0006 4368     		ldr	r3, [r0, #4]
+  63              	.LVL3:
+  87:Drivers/lvgl/src/misc/lv_array.h **** }
+  64              		.loc 2 87 17 view .LVU10
+  65              	.LBE12:
+  66              	.LBE11:
+  67              		.loc 1 298 20 discriminator 2 view .LVU11
+  68 0008 F61A     		subs	r6, r6, r3
+  69              	.LVL4:
+ 299:Drivers/lvgl/src/misc/lv_circle_buf.c ****     for(uint32_t i = 0; i < required; i++) lv_array_push_back(&circle_buf->array, NULL);
+  70              		.loc 1 299 5 is_stmt 1 view .LVU12
+  71              	.LBB13:
+  72              		.loc 1 299 9 view .LVU13
+  73              		.loc 1 299 18 is_stmt 0 view .LVU14
+  74 000a 0024     		movs	r4, #0
+  75              		.loc 1 299 5 view .LVU15
+  76 000c 04E0     		b	.L2
+  77              	.LVL5:
+  78              	.L3:
+  79              		.loc 1 299 44 is_stmt 1 discriminator 1 view .LVU16
+  80 000e 0021     		movs	r1, #0
+  81 0010 2846     		mov	r0, r5
+  82 0012 FFF7FEFF 		bl	lv_array_push_back
+  83              	.LVL6:
+  84              		.loc 1 299 40 discriminator 2 view .LVU17
+  85 0016 0134     		adds	r4, r4, #1
+  86              	.LVL7:
+  87              	.L2:
+  88              		.loc 1 299 27 discriminator 3 view .LVU18
+  89 0018 B442     		cmp	r4, r6
+  90 001a F8D3     		bcc	.L3
+  91              	.LBE13:
+ 300:Drivers/lvgl/src/misc/lv_circle_buf.c **** }
+  92              		.loc 1 300 1 is_stmt 0 view .LVU19
+  93 001c 70BD     		pop	{r4, r5, r6, pc}
+  94              		.loc 1 300 1 view .LVU20
+  95              		.cfi_endproc
+  96              	.LFE43:
+  98              		.section	.text.lv_circle_buf_create,"ax",%progbits
+  99              		.align	1
+ 100              		.global	lv_circle_buf_create
+ 101              		.syntax unified
+ 102              		.thumb
+ 103              		.thumb_func
+ 105              	lv_circle_buf_create:
+ 106              	.LVL8:
+ 107              	.LFB24:
+  52:Drivers/lvgl/src/misc/lv_circle_buf.c ****     lv_circle_buf_t * circle_buf = lv_malloc(sizeof(lv_circle_buf_t));
+ 108              		.loc 1 52 1 is_stmt 1 view -0
+ 109              		.cfi_startproc
+ 110              		@ args = 0, pretend = 0, frame = 0
+ 111              		@ frame_needed = 0, uses_anonymous_args = 0
+  52:Drivers/lvgl/src/misc/lv_circle_buf.c ****     lv_circle_buf_t * circle_buf = lv_malloc(sizeof(lv_circle_buf_t));
+ 112              		.loc 1 52 1 is_stmt 0 view .LVU22
+ 113 0000 70B5     		push	{r4, r5, r6, lr}
+ARM GAS  /tmp/ccEsZFFf.s 			page 10
+
+
+ 114              	.LCFI1:
+ 115              		.cfi_def_cfa_offset 16
+ 116              		.cfi_offset 4, -16
+ 117              		.cfi_offset 5, -12
+ 118              		.cfi_offset 6, -8
+ 119              		.cfi_offset 14, -4
+ 120 0002 0646     		mov	r6, r0
+ 121 0004 0D46     		mov	r5, r1
+  53:Drivers/lvgl/src/misc/lv_circle_buf.c ****     LV_ASSERT_MALLOC(circle_buf);
+ 122              		.loc 1 53 5 is_stmt 1 view .LVU23
+  53:Drivers/lvgl/src/misc/lv_circle_buf.c ****     LV_ASSERT_MALLOC(circle_buf);
+ 123              		.loc 1 53 36 is_stmt 0 view .LVU24
+ 124 0006 2020     		movs	r0, #32
+ 125              	.LVL9:
+  53:Drivers/lvgl/src/misc/lv_circle_buf.c ****     LV_ASSERT_MALLOC(circle_buf);
+ 126              		.loc 1 53 36 view .LVU25
+ 127 0008 FFF7FEFF 		bl	lv_malloc
+ 128              	.LVL10:
+  54:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 129              		.loc 1 54 33 is_stmt 1 view .LVU26
+  56:Drivers/lvgl/src/misc/lv_circle_buf.c ****         return NULL;
+ 130              		.loc 1 56 5 view .LVU27
+  56:Drivers/lvgl/src/misc/lv_circle_buf.c ****         return NULL;
+ 131              		.loc 1 56 7 is_stmt 0 view .LVU28
+ 132 000c 0446     		mov	r4, r0
+ 133 000e 58B1     		cbz	r0, .L5
+  60:Drivers/lvgl/src/misc/lv_circle_buf.c ****     circle_buf->head = 0;
+ 134              		.loc 1 60 5 is_stmt 1 view .LVU29
+ 135 0010 2A46     		mov	r2, r5
+ 136 0012 3146     		mov	r1, r6
+ 137 0014 FFF7FEFF 		bl	lv_array_init
+ 138              	.LVL11:
+  61:Drivers/lvgl/src/misc/lv_circle_buf.c ****     circle_buf->tail = 0;
+ 139              		.loc 1 61 5 view .LVU30
+  61:Drivers/lvgl/src/misc/lv_circle_buf.c ****     circle_buf->tail = 0;
+ 140              		.loc 1 61 22 is_stmt 0 view .LVU31
+ 141 0018 0023     		movs	r3, #0
+ 142 001a 6361     		str	r3, [r4, #20]
+  62:Drivers/lvgl/src/misc/lv_circle_buf.c ****     circle_buf->inner_alloc = true;
+ 143              		.loc 1 62 5 is_stmt 1 view .LVU32
+  62:Drivers/lvgl/src/misc/lv_circle_buf.c ****     circle_buf->inner_alloc = true;
+ 144              		.loc 1 62 22 is_stmt 0 view .LVU33
+ 145 001c A361     		str	r3, [r4, #24]
+  63:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 146              		.loc 1 63 5 is_stmt 1 view .LVU34
+  63:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 147              		.loc 1 63 29 is_stmt 0 view .LVU35
+ 148 001e 0123     		movs	r3, #1
+ 149 0020 2377     		strb	r3, [r4, #28]
+  65:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 150              		.loc 1 65 5 is_stmt 1 view .LVU36
+ 151 0022 2046     		mov	r0, r4
+ 152 0024 FFF7FEFF 		bl	circle_buf_prepare_empty
+ 153              	.LVL12:
+  67:Drivers/lvgl/src/misc/lv_circle_buf.c **** }
+ 154              		.loc 1 67 5 view .LVU37
+ 155              	.L5:
+ARM GAS  /tmp/ccEsZFFf.s 			page 11
+
+
+  68:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 156              		.loc 1 68 1 is_stmt 0 view .LVU38
+ 157 0028 2046     		mov	r0, r4
+ 158 002a 70BD     		pop	{r4, r5, r6, pc}
+  68:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 159              		.loc 1 68 1 view .LVU39
+ 160              		.cfi_endproc
+ 161              	.LFE24:
+ 163              		.section	.text.lv_circle_buf_create_from_buf,"ax",%progbits
+ 164              		.align	1
+ 165              		.global	lv_circle_buf_create_from_buf
+ 166              		.syntax unified
+ 167              		.thumb
+ 168              		.thumb_func
+ 170              	lv_circle_buf_create_from_buf:
+ 171              	.LVL13:
+ 172              	.LFB25:
+  71:Drivers/lvgl/src/misc/lv_circle_buf.c ****     LV_ASSERT_NULL(buf);
+ 173              		.loc 1 71 1 is_stmt 1 view -0
+ 174              		.cfi_startproc
+ 175              		@ args = 0, pretend = 0, frame = 0
+ 176              		@ frame_needed = 0, uses_anonymous_args = 0
+  71:Drivers/lvgl/src/misc/lv_circle_buf.c ****     LV_ASSERT_NULL(buf);
+ 177              		.loc 1 71 1 is_stmt 0 view .LVU41
+ 178 0000 F8B5     		push	{r3, r4, r5, r6, r7, lr}
+ 179              	.LCFI2:
+ 180              		.cfi_def_cfa_offset 24
+ 181              		.cfi_offset 3, -24
+ 182              		.cfi_offset 4, -20
+ 183              		.cfi_offset 5, -16
+ 184              		.cfi_offset 6, -12
+ 185              		.cfi_offset 7, -8
+ 186              		.cfi_offset 14, -4
+ 187 0002 0746     		mov	r7, r0
+ 188 0004 0E46     		mov	r6, r1
+ 189 0006 1546     		mov	r5, r2
+  72:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 190              		.loc 1 72 24 is_stmt 1 view .LVU42
+  74:Drivers/lvgl/src/misc/lv_circle_buf.c ****     LV_ASSERT_MALLOC(circle_buf);
+ 191              		.loc 1 74 5 view .LVU43
+  74:Drivers/lvgl/src/misc/lv_circle_buf.c ****     LV_ASSERT_MALLOC(circle_buf);
+ 192              		.loc 1 74 36 is_stmt 0 view .LVU44
+ 193 0008 2020     		movs	r0, #32
+ 194              	.LVL14:
+  74:Drivers/lvgl/src/misc/lv_circle_buf.c ****     LV_ASSERT_MALLOC(circle_buf);
+ 195              		.loc 1 74 36 view .LVU45
+ 196 000a FFF7FEFF 		bl	lv_malloc
+ 197              	.LVL15:
+  75:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 198              		.loc 1 75 33 is_stmt 1 view .LVU46
+  77:Drivers/lvgl/src/misc/lv_circle_buf.c ****         return NULL;
+ 199              		.loc 1 77 5 view .LVU47
+  77:Drivers/lvgl/src/misc/lv_circle_buf.c ****         return NULL;
+ 200              		.loc 1 77 7 is_stmt 0 view .LVU48
+ 201 000e 0446     		mov	r4, r0
+ 202 0010 58B1     		cbz	r0, .L8
+  81:Drivers/lvgl/src/misc/lv_circle_buf.c ****     circle_buf->head = 0;
+ARM GAS  /tmp/ccEsZFFf.s 			page 12
+
+
+ 203              		.loc 1 81 5 is_stmt 1 view .LVU49
+ 204 0012 2B46     		mov	r3, r5
+ 205 0014 3246     		mov	r2, r6
+ 206 0016 3946     		mov	r1, r7
+ 207 0018 FFF7FEFF 		bl	lv_array_init_from_buf
+ 208              	.LVL16:
+  82:Drivers/lvgl/src/misc/lv_circle_buf.c ****     circle_buf->tail = 0;
+ 209              		.loc 1 82 5 view .LVU50
+  82:Drivers/lvgl/src/misc/lv_circle_buf.c ****     circle_buf->tail = 0;
+ 210              		.loc 1 82 22 is_stmt 0 view .LVU51
+ 211 001c 0023     		movs	r3, #0
+ 212 001e 6361     		str	r3, [r4, #20]
+  83:Drivers/lvgl/src/misc/lv_circle_buf.c ****     circle_buf->inner_alloc = false;
+ 213              		.loc 1 83 5 is_stmt 1 view .LVU52
+  83:Drivers/lvgl/src/misc/lv_circle_buf.c ****     circle_buf->inner_alloc = false;
+ 214              		.loc 1 83 22 is_stmt 0 view .LVU53
+ 215 0020 A361     		str	r3, [r4, #24]
+  84:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 216              		.loc 1 84 5 is_stmt 1 view .LVU54
+  84:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 217              		.loc 1 84 29 is_stmt 0 view .LVU55
+ 218 0022 2377     		strb	r3, [r4, #28]
+  86:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 219              		.loc 1 86 5 is_stmt 1 view .LVU56
+ 220 0024 2046     		mov	r0, r4
+ 221 0026 FFF7FEFF 		bl	circle_buf_prepare_empty
+ 222              	.LVL17:
+  88:Drivers/lvgl/src/misc/lv_circle_buf.c **** }
+ 223              		.loc 1 88 5 view .LVU57
+ 224              	.L8:
+  89:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 225              		.loc 1 89 1 is_stmt 0 view .LVU58
+ 226 002a 2046     		mov	r0, r4
+ 227 002c F8BD     		pop	{r3, r4, r5, r6, r7, pc}
+  89:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 228              		.loc 1 89 1 view .LVU59
+ 229              		.cfi_endproc
+ 230              	.LFE25:
+ 232              		.section	.text.lv_circle_buf_create_from_array,"ax",%progbits
+ 233              		.align	1
+ 234              		.global	lv_circle_buf_create_from_array
+ 235              		.syntax unified
+ 236              		.thumb
+ 237              		.thumb_func
+ 239              	lv_circle_buf_create_from_array:
+ 240              	.LVL18:
+ 241              	.LFB26:
+  92:Drivers/lvgl/src/misc/lv_circle_buf.c ****     LV_ASSERT_NULL(array);
+ 242              		.loc 1 92 1 is_stmt 1 view -0
+ 243              		.cfi_startproc
+ 244              		@ args = 0, pretend = 0, frame = 0
+ 245              		@ frame_needed = 0, uses_anonymous_args = 0
+  92:Drivers/lvgl/src/misc/lv_circle_buf.c ****     LV_ASSERT_NULL(array);
+ 246              		.loc 1 92 1 is_stmt 0 view .LVU61
+ 247 0000 38B5     		push	{r3, r4, r5, lr}
+ 248              	.LCFI3:
+ 249              		.cfi_def_cfa_offset 16
+ARM GAS  /tmp/ccEsZFFf.s 			page 13
+
+
+ 250              		.cfi_offset 3, -16
+ 251              		.cfi_offset 4, -12
+ 252              		.cfi_offset 5, -8
+ 253              		.cfi_offset 14, -4
+  93:Drivers/lvgl/src/misc/lv_circle_buf.c ****     if(array == NULL) {
+ 254              		.loc 1 93 26 is_stmt 1 view .LVU62
+  94:Drivers/lvgl/src/misc/lv_circle_buf.c ****         return NULL;
+ 255              		.loc 1 94 5 view .LVU63
+  94:Drivers/lvgl/src/misc/lv_circle_buf.c ****         return NULL;
+ 256              		.loc 1 94 7 is_stmt 0 view .LVU64
+ 257 0002 C0B1     		cbz	r0, .L15
+ 258 0004 0546     		mov	r5, r0
+  98:Drivers/lvgl/src/misc/lv_circle_buf.c ****     LV_ASSERT_MALLOC(circle_buf);
+ 259              		.loc 1 98 5 is_stmt 1 view .LVU65
+  98:Drivers/lvgl/src/misc/lv_circle_buf.c ****     LV_ASSERT_MALLOC(circle_buf);
+ 260              		.loc 1 98 36 is_stmt 0 view .LVU66
+ 261 0006 2020     		movs	r0, #32
+ 262              	.LVL19:
+  98:Drivers/lvgl/src/misc/lv_circle_buf.c ****     LV_ASSERT_MALLOC(circle_buf);
+ 263              		.loc 1 98 36 view .LVU67
+ 264 0008 FFF7FEFF 		bl	lv_malloc
+ 265              	.LVL20:
+  99:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 266              		.loc 1 99 33 is_stmt 1 view .LVU68
+ 101:Drivers/lvgl/src/misc/lv_circle_buf.c ****         return NULL;
+ 267              		.loc 1 101 5 view .LVU69
+ 101:Drivers/lvgl/src/misc/lv_circle_buf.c ****         return NULL;
+ 268              		.loc 1 101 7 is_stmt 0 view .LVU70
+ 269 000c 0446     		mov	r4, r0
+ 270 000e 80B1     		cbz	r0, .L11
+ 105:Drivers/lvgl/src/misc/lv_circle_buf.c ****     circle_buf->head = 0;
+ 271              		.loc 1 105 5 is_stmt 1 view .LVU71
+ 105:Drivers/lvgl/src/misc/lv_circle_buf.c ****     circle_buf->head = 0;
+ 272              		.loc 1 105 23 is_stmt 0 view .LVU72
+ 273 0010 8646     		mov	lr, r0
+ 274 0012 AC46     		mov	ip, r5
+ 275 0014 BCE80F00 		ldmia	ip!, {r0, r1, r2, r3}
+ 276              	.LVL21:
+ 105:Drivers/lvgl/src/misc/lv_circle_buf.c ****     circle_buf->head = 0;
+ 277              		.loc 1 105 23 view .LVU73
+ 278 0018 AEE80F00 		stmia	lr!, {r0, r1, r2, r3}
+ 279 001c DCF80030 		ldr	r3, [ip]
+ 280 0020 CEF80030 		str	r3, [lr]
+ 106:Drivers/lvgl/src/misc/lv_circle_buf.c ****     circle_buf->tail = 0;
+ 281              		.loc 1 106 5 is_stmt 1 view .LVU74
+ 106:Drivers/lvgl/src/misc/lv_circle_buf.c ****     circle_buf->tail = 0;
+ 282              		.loc 1 106 22 is_stmt 0 view .LVU75
+ 283 0024 0023     		movs	r3, #0
+ 284 0026 6361     		str	r3, [r4, #20]
+ 107:Drivers/lvgl/src/misc/lv_circle_buf.c ****     circle_buf->inner_alloc = false;
+ 285              		.loc 1 107 5 is_stmt 1 view .LVU76
+ 107:Drivers/lvgl/src/misc/lv_circle_buf.c ****     circle_buf->inner_alloc = false;
+ 286              		.loc 1 107 22 is_stmt 0 view .LVU77
+ 287 0028 A361     		str	r3, [r4, #24]
+ 108:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 288              		.loc 1 108 5 is_stmt 1 view .LVU78
+ 108:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ARM GAS  /tmp/ccEsZFFf.s 			page 14
+
+
+ 289              		.loc 1 108 29 is_stmt 0 view .LVU79
+ 290 002a 2377     		strb	r3, [r4, #28]
+ 110:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 291              		.loc 1 110 5 is_stmt 1 view .LVU80
+ 292 002c 2046     		mov	r0, r4
+ 293 002e FFF7FEFF 		bl	circle_buf_prepare_empty
+ 294              	.LVL22:
+ 112:Drivers/lvgl/src/misc/lv_circle_buf.c **** }
+ 295              		.loc 1 112 5 view .LVU81
+ 296              	.L11:
+ 113:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 297              		.loc 1 113 1 is_stmt 0 view .LVU82
+ 298 0032 2046     		mov	r0, r4
+ 299 0034 38BD     		pop	{r3, r4, r5, pc}
+ 300              	.LVL23:
+ 301              	.L15:
+  95:Drivers/lvgl/src/misc/lv_circle_buf.c ****     }
+ 302              		.loc 1 95 16 view .LVU83
+ 303 0036 0446     		mov	r4, r0
+ 304 0038 FBE7     		b	.L11
+ 305              		.cfi_endproc
+ 306              	.LFE26:
+ 308              		.section	.text.lv_circle_buf_resize,"ax",%progbits
+ 309              		.align	1
+ 310              		.global	lv_circle_buf_resize
+ 311              		.syntax unified
+ 312              		.thumb
+ 313              		.thumb_func
+ 315              	lv_circle_buf_resize:
+ 316              	.LVL24:
+ 317              	.LFB27:
+ 116:Drivers/lvgl/src/misc/lv_circle_buf.c ****     LV_ASSERT_NULL(circle_buf);
+ 318              		.loc 1 116 1 is_stmt 1 view -0
+ 319              		.cfi_startproc
+ 320              		@ args = 0, pretend = 0, frame = 0
+ 321              		@ frame_needed = 0, uses_anonymous_args = 0
+ 116:Drivers/lvgl/src/misc/lv_circle_buf.c ****     LV_ASSERT_NULL(circle_buf);
+ 322              		.loc 1 116 1 is_stmt 0 view .LVU85
+ 323 0000 10B5     		push	{r4, lr}
+ 324              	.LCFI4:
+ 325              		.cfi_def_cfa_offset 8
+ 326              		.cfi_offset 4, -8
+ 327              		.cfi_offset 14, -4
+ 328 0002 0446     		mov	r4, r0
+ 117:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 329              		.loc 1 117 31 is_stmt 1 view .LVU86
+ 119:Drivers/lvgl/src/misc/lv_circle_buf.c ****         return LV_RESULT_INVALID;
+ 330              		.loc 1 119 5 view .LVU87
+ 119:Drivers/lvgl/src/misc/lv_circle_buf.c ****         return LV_RESULT_INVALID;
+ 331              		.loc 1 119 8 is_stmt 0 view .LVU88
+ 332 0004 FFF7FEFF 		bl	lv_array_resize
+ 333              	.LVL25:
+ 119:Drivers/lvgl/src/misc/lv_circle_buf.c ****         return LV_RESULT_INVALID;
+ 334              		.loc 1 119 7 discriminator 1 view .LVU89
+ 335 0008 00B9     		cbnz	r0, .L21
+ 336              	.L18:
+ 129:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ARM GAS  /tmp/ccEsZFFf.s 			page 15
+
+
+ 337              		.loc 1 129 1 view .LVU90
+ 338 000a 10BD     		pop	{r4, pc}
+ 339              	.LVL26:
+ 340              	.L21:
+ 123:Drivers/lvgl/src/misc/lv_circle_buf.c ****     circle_buf->tail = 0;
+ 341              		.loc 1 123 5 is_stmt 1 view .LVU91
+ 123:Drivers/lvgl/src/misc/lv_circle_buf.c ****     circle_buf->tail = 0;
+ 342              		.loc 1 123 22 is_stmt 0 view .LVU92
+ 343 000c 0023     		movs	r3, #0
+ 344 000e 6361     		str	r3, [r4, #20]
+ 124:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 345              		.loc 1 124 5 is_stmt 1 view .LVU93
+ 124:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 346              		.loc 1 124 22 is_stmt 0 view .LVU94
+ 347 0010 A361     		str	r3, [r4, #24]
+ 126:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 348              		.loc 1 126 5 is_stmt 1 view .LVU95
+ 349 0012 2046     		mov	r0, r4
+ 350 0014 FFF7FEFF 		bl	circle_buf_prepare_empty
+ 351              	.LVL27:
+ 128:Drivers/lvgl/src/misc/lv_circle_buf.c **** }
+ 352              		.loc 1 128 5 view .LVU96
+ 128:Drivers/lvgl/src/misc/lv_circle_buf.c **** }
+ 353              		.loc 1 128 12 is_stmt 0 view .LVU97
+ 354 0018 0120     		movs	r0, #1
+ 355 001a F6E7     		b	.L18
+ 356              		.cfi_endproc
+ 357              	.LFE27:
+ 359              		.section	.text.lv_circle_buf_destroy,"ax",%progbits
+ 360              		.align	1
+ 361              		.global	lv_circle_buf_destroy
+ 362              		.syntax unified
+ 363              		.thumb
+ 364              		.thumb_func
+ 366              	lv_circle_buf_destroy:
+ 367              	.LVL28:
+ 368              	.LFB28:
+ 132:Drivers/lvgl/src/misc/lv_circle_buf.c ****     LV_ASSERT_NULL(circle_buf);
+ 369              		.loc 1 132 1 is_stmt 1 view -0
+ 370              		.cfi_startproc
+ 371              		@ args = 0, pretend = 0, frame = 0
+ 372              		@ frame_needed = 0, uses_anonymous_args = 0
+ 132:Drivers/lvgl/src/misc/lv_circle_buf.c ****     LV_ASSERT_NULL(circle_buf);
+ 373              		.loc 1 132 1 is_stmt 0 view .LVU99
+ 374 0000 10B5     		push	{r4, lr}
+ 375              	.LCFI5:
+ 376              		.cfi_def_cfa_offset 8
+ 377              		.cfi_offset 4, -8
+ 378              		.cfi_offset 14, -4
+ 379 0002 0446     		mov	r4, r0
+ 133:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 380              		.loc 1 133 31 is_stmt 1 view .LVU100
+ 135:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 381              		.loc 1 135 5 view .LVU101
+ 382 0004 FFF7FEFF 		bl	lv_array_deinit
+ 383              	.LVL29:
+ 137:Drivers/lvgl/src/misc/lv_circle_buf.c **** }
+ARM GAS  /tmp/ccEsZFFf.s 			page 16
+
+
+ 384              		.loc 1 137 5 view .LVU102
+ 385 0008 2046     		mov	r0, r4
+ 386 000a FFF7FEFF 		bl	lv_free
+ 387              	.LVL30:
+ 138:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 388              		.loc 1 138 1 is_stmt 0 view .LVU103
+ 389 000e 10BD     		pop	{r4, pc}
+ 138:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 390              		.loc 1 138 1 view .LVU104
+ 391              		.cfi_endproc
+ 392              	.LFE28:
+ 394              		.section	.text.lv_circle_buf_size,"ax",%progbits
+ 395              		.align	1
+ 396              		.global	lv_circle_buf_size
+ 397              		.syntax unified
+ 398              		.thumb
+ 399              		.thumb_func
+ 401              	lv_circle_buf_size:
+ 402              	.LVL31:
+ 403              	.LFB29:
+ 141:Drivers/lvgl/src/misc/lv_circle_buf.c ****     LV_ASSERT_NULL(circle_buf);
+ 404              		.loc 1 141 1 is_stmt 1 view -0
+ 405              		.cfi_startproc
+ 406              		@ args = 0, pretend = 0, frame = 0
+ 407              		@ frame_needed = 0, uses_anonymous_args = 0
+ 408              		@ link register save eliminated.
+ 142:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 409              		.loc 1 142 31 view .LVU106
+ 144:Drivers/lvgl/src/misc/lv_circle_buf.c **** }
+ 410              		.loc 1 144 5 view .LVU107
+ 144:Drivers/lvgl/src/misc/lv_circle_buf.c **** }
+ 411              		.loc 1 144 22 is_stmt 0 view .LVU108
+ 412 0000 8269     		ldr	r2, [r0, #24]
+ 144:Drivers/lvgl/src/misc/lv_circle_buf.c **** }
+ 413              		.loc 1 144 41 view .LVU109
+ 414 0002 4069     		ldr	r0, [r0, #20]
+ 415              	.LVL32:
+ 145:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 416              		.loc 1 145 1 view .LVU110
+ 417 0004 101A     		subs	r0, r2, r0
+ 418 0006 7047     		bx	lr
+ 419              		.cfi_endproc
+ 420              	.LFE29:
+ 422              		.section	.text.lv_circle_buf_capacity,"ax",%progbits
+ 423              		.align	1
+ 424              		.global	lv_circle_buf_capacity
+ 425              		.syntax unified
+ 426              		.thumb
+ 427              		.thumb_func
+ 429              	lv_circle_buf_capacity:
+ 430              	.LVL33:
+ 431              	.LFB30:
+ 148:Drivers/lvgl/src/misc/lv_circle_buf.c ****     LV_ASSERT_NULL(circle_buf);
+ 432              		.loc 1 148 1 is_stmt 1 view -0
+ 433              		.cfi_startproc
+ 434              		@ args = 0, pretend = 0, frame = 0
+ 435              		@ frame_needed = 0, uses_anonymous_args = 0
+ARM GAS  /tmp/ccEsZFFf.s 			page 17
+
+
+ 436              		@ link register save eliminated.
+ 149:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 437              		.loc 1 149 31 view .LVU112
+ 151:Drivers/lvgl/src/misc/lv_circle_buf.c **** }
+ 438              		.loc 1 151 5 view .LVU113
+ 439              	.LBB14:
+ 440              	.LBI14:
+  95:Drivers/lvgl/src/misc/lv_array.h **** {
+ 441              		.loc 2 95 24 view .LVU114
+ 442              	.LBB15:
+ 443              		.loc 2 97 5 view .LVU115
+ 444              		.loc 2 97 5 is_stmt 0 view .LVU116
+ 445              	.LBE15:
+ 446              	.LBE14:
+ 152:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 447              		.loc 1 152 1 view .LVU117
+ 448 0000 8068     		ldr	r0, [r0, #8]
+ 449              	.LVL34:
+ 152:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 450              		.loc 1 152 1 view .LVU118
+ 451 0002 7047     		bx	lr
+ 452              		.cfi_endproc
+ 453              	.LFE30:
+ 455              		.section	.text.lv_circle_buf_remain,"ax",%progbits
+ 456              		.align	1
+ 457              		.global	lv_circle_buf_remain
+ 458              		.syntax unified
+ 459              		.thumb
+ 460              		.thumb_func
+ 462              	lv_circle_buf_remain:
+ 463              	.LVL35:
+ 464              	.LFB31:
+ 155:Drivers/lvgl/src/misc/lv_circle_buf.c ****     LV_ASSERT_NULL(circle_buf);
+ 465              		.loc 1 155 1 is_stmt 1 view -0
+ 466              		.cfi_startproc
+ 467              		@ args = 0, pretend = 0, frame = 0
+ 468              		@ frame_needed = 0, uses_anonymous_args = 0
+ 155:Drivers/lvgl/src/misc/lv_circle_buf.c ****     LV_ASSERT_NULL(circle_buf);
+ 469              		.loc 1 155 1 is_stmt 0 view .LVU120
+ 470 0000 38B5     		push	{r3, r4, r5, lr}
+ 471              	.LCFI6:
+ 472              		.cfi_def_cfa_offset 16
+ 473              		.cfi_offset 3, -16
+ 474              		.cfi_offset 4, -12
+ 475              		.cfi_offset 5, -8
+ 476              		.cfi_offset 14, -4
+ 477 0002 0546     		mov	r5, r0
+ 156:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 478              		.loc 1 156 31 is_stmt 1 view .LVU121
+ 158:Drivers/lvgl/src/misc/lv_circle_buf.c **** }
+ 479              		.loc 1 158 5 view .LVU122
+ 158:Drivers/lvgl/src/misc/lv_circle_buf.c **** }
+ 480              		.loc 1 158 12 is_stmt 0 view .LVU123
+ 481 0004 FFF7FEFF 		bl	lv_circle_buf_capacity
+ 482              	.LVL36:
+ 158:Drivers/lvgl/src/misc/lv_circle_buf.c **** }
+ 483              		.loc 1 158 12 view .LVU124
+ARM GAS  /tmp/ccEsZFFf.s 			page 18
+
+
+ 484 0008 0446     		mov	r4, r0
+ 158:Drivers/lvgl/src/misc/lv_circle_buf.c **** }
+ 485              		.loc 1 158 49 discriminator 1 view .LVU125
+ 486 000a 2846     		mov	r0, r5
+ 487 000c FFF7FEFF 		bl	lv_circle_buf_size
+ 488              	.LVL37:
+ 159:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 489              		.loc 1 159 1 view .LVU126
+ 490 0010 201A     		subs	r0, r4, r0
+ 491 0012 38BD     		pop	{r3, r4, r5, pc}
+ 159:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 492              		.loc 1 159 1 view .LVU127
+ 493              		.cfi_endproc
+ 494              	.LFE31:
+ 496              		.section	.text.lv_circle_buf_is_empty,"ax",%progbits
+ 497              		.align	1
+ 498              		.global	lv_circle_buf_is_empty
+ 499              		.syntax unified
+ 500              		.thumb
+ 501              		.thumb_func
+ 503              	lv_circle_buf_is_empty:
+ 504              	.LVL38:
+ 505              	.LFB32:
+ 162:Drivers/lvgl/src/misc/lv_circle_buf.c ****     LV_ASSERT_NULL(circle_buf);
+ 506              		.loc 1 162 1 is_stmt 1 view -0
+ 507              		.cfi_startproc
+ 508              		@ args = 0, pretend = 0, frame = 0
+ 509              		@ frame_needed = 0, uses_anonymous_args = 0
+ 162:Drivers/lvgl/src/misc/lv_circle_buf.c ****     LV_ASSERT_NULL(circle_buf);
+ 510              		.loc 1 162 1 is_stmt 0 view .LVU129
+ 511 0000 08B5     		push	{r3, lr}
+ 512              	.LCFI7:
+ 513              		.cfi_def_cfa_offset 8
+ 514              		.cfi_offset 3, -8
+ 515              		.cfi_offset 14, -4
+ 163:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 516              		.loc 1 163 31 is_stmt 1 view .LVU130
+ 165:Drivers/lvgl/src/misc/lv_circle_buf.c **** }
+ 517              		.loc 1 165 5 view .LVU131
+ 165:Drivers/lvgl/src/misc/lv_circle_buf.c **** }
+ 518              		.loc 1 165 13 is_stmt 0 view .LVU132
+ 519 0002 FFF7FEFF 		bl	lv_circle_buf_size
+ 520              	.LVL39:
+ 166:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 521              		.loc 1 166 1 view .LVU133
+ 522 0006 B0FA80F0 		clz	r0, r0
+ 523 000a 4009     		lsrs	r0, r0, #5
+ 524 000c 08BD     		pop	{r3, pc}
+ 525              		.cfi_endproc
+ 526              	.LFE32:
+ 528              		.section	.text.lv_circle_buf_is_full,"ax",%progbits
+ 529              		.align	1
+ 530              		.global	lv_circle_buf_is_full
+ 531              		.syntax unified
+ 532              		.thumb
+ 533              		.thumb_func
+ 535              	lv_circle_buf_is_full:
+ARM GAS  /tmp/ccEsZFFf.s 			page 19
+
+
+ 536              	.LVL40:
+ 537              	.LFB33:
+ 169:Drivers/lvgl/src/misc/lv_circle_buf.c ****     LV_ASSERT_NULL(circle_buf);
+ 538              		.loc 1 169 1 is_stmt 1 view -0
+ 539              		.cfi_startproc
+ 540              		@ args = 0, pretend = 0, frame = 0
+ 541              		@ frame_needed = 0, uses_anonymous_args = 0
+ 169:Drivers/lvgl/src/misc/lv_circle_buf.c ****     LV_ASSERT_NULL(circle_buf);
+ 542              		.loc 1 169 1 is_stmt 0 view .LVU135
+ 543 0000 08B5     		push	{r3, lr}
+ 544              	.LCFI8:
+ 545              		.cfi_def_cfa_offset 8
+ 546              		.cfi_offset 3, -8
+ 547              		.cfi_offset 14, -4
+ 170:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 548              		.loc 1 170 31 is_stmt 1 view .LVU136
+ 172:Drivers/lvgl/src/misc/lv_circle_buf.c **** }
+ 549              		.loc 1 172 5 view .LVU137
+ 172:Drivers/lvgl/src/misc/lv_circle_buf.c **** }
+ 550              		.loc 1 172 13 is_stmt 0 view .LVU138
+ 551 0002 FFF7FEFF 		bl	lv_circle_buf_remain
+ 552              	.LVL41:
+ 173:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 553              		.loc 1 173 1 view .LVU139
+ 554 0006 B0FA80F0 		clz	r0, r0
+ 555 000a 4009     		lsrs	r0, r0, #5
+ 556 000c 08BD     		pop	{r3, pc}
+ 557              		.cfi_endproc
+ 558              	.LFE33:
+ 560              		.section	.text.lv_circle_buf_reset,"ax",%progbits
+ 561              		.align	1
+ 562              		.global	lv_circle_buf_reset
+ 563              		.syntax unified
+ 564              		.thumb
+ 565              		.thumb_func
+ 567              	lv_circle_buf_reset:
+ 568              	.LVL42:
+ 569              	.LFB34:
+ 176:Drivers/lvgl/src/misc/lv_circle_buf.c ****     LV_ASSERT_NULL(circle_buf);
+ 570              		.loc 1 176 1 is_stmt 1 view -0
+ 571              		.cfi_startproc
+ 572              		@ args = 0, pretend = 0, frame = 0
+ 573              		@ frame_needed = 0, uses_anonymous_args = 0
+ 574              		@ link register save eliminated.
+ 177:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 575              		.loc 1 177 31 view .LVU141
+ 179:Drivers/lvgl/src/misc/lv_circle_buf.c ****     circle_buf->tail = 0;
+ 576              		.loc 1 179 5 view .LVU142
+ 179:Drivers/lvgl/src/misc/lv_circle_buf.c ****     circle_buf->tail = 0;
+ 577              		.loc 1 179 22 is_stmt 0 view .LVU143
+ 578 0000 0023     		movs	r3, #0
+ 579 0002 4361     		str	r3, [r0, #20]
+ 180:Drivers/lvgl/src/misc/lv_circle_buf.c **** }
+ 580              		.loc 1 180 5 is_stmt 1 view .LVU144
+ 180:Drivers/lvgl/src/misc/lv_circle_buf.c **** }
+ 581              		.loc 1 180 22 is_stmt 0 view .LVU145
+ 582 0004 8361     		str	r3, [r0, #24]
+ARM GAS  /tmp/ccEsZFFf.s 			page 20
+
+
+ 181:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 583              		.loc 1 181 1 view .LVU146
+ 584 0006 7047     		bx	lr
+ 585              		.cfi_endproc
+ 586              	.LFE34:
+ 588              		.section	.text.lv_circle_buf_head,"ax",%progbits
+ 589              		.align	1
+ 590              		.global	lv_circle_buf_head
+ 591              		.syntax unified
+ 592              		.thumb
+ 593              		.thumb_func
+ 595              	lv_circle_buf_head:
+ 596              	.LVL43:
+ 597              	.LFB35:
+ 184:Drivers/lvgl/src/misc/lv_circle_buf.c ****     LV_ASSERT_NULL(circle_buf);
+ 598              		.loc 1 184 1 is_stmt 1 view -0
+ 599              		.cfi_startproc
+ 600              		@ args = 0, pretend = 0, frame = 0
+ 601              		@ frame_needed = 0, uses_anonymous_args = 0
+ 184:Drivers/lvgl/src/misc/lv_circle_buf.c ****     LV_ASSERT_NULL(circle_buf);
+ 602              		.loc 1 184 1 is_stmt 0 view .LVU148
+ 603 0000 10B5     		push	{r4, lr}
+ 604              	.LCFI9:
+ 605              		.cfi_def_cfa_offset 8
+ 606              		.cfi_offset 4, -8
+ 607              		.cfi_offset 14, -4
+ 608 0002 0446     		mov	r4, r0
+ 185:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 609              		.loc 1 185 31 is_stmt 1 view .LVU149
+ 187:Drivers/lvgl/src/misc/lv_circle_buf.c ****     LV_ASSERT_MSG(capacity > 0, "circle buffer capacity must be > 0");
+ 610              		.loc 1 187 5 view .LVU150
+ 187:Drivers/lvgl/src/misc/lv_circle_buf.c ****     LV_ASSERT_MSG(capacity > 0, "circle buffer capacity must be > 0");
+ 611              		.loc 1 187 25 is_stmt 0 view .LVU151
+ 612 0004 FFF7FEFF 		bl	lv_circle_buf_capacity
+ 613              	.LVL44:
+ 188:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 614              		.loc 1 188 70 is_stmt 1 view .LVU152
+ 190:Drivers/lvgl/src/misc/lv_circle_buf.c ****                        circle_buf->head % capacity);
+ 615              		.loc 1 190 5 view .LVU153
+ 191:Drivers/lvgl/src/misc/lv_circle_buf.c **** }
+ 616              		.loc 1 191 34 is_stmt 0 view .LVU154
+ 617 0008 6369     		ldr	r3, [r4, #20]
+ 190:Drivers/lvgl/src/misc/lv_circle_buf.c ****                        circle_buf->head % capacity);
+ 618              		.loc 1 190 12 view .LVU155
+ 619 000a B3FBF0F1 		udiv	r1, r3, r0
+ 620 000e 00FB1131 		mls	r1, r0, r1, r3
+ 621 0012 2046     		mov	r0, r4
+ 622              	.LVL45:
+ 190:Drivers/lvgl/src/misc/lv_circle_buf.c ****                        circle_buf->head % capacity);
+ 623              		.loc 1 190 12 view .LVU156
+ 624 0014 FFF7FEFF 		bl	lv_array_at
+ 625              	.LVL46:
+ 192:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 626              		.loc 1 192 1 view .LVU157
+ 627 0018 10BD     		pop	{r4, pc}
+ 192:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 628              		.loc 1 192 1 view .LVU158
+ARM GAS  /tmp/ccEsZFFf.s 			page 21
+
+
+ 629              		.cfi_endproc
+ 630              	.LFE35:
+ 632              		.section	.text.lv_circle_buf_tail,"ax",%progbits
+ 633              		.align	1
+ 634              		.global	lv_circle_buf_tail
+ 635              		.syntax unified
+ 636              		.thumb
+ 637              		.thumb_func
+ 639              	lv_circle_buf_tail:
+ 640              	.LVL47:
+ 641              	.LFB36:
+ 195:Drivers/lvgl/src/misc/lv_circle_buf.c ****     LV_ASSERT_NULL(circle_buf);
+ 642              		.loc 1 195 1 is_stmt 1 view -0
+ 643              		.cfi_startproc
+ 644              		@ args = 0, pretend = 0, frame = 0
+ 645              		@ frame_needed = 0, uses_anonymous_args = 0
+ 195:Drivers/lvgl/src/misc/lv_circle_buf.c ****     LV_ASSERT_NULL(circle_buf);
+ 646              		.loc 1 195 1 is_stmt 0 view .LVU160
+ 647 0000 10B5     		push	{r4, lr}
+ 648              	.LCFI10:
+ 649              		.cfi_def_cfa_offset 8
+ 650              		.cfi_offset 4, -8
+ 651              		.cfi_offset 14, -4
+ 652 0002 0446     		mov	r4, r0
+ 196:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 653              		.loc 1 196 31 is_stmt 1 view .LVU161
+ 198:Drivers/lvgl/src/misc/lv_circle_buf.c ****     LV_ASSERT_MSG(capacity > 0, "circle buffer capacity must be > 0");
+ 654              		.loc 1 198 5 view .LVU162
+ 198:Drivers/lvgl/src/misc/lv_circle_buf.c ****     LV_ASSERT_MSG(capacity > 0, "circle buffer capacity must be > 0");
+ 655              		.loc 1 198 25 is_stmt 0 view .LVU163
+ 656 0004 FFF7FEFF 		bl	lv_circle_buf_capacity
+ 657              	.LVL48:
+ 199:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 658              		.loc 1 199 70 is_stmt 1 view .LVU164
+ 201:Drivers/lvgl/src/misc/lv_circle_buf.c ****                        circle_buf->tail % capacity);
+ 659              		.loc 1 201 5 view .LVU165
+ 202:Drivers/lvgl/src/misc/lv_circle_buf.c **** }
+ 660              		.loc 1 202 34 is_stmt 0 view .LVU166
+ 661 0008 A369     		ldr	r3, [r4, #24]
+ 201:Drivers/lvgl/src/misc/lv_circle_buf.c ****                        circle_buf->tail % capacity);
+ 662              		.loc 1 201 12 view .LVU167
+ 663 000a B3FBF0F1 		udiv	r1, r3, r0
+ 664 000e 00FB1131 		mls	r1, r0, r1, r3
+ 665 0012 2046     		mov	r0, r4
+ 666              	.LVL49:
+ 201:Drivers/lvgl/src/misc/lv_circle_buf.c ****                        circle_buf->tail % capacity);
+ 667              		.loc 1 201 12 view .LVU168
+ 668 0014 FFF7FEFF 		bl	lv_array_at
+ 669              	.LVL50:
+ 203:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 670              		.loc 1 203 1 view .LVU169
+ 671 0018 10BD     		pop	{r4, pc}
+ 203:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 672              		.loc 1 203 1 view .LVU170
+ 673              		.cfi_endproc
+ 674              	.LFE36:
+ 676              		.section	.text.lv_circle_buf_write,"ax",%progbits
+ARM GAS  /tmp/ccEsZFFf.s 			page 22
+
+
+ 677              		.align	1
+ 678              		.global	lv_circle_buf_write
+ 679              		.syntax unified
+ 680              		.thumb
+ 681              		.thumb_func
+ 683              	lv_circle_buf_write:
+ 684              	.LVL51:
+ 685              	.LFB38:
+ 222:Drivers/lvgl/src/misc/lv_circle_buf.c ****     LV_ASSERT_NULL(circle_buf);
+ 686              		.loc 1 222 1 is_stmt 1 view -0
+ 687              		.cfi_startproc
+ 688              		@ args = 0, pretend = 0, frame = 0
+ 689              		@ frame_needed = 0, uses_anonymous_args = 0
+ 222:Drivers/lvgl/src/misc/lv_circle_buf.c ****     LV_ASSERT_NULL(circle_buf);
+ 690              		.loc 1 222 1 is_stmt 0 view .LVU172
+ 691 0000 70B5     		push	{r4, r5, r6, lr}
+ 692              	.LCFI11:
+ 693              		.cfi_def_cfa_offset 16
+ 694              		.cfi_offset 4, -16
+ 695              		.cfi_offset 5, -12
+ 696              		.cfi_offset 6, -8
+ 697              		.cfi_offset 14, -4
+ 698 0002 0446     		mov	r4, r0
+ 699 0004 0E46     		mov	r6, r1
+ 223:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 700              		.loc 1 223 31 is_stmt 1 view .LVU173
+ 225:Drivers/lvgl/src/misc/lv_circle_buf.c ****         return LV_RESULT_INVALID;
+ 701              		.loc 1 225 5 view .LVU174
+ 225:Drivers/lvgl/src/misc/lv_circle_buf.c ****         return LV_RESULT_INVALID;
+ 702              		.loc 1 225 8 is_stmt 0 view .LVU175
+ 703 0006 FFF7FEFF 		bl	lv_circle_buf_is_full
+ 704              	.LVL52:
+ 225:Drivers/lvgl/src/misc/lv_circle_buf.c ****         return LV_RESULT_INVALID;
+ 705              		.loc 1 225 7 discriminator 1 view .LVU176
+ 706 000a 08B1     		cbz	r0, .L41
+ 226:Drivers/lvgl/src/misc/lv_circle_buf.c ****     }
+ 707              		.loc 1 226 16 view .LVU177
+ 708 000c 0020     		movs	r0, #0
+ 709              	.L38:
+ 233:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 710              		.loc 1 233 1 view .LVU178
+ 711 000e 70BD     		pop	{r4, r5, r6, pc}
+ 712              	.LVL53:
+ 713              	.L41:
+ 229:Drivers/lvgl/src/misc/lv_circle_buf.c ****     circle_buf->tail++;
+ 714              		.loc 1 229 5 is_stmt 1 view .LVU179
+ 229:Drivers/lvgl/src/misc/lv_circle_buf.c ****     circle_buf->tail++;
+ 715              		.loc 1 229 51 is_stmt 0 view .LVU180
+ 716 0010 A569     		ldr	r5, [r4, #24]
+ 229:Drivers/lvgl/src/misc/lv_circle_buf.c ****     circle_buf->tail++;
+ 717              		.loc 1 229 60 view .LVU181
+ 718 0012 2046     		mov	r0, r4
+ 719 0014 FFF7FEFF 		bl	lv_circle_buf_capacity
+ 720              	.LVL54:
+ 229:Drivers/lvgl/src/misc/lv_circle_buf.c ****     circle_buf->tail++;
+ 721              		.loc 1 229 5 discriminator 1 view .LVU182
+ 722 0018 B5FBF0F1 		udiv	r1, r5, r0
+ARM GAS  /tmp/ccEsZFFf.s 			page 23
+
+
+ 723 001c 3246     		mov	r2, r6
+ 724 001e 00FB1151 		mls	r1, r0, r1, r5
+ 725 0022 2046     		mov	r0, r4
+ 726 0024 FFF7FEFF 		bl	lv_array_assign
+ 727              	.LVL55:
+ 230:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 728              		.loc 1 230 5 is_stmt 1 view .LVU183
+ 230:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 729              		.loc 1 230 15 is_stmt 0 view .LVU184
+ 730 0028 A369     		ldr	r3, [r4, #24]
+ 230:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 731              		.loc 1 230 21 view .LVU185
+ 732 002a 0133     		adds	r3, r3, #1
+ 733 002c A361     		str	r3, [r4, #24]
+ 232:Drivers/lvgl/src/misc/lv_circle_buf.c **** }
+ 734              		.loc 1 232 5 is_stmt 1 view .LVU186
+ 232:Drivers/lvgl/src/misc/lv_circle_buf.c **** }
+ 735              		.loc 1 232 12 is_stmt 0 view .LVU187
+ 736 002e 0120     		movs	r0, #1
+ 737 0030 EDE7     		b	.L38
+ 738              		.cfi_endproc
+ 739              	.LFE38:
+ 741              		.section	.text.lv_circle_buf_fill,"ax",%progbits
+ 742              		.align	1
+ 743              		.global	lv_circle_buf_fill
+ 744              		.syntax unified
+ 745              		.thumb
+ 746              		.thumb_func
+ 748              	lv_circle_buf_fill:
+ 749              	.LVL56:
+ 750              	.LFB39:
+ 237:Drivers/lvgl/src/misc/lv_circle_buf.c ****     LV_ASSERT_NULL(circle_buf);
+ 751              		.loc 1 237 1 is_stmt 1 view -0
+ 752              		.cfi_startproc
+ 753              		@ args = 0, pretend = 0, frame = 0
+ 754              		@ frame_needed = 0, uses_anonymous_args = 0
+ 237:Drivers/lvgl/src/misc/lv_circle_buf.c ****     LV_ASSERT_NULL(circle_buf);
+ 755              		.loc 1 237 1 is_stmt 0 view .LVU189
+ 756 0000 2DE9F041 		push	{r4, r5, r6, r7, r8, lr}
+ 757              	.LCFI12:
+ 758              		.cfi_def_cfa_offset 24
+ 759              		.cfi_offset 4, -24
+ 760              		.cfi_offset 5, -20
+ 761              		.cfi_offset 6, -16
+ 762              		.cfi_offset 7, -12
+ 763              		.cfi_offset 8, -8
+ 764              		.cfi_offset 14, -4
+ 765 0004 0446     		mov	r4, r0
+ 766 0006 0D46     		mov	r5, r1
+ 767 0008 9046     		mov	r8, r2
+ 768 000a 1F46     		mov	r7, r3
+ 238:Drivers/lvgl/src/misc/lv_circle_buf.c ****     LV_ASSERT_NULL(fill_cb);
+ 769              		.loc 1 238 31 is_stmt 1 view .LVU190
+ 239:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 770              		.loc 1 239 28 view .LVU191
+ 241:Drivers/lvgl/src/misc/lv_circle_buf.c ****     while(count > 0 && !lv_circle_buf_is_full(circle_buf)) {
+ 771              		.loc 1 241 5 view .LVU192
+ARM GAS  /tmp/ccEsZFFf.s 			page 24
+
+
+ 772              	.LVL57:
+ 242:Drivers/lvgl/src/misc/lv_circle_buf.c ****         void * data = lv_circle_buf_tail(circle_buf);
+ 773              		.loc 1 242 5 view .LVU193
+ 241:Drivers/lvgl/src/misc/lv_circle_buf.c ****     while(count > 0 && !lv_circle_buf_is_full(circle_buf)) {
+ 774              		.loc 1 241 14 is_stmt 0 view .LVU194
+ 775 000c 0026     		movs	r6, #0
+ 242:Drivers/lvgl/src/misc/lv_circle_buf.c ****         void * data = lv_circle_buf_tail(circle_buf);
+ 776              		.loc 1 242 10 view .LVU195
+ 777 000e 04E0     		b	.L43
+ 778              	.LVL58:
+ 779              	.L47:
+ 780              	.LBB16:
+ 245:Drivers/lvgl/src/misc/lv_circle_buf.c ****             filled++;
+ 781              		.loc 1 245 13 is_stmt 1 view .LVU196
+ 245:Drivers/lvgl/src/misc/lv_circle_buf.c ****             filled++;
+ 782              		.loc 1 245 23 is_stmt 0 view .LVU197
+ 783 0010 A069     		ldr	r0, [r4, #24]
+ 245:Drivers/lvgl/src/misc/lv_circle_buf.c ****             filled++;
+ 784              		.loc 1 245 29 view .LVU198
+ 785 0012 0130     		adds	r0, r0, #1
+ 786 0014 A061     		str	r0, [r4, #24]
+ 246:Drivers/lvgl/src/misc/lv_circle_buf.c ****         }
+ 787              		.loc 1 246 13 is_stmt 1 view .LVU199
+ 246:Drivers/lvgl/src/misc/lv_circle_buf.c ****         }
+ 788              		.loc 1 246 19 is_stmt 0 view .LVU200
+ 789 0016 0136     		adds	r6, r6, #1
+ 790              	.LVL59:
+ 250:Drivers/lvgl/src/misc/lv_circle_buf.c ****     }
+ 791              		.loc 1 250 9 is_stmt 1 view .LVU201
+ 250:Drivers/lvgl/src/misc/lv_circle_buf.c ****     }
+ 792              		.loc 1 250 14 is_stmt 0 view .LVU202
+ 793 0018 013D     		subs	r5, r5, #1
+ 794              	.LVL60:
+ 795              	.L43:
+ 250:Drivers/lvgl/src/misc/lv_circle_buf.c ****     }
+ 796              		.loc 1 250 14 view .LVU203
+ 797              	.LBE16:
+ 242:Drivers/lvgl/src/misc/lv_circle_buf.c ****         void * data = lv_circle_buf_tail(circle_buf);
+ 798              		.loc 1 242 21 is_stmt 1 discriminator 1 view .LVU204
+ 799 001a 65B1     		cbz	r5, .L42
+ 242:Drivers/lvgl/src/misc/lv_circle_buf.c ****         void * data = lv_circle_buf_tail(circle_buf);
+ 800              		.loc 1 242 25 is_stmt 0 discriminator 2 view .LVU205
+ 801 001c 2046     		mov	r0, r4
+ 802 001e FFF7FEFF 		bl	lv_circle_buf_is_full
+ 803              	.LVL61:
+ 242:Drivers/lvgl/src/misc/lv_circle_buf.c ****         void * data = lv_circle_buf_tail(circle_buf);
+ 804              		.loc 1 242 21 discriminator 3 view .LVU206
+ 805 0022 40B9     		cbnz	r0, .L42
+ 806              	.LBB17:
+ 243:Drivers/lvgl/src/misc/lv_circle_buf.c ****         if(fill_cb(data, circle_buf->array.element_size, (int32_t)filled, user_data) == LV_RESULT_O
+ 807              		.loc 1 243 9 is_stmt 1 view .LVU207
+ 243:Drivers/lvgl/src/misc/lv_circle_buf.c ****         if(fill_cb(data, circle_buf->array.element_size, (int32_t)filled, user_data) == LV_RESULT_O
+ 808              		.loc 1 243 23 is_stmt 0 view .LVU208
+ 809 0024 2046     		mov	r0, r4
+ 810 0026 FFF7FEFF 		bl	lv_circle_buf_tail
+ 811              	.LVL62:
+ 244:Drivers/lvgl/src/misc/lv_circle_buf.c ****             circle_buf->tail++;
+ARM GAS  /tmp/ccEsZFFf.s 			page 25
+
+
+ 812              		.loc 1 244 9 is_stmt 1 view .LVU209
+ 244:Drivers/lvgl/src/misc/lv_circle_buf.c ****             circle_buf->tail++;
+ 813              		.loc 1 244 12 is_stmt 0 view .LVU210
+ 814 002a 3B46     		mov	r3, r7
+ 815 002c 3246     		mov	r2, r6
+ 816 002e E168     		ldr	r1, [r4, #12]
+ 817 0030 C047     		blx	r8
+ 818              	.LVL63:
+ 244:Drivers/lvgl/src/misc/lv_circle_buf.c ****             circle_buf->tail++;
+ 819              		.loc 1 244 11 discriminator 1 view .LVU211
+ 820 0032 0028     		cmp	r0, #0
+ 821 0034 ECD1     		bne	.L47
+ 822              	.LVL64:
+ 823              	.L42:
+ 244:Drivers/lvgl/src/misc/lv_circle_buf.c ****             circle_buf->tail++;
+ 824              		.loc 1 244 11 discriminator 1 view .LVU212
+ 825              	.LBE17:
+ 254:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 826              		.loc 1 254 1 view .LVU213
+ 827 0036 3046     		mov	r0, r6
+ 828 0038 BDE8F081 		pop	{r4, r5, r6, r7, r8, pc}
+ 254:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 829              		.loc 1 254 1 view .LVU214
+ 830              		.cfi_endproc
+ 831              	.LFE39:
+ 833              		.section	.text.lv_circle_buf_skip,"ax",%progbits
+ 834              		.align	1
+ 835              		.global	lv_circle_buf_skip
+ 836              		.syntax unified
+ 837              		.thumb
+ 838              		.thumb_func
+ 840              	lv_circle_buf_skip:
+ 841              	.LVL65:
+ 842              	.LFB40:
+ 257:Drivers/lvgl/src/misc/lv_circle_buf.c ****     LV_ASSERT_NULL(circle_buf);
+ 843              		.loc 1 257 1 is_stmt 1 view -0
+ 844              		.cfi_startproc
+ 845              		@ args = 0, pretend = 0, frame = 0
+ 846              		@ frame_needed = 0, uses_anonymous_args = 0
+ 257:Drivers/lvgl/src/misc/lv_circle_buf.c ****     LV_ASSERT_NULL(circle_buf);
+ 847              		.loc 1 257 1 is_stmt 0 view .LVU216
+ 848 0000 10B5     		push	{r4, lr}
+ 849              	.LCFI13:
+ 850              		.cfi_def_cfa_offset 8
+ 851              		.cfi_offset 4, -8
+ 852              		.cfi_offset 14, -4
+ 853 0002 0446     		mov	r4, r0
+ 258:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 854              		.loc 1 258 31 is_stmt 1 view .LVU217
+ 260:Drivers/lvgl/src/misc/lv_circle_buf.c ****         circle_buf->head = 0;
+ 855              		.loc 1 260 5 view .LVU218
+ 260:Drivers/lvgl/src/misc/lv_circle_buf.c ****         circle_buf->head = 0;
+ 856              		.loc 1 260 8 is_stmt 0 view .LVU219
+ 857 0004 FFF7FEFF 		bl	lv_circle_buf_is_empty
+ 858              	.LVL66:
+ 260:Drivers/lvgl/src/misc/lv_circle_buf.c ****         circle_buf->head = 0;
+ 859              		.loc 1 260 7 discriminator 1 view .LVU220
+ARM GAS  /tmp/ccEsZFFf.s 			page 26
+
+
+ 860 0008 20B9     		cbnz	r0, .L52
+ 266:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 861              		.loc 1 266 5 is_stmt 1 view .LVU221
+ 266:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 862              		.loc 1 266 15 is_stmt 0 view .LVU222
+ 863 000a 6369     		ldr	r3, [r4, #20]
+ 266:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 864              		.loc 1 266 21 view .LVU223
+ 865 000c 0133     		adds	r3, r3, #1
+ 866 000e 6361     		str	r3, [r4, #20]
+ 268:Drivers/lvgl/src/misc/lv_circle_buf.c **** }
+ 867              		.loc 1 268 5 is_stmt 1 view .LVU224
+ 268:Drivers/lvgl/src/misc/lv_circle_buf.c **** }
+ 868              		.loc 1 268 12 is_stmt 0 view .LVU225
+ 869 0010 0120     		movs	r0, #1
+ 870              	.L50:
+ 269:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 871              		.loc 1 269 1 view .LVU226
+ 872 0012 10BD     		pop	{r4, pc}
+ 873              	.LVL67:
+ 874              	.L52:
+ 261:Drivers/lvgl/src/misc/lv_circle_buf.c ****         circle_buf->tail = 0;
+ 875              		.loc 1 261 9 is_stmt 1 view .LVU227
+ 261:Drivers/lvgl/src/misc/lv_circle_buf.c ****         circle_buf->tail = 0;
+ 876              		.loc 1 261 26 is_stmt 0 view .LVU228
+ 877 0014 0020     		movs	r0, #0
+ 878 0016 6061     		str	r0, [r4, #20]
+ 262:Drivers/lvgl/src/misc/lv_circle_buf.c ****         return LV_RESULT_INVALID;
+ 879              		.loc 1 262 9 is_stmt 1 view .LVU229
+ 262:Drivers/lvgl/src/misc/lv_circle_buf.c ****         return LV_RESULT_INVALID;
+ 880              		.loc 1 262 26 is_stmt 0 view .LVU230
+ 881 0018 A061     		str	r0, [r4, #24]
+ 263:Drivers/lvgl/src/misc/lv_circle_buf.c ****     }
+ 882              		.loc 1 263 9 is_stmt 1 view .LVU231
+ 263:Drivers/lvgl/src/misc/lv_circle_buf.c ****     }
+ 883              		.loc 1 263 16 is_stmt 0 view .LVU232
+ 884 001a FAE7     		b	.L50
+ 885              		.cfi_endproc
+ 886              	.LFE40:
+ 888              		.section	.text.lv_circle_buf_peek_at,"ax",%progbits
+ 889              		.align	1
+ 890              		.global	lv_circle_buf_peek_at
+ 891              		.syntax unified
+ 892              		.thumb
+ 893              		.thumb_func
+ 895              	lv_circle_buf_peek_at:
+ 896              	.LVL68:
+ 897              	.LFB42:
+ 280:Drivers/lvgl/src/misc/lv_circle_buf.c ****     LV_ASSERT_NULL(circle_buf);
+ 898              		.loc 1 280 1 is_stmt 1 view -0
+ 899              		.cfi_startproc
+ 900              		@ args = 0, pretend = 0, frame = 0
+ 901              		@ frame_needed = 0, uses_anonymous_args = 0
+ 280:Drivers/lvgl/src/misc/lv_circle_buf.c ****     LV_ASSERT_NULL(circle_buf);
+ 902              		.loc 1 280 1 is_stmt 0 view .LVU234
+ 903 0000 70B5     		push	{r4, r5, r6, lr}
+ 904              	.LCFI14:
+ARM GAS  /tmp/ccEsZFFf.s 			page 27
+
+
+ 905              		.cfi_def_cfa_offset 16
+ 906              		.cfi_offset 4, -16
+ 907              		.cfi_offset 5, -12
+ 908              		.cfi_offset 6, -8
+ 909              		.cfi_offset 14, -4
+ 910 0002 0546     		mov	r5, r0
+ 911 0004 0C46     		mov	r4, r1
+ 912 0006 1646     		mov	r6, r2
+ 281:Drivers/lvgl/src/misc/lv_circle_buf.c ****     LV_ASSERT_NULL(data);
+ 913              		.loc 1 281 31 is_stmt 1 view .LVU235
+ 282:Drivers/lvgl/src/misc/lv_circle_buf.c ****     LV_ASSERT_MSG(lv_circle_buf_size(circle_buf) > 0, "can't peek into an empty buffer");
+ 914              		.loc 1 282 25 view .LVU236
+ 283:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 915              		.loc 1 283 89 view .LVU237
+ 285:Drivers/lvgl/src/misc/lv_circle_buf.c ****                                     circle_buf);
+ 916              		.loc 1 285 5 view .LVU238
+ 285:Drivers/lvgl/src/misc/lv_circle_buf.c ****                                     circle_buf);
+ 917              		.loc 1 285 42 is_stmt 0 view .LVU239
+ 918 0008 FFF7FEFF 		bl	lv_circle_buf_size
+ 919              	.LVL69:
+ 285:Drivers/lvgl/src/misc/lv_circle_buf.c ****                                     circle_buf);
+ 920              		.loc 1 285 40 discriminator 1 view .LVU240
+ 921 000c B4FBF0F3 		udiv	r3, r4, r0
+ 922 0010 00FB1344 		mls	r4, r0, r3, r4
+ 923              	.LVL70:
+ 285:Drivers/lvgl/src/misc/lv_circle_buf.c ****                                     circle_buf);
+ 924              		.loc 1 285 85 discriminator 1 view .LVU241
+ 925 0014 6B69     		ldr	r3, [r5, #20]
+ 285:Drivers/lvgl/src/misc/lv_circle_buf.c ****                                     circle_buf);
+ 926              		.loc 1 285 73 discriminator 1 view .LVU242
+ 927 0016 1C44     		add	r4, r4, r3
+ 285:Drivers/lvgl/src/misc/lv_circle_buf.c ****                                     circle_buf);
+ 928              		.loc 1 285 95 discriminator 1 view .LVU243
+ 929 0018 2846     		mov	r0, r5
+ 930 001a FFF7FEFF 		bl	lv_circle_buf_capacity
+ 931              	.LVL71:
+ 285:Drivers/lvgl/src/misc/lv_circle_buf.c ****                                     circle_buf);
+ 932              		.loc 1 285 20 discriminator 2 view .LVU244
+ 933 001e B4FBF0F1 		udiv	r1, r4, r0
+ 934              	.LVL72:
+ 287:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 935              		.loc 1 287 5 is_stmt 1 view .LVU245
+ 287:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 936              		.loc 1 287 21 is_stmt 0 view .LVU246
+ 937 0022 00FB1141 		mls	r1, r0, r1, r4
+ 938              	.LVL73:
+ 287:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 939              		.loc 1 287 21 view .LVU247
+ 940 0026 2846     		mov	r0, r5
+ 941 0028 FFF7FEFF 		bl	lv_array_at
+ 942              	.LVL74:
+ 287:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 943              		.loc 1 287 21 view .LVU248
+ 944 002c 0146     		mov	r1, r0
+ 287:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 945              		.loc 1 287 5 discriminator 1 view .LVU249
+ 946 002e EA68     		ldr	r2, [r5, #12]
+ARM GAS  /tmp/ccEsZFFf.s 			page 28
+
+
+ 947 0030 3046     		mov	r0, r6
+ 948 0032 FFF7FEFF 		bl	lv_memcpy
+ 949              	.LVL75:
+ 289:Drivers/lvgl/src/misc/lv_circle_buf.c **** }
+ 950              		.loc 1 289 5 is_stmt 1 view .LVU250
+ 290:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 951              		.loc 1 290 1 is_stmt 0 view .LVU251
+ 952 0036 0120     		movs	r0, #1
+ 953 0038 70BD     		pop	{r4, r5, r6, pc}
+ 290:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 954              		.loc 1 290 1 view .LVU252
+ 955              		.cfi_endproc
+ 956              	.LFE42:
+ 958              		.section	.text.lv_circle_buf_read,"ax",%progbits
+ 959              		.align	1
+ 960              		.global	lv_circle_buf_read
+ 961              		.syntax unified
+ 962              		.thumb
+ 963              		.thumb_func
+ 965              	lv_circle_buf_read:
+ 966              	.LVL76:
+ 967              	.LFB37:
+ 206:Drivers/lvgl/src/misc/lv_circle_buf.c ****     LV_ASSERT_NULL(circle_buf);
+ 968              		.loc 1 206 1 is_stmt 1 view -0
+ 969              		.cfi_startproc
+ 970              		@ args = 0, pretend = 0, frame = 0
+ 971              		@ frame_needed = 0, uses_anonymous_args = 0
+ 206:Drivers/lvgl/src/misc/lv_circle_buf.c ****     LV_ASSERT_NULL(circle_buf);
+ 972              		.loc 1 206 1 is_stmt 0 view .LVU254
+ 973 0000 38B5     		push	{r3, r4, r5, lr}
+ 974              	.LCFI15:
+ 975              		.cfi_def_cfa_offset 16
+ 976              		.cfi_offset 3, -16
+ 977              		.cfi_offset 4, -12
+ 978              		.cfi_offset 5, -8
+ 979              		.cfi_offset 14, -4
+ 980 0002 0446     		mov	r4, r0
+ 981 0004 0D46     		mov	r5, r1
+ 207:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 982              		.loc 1 207 31 is_stmt 1 view .LVU255
+ 209:Drivers/lvgl/src/misc/lv_circle_buf.c ****         circle_buf->head = 0;
+ 983              		.loc 1 209 5 view .LVU256
+ 209:Drivers/lvgl/src/misc/lv_circle_buf.c ****         circle_buf->head = 0;
+ 984              		.loc 1 209 8 is_stmt 0 view .LVU257
+ 985 0006 FFF7FEFF 		bl	lv_circle_buf_is_empty
+ 986              	.LVL77:
+ 209:Drivers/lvgl/src/misc/lv_circle_buf.c ****         circle_buf->head = 0;
+ 987              		.loc 1 209 7 discriminator 1 view .LVU258
+ 988 000a 18B1     		cbz	r0, .L56
+ 210:Drivers/lvgl/src/misc/lv_circle_buf.c ****         circle_buf->tail = 0;
+ 989              		.loc 1 210 9 is_stmt 1 view .LVU259
+ 210:Drivers/lvgl/src/misc/lv_circle_buf.c ****         circle_buf->tail = 0;
+ 990              		.loc 1 210 26 is_stmt 0 view .LVU260
+ 991 000c 0020     		movs	r0, #0
+ 992 000e 6061     		str	r0, [r4, #20]
+ 211:Drivers/lvgl/src/misc/lv_circle_buf.c ****         return LV_RESULT_INVALID;
+ 993              		.loc 1 211 9 is_stmt 1 view .LVU261
+ARM GAS  /tmp/ccEsZFFf.s 			page 29
+
+
+ 211:Drivers/lvgl/src/misc/lv_circle_buf.c ****         return LV_RESULT_INVALID;
+ 994              		.loc 1 211 26 is_stmt 0 view .LVU262
+ 995 0010 A061     		str	r0, [r4, #24]
+ 212:Drivers/lvgl/src/misc/lv_circle_buf.c ****     }
+ 996              		.loc 1 212 9 is_stmt 1 view .LVU263
+ 997              	.L57:
+ 219:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 998              		.loc 1 219 1 is_stmt 0 view .LVU264
+ 999 0012 38BD     		pop	{r3, r4, r5, pc}
+ 1000              	.LVL78:
+ 1001              	.L56:
+ 215:Drivers/lvgl/src/misc/lv_circle_buf.c ****     circle_buf->head++;
+ 1002              		.loc 1 215 5 is_stmt 1 view .LVU265
+ 1003 0014 2A46     		mov	r2, r5
+ 1004 0016 0146     		mov	r1, r0
+ 1005 0018 2046     		mov	r0, r4
+ 1006 001a FFF7FEFF 		bl	lv_circle_buf_peek_at
+ 1007              	.LVL79:
+ 216:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 1008              		.loc 1 216 5 view .LVU266
+ 216:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 1009              		.loc 1 216 15 is_stmt 0 view .LVU267
+ 1010 001e 6369     		ldr	r3, [r4, #20]
+ 216:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 1011              		.loc 1 216 21 view .LVU268
+ 1012 0020 0133     		adds	r3, r3, #1
+ 1013 0022 6361     		str	r3, [r4, #20]
+ 218:Drivers/lvgl/src/misc/lv_circle_buf.c **** }
+ 1014              		.loc 1 218 5 is_stmt 1 view .LVU269
+ 218:Drivers/lvgl/src/misc/lv_circle_buf.c **** }
+ 1015              		.loc 1 218 12 is_stmt 0 view .LVU270
+ 1016 0024 0120     		movs	r0, #1
+ 1017 0026 F4E7     		b	.L57
+ 1018              		.cfi_endproc
+ 1019              	.LFE37:
+ 1021              		.section	.text.lv_circle_buf_peek,"ax",%progbits
+ 1022              		.align	1
+ 1023              		.global	lv_circle_buf_peek
+ 1024              		.syntax unified
+ 1025              		.thumb
+ 1026              		.thumb_func
+ 1028              	lv_circle_buf_peek:
+ 1029              	.LVL80:
+ 1030              	.LFB41:
+ 272:Drivers/lvgl/src/misc/lv_circle_buf.c ****     LV_ASSERT_NULL(circle_buf);
+ 1031              		.loc 1 272 1 is_stmt 1 view -0
+ 1032              		.cfi_startproc
+ 1033              		@ args = 0, pretend = 0, frame = 0
+ 1034              		@ frame_needed = 0, uses_anonymous_args = 0
+ 272:Drivers/lvgl/src/misc/lv_circle_buf.c ****     LV_ASSERT_NULL(circle_buf);
+ 1035              		.loc 1 272 1 is_stmt 0 view .LVU272
+ 1036 0000 08B5     		push	{r3, lr}
+ 1037              	.LCFI16:
+ 1038              		.cfi_def_cfa_offset 8
+ 1039              		.cfi_offset 3, -8
+ 1040              		.cfi_offset 14, -4
+ 1041 0002 0A46     		mov	r2, r1
+ARM GAS  /tmp/ccEsZFFf.s 			page 30
+
+
+ 273:Drivers/lvgl/src/misc/lv_circle_buf.c ****     LV_ASSERT_NULL(data);
+ 1042              		.loc 1 273 31 is_stmt 1 view .LVU273
+ 274:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 1043              		.loc 1 274 25 view .LVU274
+ 276:Drivers/lvgl/src/misc/lv_circle_buf.c **** }
+ 1044              		.loc 1 276 5 view .LVU275
+ 276:Drivers/lvgl/src/misc/lv_circle_buf.c **** }
+ 1045              		.loc 1 276 12 is_stmt 0 view .LVU276
+ 1046 0004 0021     		movs	r1, #0
+ 1047              	.LVL81:
+ 276:Drivers/lvgl/src/misc/lv_circle_buf.c **** }
+ 1048              		.loc 1 276 12 view .LVU277
+ 1049 0006 FFF7FEFF 		bl	lv_circle_buf_peek_at
+ 1050              	.LVL82:
+ 277:Drivers/lvgl/src/misc/lv_circle_buf.c **** 
+ 1051              		.loc 1 277 1 view .LVU278
+ 1052 000a 08BD     		pop	{r3, pc}
+ 1053              		.cfi_endproc
+ 1054              	.LFE41:
+ 1056              		.text
+ 1057              	.Letext0:
+ 1058              		.file 3 "/usr/arm-none-eabi/include/machine/_default_types.h"
+ 1059              		.file 4 "/usr/arm-none-eabi/include/sys/_stdint.h"
+ 1060              		.file 5 "/usr/lib/gcc/arm-none-eabi/16.2.0/include/stddef.h"
+ 1061              		.file 6 "Drivers/lvgl/src/misc/../../include/lvgl/core/../lv_types.h"
+ 1062              		.file 7 "Drivers/lvgl/src/misc/lv_circle_buf_private.h"
+ 1063              		.file 8 "Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../stdlib/lv_string.h"
+ 1064              		.file 9 "Drivers/lvgl/src/misc/../../include/lvgl/core/../font/../draw/../debugging/../stdlib/lv_m
+ARM GAS  /tmp/ccEsZFFf.s 			page 31
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 lv_circle_buf.c
+     /tmp/ccEsZFFf.s:21     .text.circle_buf_prepare_empty:00000000 $t
+     /tmp/ccEsZFFf.s:26     .text.circle_buf_prepare_empty:00000000 circle_buf_prepare_empty
+     /tmp/ccEsZFFf.s:99     .text.lv_circle_buf_create:00000000 $t
+     /tmp/ccEsZFFf.s:105    .text.lv_circle_buf_create:00000000 lv_circle_buf_create
+     /tmp/ccEsZFFf.s:164    .text.lv_circle_buf_create_from_buf:00000000 $t
+     /tmp/ccEsZFFf.s:170    .text.lv_circle_buf_create_from_buf:00000000 lv_circle_buf_create_from_buf
+     /tmp/ccEsZFFf.s:233    .text.lv_circle_buf_create_from_array:00000000 $t
+     /tmp/ccEsZFFf.s:239    .text.lv_circle_buf_create_from_array:00000000 lv_circle_buf_create_from_array
+     /tmp/ccEsZFFf.s:309    .text.lv_circle_buf_resize:00000000 $t
+     /tmp/ccEsZFFf.s:315    .text.lv_circle_buf_resize:00000000 lv_circle_buf_resize
+     /tmp/ccEsZFFf.s:360    .text.lv_circle_buf_destroy:00000000 $t
+     /tmp/ccEsZFFf.s:366    .text.lv_circle_buf_destroy:00000000 lv_circle_buf_destroy
+     /tmp/ccEsZFFf.s:395    .text.lv_circle_buf_size:00000000 $t
+     /tmp/ccEsZFFf.s:401    .text.lv_circle_buf_size:00000000 lv_circle_buf_size
+     /tmp/ccEsZFFf.s:423    .text.lv_circle_buf_capacity:00000000 $t
+     /tmp/ccEsZFFf.s:429    .text.lv_circle_buf_capacity:00000000 lv_circle_buf_capacity
+     /tmp/ccEsZFFf.s:456    .text.lv_circle_buf_remain:00000000 $t
+     /tmp/ccEsZFFf.s:462    .text.lv_circle_buf_remain:00000000 lv_circle_buf_remain
+     /tmp/ccEsZFFf.s:497    .text.lv_circle_buf_is_empty:00000000 $t
+     /tmp/ccEsZFFf.s:503    .text.lv_circle_buf_is_empty:00000000 lv_circle_buf_is_empty
+     /tmp/ccEsZFFf.s:529    .text.lv_circle_buf_is_full:00000000 $t
+     /tmp/ccEsZFFf.s:535    .text.lv_circle_buf_is_full:00000000 lv_circle_buf_is_full
+     /tmp/ccEsZFFf.s:561    .text.lv_circle_buf_reset:00000000 $t
+     /tmp/ccEsZFFf.s:567    .text.lv_circle_buf_reset:00000000 lv_circle_buf_reset
+     /tmp/ccEsZFFf.s:589    .text.lv_circle_buf_head:00000000 $t
+     /tmp/ccEsZFFf.s:595    .text.lv_circle_buf_head:00000000 lv_circle_buf_head
+     /tmp/ccEsZFFf.s:633    .text.lv_circle_buf_tail:00000000 $t
+     /tmp/ccEsZFFf.s:639    .text.lv_circle_buf_tail:00000000 lv_circle_buf_tail
+     /tmp/ccEsZFFf.s:677    .text.lv_circle_buf_write:00000000 $t
+     /tmp/ccEsZFFf.s:683    .text.lv_circle_buf_write:00000000 lv_circle_buf_write
+     /tmp/ccEsZFFf.s:742    .text.lv_circle_buf_fill:00000000 $t
+     /tmp/ccEsZFFf.s:748    .text.lv_circle_buf_fill:00000000 lv_circle_buf_fill
+     /tmp/ccEsZFFf.s:834    .text.lv_circle_buf_skip:00000000 $t
+     /tmp/ccEsZFFf.s:840    .text.lv_circle_buf_skip:00000000 lv_circle_buf_skip
+     /tmp/ccEsZFFf.s:889    .text.lv_circle_buf_peek_at:00000000 $t
+     /tmp/ccEsZFFf.s:895    .text.lv_circle_buf_peek_at:00000000 lv_circle_buf_peek_at
+     /tmp/ccEsZFFf.s:959    .text.lv_circle_buf_read:00000000 $t
+     /tmp/ccEsZFFf.s:965    .text.lv_circle_buf_read:00000000 lv_circle_buf_read
+     /tmp/ccEsZFFf.s:1022   .text.lv_circle_buf_peek:00000000 $t
+     /tmp/ccEsZFFf.s:1028   .text.lv_circle_buf_peek:00000000 lv_circle_buf_peek
+
+UNDEFINED SYMBOLS
+lv_array_push_back
+lv_malloc
+lv_array_init
+lv_array_init_from_buf
+lv_array_resize
+lv_array_deinit
+lv_free
+lv_array_at
+lv_array_assign
+lv_memcpy

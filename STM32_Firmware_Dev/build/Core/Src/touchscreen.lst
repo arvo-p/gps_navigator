@@ -1,0 +1,1626 @@
+ARM GAS  /tmp/ccm0AGjk.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.arch armv7e-m
+   3              		.fpu fpv4-sp-d16
+   4              		.eabi_attribute 27, 1
+   5              		.eabi_attribute 28, 1
+   6              		.eabi_attribute 20, 1
+   7              		.eabi_attribute 21, 1
+   8              		.eabi_attribute 23, 3
+   9              		.eabi_attribute 24, 1
+  10              		.eabi_attribute 25, 1
+  11              		.eabi_attribute 26, 1
+  12              		.eabi_attribute 30, 1
+  13              		.eabi_attribute 34, 1
+  14              		.eabi_attribute 18, 4
+  15              		.file	"touchscreen.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.file 1 "Core/Src/touchscreen.c"
+  20              		.section	.text.Touchscreen_DrawBackground,"ax",%progbits
+  21              		.align	1
+  22              		.syntax unified
+  23              		.thumb
+  24              		.thumb_func
+  26              	Touchscreen_DrawBackground:
+  27              	.LVL0:
+  28              	.LFB139:
+   1:Core/Src/touchscreen.c **** /**
+   2:Core/Src/touchscreen.c ****   ******************************************************************************
+   3:Core/Src/touchscreen.c ****   * @file    BSP/Src/touchscreen.c 
+   4:Core/Src/touchscreen.c ****   * @author  MCD Application Team
+   5:Core/Src/touchscreen.c ****   * @brief   This example code shows how to use the touchscreen driver.
+   6:Core/Src/touchscreen.c ****   ******************************************************************************
+   7:Core/Src/touchscreen.c ****   * @attention
+   8:Core/Src/touchscreen.c ****   *
+   9:Core/Src/touchscreen.c ****   * Copyright (c) 2017 STMicroelectronics.
+  10:Core/Src/touchscreen.c ****   * All rights reserved.
+  11:Core/Src/touchscreen.c ****   *
+  12:Core/Src/touchscreen.c ****   * This software is licensed under terms that can be found in the LICENSE file
+  13:Core/Src/touchscreen.c ****   * in the root directory of this software component.
+  14:Core/Src/touchscreen.c ****   * If no LICENSE file comes with this software, it is provided AS-IS.
+  15:Core/Src/touchscreen.c ****   *
+  16:Core/Src/touchscreen.c ****   ******************************************************************************
+  17:Core/Src/touchscreen.c ****   */
+  18:Core/Src/touchscreen.c **** 
+  19:Core/Src/touchscreen.c **** /* Includes ------------------------------------------------------------------*/
+  20:Core/Src/touchscreen.c **** #include "main.h"
+  21:Core/Src/touchscreen.c **** 
+  22:Core/Src/touchscreen.c **** /** @addtogroup STM32F4xx_HAL_Examples
+  23:Core/Src/touchscreen.c ****   * @{
+  24:Core/Src/touchscreen.c ****   */
+  25:Core/Src/touchscreen.c **** 
+  26:Core/Src/touchscreen.c **** /** @addtogroup BSP
+  27:Core/Src/touchscreen.c ****   * @{
+  28:Core/Src/touchscreen.c ****   */ 
+  29:Core/Src/touchscreen.c **** 
+  30:Core/Src/touchscreen.c **** /* Private typedef -----------------------------------------------------------*/
+ARM GAS  /tmp/ccm0AGjk.s 			page 2
+
+
+  31:Core/Src/touchscreen.c **** /* Private define ------------------------------------------------------------*/
+  32:Core/Src/touchscreen.c **** #define  CIRCLE_RADIUS        30
+  33:Core/Src/touchscreen.c **** 
+  34:Core/Src/touchscreen.c **** /* Private macro -------------------------------------------------------------*/
+  35:Core/Src/touchscreen.c **** #define  CIRCLE_XPOS(i)       ((i * BSP_LCD_GetXSize()) / 5)
+  36:Core/Src/touchscreen.c **** #define  CIRCLE_YPOS(i)       (BSP_LCD_GetYSize() - CIRCLE_RADIUS - 60)
+  37:Core/Src/touchscreen.c **** 
+  38:Core/Src/touchscreen.c **** /* Private variables ---------------------------------------------------------*/
+  39:Core/Src/touchscreen.c **** static TS_StateTypeDef  TS_State;
+  40:Core/Src/touchscreen.c **** 
+  41:Core/Src/touchscreen.c **** /* Private function prototypes -----------------------------------------------*/
+  42:Core/Src/touchscreen.c **** static void Touchscreen_SetHint(void);
+  43:Core/Src/touchscreen.c **** static void Touchscreen_DrawBackground (uint8_t state);
+  44:Core/Src/touchscreen.c **** 
+  45:Core/Src/touchscreen.c **** /* Private functions ---------------------------------------------------------*/
+  46:Core/Src/touchscreen.c **** 
+  47:Core/Src/touchscreen.c **** /**
+  48:Core/Src/touchscreen.c ****   * @brief  Touchscreen Demo
+  49:Core/Src/touchscreen.c ****   * @param  None
+  50:Core/Src/touchscreen.c ****   * @retval None
+  51:Core/Src/touchscreen.c ****   */
+  52:Core/Src/touchscreen.c **** void Touchscreen_demo(void)
+  53:Core/Src/touchscreen.c **** { 
+  54:Core/Src/touchscreen.c ****   uint8_t status = 0;
+  55:Core/Src/touchscreen.c ****   uint16_t x,y;
+  56:Core/Src/touchscreen.c ****   uint8_t state = 0;
+  57:Core/Src/touchscreen.c ****   
+  58:Core/Src/touchscreen.c ****   if(IsCalibrationDone() == 0)
+  59:Core/Src/touchscreen.c ****   {
+  60:Core/Src/touchscreen.c ****     Touchscreen_Calibration();
+  61:Core/Src/touchscreen.c ****   }
+  62:Core/Src/touchscreen.c ****   
+  63:Core/Src/touchscreen.c ****   Touchscreen_SetHint();
+  64:Core/Src/touchscreen.c ****   
+  65:Core/Src/touchscreen.c ****   status = BSP_TS_Init(BSP_LCD_GetXSize(), BSP_LCD_GetYSize());
+  66:Core/Src/touchscreen.c ****   
+  67:Core/Src/touchscreen.c ****   if (status != TS_OK)
+  68:Core/Src/touchscreen.c ****   {
+  69:Core/Src/touchscreen.c ****     BSP_LCD_SetBackColor(LCD_COLOR_WHITE); 
+  70:Core/Src/touchscreen.c ****     BSP_LCD_SetTextColor(LCD_COLOR_RED);
+  71:Core/Src/touchscreen.c ****     BSP_LCD_DisplayStringAt(0, BSP_LCD_GetYSize()- 95, (uint8_t*)"ERROR", CENTER_MODE);
+  72:Core/Src/touchscreen.c ****     BSP_LCD_DisplayStringAt(0, BSP_LCD_GetYSize()- 80, (uint8_t*)"Touchscreen cannot be initialized
+  73:Core/Src/touchscreen.c ****   }
+  74:Core/Src/touchscreen.c ****   else
+  75:Core/Src/touchscreen.c ****   {
+  76:Core/Src/touchscreen.c ****     Touchscreen_DrawBackground(state);
+  77:Core/Src/touchscreen.c ****   }
+  78:Core/Src/touchscreen.c ****   
+  79:Core/Src/touchscreen.c ****   while (1)
+  80:Core/Src/touchscreen.c ****   {
+  81:Core/Src/touchscreen.c ****     if (status == TS_OK)
+  82:Core/Src/touchscreen.c ****     {
+  83:Core/Src/touchscreen.c ****       BSP_TS_GetState(&TS_State);
+  84:Core/Src/touchscreen.c ****       
+  85:Core/Src/touchscreen.c ****       if (TS_State.TouchDetected) {
+  86:Core/Src/touchscreen.c ****         x = Calibration_GetX(TS_State.X);
+  87:Core/Src/touchscreen.c ****         y = Calibration_GetY(TS_State.Y);
+ARM GAS  /tmp/ccm0AGjk.s 			page 3
+
+
+  88:Core/Src/touchscreen.c ****         
+  89:Core/Src/touchscreen.c ****         if((TS_State.TouchDetected) && 
+  90:Core/Src/touchscreen.c ****            (y > (CIRCLE_YPOS(1) - CIRCLE_RADIUS))&&
+  91:Core/Src/touchscreen.c ****              (y < (CIRCLE_YPOS(1) + CIRCLE_RADIUS)))
+  92:Core/Src/touchscreen.c ****         {
+  93:Core/Src/touchscreen.c ****           
+  94:Core/Src/touchscreen.c ****           if((x > (CIRCLE_XPOS(1) - CIRCLE_RADIUS))&&
+  95:Core/Src/touchscreen.c ****              (x < (CIRCLE_XPOS(1) + CIRCLE_RADIUS)))
+  96:Core/Src/touchscreen.c ****           {
+  97:Core/Src/touchscreen.c ****             if((state & 1) == 0)
+  98:Core/Src/touchscreen.c ****             {
+  99:Core/Src/touchscreen.c ****               Touchscreen_DrawBackground(1);
+ 100:Core/Src/touchscreen.c ****               BSP_LCD_SetTextColor(LCD_COLOR_BLUE); 
+ 101:Core/Src/touchscreen.c ****               BSP_LCD_FillCircle(CIRCLE_XPOS(1), CIRCLE_YPOS(1), CIRCLE_RADIUS);
+ 102:Core/Src/touchscreen.c ****               state |= 1;
+ 103:Core/Src/touchscreen.c ****             }
+ 104:Core/Src/touchscreen.c ****           }
+ 105:Core/Src/touchscreen.c ****           if((x > (CIRCLE_XPOS(2) - CIRCLE_RADIUS))&&
+ 106:Core/Src/touchscreen.c ****              (x < (CIRCLE_XPOS(2) + CIRCLE_RADIUS)))
+ 107:Core/Src/touchscreen.c ****           {
+ 108:Core/Src/touchscreen.c ****             if((state & 2) == 0)
+ 109:Core/Src/touchscreen.c ****             {          
+ 110:Core/Src/touchscreen.c ****               Touchscreen_DrawBackground(2);
+ 111:Core/Src/touchscreen.c ****               BSP_LCD_SetTextColor(LCD_COLOR_RED); 
+ 112:Core/Src/touchscreen.c ****               BSP_LCD_FillCircle(CIRCLE_XPOS(2), CIRCLE_YPOS(2), CIRCLE_RADIUS);
+ 113:Core/Src/touchscreen.c ****               state |= 2;
+ 114:Core/Src/touchscreen.c ****             }          
+ 115:Core/Src/touchscreen.c ****           }
+ 116:Core/Src/touchscreen.c ****           
+ 117:Core/Src/touchscreen.c ****           if((x > (CIRCLE_XPOS(3) - CIRCLE_RADIUS))&&
+ 118:Core/Src/touchscreen.c ****              (x < (CIRCLE_XPOS(3) + CIRCLE_RADIUS)))
+ 119:Core/Src/touchscreen.c ****           {
+ 120:Core/Src/touchscreen.c ****             if((state & 4) == 0)
+ 121:Core/Src/touchscreen.c ****             {           
+ 122:Core/Src/touchscreen.c ****               Touchscreen_DrawBackground(4);
+ 123:Core/Src/touchscreen.c ****               BSP_LCD_SetTextColor(LCD_COLOR_YELLOW); 
+ 124:Core/Src/touchscreen.c ****               BSP_LCD_FillCircle(CIRCLE_XPOS(3), CIRCLE_YPOS(3), CIRCLE_RADIUS);
+ 125:Core/Src/touchscreen.c ****               state |= 4;
+ 126:Core/Src/touchscreen.c ****             }            
+ 127:Core/Src/touchscreen.c ****           }
+ 128:Core/Src/touchscreen.c ****           
+ 129:Core/Src/touchscreen.c ****           if((x > (CIRCLE_XPOS(4) - CIRCLE_RADIUS))&&
+ 130:Core/Src/touchscreen.c ****              (x < (CIRCLE_XPOS(4) + CIRCLE_RADIUS)))
+ 131:Core/Src/touchscreen.c ****           {
+ 132:Core/Src/touchscreen.c ****             if((state & 8) == 0)
+ 133:Core/Src/touchscreen.c ****             {           
+ 134:Core/Src/touchscreen.c ****               Touchscreen_DrawBackground(8);
+ 135:Core/Src/touchscreen.c ****               BSP_LCD_SetTextColor(LCD_COLOR_GREEN); 
+ 136:Core/Src/touchscreen.c ****               BSP_LCD_FillCircle(CIRCLE_XPOS(4), CIRCLE_YPOS(3), CIRCLE_RADIUS);
+ 137:Core/Src/touchscreen.c ****               state |= 8;
+ 138:Core/Src/touchscreen.c ****             }           
+ 139:Core/Src/touchscreen.c ****           }  
+ 140:Core/Src/touchscreen.c ****           if (state != 0x0F)
+ 141:Core/Src/touchscreen.c ****           {
+ 142:Core/Src/touchscreen.c ****             TS_State.TouchDetected = 0;
+ 143:Core/Src/touchscreen.c ****           }
+ 144:Core/Src/touchscreen.c ****           else {
+ARM GAS  /tmp/ccm0AGjk.s 			page 4
+
+
+ 145:Core/Src/touchscreen.c ****             if(CheckForUserInput() > 0)
+ 146:Core/Src/touchscreen.c ****             {
+ 147:Core/Src/touchscreen.c ****               return;
+ 148:Core/Src/touchscreen.c ****             }
+ 149:Core/Src/touchscreen.c ****           }
+ 150:Core/Src/touchscreen.c ****         }   
+ 151:Core/Src/touchscreen.c ****       }
+ 152:Core/Src/touchscreen.c ****     }
+ 153:Core/Src/touchscreen.c ****     
+ 154:Core/Src/touchscreen.c ****     HAL_Delay(100);
+ 155:Core/Src/touchscreen.c ****   }
+ 156:Core/Src/touchscreen.c **** }
+ 157:Core/Src/touchscreen.c **** 
+ 158:Core/Src/touchscreen.c **** /**
+ 159:Core/Src/touchscreen.c ****   * @brief  Display TS Demo Hint
+ 160:Core/Src/touchscreen.c ****   * @param  None
+ 161:Core/Src/touchscreen.c ****   * @retval None
+ 162:Core/Src/touchscreen.c ****   */
+ 163:Core/Src/touchscreen.c **** static void Touchscreen_SetHint(void)
+ 164:Core/Src/touchscreen.c **** {
+ 165:Core/Src/touchscreen.c ****   /* Clear the LCD */ 
+ 166:Core/Src/touchscreen.c ****   BSP_LCD_Clear(LCD_COLOR_WHITE);
+ 167:Core/Src/touchscreen.c ****   
+ 168:Core/Src/touchscreen.c ****   /* Set Touchscreen Demo description */
+ 169:Core/Src/touchscreen.c ****   BSP_LCD_SetTextColor(LCD_COLOR_BLUE);
+ 170:Core/Src/touchscreen.c ****   BSP_LCD_FillRect(0, 0, BSP_LCD_GetXSize(), 80);
+ 171:Core/Src/touchscreen.c ****   BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
+ 172:Core/Src/touchscreen.c ****   BSP_LCD_SetBackColor(LCD_COLOR_BLUE); 
+ 173:Core/Src/touchscreen.c ****   BSP_LCD_SetFont(&Font24);
+ 174:Core/Src/touchscreen.c ****   BSP_LCD_DisplayStringAt(0, 0, (uint8_t*)"Touchscreen", CENTER_MODE);
+ 175:Core/Src/touchscreen.c ****   BSP_LCD_SetFont(&Font12);
+ 176:Core/Src/touchscreen.c ****   BSP_LCD_DisplayStringAt(0, 30, (uint8_t*)"Please use the Touchscreen to", CENTER_MODE);
+ 177:Core/Src/touchscreen.c ****   BSP_LCD_DisplayStringAt(0, 45, (uint8_t*)"activate the colored circle", CENTER_MODE);
+ 178:Core/Src/touchscreen.c ****   BSP_LCD_DisplayStringAt(0, 60, (uint8_t*)"inside the rectangle", CENTER_MODE);
+ 179:Core/Src/touchscreen.c ****   
+ 180:Core/Src/touchscreen.c ****   /* Set the LCD Text Color */
+ 181:Core/Src/touchscreen.c ****   BSP_LCD_SetTextColor(LCD_COLOR_BLUE);  
+ 182:Core/Src/touchscreen.c ****   BSP_LCD_DrawRect(10, 90, BSP_LCD_GetXSize() - 20, BSP_LCD_GetYSize()- 100);
+ 183:Core/Src/touchscreen.c ****   BSP_LCD_DrawRect(11, 91, BSP_LCD_GetXSize() - 22, BSP_LCD_GetYSize()- 102); 
+ 184:Core/Src/touchscreen.c **** }
+ 185:Core/Src/touchscreen.c **** 
+ 186:Core/Src/touchscreen.c **** /**
+ 187:Core/Src/touchscreen.c ****   * @brief  Draw Touchscreen Background
+ 188:Core/Src/touchscreen.c ****   * @param  state: touch zone state
+ 189:Core/Src/touchscreen.c ****   * @retval None
+ 190:Core/Src/touchscreen.c ****   */
+ 191:Core/Src/touchscreen.c **** static void Touchscreen_DrawBackground (uint8_t state)
+ 192:Core/Src/touchscreen.c **** {
+  29              		.loc 1 192 1 view -0
+  30              		.cfi_startproc
+  31              		@ args = 0, pretend = 0, frame = 0
+  32              		@ frame_needed = 0, uses_anonymous_args = 0
+  33              		.loc 1 192 1 is_stmt 0 view .LVU1
+  34 0000 38B5     		push	{r3, r4, r5, lr}
+  35              	.LCFI0:
+  36              		.cfi_def_cfa_offset 16
+  37              		.cfi_offset 3, -16
+ARM GAS  /tmp/ccm0AGjk.s 			page 5
+
+
+  38              		.cfi_offset 4, -12
+  39              		.cfi_offset 5, -8
+  40              		.cfi_offset 14, -4
+ 193:Core/Src/touchscreen.c ****   switch(state)
+  41              		.loc 1 193 3 is_stmt 1 view .LVU2
+  42 0002 0828     		cmp	r0, #8
+  43 0004 00F23481 		bhi	.L1
+  44 0008 DFE810F0 		tbh	[pc, r0, lsl #1]
+  45              	.L4:
+  46 000c 0900     		.2byte	(.L8-.L4)/2
+  47 000e 9500     		.2byte	(.L7-.L4)/2
+  48 0010 BA00     		.2byte	(.L6-.L4)/2
+  49 0012 3201     		.2byte	(.L1-.L4)/2
+  50 0014 E100     		.2byte	(.L5-.L4)/2
+  51 0016 3201     		.2byte	(.L1-.L4)/2
+  52 0018 3201     		.2byte	(.L1-.L4)/2
+  53 001a 3201     		.2byte	(.L1-.L4)/2
+  54 001c 0B01     		.2byte	(.L3-.L4)/2
+  55              		.p2align 1
+  56              	.L8:
+ 194:Core/Src/touchscreen.c ****   {
+ 195:Core/Src/touchscreen.c ****   case 0:
+ 196:Core/Src/touchscreen.c ****     BSP_LCD_SetTextColor(LCD_COLOR_BLUE); 
+  57              		.loc 1 196 5 view .LVU3
+  58 001e 9548     		ldr	r0, .L11
+  59              	.LVL1:
+  60              		.loc 1 196 5 is_stmt 0 view .LVU4
+  61 0020 FFF7FEFF 		bl	BSP_LCD_SetTextColor
+  62              	.LVL2:
+ 197:Core/Src/touchscreen.c ****     BSP_LCD_FillCircle(CIRCLE_XPOS(1), CIRCLE_YPOS(1), CIRCLE_RADIUS);
+  63              		.loc 1 197 5 is_stmt 1 view .LVU5
+  64              		.loc 1 197 24 is_stmt 0 view .LVU6
+  65 0024 FFF7FEFF 		bl	BSP_LCD_GetXSize
+  66              	.LVL3:
+  67              		.loc 1 197 24 discriminator 1 view .LVU7
+  68 0028 934C     		ldr	r4, .L11+4
+  69 002a A4FB0030 		umull	r3, r0, r4, r0
+  70 002e 8508     		lsrs	r5, r0, #2
+  71              		.loc 1 197 40 discriminator 1 view .LVU8
+  72 0030 FFF7FEFF 		bl	BSP_LCD_GetYSize
+  73              	.LVL4:
+  74              		.loc 1 197 5 discriminator 2 view .LVU9
+  75 0034 A0F15A01 		sub	r1, r0, #90
+  76 0038 1E22     		movs	r2, #30
+  77 003a 89B2     		uxth	r1, r1
+  78 003c A8B2     		uxth	r0, r5
+  79 003e FFF7FEFF 		bl	BSP_LCD_FillCircle
+  80              	.LVL5:
+ 198:Core/Src/touchscreen.c ****     
+ 199:Core/Src/touchscreen.c ****     BSP_LCD_SetTextColor(LCD_COLOR_RED); 
+  81              		.loc 1 199 5 is_stmt 1 view .LVU10
+  82 0042 8E48     		ldr	r0, .L11+8
+  83 0044 FFF7FEFF 		bl	BSP_LCD_SetTextColor
+  84              	.LVL6:
+ 200:Core/Src/touchscreen.c ****     BSP_LCD_FillCircle(CIRCLE_XPOS(2), CIRCLE_YPOS(2), CIRCLE_RADIUS);
+  85              		.loc 1 200 5 view .LVU11
+  86              		.loc 1 200 24 is_stmt 0 view .LVU12
+ARM GAS  /tmp/ccm0AGjk.s 			page 6
+
+
+  87 0048 FFF7FEFF 		bl	BSP_LCD_GetXSize
+  88              	.LVL7:
+  89              		.loc 1 200 24 discriminator 1 view .LVU13
+  90 004c 4000     		lsls	r0, r0, #1
+  91 004e A4FB0030 		umull	r3, r0, r4, r0
+  92 0052 8508     		lsrs	r5, r0, #2
+  93              		.loc 1 200 40 discriminator 1 view .LVU14
+  94 0054 FFF7FEFF 		bl	BSP_LCD_GetYSize
+  95              	.LVL8:
+  96              		.loc 1 200 5 discriminator 2 view .LVU15
+  97 0058 A0F15A01 		sub	r1, r0, #90
+  98 005c 1E22     		movs	r2, #30
+  99 005e 89B2     		uxth	r1, r1
+ 100 0060 A8B2     		uxth	r0, r5
+ 101 0062 FFF7FEFF 		bl	BSP_LCD_FillCircle
+ 102              	.LVL9:
+ 201:Core/Src/touchscreen.c **** 
+ 202:Core/Src/touchscreen.c ****     BSP_LCD_SetTextColor(LCD_COLOR_YELLOW); 
+ 103              		.loc 1 202 5 is_stmt 1 view .LVU16
+ 104 0066 6FF0FF00 		mvn	r0, #255
+ 105 006a FFF7FEFF 		bl	BSP_LCD_SetTextColor
+ 106              	.LVL10:
+ 203:Core/Src/touchscreen.c ****     BSP_LCD_FillCircle(CIRCLE_XPOS(3), CIRCLE_YPOS(3), CIRCLE_RADIUS);
+ 107              		.loc 1 203 5 view .LVU17
+ 108              		.loc 1 203 24 is_stmt 0 view .LVU18
+ 109 006e FFF7FEFF 		bl	BSP_LCD_GetXSize
+ 110              	.LVL11:
+ 111              		.loc 1 203 24 discriminator 1 view .LVU19
+ 112 0072 00EB4000 		add	r0, r0, r0, lsl #1
+ 113 0076 A4FB0030 		umull	r3, r0, r4, r0
+ 114 007a 8508     		lsrs	r5, r0, #2
+ 115              		.loc 1 203 40 discriminator 1 view .LVU20
+ 116 007c FFF7FEFF 		bl	BSP_LCD_GetYSize
+ 117              	.LVL12:
+ 118              		.loc 1 203 5 discriminator 2 view .LVU21
+ 119 0080 A0F15A01 		sub	r1, r0, #90
+ 120 0084 1E22     		movs	r2, #30
+ 121 0086 89B2     		uxth	r1, r1
+ 122 0088 A8B2     		uxth	r0, r5
+ 123 008a FFF7FEFF 		bl	BSP_LCD_FillCircle
+ 124              	.LVL13:
+ 204:Core/Src/touchscreen.c **** 
+ 205:Core/Src/touchscreen.c ****     BSP_LCD_SetTextColor(LCD_COLOR_GREEN); 
+ 125              		.loc 1 205 5 is_stmt 1 view .LVU22
+ 126 008e 4FF0FF20 		mov	r0, #-16711936
+ 127 0092 FFF7FEFF 		bl	BSP_LCD_SetTextColor
+ 128              	.LVL14:
+ 206:Core/Src/touchscreen.c ****     BSP_LCD_FillCircle(CIRCLE_XPOS(4), CIRCLE_YPOS(3), CIRCLE_RADIUS);
+ 129              		.loc 1 206 5 view .LVU23
+ 130              		.loc 1 206 24 is_stmt 0 view .LVU24
+ 131 0096 FFF7FEFF 		bl	BSP_LCD_GetXSize
+ 132              	.LVL15:
+ 133              		.loc 1 206 24 discriminator 1 view .LVU25
+ 134 009a 8000     		lsls	r0, r0, #2
+ 135 009c A4FB0030 		umull	r3, r0, r4, r0
+ 136 00a0 8508     		lsrs	r5, r0, #2
+ 137              		.loc 1 206 40 discriminator 1 view .LVU26
+ARM GAS  /tmp/ccm0AGjk.s 			page 7
+
+
+ 138 00a2 FFF7FEFF 		bl	BSP_LCD_GetYSize
+ 139              	.LVL16:
+ 140              		.loc 1 206 5 discriminator 2 view .LVU27
+ 141 00a6 A0F15A01 		sub	r1, r0, #90
+ 142 00aa 1E22     		movs	r2, #30
+ 143 00ac 89B2     		uxth	r1, r1
+ 144 00ae A8B2     		uxth	r0, r5
+ 145 00b0 FFF7FEFF 		bl	BSP_LCD_FillCircle
+ 146              	.LVL17:
+ 207:Core/Src/touchscreen.c ****     
+ 208:Core/Src/touchscreen.c ****     BSP_LCD_SetTextColor(LCD_COLOR_WHITE); 
+ 147              		.loc 1 208 5 is_stmt 1 view .LVU28
+ 148 00b4 4FF0FF30 		mov	r0, #-1
+ 149 00b8 FFF7FEFF 		bl	BSP_LCD_SetTextColor
+ 150              	.LVL18:
+ 209:Core/Src/touchscreen.c ****     BSP_LCD_FillCircle(CIRCLE_XPOS(1), CIRCLE_YPOS(1), CIRCLE_RADIUS - 2);        
+ 151              		.loc 1 209 5 view .LVU29
+ 152              		.loc 1 209 24 is_stmt 0 view .LVU30
+ 153 00bc FFF7FEFF 		bl	BSP_LCD_GetXSize
+ 154              	.LVL19:
+ 155              		.loc 1 209 24 discriminator 1 view .LVU31
+ 156 00c0 A4FB0030 		umull	r3, r0, r4, r0
+ 157 00c4 8508     		lsrs	r5, r0, #2
+ 158              		.loc 1 209 40 discriminator 1 view .LVU32
+ 159 00c6 FFF7FEFF 		bl	BSP_LCD_GetYSize
+ 160              	.LVL20:
+ 161              		.loc 1 209 5 discriminator 2 view .LVU33
+ 162 00ca A0F15A01 		sub	r1, r0, #90
+ 163 00ce 1C22     		movs	r2, #28
+ 164 00d0 89B2     		uxth	r1, r1
+ 165 00d2 A8B2     		uxth	r0, r5
+ 166 00d4 FFF7FEFF 		bl	BSP_LCD_FillCircle
+ 167              	.LVL21:
+ 210:Core/Src/touchscreen.c ****     BSP_LCD_FillCircle(CIRCLE_XPOS(2), CIRCLE_YPOS(2), CIRCLE_RADIUS - 2);
+ 168              		.loc 1 210 5 is_stmt 1 view .LVU34
+ 169              		.loc 1 210 24 is_stmt 0 view .LVU35
+ 170 00d8 FFF7FEFF 		bl	BSP_LCD_GetXSize
+ 171              	.LVL22:
+ 172              		.loc 1 210 24 discriminator 1 view .LVU36
+ 173 00dc 4000     		lsls	r0, r0, #1
+ 174 00de A4FB0030 		umull	r3, r0, r4, r0
+ 175 00e2 8508     		lsrs	r5, r0, #2
+ 176              		.loc 1 210 40 discriminator 1 view .LVU37
+ 177 00e4 FFF7FEFF 		bl	BSP_LCD_GetYSize
+ 178              	.LVL23:
+ 179              		.loc 1 210 5 discriminator 2 view .LVU38
+ 180 00e8 A0F15A01 		sub	r1, r0, #90
+ 181 00ec 1C22     		movs	r2, #28
+ 182 00ee 89B2     		uxth	r1, r1
+ 183 00f0 A8B2     		uxth	r0, r5
+ 184 00f2 FFF7FEFF 		bl	BSP_LCD_FillCircle
+ 185              	.LVL24:
+ 211:Core/Src/touchscreen.c ****     BSP_LCD_FillCircle(CIRCLE_XPOS(3), CIRCLE_YPOS(3), CIRCLE_RADIUS - 2);
+ 186              		.loc 1 211 5 is_stmt 1 view .LVU39
+ 187              		.loc 1 211 24 is_stmt 0 view .LVU40
+ 188 00f6 FFF7FEFF 		bl	BSP_LCD_GetXSize
+ 189              	.LVL25:
+ARM GAS  /tmp/ccm0AGjk.s 			page 8
+
+
+ 190              		.loc 1 211 24 discriminator 1 view .LVU41
+ 191 00fa 00EB4000 		add	r0, r0, r0, lsl #1
+ 192 00fe A4FB0030 		umull	r3, r0, r4, r0
+ 193 0102 8508     		lsrs	r5, r0, #2
+ 194              		.loc 1 211 40 discriminator 1 view .LVU42
+ 195 0104 FFF7FEFF 		bl	BSP_LCD_GetYSize
+ 196              	.LVL26:
+ 197              		.loc 1 211 5 discriminator 2 view .LVU43
+ 198 0108 A0F15A01 		sub	r1, r0, #90
+ 199 010c 1C22     		movs	r2, #28
+ 200 010e 89B2     		uxth	r1, r1
+ 201 0110 A8B2     		uxth	r0, r5
+ 202 0112 FFF7FEFF 		bl	BSP_LCD_FillCircle
+ 203              	.LVL27:
+ 212:Core/Src/touchscreen.c ****     BSP_LCD_FillCircle(CIRCLE_XPOS(4), CIRCLE_YPOS(3), CIRCLE_RADIUS - 2); 
+ 204              		.loc 1 212 5 is_stmt 1 view .LVU44
+ 205              		.loc 1 212 24 is_stmt 0 view .LVU45
+ 206 0116 FFF7FEFF 		bl	BSP_LCD_GetXSize
+ 207              	.LVL28:
+ 208              		.loc 1 212 24 discriminator 1 view .LVU46
+ 209 011a 8000     		lsls	r0, r0, #2
+ 210 011c A4FB0030 		umull	r3, r0, r4, r0
+ 211 0120 8408     		lsrs	r4, r0, #2
+ 212              		.loc 1 212 40 discriminator 1 view .LVU47
+ 213 0122 FFF7FEFF 		bl	BSP_LCD_GetYSize
+ 214              	.LVL29:
+ 215              		.loc 1 212 5 discriminator 2 view .LVU48
+ 216 0126 A0F15A01 		sub	r1, r0, #90
+ 217 012a 1C22     		movs	r2, #28
+ 218 012c 89B2     		uxth	r1, r1
+ 219 012e A0B2     		uxth	r0, r4
+ 220 0130 FFF7FEFF 		bl	BSP_LCD_FillCircle
+ 221              	.LVL30:
+ 213:Core/Src/touchscreen.c ****     break;
+ 222              		.loc 1 213 5 is_stmt 1 view .LVU49
+ 223 0134 9CE0     		b	.L1
+ 224              	.LVL31:
+ 225              	.L7:
+ 214:Core/Src/touchscreen.c ****     
+ 215:Core/Src/touchscreen.c ****   case 1:
+ 216:Core/Src/touchscreen.c ****     BSP_LCD_SetTextColor(LCD_COLOR_BLUE); 
+ 226              		.loc 1 216 5 view .LVU50
+ 227 0136 4F48     		ldr	r0, .L11
+ 228              	.LVL32:
+ 229              		.loc 1 216 5 is_stmt 0 view .LVU51
+ 230 0138 FFF7FEFF 		bl	BSP_LCD_SetTextColor
+ 231              	.LVL33:
+ 217:Core/Src/touchscreen.c ****     BSP_LCD_FillCircle(CIRCLE_XPOS(1), CIRCLE_YPOS(1), CIRCLE_RADIUS);
+ 232              		.loc 1 217 5 is_stmt 1 view .LVU52
+ 233              		.loc 1 217 24 is_stmt 0 view .LVU53
+ 234 013c FFF7FEFF 		bl	BSP_LCD_GetXSize
+ 235              	.LVL34:
+ 236              		.loc 1 217 24 discriminator 1 view .LVU54
+ 237 0140 4D4C     		ldr	r4, .L11+4
+ 238 0142 A4FB0030 		umull	r3, r0, r4, r0
+ 239 0146 8508     		lsrs	r5, r0, #2
+ 240              		.loc 1 217 40 discriminator 1 view .LVU55
+ARM GAS  /tmp/ccm0AGjk.s 			page 9
+
+
+ 241 0148 FFF7FEFF 		bl	BSP_LCD_GetYSize
+ 242              	.LVL35:
+ 243              		.loc 1 217 5 discriminator 2 view .LVU56
+ 244 014c A0F15A01 		sub	r1, r0, #90
+ 245 0150 1E22     		movs	r2, #30
+ 246 0152 89B2     		uxth	r1, r1
+ 247 0154 A8B2     		uxth	r0, r5
+ 248 0156 FFF7FEFF 		bl	BSP_LCD_FillCircle
+ 249              	.LVL36:
+ 218:Core/Src/touchscreen.c ****     BSP_LCD_SetTextColor(LCD_COLOR_WHITE); 
+ 250              		.loc 1 218 5 is_stmt 1 view .LVU57
+ 251 015a 4FF0FF30 		mov	r0, #-1
+ 252 015e FFF7FEFF 		bl	BSP_LCD_SetTextColor
+ 253              	.LVL37:
+ 219:Core/Src/touchscreen.c ****     BSP_LCD_FillCircle(CIRCLE_XPOS(1), CIRCLE_YPOS(1), CIRCLE_RADIUS - 2);        
+ 254              		.loc 1 219 5 view .LVU58
+ 255              		.loc 1 219 24 is_stmt 0 view .LVU59
+ 256 0162 FFF7FEFF 		bl	BSP_LCD_GetXSize
+ 257              	.LVL38:
+ 258              		.loc 1 219 24 discriminator 1 view .LVU60
+ 259 0166 A4FB0030 		umull	r3, r0, r4, r0
+ 260 016a 8408     		lsrs	r4, r0, #2
+ 261              		.loc 1 219 40 discriminator 1 view .LVU61
+ 262 016c FFF7FEFF 		bl	BSP_LCD_GetYSize
+ 263              	.LVL39:
+ 264              		.loc 1 219 5 discriminator 2 view .LVU62
+ 265 0170 A0F15A01 		sub	r1, r0, #90
+ 266 0174 1C22     		movs	r2, #28
+ 267 0176 89B2     		uxth	r1, r1
+ 268 0178 A0B2     		uxth	r0, r4
+ 269 017a FFF7FEFF 		bl	BSP_LCD_FillCircle
+ 270              	.LVL40:
+ 220:Core/Src/touchscreen.c ****     break;
+ 271              		.loc 1 220 5 is_stmt 1 view .LVU63
+ 272 017e 77E0     		b	.L1
+ 273              	.LVL41:
+ 274              	.L6:
+ 221:Core/Src/touchscreen.c ****     
+ 222:Core/Src/touchscreen.c ****   case 2:
+ 223:Core/Src/touchscreen.c ****     BSP_LCD_SetTextColor(LCD_COLOR_RED); 
+ 275              		.loc 1 223 5 view .LVU64
+ 276 0180 3E48     		ldr	r0, .L11+8
+ 277              	.LVL42:
+ 278              		.loc 1 223 5 is_stmt 0 view .LVU65
+ 279 0182 FFF7FEFF 		bl	BSP_LCD_SetTextColor
+ 280              	.LVL43:
+ 224:Core/Src/touchscreen.c ****     BSP_LCD_FillCircle(CIRCLE_XPOS(2), CIRCLE_YPOS(2), CIRCLE_RADIUS);
+ 281              		.loc 1 224 5 is_stmt 1 view .LVU66
+ 282              		.loc 1 224 24 is_stmt 0 view .LVU67
+ 283 0186 FFF7FEFF 		bl	BSP_LCD_GetXSize
+ 284              	.LVL44:
+ 285              		.loc 1 224 24 discriminator 1 view .LVU68
+ 286 018a 4000     		lsls	r0, r0, #1
+ 287 018c 3A4C     		ldr	r4, .L11+4
+ 288 018e A4FB0030 		umull	r3, r0, r4, r0
+ 289 0192 8508     		lsrs	r5, r0, #2
+ 290              		.loc 1 224 40 discriminator 1 view .LVU69
+ARM GAS  /tmp/ccm0AGjk.s 			page 10
+
+
+ 291 0194 FFF7FEFF 		bl	BSP_LCD_GetYSize
+ 292              	.LVL45:
+ 293              		.loc 1 224 5 discriminator 2 view .LVU70
+ 294 0198 A0F15A01 		sub	r1, r0, #90
+ 295 019c 1E22     		movs	r2, #30
+ 296 019e 89B2     		uxth	r1, r1
+ 297 01a0 A8B2     		uxth	r0, r5
+ 298 01a2 FFF7FEFF 		bl	BSP_LCD_FillCircle
+ 299              	.LVL46:
+ 225:Core/Src/touchscreen.c ****     BSP_LCD_SetTextColor(LCD_COLOR_WHITE); 
+ 300              		.loc 1 225 5 is_stmt 1 view .LVU71
+ 301 01a6 4FF0FF30 		mov	r0, #-1
+ 302 01aa FFF7FEFF 		bl	BSP_LCD_SetTextColor
+ 303              	.LVL47:
+ 226:Core/Src/touchscreen.c ****     BSP_LCD_FillCircle(CIRCLE_XPOS(2), CIRCLE_YPOS(2), CIRCLE_RADIUS - 2); 
+ 304              		.loc 1 226 5 view .LVU72
+ 305              		.loc 1 226 24 is_stmt 0 view .LVU73
+ 306 01ae FFF7FEFF 		bl	BSP_LCD_GetXSize
+ 307              	.LVL48:
+ 308              		.loc 1 226 24 discriminator 1 view .LVU74
+ 309 01b2 4000     		lsls	r0, r0, #1
+ 310 01b4 A4FB0030 		umull	r3, r0, r4, r0
+ 311 01b8 8408     		lsrs	r4, r0, #2
+ 312              		.loc 1 226 40 discriminator 1 view .LVU75
+ 313 01ba FFF7FEFF 		bl	BSP_LCD_GetYSize
+ 314              	.LVL49:
+ 315              		.loc 1 226 5 discriminator 2 view .LVU76
+ 316 01be A0F15A01 		sub	r1, r0, #90
+ 317 01c2 1C22     		movs	r2, #28
+ 318 01c4 89B2     		uxth	r1, r1
+ 319 01c6 A0B2     		uxth	r0, r4
+ 320 01c8 FFF7FEFF 		bl	BSP_LCD_FillCircle
+ 321              	.LVL50:
+ 227:Core/Src/touchscreen.c ****     break;
+ 322              		.loc 1 227 5 is_stmt 1 view .LVU77
+ 323 01cc 50E0     		b	.L1
+ 324              	.LVL51:
+ 325              	.L5:
+ 228:Core/Src/touchscreen.c ****     
+ 229:Core/Src/touchscreen.c ****   case 4:
+ 230:Core/Src/touchscreen.c ****     BSP_LCD_SetTextColor(LCD_COLOR_YELLOW); 
+ 326              		.loc 1 230 5 view .LVU78
+ 327 01ce 6FF0FF00 		mvn	r0, #255
+ 328              	.LVL52:
+ 329              		.loc 1 230 5 is_stmt 0 view .LVU79
+ 330 01d2 FFF7FEFF 		bl	BSP_LCD_SetTextColor
+ 331              	.LVL53:
+ 231:Core/Src/touchscreen.c ****     BSP_LCD_FillCircle(CIRCLE_XPOS(3), CIRCLE_YPOS(3), CIRCLE_RADIUS);
+ 332              		.loc 1 231 5 is_stmt 1 view .LVU80
+ 333              		.loc 1 231 24 is_stmt 0 view .LVU81
+ 334 01d6 FFF7FEFF 		bl	BSP_LCD_GetXSize
+ 335              	.LVL54:
+ 336              		.loc 1 231 24 discriminator 1 view .LVU82
+ 337 01da 00EB4000 		add	r0, r0, r0, lsl #1
+ 338 01de 264C     		ldr	r4, .L11+4
+ 339 01e0 A4FB0030 		umull	r3, r0, r4, r0
+ 340 01e4 8508     		lsrs	r5, r0, #2
+ARM GAS  /tmp/ccm0AGjk.s 			page 11
+
+
+ 341              		.loc 1 231 40 discriminator 1 view .LVU83
+ 342 01e6 FFF7FEFF 		bl	BSP_LCD_GetYSize
+ 343              	.LVL55:
+ 344              		.loc 1 231 5 discriminator 2 view .LVU84
+ 345 01ea A0F15A01 		sub	r1, r0, #90
+ 346 01ee 1E22     		movs	r2, #30
+ 347 01f0 89B2     		uxth	r1, r1
+ 348 01f2 A8B2     		uxth	r0, r5
+ 349 01f4 FFF7FEFF 		bl	BSP_LCD_FillCircle
+ 350              	.LVL56:
+ 232:Core/Src/touchscreen.c ****     BSP_LCD_SetTextColor(LCD_COLOR_WHITE); 
+ 351              		.loc 1 232 5 is_stmt 1 view .LVU85
+ 352 01f8 4FF0FF30 		mov	r0, #-1
+ 353 01fc FFF7FEFF 		bl	BSP_LCD_SetTextColor
+ 354              	.LVL57:
+ 233:Core/Src/touchscreen.c ****     BSP_LCD_FillCircle(CIRCLE_XPOS(3), CIRCLE_YPOS(3), CIRCLE_RADIUS - 2); 
+ 355              		.loc 1 233 5 view .LVU86
+ 356              		.loc 1 233 24 is_stmt 0 view .LVU87
+ 357 0200 FFF7FEFF 		bl	BSP_LCD_GetXSize
+ 358              	.LVL58:
+ 359              		.loc 1 233 24 discriminator 1 view .LVU88
+ 360 0204 00EB4000 		add	r0, r0, r0, lsl #1
+ 361 0208 A4FB0030 		umull	r3, r0, r4, r0
+ 362 020c 8408     		lsrs	r4, r0, #2
+ 363              		.loc 1 233 40 discriminator 1 view .LVU89
+ 364 020e FFF7FEFF 		bl	BSP_LCD_GetYSize
+ 365              	.LVL59:
+ 366              		.loc 1 233 5 discriminator 2 view .LVU90
+ 367 0212 A0F15A01 		sub	r1, r0, #90
+ 368 0216 1C22     		movs	r2, #28
+ 369 0218 89B2     		uxth	r1, r1
+ 370 021a A0B2     		uxth	r0, r4
+ 371 021c FFF7FEFF 		bl	BSP_LCD_FillCircle
+ 372              	.LVL60:
+ 234:Core/Src/touchscreen.c ****     break;
+ 373              		.loc 1 234 5 is_stmt 1 view .LVU91
+ 374 0220 26E0     		b	.L1
+ 375              	.LVL61:
+ 376              	.L3:
+ 235:Core/Src/touchscreen.c ****     
+ 236:Core/Src/touchscreen.c ****   case 8:
+ 237:Core/Src/touchscreen.c ****     BSP_LCD_SetTextColor(LCD_COLOR_GREEN); 
+ 377              		.loc 1 237 5 view .LVU92
+ 378 0222 4FF0FF20 		mov	r0, #-16711936
+ 379              	.LVL62:
+ 380              		.loc 1 237 5 is_stmt 0 view .LVU93
+ 381 0226 FFF7FEFF 		bl	BSP_LCD_SetTextColor
+ 382              	.LVL63:
+ 238:Core/Src/touchscreen.c ****     BSP_LCD_FillCircle(CIRCLE_XPOS(4), CIRCLE_YPOS(4), CIRCLE_RADIUS);
+ 383              		.loc 1 238 5 is_stmt 1 view .LVU94
+ 384              		.loc 1 238 24 is_stmt 0 view .LVU95
+ 385 022a FFF7FEFF 		bl	BSP_LCD_GetXSize
+ 386              	.LVL64:
+ 387              		.loc 1 238 24 discriminator 1 view .LVU96
+ 388 022e 8000     		lsls	r0, r0, #2
+ 389 0230 114C     		ldr	r4, .L11+4
+ 390 0232 A4FB0030 		umull	r3, r0, r4, r0
+ARM GAS  /tmp/ccm0AGjk.s 			page 12
+
+
+ 391 0236 8508     		lsrs	r5, r0, #2
+ 392              		.loc 1 238 40 discriminator 1 view .LVU97
+ 393 0238 FFF7FEFF 		bl	BSP_LCD_GetYSize
+ 394              	.LVL65:
+ 395              		.loc 1 238 5 discriminator 2 view .LVU98
+ 396 023c A0F15A01 		sub	r1, r0, #90
+ 397 0240 1E22     		movs	r2, #30
+ 398 0242 89B2     		uxth	r1, r1
+ 399 0244 A8B2     		uxth	r0, r5
+ 400 0246 FFF7FEFF 		bl	BSP_LCD_FillCircle
+ 401              	.LVL66:
+ 239:Core/Src/touchscreen.c ****     BSP_LCD_SetTextColor(LCD_COLOR_WHITE); 
+ 402              		.loc 1 239 5 is_stmt 1 view .LVU99
+ 403 024a 4FF0FF30 		mov	r0, #-1
+ 404 024e FFF7FEFF 		bl	BSP_LCD_SetTextColor
+ 405              	.LVL67:
+ 240:Core/Src/touchscreen.c ****     BSP_LCD_FillCircle(CIRCLE_XPOS(4), CIRCLE_YPOS(4), CIRCLE_RADIUS - 2); 
+ 406              		.loc 1 240 5 view .LVU100
+ 407              		.loc 1 240 24 is_stmt 0 view .LVU101
+ 408 0252 FFF7FEFF 		bl	BSP_LCD_GetXSize
+ 409              	.LVL68:
+ 410              		.loc 1 240 24 discriminator 1 view .LVU102
+ 411 0256 8000     		lsls	r0, r0, #2
+ 412 0258 A4FB0030 		umull	r3, r0, r4, r0
+ 413 025c 8408     		lsrs	r4, r0, #2
+ 414              		.loc 1 240 40 discriminator 1 view .LVU103
+ 415 025e FFF7FEFF 		bl	BSP_LCD_GetYSize
+ 416              	.LVL69:
+ 417              		.loc 1 240 5 discriminator 2 view .LVU104
+ 418 0262 A0F15A01 		sub	r1, r0, #90
+ 419 0266 1C22     		movs	r2, #28
+ 420 0268 89B2     		uxth	r1, r1
+ 421 026a A0B2     		uxth	r0, r4
+ 422 026c FFF7FEFF 		bl	BSP_LCD_FillCircle
+ 423              	.LVL70:
+ 241:Core/Src/touchscreen.c ****     break; 
+ 424              		.loc 1 241 5 is_stmt 1 view .LVU105
+ 425              	.L1:
+ 242:Core/Src/touchscreen.c ****   }
+ 243:Core/Src/touchscreen.c **** }
+ 426              		.loc 1 243 1 is_stmt 0 view .LVU106
+ 427 0270 38BD     		pop	{r3, r4, r5, pc}
+ 428              	.L12:
+ 429 0272 00BF     		.align	2
+ 430              	.L11:
+ 431 0274 FF0000FF 		.word	-16776961
+ 432 0278 CDCCCCCC 		.word	-858993459
+ 433 027c 0000FFFF 		.word	-65536
+ 434              		.cfi_endproc
+ 435              	.LFE139:
+ 437              		.section	.rodata.Touchscreen_SetHint.str1.4,"aMS",%progbits,1
+ 438              		.align	2
+ 439              	.LC0:
+ 440 0000 546F7563 		.ascii	"Touchscreen\000"
+ 440      68736372 
+ 440      65656E00 
+ 441              		.align	2
+ARM GAS  /tmp/ccm0AGjk.s 			page 13
+
+
+ 442              	.LC1:
+ 443 000c 506C6561 		.ascii	"Please use the Touchscreen to\000"
+ 443      73652075 
+ 443      73652074 
+ 443      68652054 
+ 443      6F756368 
+ 444 002a 0000     		.align	2
+ 445              	.LC2:
+ 446 002c 61637469 		.ascii	"activate the colored circle\000"
+ 446      76617465 
+ 446      20746865 
+ 446      20636F6C 
+ 446      6F726564 
+ 447              		.align	2
+ 448              	.LC3:
+ 449 0048 696E7369 		.ascii	"inside the rectangle\000"
+ 449      64652074 
+ 449      68652072 
+ 449      65637461 
+ 449      6E676C65 
+ 450              		.section	.text.Touchscreen_SetHint,"ax",%progbits
+ 451              		.align	1
+ 452              		.syntax unified
+ 453              		.thumb
+ 454              		.thumb_func
+ 456              	Touchscreen_SetHint:
+ 457              	.LFB138:
+ 164:Core/Src/touchscreen.c ****   /* Clear the LCD */ 
+ 458              		.loc 1 164 1 is_stmt 1 view -0
+ 459              		.cfi_startproc
+ 460              		@ args = 0, pretend = 0, frame = 0
+ 461              		@ frame_needed = 0, uses_anonymous_args = 0
+ 462 0000 10B5     		push	{r4, lr}
+ 463              	.LCFI1:
+ 464              		.cfi_def_cfa_offset 8
+ 465              		.cfi_offset 4, -8
+ 466              		.cfi_offset 14, -4
+ 166:Core/Src/touchscreen.c ****   
+ 467              		.loc 1 166 3 view .LVU108
+ 468 0002 4FF0FF30 		mov	r0, #-1
+ 469 0006 FFF7FEFF 		bl	BSP_LCD_Clear
+ 470              	.LVL71:
+ 169:Core/Src/touchscreen.c ****   BSP_LCD_FillRect(0, 0, BSP_LCD_GetXSize(), 80);
+ 471              		.loc 1 169 3 view .LVU109
+ 472 000a 294C     		ldr	r4, .L15
+ 473 000c 2046     		mov	r0, r4
+ 474 000e FFF7FEFF 		bl	BSP_LCD_SetTextColor
+ 475              	.LVL72:
+ 170:Core/Src/touchscreen.c ****   BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
+ 476              		.loc 1 170 3 view .LVU110
+ 170:Core/Src/touchscreen.c ****   BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
+ 477              		.loc 1 170 26 is_stmt 0 view .LVU111
+ 478 0012 FFF7FEFF 		bl	BSP_LCD_GetXSize
+ 479              	.LVL73:
+ 170:Core/Src/touchscreen.c ****   BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
+ 480              		.loc 1 170 3 discriminator 1 view .LVU112
+ 481 0016 5023     		movs	r3, #80
+ARM GAS  /tmp/ccm0AGjk.s 			page 14
+
+
+ 482 0018 82B2     		uxth	r2, r0
+ 483 001a 0021     		movs	r1, #0
+ 484 001c 0846     		mov	r0, r1
+ 485 001e FFF7FEFF 		bl	BSP_LCD_FillRect
+ 486              	.LVL74:
+ 171:Core/Src/touchscreen.c ****   BSP_LCD_SetBackColor(LCD_COLOR_BLUE); 
+ 487              		.loc 1 171 3 is_stmt 1 view .LVU113
+ 488 0022 4FF0FF30 		mov	r0, #-1
+ 489 0026 FFF7FEFF 		bl	BSP_LCD_SetTextColor
+ 490              	.LVL75:
+ 172:Core/Src/touchscreen.c ****   BSP_LCD_SetFont(&Font24);
+ 491              		.loc 1 172 3 view .LVU114
+ 492 002a 2046     		mov	r0, r4
+ 493 002c FFF7FEFF 		bl	BSP_LCD_SetBackColor
+ 494              	.LVL76:
+ 173:Core/Src/touchscreen.c ****   BSP_LCD_DisplayStringAt(0, 0, (uint8_t*)"Touchscreen", CENTER_MODE);
+ 495              		.loc 1 173 3 view .LVU115
+ 496 0030 2048     		ldr	r0, .L15+4
+ 497 0032 FFF7FEFF 		bl	BSP_LCD_SetFont
+ 498              	.LVL77:
+ 174:Core/Src/touchscreen.c ****   BSP_LCD_SetFont(&Font12);
+ 499              		.loc 1 174 3 view .LVU116
+ 500 0036 0123     		movs	r3, #1
+ 501 0038 1F4A     		ldr	r2, .L15+8
+ 502 003a 0021     		movs	r1, #0
+ 503 003c 0846     		mov	r0, r1
+ 504 003e FFF7FEFF 		bl	BSP_LCD_DisplayStringAt
+ 505              	.LVL78:
+ 175:Core/Src/touchscreen.c ****   BSP_LCD_DisplayStringAt(0, 30, (uint8_t*)"Please use the Touchscreen to", CENTER_MODE);
+ 506              		.loc 1 175 3 view .LVU117
+ 507 0042 1E48     		ldr	r0, .L15+12
+ 508 0044 FFF7FEFF 		bl	BSP_LCD_SetFont
+ 509              	.LVL79:
+ 176:Core/Src/touchscreen.c ****   BSP_LCD_DisplayStringAt(0, 45, (uint8_t*)"activate the colored circle", CENTER_MODE);
+ 510              		.loc 1 176 3 view .LVU118
+ 511 0048 0123     		movs	r3, #1
+ 512 004a 1D4A     		ldr	r2, .L15+16
+ 513 004c 1E21     		movs	r1, #30
+ 514 004e 0020     		movs	r0, #0
+ 515 0050 FFF7FEFF 		bl	BSP_LCD_DisplayStringAt
+ 516              	.LVL80:
+ 177:Core/Src/touchscreen.c ****   BSP_LCD_DisplayStringAt(0, 60, (uint8_t*)"inside the rectangle", CENTER_MODE);
+ 517              		.loc 1 177 3 view .LVU119
+ 518 0054 0123     		movs	r3, #1
+ 519 0056 1B4A     		ldr	r2, .L15+20
+ 520 0058 2D21     		movs	r1, #45
+ 521 005a 0020     		movs	r0, #0
+ 522 005c FFF7FEFF 		bl	BSP_LCD_DisplayStringAt
+ 523              	.LVL81:
+ 178:Core/Src/touchscreen.c ****   
+ 524              		.loc 1 178 3 view .LVU120
+ 525 0060 0123     		movs	r3, #1
+ 526 0062 194A     		ldr	r2, .L15+24
+ 527 0064 3C21     		movs	r1, #60
+ 528 0066 0020     		movs	r0, #0
+ 529 0068 FFF7FEFF 		bl	BSP_LCD_DisplayStringAt
+ 530              	.LVL82:
+ARM GAS  /tmp/ccm0AGjk.s 			page 15
+
+
+ 181:Core/Src/touchscreen.c ****   BSP_LCD_DrawRect(10, 90, BSP_LCD_GetXSize() - 20, BSP_LCD_GetYSize()- 100);
+ 531              		.loc 1 181 3 view .LVU121
+ 532 006c 2046     		mov	r0, r4
+ 533 006e FFF7FEFF 		bl	BSP_LCD_SetTextColor
+ 534              	.LVL83:
+ 182:Core/Src/touchscreen.c ****   BSP_LCD_DrawRect(11, 91, BSP_LCD_GetXSize() - 22, BSP_LCD_GetYSize()- 102); 
+ 535              		.loc 1 182 3 view .LVU122
+ 182:Core/Src/touchscreen.c ****   BSP_LCD_DrawRect(11, 91, BSP_LCD_GetXSize() - 22, BSP_LCD_GetYSize()- 102); 
+ 536              		.loc 1 182 28 is_stmt 0 view .LVU123
+ 537 0072 FFF7FEFF 		bl	BSP_LCD_GetXSize
+ 538              	.LVL84:
+ 539 0076 0446     		mov	r4, r0
+ 182:Core/Src/touchscreen.c ****   BSP_LCD_DrawRect(11, 91, BSP_LCD_GetXSize() - 22, BSP_LCD_GetYSize()- 102); 
+ 540              		.loc 1 182 53 discriminator 1 view .LVU124
+ 541 0078 FFF7FEFF 		bl	BSP_LCD_GetYSize
+ 542              	.LVL85:
+ 182:Core/Src/touchscreen.c ****   BSP_LCD_DrawRect(11, 91, BSP_LCD_GetXSize() - 22, BSP_LCD_GetYSize()- 102); 
+ 543              		.loc 1 182 3 discriminator 2 view .LVU125
+ 544 007c A0F16403 		sub	r3, r0, #100
+ 182:Core/Src/touchscreen.c ****   BSP_LCD_DrawRect(11, 91, BSP_LCD_GetXSize() - 22, BSP_LCD_GetYSize()- 102); 
+ 545              		.loc 1 182 3 discriminator 1 view .LVU126
+ 546 0080 A4F11402 		sub	r2, r4, #20
+ 182:Core/Src/touchscreen.c ****   BSP_LCD_DrawRect(11, 91, BSP_LCD_GetXSize() - 22, BSP_LCD_GetYSize()- 102); 
+ 547              		.loc 1 182 3 discriminator 2 view .LVU127
+ 548 0084 9BB2     		uxth	r3, r3
+ 549 0086 92B2     		uxth	r2, r2
+ 550 0088 5A21     		movs	r1, #90
+ 551 008a 0A20     		movs	r0, #10
+ 552 008c FFF7FEFF 		bl	BSP_LCD_DrawRect
+ 553              	.LVL86:
+ 183:Core/Src/touchscreen.c **** }
+ 554              		.loc 1 183 3 is_stmt 1 view .LVU128
+ 183:Core/Src/touchscreen.c **** }
+ 555              		.loc 1 183 28 is_stmt 0 view .LVU129
+ 556 0090 FFF7FEFF 		bl	BSP_LCD_GetXSize
+ 557              	.LVL87:
+ 558 0094 0446     		mov	r4, r0
+ 183:Core/Src/touchscreen.c **** }
+ 559              		.loc 1 183 53 discriminator 1 view .LVU130
+ 560 0096 FFF7FEFF 		bl	BSP_LCD_GetYSize
+ 561              	.LVL88:
+ 183:Core/Src/touchscreen.c **** }
+ 562              		.loc 1 183 3 discriminator 2 view .LVU131
+ 563 009a A0F16603 		sub	r3, r0, #102
+ 183:Core/Src/touchscreen.c **** }
+ 564              		.loc 1 183 3 discriminator 1 view .LVU132
+ 565 009e A4F11602 		sub	r2, r4, #22
+ 183:Core/Src/touchscreen.c **** }
+ 566              		.loc 1 183 3 discriminator 2 view .LVU133
+ 567 00a2 9BB2     		uxth	r3, r3
+ 568 00a4 92B2     		uxth	r2, r2
+ 569 00a6 5B21     		movs	r1, #91
+ 570 00a8 0B20     		movs	r0, #11
+ 571 00aa FFF7FEFF 		bl	BSP_LCD_DrawRect
+ 572              	.LVL89:
+ 184:Core/Src/touchscreen.c **** 
+ 573              		.loc 1 184 1 view .LVU134
+ARM GAS  /tmp/ccm0AGjk.s 			page 16
+
+
+ 574 00ae 10BD     		pop	{r4, pc}
+ 575              	.L16:
+ 576              		.align	2
+ 577              	.L15:
+ 578 00b0 FF0000FF 		.word	-16776961
+ 579 00b4 00000000 		.word	Font24
+ 580 00b8 00000000 		.word	.LC0
+ 581 00bc 00000000 		.word	Font12
+ 582 00c0 0C000000 		.word	.LC1
+ 583 00c4 2C000000 		.word	.LC2
+ 584 00c8 48000000 		.word	.LC3
+ 585              		.cfi_endproc
+ 586              	.LFE138:
+ 588              		.section	.rodata.Touchscreen_demo.str1.4,"aMS",%progbits,1
+ 589              		.align	2
+ 590              	.LC4:
+ 591 0000 4552524F 		.ascii	"ERROR\000"
+ 591      5200
+ 592 0006 0000     		.align	2
+ 593              	.LC5:
+ 594 0008 546F7563 		.ascii	"Touchscreen cannot be initialized\000"
+ 594      68736372 
+ 594      65656E20 
+ 594      63616E6E 
+ 594      6F742062 
+ 595              		.section	.text.Touchscreen_demo,"ax",%progbits
+ 596              		.align	1
+ 597              		.global	Touchscreen_demo
+ 598              		.syntax unified
+ 599              		.thumb
+ 600              		.thumb_func
+ 602              	Touchscreen_demo:
+ 603              	.LFB137:
+  53:Core/Src/touchscreen.c ****   uint8_t status = 0;
+ 604              		.loc 1 53 1 is_stmt 1 view -0
+ 605              		.cfi_startproc
+ 606              		@ args = 0, pretend = 0, frame = 0
+ 607              		@ frame_needed = 0, uses_anonymous_args = 0
+ 608 0000 2DE9F041 		push	{r4, r5, r6, r7, r8, lr}
+ 609              	.LCFI2:
+ 610              		.cfi_def_cfa_offset 24
+ 611              		.cfi_offset 4, -24
+ 612              		.cfi_offset 5, -20
+ 613              		.cfi_offset 6, -16
+ 614              		.cfi_offset 7, -12
+ 615              		.cfi_offset 8, -8
+ 616              		.cfi_offset 14, -4
+  54:Core/Src/touchscreen.c ****   uint16_t x,y;
+ 617              		.loc 1 54 3 view .LVU136
+ 618              	.LVL90:
+  55:Core/Src/touchscreen.c ****   uint8_t state = 0;
+ 619              		.loc 1 55 3 view .LVU137
+  56:Core/Src/touchscreen.c ****   
+ 620              		.loc 1 56 3 view .LVU138
+  58:Core/Src/touchscreen.c ****   {
+ 621              		.loc 1 58 3 view .LVU139
+  58:Core/Src/touchscreen.c ****   {
+ARM GAS  /tmp/ccm0AGjk.s 			page 17
+
+
+ 622              		.loc 1 58 6 is_stmt 0 view .LVU140
+ 623 0004 FFF7FEFF 		bl	IsCalibrationDone
+ 624              	.LVL91:
+  58:Core/Src/touchscreen.c ****   {
+ 625              		.loc 1 58 5 discriminator 1 view .LVU141
+ 626 0008 48B3     		cbz	r0, .L41
+ 627              	.L18:
+  63:Core/Src/touchscreen.c ****   
+ 628              		.loc 1 63 3 is_stmt 1 view .LVU142
+ 629 000a FFF7FEFF 		bl	Touchscreen_SetHint
+ 630              	.LVL92:
+  65:Core/Src/touchscreen.c ****   
+ 631              		.loc 1 65 3 view .LVU143
+  65:Core/Src/touchscreen.c ****   
+ 632              		.loc 1 65 24 is_stmt 0 view .LVU144
+ 633 000e FFF7FEFF 		bl	BSP_LCD_GetXSize
+ 634              	.LVL93:
+ 635 0012 0446     		mov	r4, r0
+  65:Core/Src/touchscreen.c ****   
+ 636              		.loc 1 65 44 discriminator 1 view .LVU145
+ 637 0014 FFF7FEFF 		bl	BSP_LCD_GetYSize
+ 638              	.LVL94:
+  65:Core/Src/touchscreen.c ****   
+ 639              		.loc 1 65 12 discriminator 2 view .LVU146
+ 640 0018 81B2     		uxth	r1, r0
+ 641 001a A0B2     		uxth	r0, r4
+ 642 001c FFF7FEFF 		bl	BSP_TS_Init
+ 643              	.LVL95:
+  67:Core/Src/touchscreen.c ****   {
+ 644              		.loc 1 67 3 is_stmt 1 view .LVU147
+  67:Core/Src/touchscreen.c ****   {
+ 645              		.loc 1 67 6 is_stmt 0 view .LVU148
+ 646 0020 0646     		mov	r6, r0
+ 647 0022 F8B1     		cbz	r0, .L19
+  69:Core/Src/touchscreen.c ****     BSP_LCD_SetTextColor(LCD_COLOR_RED);
+ 648              		.loc 1 69 5 is_stmt 1 view .LVU149
+ 649 0024 4FF0FF30 		mov	r0, #-1
+ 650              	.LVL96:
+  69:Core/Src/touchscreen.c ****     BSP_LCD_SetTextColor(LCD_COLOR_RED);
+ 651              		.loc 1 69 5 is_stmt 0 view .LVU150
+ 652 0028 FFF7FEFF 		bl	BSP_LCD_SetBackColor
+ 653              	.LVL97:
+  70:Core/Src/touchscreen.c ****     BSP_LCD_DisplayStringAt(0, BSP_LCD_GetYSize()- 95, (uint8_t*)"ERROR", CENTER_MODE);
+ 654              		.loc 1 70 5 is_stmt 1 view .LVU151
+ 655 002c 8B48     		ldr	r0, .L46
+ 656 002e FFF7FEFF 		bl	BSP_LCD_SetTextColor
+ 657              	.LVL98:
+  71:Core/Src/touchscreen.c ****     BSP_LCD_DisplayStringAt(0, BSP_LCD_GetYSize()- 80, (uint8_t*)"Touchscreen cannot be initialized
+ 658              		.loc 1 71 5 view .LVU152
+  71:Core/Src/touchscreen.c ****     BSP_LCD_DisplayStringAt(0, BSP_LCD_GetYSize()- 80, (uint8_t*)"Touchscreen cannot be initialized
+ 659              		.loc 1 71 32 is_stmt 0 view .LVU153
+ 660 0032 FFF7FEFF 		bl	BSP_LCD_GetYSize
+ 661              	.LVL99:
+  71:Core/Src/touchscreen.c ****     BSP_LCD_DisplayStringAt(0, BSP_LCD_GetYSize()- 80, (uint8_t*)"Touchscreen cannot be initialized
+ 662              		.loc 1 71 5 discriminator 1 view .LVU154
+ 663 0036 A0F15F01 		sub	r1, r0, #95
+ 664 003a 0123     		movs	r3, #1
+ARM GAS  /tmp/ccm0AGjk.s 			page 18
+
+
+ 665 003c 884A     		ldr	r2, .L46+4
+ 666 003e 89B2     		uxth	r1, r1
+ 667 0040 0020     		movs	r0, #0
+ 668 0042 FFF7FEFF 		bl	BSP_LCD_DisplayStringAt
+ 669              	.LVL100:
+  72:Core/Src/touchscreen.c ****   }
+ 670              		.loc 1 72 5 is_stmt 1 view .LVU155
+  72:Core/Src/touchscreen.c ****   }
+ 671              		.loc 1 72 32 is_stmt 0 view .LVU156
+ 672 0046 FFF7FEFF 		bl	BSP_LCD_GetYSize
+ 673              	.LVL101:
+  72:Core/Src/touchscreen.c ****   }
+ 674              		.loc 1 72 5 discriminator 1 view .LVU157
+ 675 004a A0F15001 		sub	r1, r0, #80
+ 676 004e 0123     		movs	r3, #1
+ 677 0050 844A     		ldr	r2, .L46+8
+ 678 0052 89B2     		uxth	r1, r1
+ 679 0054 0020     		movs	r0, #0
+ 680 0056 FFF7FEFF 		bl	BSP_LCD_DisplayStringAt
+ 681              	.LVL102:
+ 682              	.L20:
+  53:Core/Src/touchscreen.c ****   uint8_t status = 0;
+ 683              		.loc 1 53 1 view .LVU158
+ 684 005a 0027     		movs	r7, #0
+ 685 005c ACE0     		b	.L38
+ 686              	.LVL103:
+ 687              	.L41:
+  60:Core/Src/touchscreen.c ****   }
+ 688              		.loc 1 60 5 is_stmt 1 view .LVU159
+ 689 005e FFF7FEFF 		bl	Touchscreen_Calibration
+ 690              	.LVL104:
+ 691 0062 D2E7     		b	.L18
+ 692              	.LVL105:
+ 693              	.L19:
+  76:Core/Src/touchscreen.c ****   }
+ 694              		.loc 1 76 5 view .LVU160
+ 695 0064 FFF7FEFF 		bl	Touchscreen_DrawBackground
+ 696              	.LVL106:
+  76:Core/Src/touchscreen.c ****   }
+ 697              		.loc 1 76 5 is_stmt 0 view .LVU161
+ 698 0068 F7E7     		b	.L20
+ 699              	.LVL107:
+ 700              	.L42:
+  95:Core/Src/touchscreen.c ****           {
+ 701              		.loc 1 95 20 view .LVU162
+ 702 006a FFF7FEFF 		bl	BSP_LCD_GetXSize
+ 703              	.LVL108:
+  95:Core/Src/touchscreen.c ****           {
+ 704              		.loc 1 95 20 discriminator 1 view .LVU163
+ 705 006e 7E4B     		ldr	r3, .L46+12
+ 706 0070 A3FB0023 		umull	r2, r3, r3, r0
+ 707 0074 9B08     		lsrs	r3, r3, #2
+  95:Core/Src/touchscreen.c ****           {
+ 708              		.loc 1 95 35 discriminator 1 view .LVU164
+ 709 0076 1E33     		adds	r3, r3, #30
+  94:Core/Src/touchscreen.c ****              (x < (CIRCLE_XPOS(1) + CIRCLE_RADIUS)))
+ 710              		.loc 1 94 52 discriminator 2 view .LVU165
+ARM GAS  /tmp/ccm0AGjk.s 			page 19
+
+
+ 711 0078 9845     		cmp	r8, r3
+ 712 007a 80F0C580 		bcs	.L25
+  97:Core/Src/touchscreen.c ****             {
+ 713              		.loc 1 97 13 is_stmt 1 view .LVU166
+  97:Core/Src/touchscreen.c ****             {
+ 714              		.loc 1 97 15 is_stmt 0 view .LVU167
+ 715 007e 17F0010F 		tst	r7, #1
+ 716 0082 40F0C180 		bne	.L25
+  99:Core/Src/touchscreen.c ****               BSP_LCD_SetTextColor(LCD_COLOR_BLUE); 
+ 717              		.loc 1 99 15 is_stmt 1 view .LVU168
+ 718 0086 0120     		movs	r0, #1
+ 719 0088 FFF7FEFF 		bl	Touchscreen_DrawBackground
+ 720              	.LVL109:
+ 100:Core/Src/touchscreen.c ****               BSP_LCD_FillCircle(CIRCLE_XPOS(1), CIRCLE_YPOS(1), CIRCLE_RADIUS);
+ 721              		.loc 1 100 15 view .LVU169
+ 722 008c 7748     		ldr	r0, .L46+16
+ 723 008e FFF7FEFF 		bl	BSP_LCD_SetTextColor
+ 724              	.LVL110:
+ 101:Core/Src/touchscreen.c ****               state |= 1;
+ 725              		.loc 1 101 15 view .LVU170
+ 101:Core/Src/touchscreen.c ****               state |= 1;
+ 726              		.loc 1 101 34 is_stmt 0 view .LVU171
+ 727 0092 FFF7FEFF 		bl	BSP_LCD_GetXSize
+ 728              	.LVL111:
+ 101:Core/Src/touchscreen.c ****               state |= 1;
+ 729              		.loc 1 101 34 discriminator 1 view .LVU172
+ 730 0096 744B     		ldr	r3, .L46+12
+ 731 0098 A3FB0034 		umull	r3, r4, r3, r0
+ 732 009c A408     		lsrs	r4, r4, #2
+ 101:Core/Src/touchscreen.c ****               state |= 1;
+ 733              		.loc 1 101 50 discriminator 1 view .LVU173
+ 734 009e FFF7FEFF 		bl	BSP_LCD_GetYSize
+ 735              	.LVL112:
+ 101:Core/Src/touchscreen.c ****               state |= 1;
+ 736              		.loc 1 101 15 discriminator 2 view .LVU174
+ 737 00a2 A0F15A01 		sub	r1, r0, #90
+ 738 00a6 1E22     		movs	r2, #30
+ 739 00a8 89B2     		uxth	r1, r1
+ 740 00aa A0B2     		uxth	r0, r4
+ 741 00ac FFF7FEFF 		bl	BSP_LCD_FillCircle
+ 742              	.LVL113:
+ 102:Core/Src/touchscreen.c ****             }
+ 743              		.loc 1 102 15 is_stmt 1 view .LVU175
+ 102:Core/Src/touchscreen.c ****             }
+ 744              		.loc 1 102 21 is_stmt 0 view .LVU176
+ 745 00b0 47F00107 		orr	r7, r7, #1
+ 746              	.LVL114:
+ 102:Core/Src/touchscreen.c ****             }
+ 747              		.loc 1 102 21 view .LVU177
+ 748 00b4 A8E0     		b	.L25
+ 749              	.LVL115:
+ 750              	.L43:
+ 106:Core/Src/touchscreen.c ****           {
+ 751              		.loc 1 106 20 view .LVU178
+ 752 00b6 FFF7FEFF 		bl	BSP_LCD_GetXSize
+ 753              	.LVL116:
+ 106:Core/Src/touchscreen.c ****           {
+ARM GAS  /tmp/ccm0AGjk.s 			page 20
+
+
+ 754              		.loc 1 106 20 discriminator 1 view .LVU179
+ 755 00ba 4300     		lsls	r3, r0, #1
+ 756 00bc 6A4A     		ldr	r2, .L46+12
+ 757 00be A2FB0323 		umull	r2, r3, r2, r3
+ 758 00c2 9B08     		lsrs	r3, r3, #2
+ 106:Core/Src/touchscreen.c ****           {
+ 759              		.loc 1 106 35 discriminator 1 view .LVU180
+ 760 00c4 1E33     		adds	r3, r3, #30
+ 105:Core/Src/touchscreen.c ****              (x < (CIRCLE_XPOS(2) + CIRCLE_RADIUS)))
+ 761              		.loc 1 105 52 discriminator 2 view .LVU181
+ 762 00c6 9845     		cmp	r8, r3
+ 763 00c8 80F0A980 		bcs	.L28
+ 108:Core/Src/touchscreen.c ****             {          
+ 764              		.loc 1 108 13 is_stmt 1 view .LVU182
+ 108:Core/Src/touchscreen.c ****             {          
+ 765              		.loc 1 108 15 is_stmt 0 view .LVU183
+ 766 00cc 17F0020F 		tst	r7, #2
+ 767 00d0 40F0A580 		bne	.L28
+ 110:Core/Src/touchscreen.c ****               BSP_LCD_SetTextColor(LCD_COLOR_RED); 
+ 768              		.loc 1 110 15 is_stmt 1 view .LVU184
+ 769 00d4 0220     		movs	r0, #2
+ 770 00d6 FFF7FEFF 		bl	Touchscreen_DrawBackground
+ 771              	.LVL117:
+ 111:Core/Src/touchscreen.c ****               BSP_LCD_FillCircle(CIRCLE_XPOS(2), CIRCLE_YPOS(2), CIRCLE_RADIUS);
+ 772              		.loc 1 111 15 view .LVU185
+ 773 00da 6048     		ldr	r0, .L46
+ 774 00dc FFF7FEFF 		bl	BSP_LCD_SetTextColor
+ 775              	.LVL118:
+ 112:Core/Src/touchscreen.c ****               state |= 2;
+ 776              		.loc 1 112 15 view .LVU186
+ 112:Core/Src/touchscreen.c ****               state |= 2;
+ 777              		.loc 1 112 34 is_stmt 0 view .LVU187
+ 778 00e0 FFF7FEFF 		bl	BSP_LCD_GetXSize
+ 779              	.LVL119:
+ 112:Core/Src/touchscreen.c ****               state |= 2;
+ 780              		.loc 1 112 34 discriminator 1 view .LVU188
+ 781 00e4 4400     		lsls	r4, r0, #1
+ 782 00e6 604B     		ldr	r3, .L46+12
+ 783 00e8 A3FB0434 		umull	r3, r4, r3, r4
+ 784 00ec A408     		lsrs	r4, r4, #2
+ 112:Core/Src/touchscreen.c ****               state |= 2;
+ 785              		.loc 1 112 50 discriminator 1 view .LVU189
+ 786 00ee FFF7FEFF 		bl	BSP_LCD_GetYSize
+ 787              	.LVL120:
+ 112:Core/Src/touchscreen.c ****               state |= 2;
+ 788              		.loc 1 112 15 discriminator 2 view .LVU190
+ 789 00f2 A0F15A01 		sub	r1, r0, #90
+ 790 00f6 1E22     		movs	r2, #30
+ 791 00f8 89B2     		uxth	r1, r1
+ 792 00fa A0B2     		uxth	r0, r4
+ 793 00fc FFF7FEFF 		bl	BSP_LCD_FillCircle
+ 794              	.LVL121:
+ 113:Core/Src/touchscreen.c ****             }          
+ 795              		.loc 1 113 15 is_stmt 1 view .LVU191
+ 113:Core/Src/touchscreen.c ****             }          
+ 796              		.loc 1 113 21 is_stmt 0 view .LVU192
+ 797 0100 47F00207 		orr	r7, r7, #2
+ARM GAS  /tmp/ccm0AGjk.s 			page 21
+
+
+ 798              	.LVL122:
+ 113:Core/Src/touchscreen.c ****             }          
+ 799              		.loc 1 113 21 view .LVU193
+ 800 0104 8BE0     		b	.L28
+ 801              	.LVL123:
+ 802              	.L44:
+ 118:Core/Src/touchscreen.c ****           {
+ 803              		.loc 1 118 20 view .LVU194
+ 804 0106 FFF7FEFF 		bl	BSP_LCD_GetXSize
+ 805              	.LVL124:
+ 118:Core/Src/touchscreen.c ****           {
+ 806              		.loc 1 118 20 discriminator 1 view .LVU195
+ 807 010a 00EB4000 		add	r0, r0, r0, lsl #1
+ 808 010e 564B     		ldr	r3, .L46+12
+ 809 0110 A3FB0023 		umull	r2, r3, r3, r0
+ 810 0114 9B08     		lsrs	r3, r3, #2
+ 118:Core/Src/touchscreen.c ****           {
+ 811              		.loc 1 118 35 discriminator 1 view .LVU196
+ 812 0116 1E33     		adds	r3, r3, #30
+ 117:Core/Src/touchscreen.c ****              (x < (CIRCLE_XPOS(3) + CIRCLE_RADIUS)))
+ 813              		.loc 1 117 52 discriminator 2 view .LVU197
+ 814 0118 9845     		cmp	r8, r3
+ 815 011a 80F08C80 		bcs	.L31
+ 120:Core/Src/touchscreen.c ****             {           
+ 816              		.loc 1 120 13 is_stmt 1 view .LVU198
+ 120:Core/Src/touchscreen.c ****             {           
+ 817              		.loc 1 120 15 is_stmt 0 view .LVU199
+ 818 011e 17F0040F 		tst	r7, #4
+ 819 0122 40F08880 		bne	.L31
+ 122:Core/Src/touchscreen.c ****               BSP_LCD_SetTextColor(LCD_COLOR_YELLOW); 
+ 820              		.loc 1 122 15 is_stmt 1 view .LVU200
+ 821 0126 0420     		movs	r0, #4
+ 822 0128 FFF7FEFF 		bl	Touchscreen_DrawBackground
+ 823              	.LVL125:
+ 123:Core/Src/touchscreen.c ****               BSP_LCD_FillCircle(CIRCLE_XPOS(3), CIRCLE_YPOS(3), CIRCLE_RADIUS);
+ 824              		.loc 1 123 15 view .LVU201
+ 825 012c 6FF0FF00 		mvn	r0, #255
+ 826 0130 FFF7FEFF 		bl	BSP_LCD_SetTextColor
+ 827              	.LVL126:
+ 124:Core/Src/touchscreen.c ****               state |= 4;
+ 828              		.loc 1 124 15 view .LVU202
+ 124:Core/Src/touchscreen.c ****               state |= 4;
+ 829              		.loc 1 124 34 is_stmt 0 view .LVU203
+ 830 0134 FFF7FEFF 		bl	BSP_LCD_GetXSize
+ 831              	.LVL127:
+ 124:Core/Src/touchscreen.c ****               state |= 4;
+ 832              		.loc 1 124 34 discriminator 1 view .LVU204
+ 833 0138 00EB4000 		add	r0, r0, r0, lsl #1
+ 834 013c 4A4B     		ldr	r3, .L46+12
+ 835 013e A3FB0034 		umull	r3, r4, r3, r0
+ 836 0142 A408     		lsrs	r4, r4, #2
+ 124:Core/Src/touchscreen.c ****               state |= 4;
+ 837              		.loc 1 124 50 discriminator 1 view .LVU205
+ 838 0144 FFF7FEFF 		bl	BSP_LCD_GetYSize
+ 839              	.LVL128:
+ 124:Core/Src/touchscreen.c ****               state |= 4;
+ 840              		.loc 1 124 15 discriminator 2 view .LVU206
+ARM GAS  /tmp/ccm0AGjk.s 			page 22
+
+
+ 841 0148 A0F15A01 		sub	r1, r0, #90
+ 842 014c 1E22     		movs	r2, #30
+ 843 014e 89B2     		uxth	r1, r1
+ 844 0150 A0B2     		uxth	r0, r4
+ 845 0152 FFF7FEFF 		bl	BSP_LCD_FillCircle
+ 846              	.LVL129:
+ 125:Core/Src/touchscreen.c ****             }            
+ 847              		.loc 1 125 15 is_stmt 1 view .LVU207
+ 125:Core/Src/touchscreen.c ****             }            
+ 848              		.loc 1 125 21 is_stmt 0 view .LVU208
+ 849 0156 47F00407 		orr	r7, r7, #4
+ 850              	.LVL130:
+ 125:Core/Src/touchscreen.c ****             }            
+ 851              		.loc 1 125 21 view .LVU209
+ 852 015a 6CE0     		b	.L31
+ 853              	.LVL131:
+ 854              	.L45:
+ 130:Core/Src/touchscreen.c ****           {
+ 855              		.loc 1 130 20 view .LVU210
+ 856 015c FFF7FEFF 		bl	BSP_LCD_GetXSize
+ 857              	.LVL132:
+ 130:Core/Src/touchscreen.c ****           {
+ 858              		.loc 1 130 20 discriminator 1 view .LVU211
+ 859 0160 8300     		lsls	r3, r0, #2
+ 860 0162 414A     		ldr	r2, .L46+12
+ 861 0164 A2FB0323 		umull	r2, r3, r2, r3
+ 862 0168 9B08     		lsrs	r3, r3, #2
+ 130:Core/Src/touchscreen.c ****           {
+ 863              		.loc 1 130 35 discriminator 1 view .LVU212
+ 864 016a 1E33     		adds	r3, r3, #30
+ 129:Core/Src/touchscreen.c ****              (x < (CIRCLE_XPOS(4) + CIRCLE_RADIUS)))
+ 865              		.loc 1 129 52 discriminator 2 view .LVU213
+ 866 016c 9845     		cmp	r8, r3
+ 867 016e 6CD2     		bcs	.L34
+ 132:Core/Src/touchscreen.c ****             {           
+ 868              		.loc 1 132 13 is_stmt 1 view .LVU214
+ 132:Core/Src/touchscreen.c ****             {           
+ 869              		.loc 1 132 15 is_stmt 0 view .LVU215
+ 870 0170 17F0080F 		tst	r7, #8
+ 871 0174 69D1     		bne	.L34
+ 134:Core/Src/touchscreen.c ****               BSP_LCD_SetTextColor(LCD_COLOR_GREEN); 
+ 872              		.loc 1 134 15 is_stmt 1 view .LVU216
+ 873 0176 0820     		movs	r0, #8
+ 874 0178 FFF7FEFF 		bl	Touchscreen_DrawBackground
+ 875              	.LVL133:
+ 135:Core/Src/touchscreen.c ****               BSP_LCD_FillCircle(CIRCLE_XPOS(4), CIRCLE_YPOS(3), CIRCLE_RADIUS);
+ 876              		.loc 1 135 15 view .LVU217
+ 877 017c 4FF0FF20 		mov	r0, #-16711936
+ 878 0180 FFF7FEFF 		bl	BSP_LCD_SetTextColor
+ 879              	.LVL134:
+ 136:Core/Src/touchscreen.c ****               state |= 8;
+ 880              		.loc 1 136 15 view .LVU218
+ 136:Core/Src/touchscreen.c ****               state |= 8;
+ 881              		.loc 1 136 34 is_stmt 0 view .LVU219
+ 882 0184 FFF7FEFF 		bl	BSP_LCD_GetXSize
+ 883              	.LVL135:
+ 136:Core/Src/touchscreen.c ****               state |= 8;
+ARM GAS  /tmp/ccm0AGjk.s 			page 23
+
+
+ 884              		.loc 1 136 34 discriminator 1 view .LVU220
+ 885 0188 8400     		lsls	r4, r0, #2
+ 886 018a 374B     		ldr	r3, .L46+12
+ 887 018c A3FB0434 		umull	r3, r4, r3, r4
+ 888 0190 A408     		lsrs	r4, r4, #2
+ 136:Core/Src/touchscreen.c ****               state |= 8;
+ 889              		.loc 1 136 50 discriminator 1 view .LVU221
+ 890 0192 FFF7FEFF 		bl	BSP_LCD_GetYSize
+ 891              	.LVL136:
+ 136:Core/Src/touchscreen.c ****               state |= 8;
+ 892              		.loc 1 136 15 discriminator 2 view .LVU222
+ 893 0196 A0F15A01 		sub	r1, r0, #90
+ 894 019a 1E22     		movs	r2, #30
+ 895 019c 89B2     		uxth	r1, r1
+ 896 019e A0B2     		uxth	r0, r4
+ 897 01a0 FFF7FEFF 		bl	BSP_LCD_FillCircle
+ 898              	.LVL137:
+ 137:Core/Src/touchscreen.c ****             }           
+ 899              		.loc 1 137 15 is_stmt 1 view .LVU223
+ 137:Core/Src/touchscreen.c ****             }           
+ 900              		.loc 1 137 21 is_stmt 0 view .LVU224
+ 901 01a4 47F00807 		orr	r7, r7, #8
+ 902              	.LVL138:
+ 137:Core/Src/touchscreen.c ****             }           
+ 903              		.loc 1 137 21 view .LVU225
+ 904 01a8 4FE0     		b	.L34
+ 905              	.LVL139:
+ 906              	.L36:
+ 145:Core/Src/touchscreen.c ****             {
+ 907              		.loc 1 145 13 is_stmt 1 view .LVU226
+ 145:Core/Src/touchscreen.c ****             {
+ 908              		.loc 1 145 16 is_stmt 0 view .LVU227
+ 909 01aa FFF7FEFF 		bl	CheckForUserInput
+ 910              	.LVL140:
+ 145:Core/Src/touchscreen.c ****             {
+ 911              		.loc 1 145 15 discriminator 1 view .LVU228
+ 912 01ae 0028     		cmp	r0, #0
+ 913 01b0 51D1     		bne	.L39
+ 914              	.LVL141:
+ 915              	.L22:
+ 154:Core/Src/touchscreen.c ****   }
+ 916              		.loc 1 154 5 is_stmt 1 view .LVU229
+ 917 01b2 6420     		movs	r0, #100
+ 918 01b4 FFF7FEFF 		bl	HAL_Delay
+ 919              	.LVL142:
+  79:Core/Src/touchscreen.c ****   {
+ 920              		.loc 1 79 9 discriminator 1 view .LVU230
+ 921              	.L38:
+  79:Core/Src/touchscreen.c ****   {
+ 922              		.loc 1 79 3 view .LVU231
+  81:Core/Src/touchscreen.c ****     {
+ 923              		.loc 1 81 5 view .LVU232
+  81:Core/Src/touchscreen.c ****     {
+ 924              		.loc 1 81 8 is_stmt 0 view .LVU233
+ 925 01b8 002E     		cmp	r6, #0
+ 926 01ba FAD1     		bne	.L22
+  83:Core/Src/touchscreen.c ****       
+ARM GAS  /tmp/ccm0AGjk.s 			page 24
+
+
+ 927              		.loc 1 83 7 is_stmt 1 view .LVU234
+ 928 01bc 2C4C     		ldr	r4, .L46+20
+ 929 01be 2046     		mov	r0, r4
+ 930 01c0 FFF7FEFF 		bl	BSP_TS_GetState
+ 931              	.LVL143:
+  85:Core/Src/touchscreen.c ****         x = Calibration_GetX(TS_State.X);
+ 932              		.loc 1 85 7 view .LVU235
+  85:Core/Src/touchscreen.c ****         x = Calibration_GetX(TS_State.X);
+ 933              		.loc 1 85 19 is_stmt 0 view .LVU236
+ 934 01c4 2388     		ldrh	r3, [r4]
+  85:Core/Src/touchscreen.c ****         x = Calibration_GetX(TS_State.X);
+ 935              		.loc 1 85 10 view .LVU237
+ 936 01c6 002B     		cmp	r3, #0
+ 937 01c8 F3D0     		beq	.L22
+  86:Core/Src/touchscreen.c ****         y = Calibration_GetY(TS_State.Y);
+ 938              		.loc 1 86 9 is_stmt 1 view .LVU238
+  86:Core/Src/touchscreen.c ****         y = Calibration_GetY(TS_State.Y);
+ 939              		.loc 1 86 13 is_stmt 0 view .LVU239
+ 940 01ca 6088     		ldrh	r0, [r4, #2]
+ 941 01cc FFF7FEFF 		bl	Calibration_GetX
+ 942              	.LVL144:
+ 943 01d0 8046     		mov	r8, r0
+ 944              	.LVL145:
+  87:Core/Src/touchscreen.c ****         
+ 945              		.loc 1 87 9 is_stmt 1 view .LVU240
+  87:Core/Src/touchscreen.c ****         
+ 946              		.loc 1 87 13 is_stmt 0 view .LVU241
+ 947 01d2 A088     		ldrh	r0, [r4, #4]
+ 948 01d4 FFF7FEFF 		bl	Calibration_GetY
+ 949              	.LVL146:
+ 950 01d8 0546     		mov	r5, r0
+ 951              	.LVL147:
+  89:Core/Src/touchscreen.c ****            (y > (CIRCLE_YPOS(1) - CIRCLE_RADIUS))&&
+ 952              		.loc 1 89 9 is_stmt 1 view .LVU242
+  89:Core/Src/touchscreen.c ****            (y > (CIRCLE_YPOS(1) - CIRCLE_RADIUS))&&
+ 953              		.loc 1 89 21 is_stmt 0 view .LVU243
+ 954 01da 2388     		ldrh	r3, [r4]
+  89:Core/Src/touchscreen.c ****            (y > (CIRCLE_YPOS(1) - CIRCLE_RADIUS))&&
+ 955              		.loc 1 89 11 view .LVU244
+ 956 01dc 002B     		cmp	r3, #0
+ 957 01de E8D0     		beq	.L22
+  90:Core/Src/touchscreen.c ****              (y < (CIRCLE_YPOS(1) + CIRCLE_RADIUS)))
+ 958              		.loc 1 90 18 view .LVU245
+ 959 01e0 FFF7FEFF 		bl	BSP_LCD_GetYSize
+ 960              	.LVL148:
+  90:Core/Src/touchscreen.c ****              (y < (CIRCLE_YPOS(1) + CIRCLE_RADIUS)))
+ 961              		.loc 1 90 33 discriminator 1 view .LVU246
+ 962 01e4 7838     		subs	r0, r0, #120
+  89:Core/Src/touchscreen.c ****            (y > (CIRCLE_YPOS(1) - CIRCLE_RADIUS))&&
+ 963              		.loc 1 89 37 discriminator 1 view .LVU247
+ 964 01e6 8542     		cmp	r5, r0
+ 965 01e8 E3D9     		bls	.L22
+  91:Core/Src/touchscreen.c ****         {
+ 966              		.loc 1 91 20 view .LVU248
+ 967 01ea FFF7FEFF 		bl	BSP_LCD_GetYSize
+ 968              	.LVL149:
+  91:Core/Src/touchscreen.c ****         {
+ARM GAS  /tmp/ccm0AGjk.s 			page 25
+
+
+ 969              		.loc 1 91 35 discriminator 1 view .LVU249
+ 970 01ee 3C38     		subs	r0, r0, #60
+  90:Core/Src/touchscreen.c ****              (y < (CIRCLE_YPOS(1) + CIRCLE_RADIUS)))
+ 971              		.loc 1 90 50 discriminator 2 view .LVU250
+ 972 01f0 8542     		cmp	r5, r0
+ 973 01f2 DED2     		bcs	.L22
+  94:Core/Src/touchscreen.c ****              (x < (CIRCLE_XPOS(1) + CIRCLE_RADIUS)))
+ 974              		.loc 1 94 11 is_stmt 1 view .LVU251
+  94:Core/Src/touchscreen.c ****              (x < (CIRCLE_XPOS(1) + CIRCLE_RADIUS)))
+ 975              		.loc 1 94 20 is_stmt 0 view .LVU252
+ 976 01f4 FFF7FEFF 		bl	BSP_LCD_GetXSize
+ 977              	.LVL150:
+  94:Core/Src/touchscreen.c ****              (x < (CIRCLE_XPOS(1) + CIRCLE_RADIUS)))
+ 978              		.loc 1 94 20 discriminator 1 view .LVU253
+ 979 01f8 1B4B     		ldr	r3, .L46+12
+ 980 01fa A3FB0023 		umull	r2, r3, r3, r0
+ 981 01fe 9B08     		lsrs	r3, r3, #2
+  94:Core/Src/touchscreen.c ****              (x < (CIRCLE_XPOS(1) + CIRCLE_RADIUS)))
+ 982              		.loc 1 94 35 discriminator 1 view .LVU254
+ 983 0200 1E3B     		subs	r3, r3, #30
+  94:Core/Src/touchscreen.c ****              (x < (CIRCLE_XPOS(1) + CIRCLE_RADIUS)))
+ 984              		.loc 1 94 13 discriminator 1 view .LVU255
+ 985 0202 9845     		cmp	r8, r3
+ 986 0204 3FF631AF 		bhi	.L42
+ 987              	.LVL151:
+ 988              	.L25:
+ 105:Core/Src/touchscreen.c ****              (x < (CIRCLE_XPOS(2) + CIRCLE_RADIUS)))
+ 989              		.loc 1 105 11 is_stmt 1 view .LVU256
+ 105:Core/Src/touchscreen.c ****              (x < (CIRCLE_XPOS(2) + CIRCLE_RADIUS)))
+ 990              		.loc 1 105 20 is_stmt 0 view .LVU257
+ 991 0208 FFF7FEFF 		bl	BSP_LCD_GetXSize
+ 992              	.LVL152:
+ 105:Core/Src/touchscreen.c ****              (x < (CIRCLE_XPOS(2) + CIRCLE_RADIUS)))
+ 993              		.loc 1 105 20 discriminator 1 view .LVU258
+ 994 020c 4300     		lsls	r3, r0, #1
+ 995 020e 164A     		ldr	r2, .L46+12
+ 996 0210 A2FB0323 		umull	r2, r3, r2, r3
+ 997 0214 9B08     		lsrs	r3, r3, #2
+ 105:Core/Src/touchscreen.c ****              (x < (CIRCLE_XPOS(2) + CIRCLE_RADIUS)))
+ 998              		.loc 1 105 35 discriminator 1 view .LVU259
+ 999 0216 1E3B     		subs	r3, r3, #30
+ 105:Core/Src/touchscreen.c ****              (x < (CIRCLE_XPOS(2) + CIRCLE_RADIUS)))
+ 1000              		.loc 1 105 13 discriminator 1 view .LVU260
+ 1001 0218 9845     		cmp	r8, r3
+ 1002 021a 3FF64CAF 		bhi	.L43
+ 1003              	.LVL153:
+ 1004              	.L28:
+ 117:Core/Src/touchscreen.c ****              (x < (CIRCLE_XPOS(3) + CIRCLE_RADIUS)))
+ 1005              		.loc 1 117 11 is_stmt 1 view .LVU261
+ 117:Core/Src/touchscreen.c ****              (x < (CIRCLE_XPOS(3) + CIRCLE_RADIUS)))
+ 1006              		.loc 1 117 20 is_stmt 0 view .LVU262
+ 1007 021e FFF7FEFF 		bl	BSP_LCD_GetXSize
+ 1008              	.LVL154:
+ 117:Core/Src/touchscreen.c ****              (x < (CIRCLE_XPOS(3) + CIRCLE_RADIUS)))
+ 1009              		.loc 1 117 20 discriminator 1 view .LVU263
+ 1010 0222 00EB4000 		add	r0, r0, r0, lsl #1
+ 1011 0226 104B     		ldr	r3, .L46+12
+ARM GAS  /tmp/ccm0AGjk.s 			page 26
+
+
+ 1012 0228 A3FB0023 		umull	r2, r3, r3, r0
+ 1013 022c 9B08     		lsrs	r3, r3, #2
+ 117:Core/Src/touchscreen.c ****              (x < (CIRCLE_XPOS(3) + CIRCLE_RADIUS)))
+ 1014              		.loc 1 117 35 discriminator 1 view .LVU264
+ 1015 022e 1E3B     		subs	r3, r3, #30
+ 117:Core/Src/touchscreen.c ****              (x < (CIRCLE_XPOS(3) + CIRCLE_RADIUS)))
+ 1016              		.loc 1 117 13 discriminator 1 view .LVU265
+ 1017 0230 9845     		cmp	r8, r3
+ 1018 0232 3FF668AF 		bhi	.L44
+ 1019              	.LVL155:
+ 1020              	.L31:
+ 129:Core/Src/touchscreen.c ****              (x < (CIRCLE_XPOS(4) + CIRCLE_RADIUS)))
+ 1021              		.loc 1 129 11 is_stmt 1 view .LVU266
+ 129:Core/Src/touchscreen.c ****              (x < (CIRCLE_XPOS(4) + CIRCLE_RADIUS)))
+ 1022              		.loc 1 129 20 is_stmt 0 view .LVU267
+ 1023 0236 FFF7FEFF 		bl	BSP_LCD_GetXSize
+ 1024              	.LVL156:
+ 129:Core/Src/touchscreen.c ****              (x < (CIRCLE_XPOS(4) + CIRCLE_RADIUS)))
+ 1025              		.loc 1 129 20 discriminator 1 view .LVU268
+ 1026 023a 8300     		lsls	r3, r0, #2
+ 1027 023c 0A4A     		ldr	r2, .L46+12
+ 1028 023e A2FB0323 		umull	r2, r3, r2, r3
+ 1029 0242 9B08     		lsrs	r3, r3, #2
+ 129:Core/Src/touchscreen.c ****              (x < (CIRCLE_XPOS(4) + CIRCLE_RADIUS)))
+ 1030              		.loc 1 129 35 discriminator 1 view .LVU269
+ 1031 0244 1E3B     		subs	r3, r3, #30
+ 129:Core/Src/touchscreen.c ****              (x < (CIRCLE_XPOS(4) + CIRCLE_RADIUS)))
+ 1032              		.loc 1 129 13 discriminator 1 view .LVU270
+ 1033 0246 9845     		cmp	r8, r3
+ 1034 0248 88D8     		bhi	.L45
+ 1035              	.LVL157:
+ 1036              	.L34:
+ 140:Core/Src/touchscreen.c ****           {
+ 1037              		.loc 1 140 11 is_stmt 1 view .LVU271
+ 140:Core/Src/touchscreen.c ****           {
+ 1038              		.loc 1 140 14 is_stmt 0 view .LVU272
+ 1039 024a 0F2F     		cmp	r7, #15
+ 1040 024c ADD0     		beq	.L36
+ 142:Core/Src/touchscreen.c ****           }
+ 1041              		.loc 1 142 13 is_stmt 1 view .LVU273
+ 142:Core/Src/touchscreen.c ****           }
+ 1042              		.loc 1 142 36 is_stmt 0 view .LVU274
+ 1043 024e 084B     		ldr	r3, .L46+20
+ 1044 0250 0022     		movs	r2, #0
+ 1045 0252 1A80     		strh	r2, [r3]	@ movhi
+ 1046 0254 ADE7     		b	.L22
+ 1047              	.L39:
+ 156:Core/Src/touchscreen.c **** 
+ 1048              		.loc 1 156 1 view .LVU275
+ 1049 0256 BDE8F081 		pop	{r4, r5, r6, r7, r8, pc}
+ 1050              	.LVL158:
+ 1051              	.L47:
+ 156:Core/Src/touchscreen.c **** 
+ 1052              		.loc 1 156 1 view .LVU276
+ 1053 025a 00BF     		.align	2
+ 1054              	.L46:
+ 1055 025c 0000FFFF 		.word	-65536
+ARM GAS  /tmp/ccm0AGjk.s 			page 27
+
+
+ 1056 0260 00000000 		.word	.LC4
+ 1057 0264 08000000 		.word	.LC5
+ 1058 0268 CDCCCCCC 		.word	-858993459
+ 1059 026c FF0000FF 		.word	-16776961
+ 1060 0270 00000000 		.word	TS_State
+ 1061              		.cfi_endproc
+ 1062              	.LFE137:
+ 1064              		.section	.bss.TS_State,"aw",%nobits
+ 1065              		.align	2
+ 1068              	TS_State:
+ 1069 0000 00000000 		.space	8
+ 1069      00000000 
+ 1070              		.text
+ 1071              	.Letext0:
+ 1072              		.file 2 "/usr/arm-none-eabi/include/machine/_default_types.h"
+ 1073              		.file 3 "/usr/arm-none-eabi/include/sys/_stdint.h"
+ 1074              		.file 4 "Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.h"
+ 1075              		.file 5 "Drivers/BSP/STM32F429I-Discovery/../../../Utilities/Fonts/fonts.h"
+ 1076              		.file 6 "Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_lcd.h"
+ 1077              		.file 7 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h"
+ 1078              		.file 8 "Core/Inc/main.h"
+ARM GAS  /tmp/ccm0AGjk.s 			page 28
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 touchscreen.c
+     /tmp/ccm0AGjk.s:21     .text.Touchscreen_DrawBackground:00000000 $t
+     /tmp/ccm0AGjk.s:26     .text.Touchscreen_DrawBackground:00000000 Touchscreen_DrawBackground
+     /tmp/ccm0AGjk.s:46     .text.Touchscreen_DrawBackground:0000000c $d
+     /tmp/ccm0AGjk.s:55     .text.Touchscreen_DrawBackground:0000001e $t
+     /tmp/ccm0AGjk.s:431    .text.Touchscreen_DrawBackground:00000274 $d
+     /tmp/ccm0AGjk.s:438    .rodata.Touchscreen_SetHint.str1.4:00000000 $d
+     /tmp/ccm0AGjk.s:451    .text.Touchscreen_SetHint:00000000 $t
+     /tmp/ccm0AGjk.s:456    .text.Touchscreen_SetHint:00000000 Touchscreen_SetHint
+     /tmp/ccm0AGjk.s:578    .text.Touchscreen_SetHint:000000b0 $d
+     /tmp/ccm0AGjk.s:589    .rodata.Touchscreen_demo.str1.4:00000000 $d
+     /tmp/ccm0AGjk.s:596    .text.Touchscreen_demo:00000000 $t
+     /tmp/ccm0AGjk.s:602    .text.Touchscreen_demo:00000000 Touchscreen_demo
+     /tmp/ccm0AGjk.s:1055   .text.Touchscreen_demo:0000025c $d
+     /tmp/ccm0AGjk.s:1068   .bss.TS_State:00000000 TS_State
+     /tmp/ccm0AGjk.s:1065   .bss.TS_State:00000000 $d
+
+UNDEFINED SYMBOLS
+BSP_LCD_SetTextColor
+BSP_LCD_GetXSize
+BSP_LCD_GetYSize
+BSP_LCD_FillCircle
+BSP_LCD_Clear
+BSP_LCD_FillRect
+BSP_LCD_SetBackColor
+BSP_LCD_SetFont
+BSP_LCD_DisplayStringAt
+BSP_LCD_DrawRect
+Font24
+Font12
+IsCalibrationDone
+BSP_TS_Init
+Touchscreen_Calibration
+CheckForUserInput
+HAL_Delay
+BSP_TS_GetState
+Calibration_GetX
+Calibration_GetY

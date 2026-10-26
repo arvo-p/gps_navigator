@@ -1,0 +1,2464 @@
+ARM GAS  /tmp/ccCUVwWy.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.arch armv7e-m
+   3              		.fpu fpv4-sp-d16
+   4              		.eabi_attribute 27, 1
+   5              		.eabi_attribute 28, 1
+   6              		.eabi_attribute 20, 1
+   7              		.eabi_attribute 21, 1
+   8              		.eabi_attribute 23, 3
+   9              		.eabi_attribute 24, 1
+  10              		.eabi_attribute 25, 1
+  11              		.eabi_attribute 26, 1
+  12              		.eabi_attribute 30, 1
+  13              		.eabi_attribute 34, 1
+  14              		.eabi_attribute 18, 4
+  15              		.file	"lv_theme_simple.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.file 1 "Drivers/lvgl/src/themes/simple/lv_theme_simple.c"
+  20              		.section	.text.theme_apply,"ax",%progbits
+  21              		.align	1
+  22              		.syntax unified
+  23              		.thumb
+  24              		.thumb_func
+  26              	theme_apply:
+  27              	.LVL0:
+  28              	.LFB34:
+   1:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** /**
+   2:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****  * @file lv_theme_simple.c
+   3:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****  *
+   4:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****  */
+   5:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+   6:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** /*********************
+   7:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****  *      INCLUDES
+   8:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****  *********************/
+   9:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+  10:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** #include "../../lvgl_public.h"
+  11:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+  12:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** #if LV_USE_THEME_SIMPLE
+  13:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+  14:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** #include "../lv_theme_private.h"
+  15:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** #include "../../core/lv_global.h"
+  16:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+  17:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** /*********************
+  18:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****  *      DEFINES
+  19:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****  *********************/
+  20:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+  21:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** struct _my_theme_t;
+  22:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** typedef struct _my_theme_t my_theme_t;
+  23:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+  24:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** #define theme_def (*(my_theme_t **)(&LV_GLOBAL_DEFAULT()->theme_simple))
+  25:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+  26:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** #define COLOR_SCR     lv_palette_lighten(LV_PALETTE_GREY, 4)
+  27:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** #define COLOR_WHITE   lv_color_white()
+  28:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** #define COLOR_LIGHT   lv_palette_lighten(LV_PALETTE_GREY, 2)
+  29:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** #define COLOR_DARK    lv_palette_main(LV_PALETTE_GREY)
+  30:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** #define COLOR_DIM     lv_palette_darken(LV_PALETTE_GREY, 2)
+ARM GAS  /tmp/ccCUVwWy.s 			page 2
+
+
+  31:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** #define SCROLLBAR_WIDTH     2
+  32:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+  33:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** /**********************
+  34:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****  *      TYPEDEFS
+  35:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****  **********************/
+  36:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** typedef struct {
+  37:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_t scr;
+  38:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_t transp;
+  39:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_t white;
+  40:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_t light;
+  41:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_t dark;
+  42:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_t dim;
+  43:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_t scrollbar;
+  44:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** #if LV_USE_ARC
+  45:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_t arc_line;
+  46:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_t arc_knob;
+  47:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** #endif
+  48:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** #if LV_USE_TEXTAREA
+  49:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_t ta_cursor;
+  50:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** #endif
+  51:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** } my_theme_styles_t;
+  52:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+  53:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** struct _my_theme_t {
+  54:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_theme_t base;
+  55:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     my_theme_styles_t styles;
+  56:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     bool inited;
+  57:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** };
+  58:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+  59:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** /**********************
+  60:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****  *  STATIC PROTOTYPES
+  61:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****  **********************/
+  62:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** static void style_init_reset(lv_style_t * style);
+  63:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** static void theme_apply(lv_theme_t * th, lv_obj_t * obj);
+  64:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+  65:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** /**********************
+  66:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****  *  STATIC VARIABLES
+  67:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****  **********************/
+  68:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+  69:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** /**********************
+  70:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****  *      MACROS
+  71:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****  **********************/
+  72:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+  73:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** /**********************
+  74:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****  *   STATIC FUNCTIONS
+  75:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****  **********************/
+  76:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+  77:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** static void style_init(my_theme_t * theme)
+  78:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** {
+  79:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     style_init_reset(&theme->styles.scrollbar);
+  80:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_bg_opa(&theme->styles.scrollbar, LV_OPA_COVER);
+  81:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_bg_color(&theme->styles.scrollbar, COLOR_DARK);
+  82:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_width(&theme->styles.scrollbar, SCROLLBAR_WIDTH);
+  83:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+  84:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     style_init_reset(&theme->styles.scr);
+  85:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_bg_opa(&theme->styles.scr, LV_OPA_COVER);
+  86:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_bg_color(&theme->styles.scr, COLOR_SCR);
+  87:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_text_color(&theme->styles.scr, COLOR_DIM);
+ARM GAS  /tmp/ccCUVwWy.s 			page 3
+
+
+  88:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+  89:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     style_init_reset(&theme->styles.transp);
+  90:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_bg_opa(&theme->styles.transp, LV_OPA_TRANSP);
+  91:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+  92:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     style_init_reset(&theme->styles.white);
+  93:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_bg_opa(&theme->styles.white, LV_OPA_COVER);
+  94:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_bg_color(&theme->styles.white, COLOR_WHITE);
+  95:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_line_width(&theme->styles.white, 1);
+  96:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_line_color(&theme->styles.white, COLOR_WHITE);
+  97:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_arc_width(&theme->styles.white, 2);
+  98:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_arc_color(&theme->styles.white, COLOR_WHITE);
+  99:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+ 100:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     style_init_reset(&theme->styles.light);
+ 101:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_bg_opa(&theme->styles.light, LV_OPA_COVER);
+ 102:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_bg_color(&theme->styles.light, COLOR_LIGHT);
+ 103:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_line_width(&theme->styles.light, 1);
+ 104:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_line_color(&theme->styles.light, COLOR_LIGHT);
+ 105:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_arc_width(&theme->styles.light, 2);
+ 106:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_arc_color(&theme->styles.light, COLOR_LIGHT);
+ 107:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+ 108:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     style_init_reset(&theme->styles.dark);
+ 109:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_bg_opa(&theme->styles.dark, LV_OPA_COVER);
+ 110:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_bg_color(&theme->styles.dark, COLOR_DARK);
+ 111:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_line_width(&theme->styles.dark, 1);
+ 112:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_line_color(&theme->styles.dark, COLOR_DARK);
+ 113:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_arc_width(&theme->styles.dark, 2);
+ 114:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_arc_color(&theme->styles.dark, COLOR_DARK);
+ 115:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+ 116:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     style_init_reset(&theme->styles.dim);
+ 117:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_bg_opa(&theme->styles.dim, LV_OPA_COVER);
+ 118:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_bg_color(&theme->styles.dim, COLOR_DIM);
+ 119:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_line_width(&theme->styles.dim, 1);
+ 120:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_line_color(&theme->styles.dim, COLOR_DIM);
+ 121:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_arc_width(&theme->styles.dim, 2);
+ 122:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_arc_color(&theme->styles.dim, COLOR_DIM);
+ 123:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+ 124:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** #if LV_USE_ARC
+ 125:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     style_init_reset(&theme->styles.arc_line);
+ 126:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_arc_width(&theme->styles.arc_line, 6);
+ 127:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     style_init_reset(&theme->styles.arc_knob);
+ 128:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_pad_all(&theme->styles.arc_knob, 5);
+ 129:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** #endif
+ 130:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+ 131:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** #if LV_USE_TEXTAREA
+ 132:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     style_init_reset(&theme->styles.ta_cursor);
+ 133:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_border_side(&theme->styles.ta_cursor, LV_BORDER_SIDE_LEFT);
+ 134:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_border_color(&theme->styles.ta_cursor, COLOR_DIM);
+ 135:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_border_width(&theme->styles.ta_cursor, 2);
+ 136:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_bg_opa(&theme->styles.ta_cursor, LV_OPA_TRANSP);
+ 137:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_anim_duration(&theme->styles.ta_cursor, 500);
+ 138:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** #endif
+ 139:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** }
+ 140:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+ 141:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** /**********************
+ 142:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****  *   GLOBAL FUNCTIONS
+ 143:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****  **********************/
+ 144:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+ARM GAS  /tmp/ccCUVwWy.s 			page 4
+
+
+ 145:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** lv_theme_t * lv_theme_simple_init(lv_display_t * disp)
+ 146:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** {
+ 147:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     LV_CHECK_ARG(disp != NULL, return NULL);
+ 148:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+ 149:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     /*This trick is required only to avoid the garbage collection of
+ 150:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****      *styles' data if LVGL is used in a binding (e.g. MicroPython)
+ 151:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****      *In a general case styles could be in a simple `static lv_style_t my_style...` variables*/
+ 152:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     if(!lv_theme_simple_is_inited()) {
+ 153:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         theme_def = lv_malloc_zeroed(sizeof(my_theme_t));
+ 154:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         LV_ASSERT_MALLOC(theme_def);
+ 155:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     }
+ 156:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+ 157:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     my_theme_t * theme = theme_def;
+ 158:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+ 159:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     theme->base.disp = disp;
+ 160:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     theme->base.font_small = LV_FONT_DEFAULT;
+ 161:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     theme->base.font_normal = LV_FONT_DEFAULT;
+ 162:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     theme->base.font_large = LV_FONT_DEFAULT;
+ 163:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     theme->base.apply_cb = theme_apply;
+ 164:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** #if LV_USE_EXT_DATA
+ 165:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     theme->base.ext_data.free_cb = NULL;
+ 166:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     theme->base.ext_data.data = NULL;
+ 167:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** #endif
+ 168:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+ 169:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     style_init(theme);
+ 170:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+ 171:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     if(lv_display_get_theme(disp) == (lv_theme_t *)theme) {
+ 172:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_report_style_change(NULL);
+ 173:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     }
+ 174:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+ 175:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     theme->inited = true;
+ 176:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+ 177:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     return (lv_theme_t *)theme_def;
+ 178:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** }
+ 179:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+ 180:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** bool lv_theme_simple_is_inited(void)
+ 181:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** {
+ 182:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     my_theme_t * theme = theme_def;
+ 183:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     if(theme == NULL) return false;
+ 184:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     return theme->inited;
+ 185:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** }
+ 186:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+ 187:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** lv_theme_t * lv_theme_simple_get(void)
+ 188:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** {
+ 189:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     if(!lv_theme_simple_is_inited()) {
+ 190:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         return NULL;
+ 191:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     }
+ 192:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+ 193:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     return (lv_theme_t *)theme_def;
+ 194:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** }
+ 195:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+ 196:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** void lv_theme_simple_deinit(void)
+ 197:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** {
+ 198:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     my_theme_t * theme = theme_def;
+ 199:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     if(theme) {
+ 200:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         if(theme->inited) {
+ 201:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****             lv_style_t * theme_styles = (lv_style_t *)(&(theme->styles));
+ARM GAS  /tmp/ccCUVwWy.s 			page 5
+
+
+ 202:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****             uint32_t i;
+ 203:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****             for(i = 0; i < sizeof(my_theme_styles_t) / sizeof(lv_style_t); i++) {
+ 204:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****                 lv_style_reset(theme_styles + i);
+ 205:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****             }
+ 206:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         }
+ 207:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** #if LV_USE_EXT_DATA
+ 208:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         if(theme->base.ext_data.free_cb) {
+ 209:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****             theme->base.ext_data.free_cb(theme->base.ext_data.data);
+ 210:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****             theme->base.ext_data.data = NULL;
+ 211:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         }
+ 212:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** #endif
+ 213:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_free(theme_def);
+ 214:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         theme_def = NULL;
+ 215:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     }
+ 216:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** }
+ 217:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+ 218:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** /**********************
+ 219:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****  *   STATIC FUNCTIONS
+ 220:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****  **********************/
+ 221:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+ 222:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** static void theme_apply(lv_theme_t * th, lv_obj_t * obj)
+ 223:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** {
+  29              		.loc 1 223 1 view -0
+  30              		.cfi_startproc
+  31              		@ args = 0, pretend = 0, frame = 0
+  32              		@ frame_needed = 0, uses_anonymous_args = 0
+  33              		.loc 1 223 1 is_stmt 0 view .LVU1
+  34 0000 F8B5     		push	{r3, r4, r5, r6, r7, lr}
+  35              	.LCFI0:
+  36              		.cfi_def_cfa_offset 24
+  37              		.cfi_offset 3, -24
+  38              		.cfi_offset 4, -20
+  39              		.cfi_offset 5, -16
+  40              		.cfi_offset 6, -12
+  41              		.cfi_offset 7, -8
+  42              		.cfi_offset 14, -4
+  43 0002 0C46     		mov	r4, r1
+ 224:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     LV_UNUSED(th);
+  44              		.loc 1 224 5 is_stmt 1 view .LVU2
+ 225:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+ 226:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     my_theme_t * theme = theme_def;
+  45              		.loc 1 226 5 view .LVU3
+  46              		.loc 1 226 18 is_stmt 0 view .LVU4
+  47 0004 C24B     		ldr	r3, .L36
+  48 0006 D3F8E451 		ldr	r5, [r3, #484]
+  49              	.LVL1:
+ 227:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_obj_t * parent = lv_obj_get_parent(obj);
+  50              		.loc 1 227 5 is_stmt 1 view .LVU5
+  51              		.loc 1 227 25 is_stmt 0 view .LVU6
+  52 000a 0846     		mov	r0, r1
+  53              	.LVL2:
+  54              		.loc 1 227 25 view .LVU7
+  55 000c FFF7FEFF 		bl	lv_obj_get_parent
+  56              	.LVL3:
+ 228:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+ 229:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     if(parent == NULL) {
+  57              		.loc 1 229 5 is_stmt 1 view .LVU8
+ARM GAS  /tmp/ccCUVwWy.s 			page 6
+
+
+  58              		.loc 1 229 7 is_stmt 0 view .LVU9
+  59 0010 18B3     		cbz	r0, .L30
+  60 0012 0646     		mov	r6, r0
+ 230:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.scr, 0);
+ 231:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.scrollbar, LV_PART_SCROLLBAR);
+ 232:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         return;
+ 233:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     }
+ 234:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+ 235:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     if(lv_obj_check_type(obj, &lv_obj_class)) {
+  61              		.loc 1 235 5 is_stmt 1 view .LVU10
+  62              		.loc 1 235 8 is_stmt 0 view .LVU11
+  63 0014 BF49     		ldr	r1, .L36+4
+  64 0016 2046     		mov	r0, r4
+  65              	.LVL4:
+  66              		.loc 1 235 8 view .LVU12
+  67 0018 FFF7FEFF 		bl	lv_obj_check_type
+  68              	.LVL5:
+  69              		.loc 1 235 7 discriminator 1 view .LVU13
+  70 001c 0028     		cmp	r0, #0
+  71 001e 3FD0     		beq	.L4
+  72              	.LBB2:
+ 236:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** #if LV_USE_TABVIEW
+ 237:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_t * grandparent = lv_obj_get_parent(parent);
+  73              		.loc 1 237 9 is_stmt 1 view .LVU14
+  74              		.loc 1 237 34 is_stmt 0 view .LVU15
+  75 0020 3046     		mov	r0, r6
+  76 0022 FFF7FEFF 		bl	lv_obj_get_parent
+  77              	.LVL6:
+  78 0026 0746     		mov	r7, r0
+  79              	.LVL7:
+ 238:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         /*Tabview content area*/
+ 239:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         if(lv_obj_check_type(parent, &lv_tabview_class)) {
+  80              		.loc 1 239 9 is_stmt 1 view .LVU16
+  81              		.loc 1 239 12 is_stmt 0 view .LVU17
+  82 0028 BB49     		ldr	r1, .L36+8
+  83 002a 3046     		mov	r0, r6
+  84              	.LVL8:
+  85              		.loc 1 239 12 view .LVU18
+  86 002c FFF7FEFF 		bl	lv_obj_check_type
+  87              	.LVL9:
+  88              		.loc 1 239 11 discriminator 1 view .LVU19
+  89 0030 08BB     		cbnz	r0, .L31
+ 240:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****             lv_obj_add_style(obj, &theme->styles.scr, 0);
+ 241:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****             return;
+ 242:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         }
+ 243:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         /*Tabview pages*/
+ 244:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         else if(grandparent && lv_obj_check_type(grandparent, &lv_tabview_class)) {
+  90              		.loc 1 244 14 is_stmt 1 view .LVU20
+  91              		.loc 1 244 16 is_stmt 0 view .LVU21
+  92 0032 27B1     		cbz	r7, .L6
+  93              		.loc 1 244 32 discriminator 1 view .LVU22
+  94 0034 B849     		ldr	r1, .L36+8
+  95 0036 3846     		mov	r0, r7
+  96 0038 FFF7FEFF 		bl	lv_obj_check_type
+  97              	.LVL10:
+  98              		.loc 1 244 29 discriminator 2 view .LVU23
+  99 003c 10BB     		cbnz	r0, .L32
+ARM GAS  /tmp/ccCUVwWy.s 			page 7
+
+
+ 100              	.L6:
+ 245:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****             lv_obj_add_style(obj, &theme->styles.scr, 0);
+ 246:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****             lv_obj_add_style(obj, &theme->styles.scrollbar, LV_PART_SCROLLBAR);
+ 247:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****             return;
+ 248:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         }
+ 249:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** #endif
+ 250:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+ 251:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.white, 0);
+ 101              		.loc 1 251 9 is_stmt 1 view .LVU24
+ 102 003e 0022     		movs	r2, #0
+ 103 0040 05F14001 		add	r1, r5, #64
+ 104 0044 2046     		mov	r0, r4
+ 105 0046 FFF7FEFF 		bl	lv_obj_add_style
+ 106              	.LVL11:
+ 252:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.scrollbar, LV_PART_SCROLLBAR);
+ 107              		.loc 1 252 9 view .LVU25
+ 108 004a 4FF48032 		mov	r2, #65536
+ 109 004e 05F17001 		add	r1, r5, #112
+ 110 0052 2046     		mov	r0, r4
+ 111 0054 FFF7FEFF 		bl	lv_obj_add_style
+ 112              	.LVL12:
+ 113              	.L1:
+ 114              		.loc 1 252 9 is_stmt 0 view .LVU26
+ 115              	.LBE2:
+ 253:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     }
+ 254:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** #if LV_USE_BUTTON
+ 255:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     else if(lv_obj_check_type(obj, &lv_button_class)) {
+ 256:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.dark, 0);
+ 257:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     }
+ 258:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** #endif
+ 259:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+ 260:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** #if LV_USE_BUTTONMATRIX
+ 261:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     else if(lv_obj_check_type(obj, &lv_buttonmatrix_class)) {
+ 262:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** #if LV_USE_MSGBOX
+ 263:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         if(lv_obj_check_type(parent, &lv_msgbox_class)) {
+ 264:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****             lv_obj_add_style(obj, &theme->styles.light, LV_PART_ITEMS);
+ 265:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****             return;
+ 266:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         }
+ 267:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** #endif
+ 268:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** #if LV_USE_TABVIEW
+ 269:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         if(lv_obj_check_type(parent, &lv_tabview_class)) {
+ 270:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****             lv_obj_add_style(obj, &theme->styles.light, LV_PART_ITEMS);
+ 271:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****             return;
+ 272:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         }
+ 273:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** #endif
+ 274:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.white, 0);
+ 275:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.light, LV_PART_ITEMS);
+ 276:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     }
+ 277:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** #endif
+ 278:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+ 279:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** #if LV_USE_BAR
+ 280:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     else if(lv_obj_check_type(obj, &lv_bar_class)) {
+ 281:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.light, 0);
+ 282:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.dark, LV_PART_INDICATOR);
+ 283:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     }
+ 284:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** #endif
+ 285:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+ARM GAS  /tmp/ccCUVwWy.s 			page 8
+
+
+ 286:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** #if LV_USE_SLIDER
+ 287:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     else if(lv_obj_check_type(obj, &lv_slider_class)) {
+ 288:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.light, 0);
+ 289:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.dark, LV_PART_INDICATOR);
+ 290:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.dim, LV_PART_KNOB);
+ 291:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     }
+ 292:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** #endif
+ 293:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+ 294:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** #if LV_USE_TABLE
+ 295:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     else if(lv_obj_check_type(obj, &lv_table_class)) {
+ 296:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.scrollbar, LV_PART_SCROLLBAR);
+ 297:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.light, LV_PART_ITEMS);
+ 298:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     }
+ 299:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** #endif
+ 300:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+ 301:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** #if LV_USE_CHECKBOX
+ 302:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     else if(lv_obj_check_type(obj, &lv_checkbox_class)) {
+ 303:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.light, LV_PART_INDICATOR);
+ 304:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.dark, LV_PART_INDICATOR | LV_STATE_CHECKED);
+ 305:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     }
+ 306:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** #endif
+ 307:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+ 308:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** #if LV_USE_SWITCH
+ 309:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     else if(lv_obj_check_type(obj, &lv_switch_class)) {
+ 310:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.light, 0);
+ 311:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.dim, LV_PART_KNOB);
+ 312:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     }
+ 313:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** #endif
+ 314:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+ 315:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** #if LV_USE_CHART
+ 316:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     else if(lv_obj_check_type(obj, &lv_chart_class)) {
+ 317:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.white, 0);
+ 318:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.scrollbar, LV_PART_SCROLLBAR);
+ 319:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.light, LV_PART_ITEMS);
+ 320:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.dark, LV_PART_CURSOR);
+ 321:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     }
+ 322:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** #endif
+ 323:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+ 324:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** #if LV_USE_ROLLER
+ 325:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     else if(lv_obj_check_type(obj, &lv_roller_class)) {
+ 326:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.light, 0);
+ 327:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.dark, LV_PART_SELECTED);
+ 328:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     }
+ 329:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** #endif
+ 330:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+ 331:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** #if LV_USE_DROPDOWN
+ 332:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     else if(lv_obj_check_type(obj, &lv_dropdown_class)) {
+ 333:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.white, 0);
+ 334:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     }
+ 335:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     else if(lv_obj_check_type(obj, &lv_dropdownlist_class)) {
+ 336:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.white, 0);
+ 337:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.scrollbar, LV_PART_SCROLLBAR);
+ 338:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.light, LV_PART_SELECTED);
+ 339:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.dark, LV_PART_SELECTED | LV_STATE_CHECKED);
+ 340:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     }
+ 341:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** #endif
+ 342:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+ARM GAS  /tmp/ccCUVwWy.s 			page 9
+
+
+ 343:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** #if LV_USE_ARC
+ 344:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     else if(lv_obj_check_type(obj, &lv_arc_class)) {
+ 345:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.light, 0);
+ 346:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.transp, 0);
+ 347:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.arc_line, 0);
+ 348:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.dark, LV_PART_INDICATOR);
+ 349:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.arc_line, LV_PART_INDICATOR);
+ 350:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.dim, LV_PART_KNOB);
+ 351:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.arc_knob, LV_PART_KNOB);
+ 352:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     }
+ 353:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** #endif
+ 354:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+ 355:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** #if LV_USE_SPINNER
+ 356:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     else if(lv_obj_check_type(obj, &lv_spinner_class)) {
+ 357:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.light, 0);
+ 358:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.transp, 0);
+ 359:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.arc_line, 0);
+ 360:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.dark, LV_PART_INDICATOR);
+ 361:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.arc_line, LV_PART_INDICATOR);
+ 362:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     }
+ 363:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** #endif
+ 364:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+ 365:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** #if LV_USE_TEXTAREA
+ 366:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     else if(lv_obj_check_type(obj, &lv_textarea_class)) {
+ 367:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.white, 0);
+ 368:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.scrollbar, LV_PART_SCROLLBAR);
+ 369:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.ta_cursor, LV_PART_CURSOR | LV_STATE_FOCUSED);
+ 370:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     }
+ 371:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** #endif
+ 372:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+ 373:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** #if LV_USE_CALENDAR
+ 374:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     else if(lv_obj_check_type(obj, &lv_calendar_class)) {
+ 375:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.light, 0);
+ 376:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     }
+ 377:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** #endif
+ 378:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+ 379:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** #if LV_USE_KEYBOARD
+ 380:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     else if(lv_obj_check_type(obj, &lv_keyboard_class)) {
+ 381:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.scr, 0);
+ 382:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.white, LV_PART_ITEMS);
+ 383:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.light, LV_PART_ITEMS | LV_STATE_CHECKED);
+ 384:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     }
+ 385:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** #endif
+ 386:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+ 387:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** #if LV_USE_MSGBOX
+ 388:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     else if(lv_obj_check_type(obj, &lv_msgbox_class)) {
+ 389:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.light, 0);
+ 390:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         return;
+ 391:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     }
+ 392:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** #endif
+ 393:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+ 394:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** #if LV_USE_SPINBOX
+ 395:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     else if(lv_obj_check_type(obj, &lv_spinbox_class)) {
+ 396:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.light, 0);
+ 397:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.dark, LV_PART_CURSOR);
+ 398:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     }
+ 399:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** #endif
+ARM GAS  /tmp/ccCUVwWy.s 			page 10
+
+
+ 400:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** #if LV_USE_TILEVIEW
+ 401:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     else if(lv_obj_check_type(obj, &lv_tileview_class)) {
+ 402:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.scr, 0);
+ 403:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.scrollbar, LV_PART_SCROLLBAR);
+ 404:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     }
+ 405:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     else if(lv_obj_check_type(obj, &lv_tileview_tile_class)) {
+ 406:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.scrollbar, LV_PART_SCROLLBAR);
+ 407:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     }
+ 408:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** #endif
+ 409:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+ 410:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** #if LV_USE_LED
+ 411:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     else if(lv_obj_check_type(obj, &lv_led_class)) {
+ 412:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.light, 0);
+ 413:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     }
+ 414:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** #endif
+ 415:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** }
+ 116              		.loc 1 415 1 view .LVU27
+ 117 0058 F8BD     		pop	{r3, r4, r5, r6, r7, pc}
+ 118              	.LVL13:
+ 119              	.L30:
+ 230:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.scrollbar, LV_PART_SCROLLBAR);
+ 120              		.loc 1 230 9 is_stmt 1 view .LVU28
+ 121 005a 0246     		mov	r2, r0
+ 122 005c 05F12801 		add	r1, r5, #40
+ 123 0060 2046     		mov	r0, r4
+ 124              	.LVL14:
+ 230:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.scrollbar, LV_PART_SCROLLBAR);
+ 125              		.loc 1 230 9 is_stmt 0 view .LVU29
+ 126 0062 FFF7FEFF 		bl	lv_obj_add_style
+ 127              	.LVL15:
+ 231:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         return;
+ 128              		.loc 1 231 9 is_stmt 1 view .LVU30
+ 129 0066 4FF48032 		mov	r2, #65536
+ 130 006a 05F17001 		add	r1, r5, #112
+ 131 006e 2046     		mov	r0, r4
+ 132 0070 FFF7FEFF 		bl	lv_obj_add_style
+ 133              	.LVL16:
+ 232:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     }
+ 134              		.loc 1 232 9 view .LVU31
+ 135 0074 F0E7     		b	.L1
+ 136              	.LVL17:
+ 137              	.L31:
+ 138              	.LBB3:
+ 240:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****             return;
+ 139              		.loc 1 240 13 view .LVU32
+ 140 0076 0022     		movs	r2, #0
+ 141 0078 05F12801 		add	r1, r5, #40
+ 142 007c 2046     		mov	r0, r4
+ 143 007e FFF7FEFF 		bl	lv_obj_add_style
+ 144              	.LVL18:
+ 241:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         }
+ 145              		.loc 1 241 13 view .LVU33
+ 146 0082 E9E7     		b	.L1
+ 147              	.L32:
+ 245:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****             lv_obj_add_style(obj, &theme->styles.scrollbar, LV_PART_SCROLLBAR);
+ 148              		.loc 1 245 13 view .LVU34
+ 149 0084 0022     		movs	r2, #0
+ARM GAS  /tmp/ccCUVwWy.s 			page 11
+
+
+ 150 0086 05F12801 		add	r1, r5, #40
+ 151 008a 2046     		mov	r0, r4
+ 152 008c FFF7FEFF 		bl	lv_obj_add_style
+ 153              	.LVL19:
+ 246:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****             return;
+ 154              		.loc 1 246 13 view .LVU35
+ 155 0090 4FF48032 		mov	r2, #65536
+ 156 0094 05F17001 		add	r1, r5, #112
+ 157 0098 2046     		mov	r0, r4
+ 158 009a FFF7FEFF 		bl	lv_obj_add_style
+ 159              	.LVL20:
+ 247:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         }
+ 160              		.loc 1 247 13 view .LVU36
+ 161 009e DBE7     		b	.L1
+ 162              	.LVL21:
+ 163              	.L4:
+ 247:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         }
+ 164              		.loc 1 247 13 is_stmt 0 view .LVU37
+ 165              	.LBE3:
+ 255:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.dark, 0);
+ 166              		.loc 1 255 10 is_stmt 1 view .LVU38
+ 255:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.dark, 0);
+ 167              		.loc 1 255 13 is_stmt 0 view .LVU39
+ 168 00a0 9E49     		ldr	r1, .L36+12
+ 169 00a2 2046     		mov	r0, r4
+ 170 00a4 FFF7FEFF 		bl	lv_obj_check_type
+ 171              	.LVL22:
+ 255:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.dark, 0);
+ 172              		.loc 1 255 12 discriminator 1 view .LVU40
+ 173 00a8 30B1     		cbz	r0, .L7
+ 256:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     }
+ 174              		.loc 1 256 9 is_stmt 1 view .LVU41
+ 175 00aa 0022     		movs	r2, #0
+ 176 00ac 05F15801 		add	r1, r5, #88
+ 177 00b0 2046     		mov	r0, r4
+ 178 00b2 FFF7FEFF 		bl	lv_obj_add_style
+ 179              	.LVL23:
+ 180 00b6 CFE7     		b	.L1
+ 181              	.L7:
+ 261:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** #if LV_USE_MSGBOX
+ 182              		.loc 1 261 10 view .LVU42
+ 261:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** #if LV_USE_MSGBOX
+ 183              		.loc 1 261 13 is_stmt 0 view .LVU43
+ 184 00b8 9949     		ldr	r1, .L36+16
+ 185 00ba 2046     		mov	r0, r4
+ 186 00bc FFF7FEFF 		bl	lv_obj_check_type
+ 187              	.LVL24:
+ 261:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** #if LV_USE_MSGBOX
+ 188              		.loc 1 261 12 discriminator 1 view .LVU44
+ 189 00c0 38B3     		cbz	r0, .L8
+ 263:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****             lv_obj_add_style(obj, &theme->styles.light, LV_PART_ITEMS);
+ 190              		.loc 1 263 9 is_stmt 1 view .LVU45
+ 263:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****             lv_obj_add_style(obj, &theme->styles.light, LV_PART_ITEMS);
+ 191              		.loc 1 263 12 is_stmt 0 view .LVU46
+ 192 00c2 9849     		ldr	r1, .L36+20
+ 193 00c4 3046     		mov	r0, r6
+ 194 00c6 FFF7FEFF 		bl	lv_obj_check_type
+ARM GAS  /tmp/ccCUVwWy.s 			page 12
+
+
+ 195              	.LVL25:
+ 263:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****             lv_obj_add_style(obj, &theme->styles.light, LV_PART_ITEMS);
+ 196              		.loc 1 263 11 discriminator 1 view .LVU47
+ 197 00ca 90B9     		cbnz	r0, .L33
+ 269:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****             lv_obj_add_style(obj, &theme->styles.light, LV_PART_ITEMS);
+ 198              		.loc 1 269 9 is_stmt 1 view .LVU48
+ 269:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****             lv_obj_add_style(obj, &theme->styles.light, LV_PART_ITEMS);
+ 199              		.loc 1 269 12 is_stmt 0 view .LVU49
+ 200 00cc 9249     		ldr	r1, .L36+8
+ 201 00ce 3046     		mov	r0, r6
+ 202 00d0 FFF7FEFF 		bl	lv_obj_check_type
+ 203              	.LVL26:
+ 269:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****             lv_obj_add_style(obj, &theme->styles.light, LV_PART_ITEMS);
+ 204              		.loc 1 269 11 discriminator 1 view .LVU50
+ 205 00d4 A8B9     		cbnz	r0, .L34
+ 274:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.light, LV_PART_ITEMS);
+ 206              		.loc 1 274 9 is_stmt 1 view .LVU51
+ 207 00d6 0246     		mov	r2, r0
+ 208 00d8 05F14001 		add	r1, r5, #64
+ 209 00dc 2046     		mov	r0, r4
+ 210 00de FFF7FEFF 		bl	lv_obj_add_style
+ 211              	.LVL27:
+ 275:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     }
+ 212              		.loc 1 275 9 view .LVU52
+ 213 00e2 4FF4A022 		mov	r2, #327680
+ 214 00e6 05F14C01 		add	r1, r5, #76
+ 215 00ea 2046     		mov	r0, r4
+ 216 00ec FFF7FEFF 		bl	lv_obj_add_style
+ 217              	.LVL28:
+ 218 00f0 B2E7     		b	.L1
+ 219              	.L33:
+ 264:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****             return;
+ 220              		.loc 1 264 13 view .LVU53
+ 221 00f2 4FF4A022 		mov	r2, #327680
+ 222 00f6 05F14C01 		add	r1, r5, #76
+ 223 00fa 2046     		mov	r0, r4
+ 224 00fc FFF7FEFF 		bl	lv_obj_add_style
+ 225              	.LVL29:
+ 265:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         }
+ 226              		.loc 1 265 13 view .LVU54
+ 227 0100 AAE7     		b	.L1
+ 228              	.L34:
+ 270:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****             return;
+ 229              		.loc 1 270 13 view .LVU55
+ 230 0102 4FF4A022 		mov	r2, #327680
+ 231 0106 05F14C01 		add	r1, r5, #76
+ 232 010a 2046     		mov	r0, r4
+ 233 010c FFF7FEFF 		bl	lv_obj_add_style
+ 234              	.LVL30:
+ 271:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         }
+ 235              		.loc 1 271 13 view .LVU56
+ 236 0110 A2E7     		b	.L1
+ 237              	.L8:
+ 280:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.light, 0);
+ 238              		.loc 1 280 10 view .LVU57
+ 280:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.light, 0);
+ 239              		.loc 1 280 13 is_stmt 0 view .LVU58
+ARM GAS  /tmp/ccCUVwWy.s 			page 13
+
+
+ 240 0112 8549     		ldr	r1, .L36+24
+ 241 0114 2046     		mov	r0, r4
+ 242 0116 FFF7FEFF 		bl	lv_obj_check_type
+ 243              	.LVL31:
+ 280:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.light, 0);
+ 244              		.loc 1 280 12 discriminator 1 view .LVU59
+ 245 011a 68B1     		cbz	r0, .L11
+ 281:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.dark, LV_PART_INDICATOR);
+ 246              		.loc 1 281 9 is_stmt 1 view .LVU60
+ 247 011c 0022     		movs	r2, #0
+ 248 011e 05F14C01 		add	r1, r5, #76
+ 249 0122 2046     		mov	r0, r4
+ 250 0124 FFF7FEFF 		bl	lv_obj_add_style
+ 251              	.LVL32:
+ 282:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     }
+ 252              		.loc 1 282 9 view .LVU61
+ 253 0128 4FF40032 		mov	r2, #131072
+ 254 012c 05F15801 		add	r1, r5, #88
+ 255 0130 2046     		mov	r0, r4
+ 256 0132 FFF7FEFF 		bl	lv_obj_add_style
+ 257              	.LVL33:
+ 258 0136 8FE7     		b	.L1
+ 259              	.L11:
+ 287:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.light, 0);
+ 260              		.loc 1 287 10 view .LVU62
+ 287:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.light, 0);
+ 261              		.loc 1 287 13 is_stmt 0 view .LVU63
+ 262 0138 7C49     		ldr	r1, .L36+28
+ 263 013a 2046     		mov	r0, r4
+ 264 013c FFF7FEFF 		bl	lv_obj_check_type
+ 265              	.LVL34:
+ 287:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.light, 0);
+ 266              		.loc 1 287 12 discriminator 1 view .LVU64
+ 267 0140 A0B1     		cbz	r0, .L12
+ 288:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.dark, LV_PART_INDICATOR);
+ 268              		.loc 1 288 9 is_stmt 1 view .LVU65
+ 269 0142 0022     		movs	r2, #0
+ 270 0144 05F14C01 		add	r1, r5, #76
+ 271 0148 2046     		mov	r0, r4
+ 272 014a FFF7FEFF 		bl	lv_obj_add_style
+ 273              	.LVL35:
+ 289:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.dim, LV_PART_KNOB);
+ 274              		.loc 1 289 9 view .LVU66
+ 275 014e 4FF40032 		mov	r2, #131072
+ 276 0152 05F15801 		add	r1, r5, #88
+ 277 0156 2046     		mov	r0, r4
+ 278 0158 FFF7FEFF 		bl	lv_obj_add_style
+ 279              	.LVL36:
+ 290:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     }
+ 280              		.loc 1 290 9 view .LVU67
+ 281 015c 4FF44032 		mov	r2, #196608
+ 282 0160 05F16401 		add	r1, r5, #100
+ 283 0164 2046     		mov	r0, r4
+ 284 0166 FFF7FEFF 		bl	lv_obj_add_style
+ 285              	.LVL37:
+ 286 016a 75E7     		b	.L1
+ 287              	.L12:
+ARM GAS  /tmp/ccCUVwWy.s 			page 14
+
+
+ 295:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.scrollbar, LV_PART_SCROLLBAR);
+ 288              		.loc 1 295 10 view .LVU68
+ 295:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.scrollbar, LV_PART_SCROLLBAR);
+ 289              		.loc 1 295 13 is_stmt 0 view .LVU69
+ 290 016c 7049     		ldr	r1, .L36+32
+ 291 016e 2046     		mov	r0, r4
+ 292 0170 FFF7FEFF 		bl	lv_obj_check_type
+ 293              	.LVL38:
+ 295:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.scrollbar, LV_PART_SCROLLBAR);
+ 294              		.loc 1 295 12 discriminator 1 view .LVU70
+ 295 0174 70B1     		cbz	r0, .L13
+ 296:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.light, LV_PART_ITEMS);
+ 296              		.loc 1 296 9 is_stmt 1 view .LVU71
+ 297 0176 4FF48032 		mov	r2, #65536
+ 298 017a 05F17001 		add	r1, r5, #112
+ 299 017e 2046     		mov	r0, r4
+ 300 0180 FFF7FEFF 		bl	lv_obj_add_style
+ 301              	.LVL39:
+ 297:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     }
+ 302              		.loc 1 297 9 view .LVU72
+ 303 0184 4FF4A022 		mov	r2, #327680
+ 304 0188 05F14C01 		add	r1, r5, #76
+ 305 018c 2046     		mov	r0, r4
+ 306 018e FFF7FEFF 		bl	lv_obj_add_style
+ 307              	.LVL40:
+ 308 0192 61E7     		b	.L1
+ 309              	.L13:
+ 302:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.light, LV_PART_INDICATOR);
+ 310              		.loc 1 302 10 view .LVU73
+ 302:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.light, LV_PART_INDICATOR);
+ 311              		.loc 1 302 13 is_stmt 0 view .LVU74
+ 312 0194 6749     		ldr	r1, .L36+36
+ 313 0196 2046     		mov	r0, r4
+ 314 0198 FFF7FEFF 		bl	lv_obj_check_type
+ 315              	.LVL41:
+ 302:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.light, LV_PART_INDICATOR);
+ 316              		.loc 1 302 12 discriminator 1 view .LVU75
+ 317 019c 68B1     		cbz	r0, .L14
+ 303:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.dark, LV_PART_INDICATOR | LV_STATE_CHECKED);
+ 318              		.loc 1 303 9 is_stmt 1 view .LVU76
+ 319 019e 4FF40032 		mov	r2, #131072
+ 320 01a2 05F14C01 		add	r1, r5, #76
+ 321 01a6 2046     		mov	r0, r4
+ 322 01a8 FFF7FEFF 		bl	lv_obj_add_style
+ 323              	.LVL42:
+ 304:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     }
+ 324              		.loc 1 304 9 view .LVU77
+ 325 01ac 624A     		ldr	r2, .L36+40
+ 326 01ae 05F15801 		add	r1, r5, #88
+ 327 01b2 2046     		mov	r0, r4
+ 328 01b4 FFF7FEFF 		bl	lv_obj_add_style
+ 329              	.LVL43:
+ 330 01b8 4EE7     		b	.L1
+ 331              	.L14:
+ 309:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.light, 0);
+ 332              		.loc 1 309 10 view .LVU78
+ 309:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.light, 0);
+ARM GAS  /tmp/ccCUVwWy.s 			page 15
+
+
+ 333              		.loc 1 309 13 is_stmt 0 view .LVU79
+ 334 01ba 6049     		ldr	r1, .L36+44
+ 335 01bc 2046     		mov	r0, r4
+ 336 01be FFF7FEFF 		bl	lv_obj_check_type
+ 337              	.LVL44:
+ 309:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.light, 0);
+ 338              		.loc 1 309 12 discriminator 1 view .LVU80
+ 339 01c2 68B1     		cbz	r0, .L15
+ 310:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.dim, LV_PART_KNOB);
+ 340              		.loc 1 310 9 is_stmt 1 view .LVU81
+ 341 01c4 0022     		movs	r2, #0
+ 342 01c6 05F14C01 		add	r1, r5, #76
+ 343 01ca 2046     		mov	r0, r4
+ 344 01cc FFF7FEFF 		bl	lv_obj_add_style
+ 345              	.LVL45:
+ 311:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     }
+ 346              		.loc 1 311 9 view .LVU82
+ 347 01d0 4FF44032 		mov	r2, #196608
+ 348 01d4 05F16401 		add	r1, r5, #100
+ 349 01d8 2046     		mov	r0, r4
+ 350 01da FFF7FEFF 		bl	lv_obj_add_style
+ 351              	.LVL46:
+ 352 01de 3BE7     		b	.L1
+ 353              	.L15:
+ 316:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.white, 0);
+ 354              		.loc 1 316 10 view .LVU83
+ 316:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.white, 0);
+ 355              		.loc 1 316 13 is_stmt 0 view .LVU84
+ 356 01e0 5749     		ldr	r1, .L36+48
+ 357 01e2 2046     		mov	r0, r4
+ 358 01e4 FFF7FEFF 		bl	lv_obj_check_type
+ 359              	.LVL47:
+ 316:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.white, 0);
+ 360              		.loc 1 316 12 discriminator 1 view .LVU85
+ 361 01e8 D8B1     		cbz	r0, .L16
+ 317:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.scrollbar, LV_PART_SCROLLBAR);
+ 362              		.loc 1 317 9 is_stmt 1 view .LVU86
+ 363 01ea 0022     		movs	r2, #0
+ 364 01ec 05F14001 		add	r1, r5, #64
+ 365 01f0 2046     		mov	r0, r4
+ 366 01f2 FFF7FEFF 		bl	lv_obj_add_style
+ 367              	.LVL48:
+ 318:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.light, LV_PART_ITEMS);
+ 368              		.loc 1 318 9 view .LVU87
+ 369 01f6 4FF48032 		mov	r2, #65536
+ 370 01fa 05F17001 		add	r1, r5, #112
+ 371 01fe 2046     		mov	r0, r4
+ 372 0200 FFF7FEFF 		bl	lv_obj_add_style
+ 373              	.LVL49:
+ 319:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.dark, LV_PART_CURSOR);
+ 374              		.loc 1 319 9 view .LVU88
+ 375 0204 4FF4A022 		mov	r2, #327680
+ 376 0208 05F14C01 		add	r1, r5, #76
+ 377 020c 2046     		mov	r0, r4
+ 378 020e FFF7FEFF 		bl	lv_obj_add_style
+ 379              	.LVL50:
+ 320:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     }
+ARM GAS  /tmp/ccCUVwWy.s 			page 16
+
+
+ 380              		.loc 1 320 9 view .LVU89
+ 381 0212 4FF4C022 		mov	r2, #393216
+ 382 0216 05F15801 		add	r1, r5, #88
+ 383 021a 2046     		mov	r0, r4
+ 384 021c FFF7FEFF 		bl	lv_obj_add_style
+ 385              	.LVL51:
+ 386 0220 1AE7     		b	.L1
+ 387              	.L16:
+ 325:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.light, 0);
+ 388              		.loc 1 325 10 view .LVU90
+ 325:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.light, 0);
+ 389              		.loc 1 325 13 is_stmt 0 view .LVU91
+ 390 0222 4849     		ldr	r1, .L36+52
+ 391 0224 2046     		mov	r0, r4
+ 392 0226 FFF7FEFF 		bl	lv_obj_check_type
+ 393              	.LVL52:
+ 325:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.light, 0);
+ 394              		.loc 1 325 12 discriminator 1 view .LVU92
+ 395 022a 68B1     		cbz	r0, .L17
+ 326:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.dark, LV_PART_SELECTED);
+ 396              		.loc 1 326 9 is_stmt 1 view .LVU93
+ 397 022c 0022     		movs	r2, #0
+ 398 022e 05F14C01 		add	r1, r5, #76
+ 399 0232 2046     		mov	r0, r4
+ 400 0234 FFF7FEFF 		bl	lv_obj_add_style
+ 401              	.LVL53:
+ 327:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     }
+ 402              		.loc 1 327 9 view .LVU94
+ 403 0238 4FF48022 		mov	r2, #262144
+ 404 023c 05F15801 		add	r1, r5, #88
+ 405 0240 2046     		mov	r0, r4
+ 406 0242 FFF7FEFF 		bl	lv_obj_add_style
+ 407              	.LVL54:
+ 408 0246 07E7     		b	.L1
+ 409              	.L17:
+ 332:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.white, 0);
+ 410              		.loc 1 332 10 view .LVU95
+ 332:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.white, 0);
+ 411              		.loc 1 332 13 is_stmt 0 view .LVU96
+ 412 0248 3F49     		ldr	r1, .L36+56
+ 413 024a 2046     		mov	r0, r4
+ 414 024c FFF7FEFF 		bl	lv_obj_check_type
+ 415              	.LVL55:
+ 332:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.white, 0);
+ 416              		.loc 1 332 12 discriminator 1 view .LVU97
+ 417 0250 30B1     		cbz	r0, .L18
+ 333:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     }
+ 418              		.loc 1 333 9 is_stmt 1 view .LVU98
+ 419 0252 0022     		movs	r2, #0
+ 420 0254 05F14001 		add	r1, r5, #64
+ 421 0258 2046     		mov	r0, r4
+ 422 025a FFF7FEFF 		bl	lv_obj_add_style
+ 423              	.LVL56:
+ 424 025e FBE6     		b	.L1
+ 425              	.L18:
+ 335:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.white, 0);
+ 426              		.loc 1 335 10 view .LVU99
+ARM GAS  /tmp/ccCUVwWy.s 			page 17
+
+
+ 335:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.white, 0);
+ 427              		.loc 1 335 13 is_stmt 0 view .LVU100
+ 428 0260 3A49     		ldr	r1, .L36+60
+ 429 0262 2046     		mov	r0, r4
+ 430 0264 FFF7FEFF 		bl	lv_obj_check_type
+ 431              	.LVL57:
+ 335:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.white, 0);
+ 432              		.loc 1 335 12 discriminator 1 view .LVU101
+ 433 0268 D8B1     		cbz	r0, .L19
+ 336:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.scrollbar, LV_PART_SCROLLBAR);
+ 434              		.loc 1 336 9 is_stmt 1 view .LVU102
+ 435 026a 0022     		movs	r2, #0
+ 436 026c 05F14001 		add	r1, r5, #64
+ 437 0270 2046     		mov	r0, r4
+ 438 0272 FFF7FEFF 		bl	lv_obj_add_style
+ 439              	.LVL58:
+ 337:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.light, LV_PART_SELECTED);
+ 440              		.loc 1 337 9 view .LVU103
+ 441 0276 4FF48032 		mov	r2, #65536
+ 442 027a 05F17001 		add	r1, r5, #112
+ 443 027e 2046     		mov	r0, r4
+ 444 0280 FFF7FEFF 		bl	lv_obj_add_style
+ 445              	.LVL59:
+ 338:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.dark, LV_PART_SELECTED | LV_STATE_CHECKED);
+ 446              		.loc 1 338 9 view .LVU104
+ 447 0284 4FF48022 		mov	r2, #262144
+ 448 0288 05F14C01 		add	r1, r5, #76
+ 449 028c 2046     		mov	r0, r4
+ 450 028e FFF7FEFF 		bl	lv_obj_add_style
+ 451              	.LVL60:
+ 339:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     }
+ 452              		.loc 1 339 9 view .LVU105
+ 453 0292 4FF00412 		mov	r2, #262148
+ 454 0296 05F15801 		add	r1, r5, #88
+ 455 029a 2046     		mov	r0, r4
+ 456 029c FFF7FEFF 		bl	lv_obj_add_style
+ 457              	.LVL61:
+ 458 02a0 DAE6     		b	.L1
+ 459              	.L19:
+ 344:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.light, 0);
+ 460              		.loc 1 344 10 view .LVU106
+ 344:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.light, 0);
+ 461              		.loc 1 344 13 is_stmt 0 view .LVU107
+ 462 02a2 2B49     		ldr	r1, .L36+64
+ 463 02a4 2046     		mov	r0, r4
+ 464 02a6 FFF7FEFF 		bl	lv_obj_check_type
+ 465              	.LVL62:
+ 344:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.light, 0);
+ 466              		.loc 1 344 12 discriminator 1 view .LVU108
+ 467 02aa 0028     		cmp	r0, #0
+ 468 02ac 52D0     		beq	.L20
+ 345:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.transp, 0);
+ 469              		.loc 1 345 9 is_stmt 1 view .LVU109
+ 470 02ae 0022     		movs	r2, #0
+ 471 02b0 05F14C01 		add	r1, r5, #76
+ 472 02b4 2046     		mov	r0, r4
+ 473 02b6 FFF7FEFF 		bl	lv_obj_add_style
+ARM GAS  /tmp/ccCUVwWy.s 			page 18
+
+
+ 474              	.LVL63:
+ 346:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.arc_line, 0);
+ 475              		.loc 1 346 9 view .LVU110
+ 476 02ba 0022     		movs	r2, #0
+ 477 02bc 05F13401 		add	r1, r5, #52
+ 478 02c0 2046     		mov	r0, r4
+ 479 02c2 FFF7FEFF 		bl	lv_obj_add_style
+ 480              	.LVL64:
+ 347:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.dark, LV_PART_INDICATOR);
+ 481              		.loc 1 347 9 view .LVU111
+ 347:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.dark, LV_PART_INDICATOR);
+ 482              		.loc 1 347 31 is_stmt 0 view .LVU112
+ 483 02c6 05F17C03 		add	r3, r5, #124
+ 484 02ca 1E46     		mov	r6, r3
+ 485              	.LVL65:
+ 347:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.dark, LV_PART_INDICATOR);
+ 486              		.loc 1 347 9 view .LVU113
+ 487 02cc 0022     		movs	r2, #0
+ 488 02ce 1946     		mov	r1, r3
+ 489 02d0 2046     		mov	r0, r4
+ 490 02d2 FFF7FEFF 		bl	lv_obj_add_style
+ 491              	.LVL66:
+ 348:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.arc_line, LV_PART_INDICATOR);
+ 492              		.loc 1 348 9 is_stmt 1 view .LVU114
+ 493 02d6 4FF40032 		mov	r2, #131072
+ 494 02da 05F15801 		add	r1, r5, #88
+ 495 02de 2046     		mov	r0, r4
+ 496 02e0 FFF7FEFF 		bl	lv_obj_add_style
+ 497              	.LVL67:
+ 349:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.dim, LV_PART_KNOB);
+ 498              		.loc 1 349 9 view .LVU115
+ 499 02e4 4FF40032 		mov	r2, #131072
+ 500 02e8 3146     		mov	r1, r6
+ 501 02ea 2046     		mov	r0, r4
+ 502 02ec FFF7FEFF 		bl	lv_obj_add_style
+ 503              	.LVL68:
+ 350:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.arc_knob, LV_PART_KNOB);
+ 504              		.loc 1 350 9 view .LVU116
+ 505 02f0 4FF44032 		mov	r2, #196608
+ 506 02f4 05F16401 		add	r1, r5, #100
+ 507 02f8 2046     		mov	r0, r4
+ 508 02fa FFF7FEFF 		bl	lv_obj_add_style
+ 509              	.LVL69:
+ 351:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     }
+ 510              		.loc 1 351 9 view .LVU117
+ 511 02fe 4FF44032 		mov	r2, #196608
+ 512 0302 05F18801 		add	r1, r5, #136
+ 513 0306 2046     		mov	r0, r4
+ 514 0308 FFF7FEFF 		bl	lv_obj_add_style
+ 515              	.LVL70:
+ 516 030c A4E6     		b	.L1
+ 517              	.L37:
+ 518 030e 00BF     		.align	2
+ 519              	.L36:
+ 520 0310 00000000 		.word	lv_global
+ 521 0314 00000000 		.word	lv_obj_class
+ 522 0318 00000000 		.word	lv_tabview_class
+ARM GAS  /tmp/ccCUVwWy.s 			page 19
+
+
+ 523 031c 00000000 		.word	lv_button_class
+ 524 0320 00000000 		.word	lv_buttonmatrix_class
+ 525 0324 00000000 		.word	lv_msgbox_class
+ 526 0328 00000000 		.word	lv_bar_class
+ 527 032c 00000000 		.word	lv_slider_class
+ 528 0330 00000000 		.word	lv_table_class
+ 529 0334 00000000 		.word	lv_checkbox_class
+ 530 0338 04000200 		.word	131076
+ 531 033c 00000000 		.word	lv_switch_class
+ 532 0340 00000000 		.word	lv_chart_class
+ 533 0344 00000000 		.word	lv_roller_class
+ 534 0348 00000000 		.word	lv_dropdown_class
+ 535 034c 00000000 		.word	lv_dropdownlist_class
+ 536 0350 00000000 		.word	lv_arc_class
+ 537              	.LVL71:
+ 538              	.L20:
+ 356:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.light, 0);
+ 539              		.loc 1 356 10 view .LVU118
+ 356:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.light, 0);
+ 540              		.loc 1 356 13 is_stmt 0 view .LVU119
+ 541 0354 5849     		ldr	r1, .L38
+ 542 0356 2046     		mov	r0, r4
+ 543 0358 FFF7FEFF 		bl	lv_obj_check_type
+ 544              	.LVL72:
+ 356:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.light, 0);
+ 545              		.loc 1 356 12 discriminator 1 view .LVU120
+ 546 035c 08B3     		cbz	r0, .L21
+ 357:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.transp, 0);
+ 547              		.loc 1 357 9 is_stmt 1 view .LVU121
+ 548 035e 0022     		movs	r2, #0
+ 549 0360 05F14C01 		add	r1, r5, #76
+ 550 0364 2046     		mov	r0, r4
+ 551 0366 FFF7FEFF 		bl	lv_obj_add_style
+ 552              	.LVL73:
+ 358:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.arc_line, 0);
+ 553              		.loc 1 358 9 view .LVU122
+ 554 036a 0022     		movs	r2, #0
+ 555 036c 05F13401 		add	r1, r5, #52
+ 556 0370 2046     		mov	r0, r4
+ 557 0372 FFF7FEFF 		bl	lv_obj_add_style
+ 558              	.LVL74:
+ 359:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.dark, LV_PART_INDICATOR);
+ 559              		.loc 1 359 9 view .LVU123
+ 359:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.dark, LV_PART_INDICATOR);
+ 560              		.loc 1 359 31 is_stmt 0 view .LVU124
+ 561 0376 05F17C03 		add	r3, r5, #124
+ 562 037a 1E46     		mov	r6, r3
+ 563              	.LVL75:
+ 359:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.dark, LV_PART_INDICATOR);
+ 564              		.loc 1 359 9 view .LVU125
+ 565 037c 0022     		movs	r2, #0
+ 566 037e 1946     		mov	r1, r3
+ 567 0380 2046     		mov	r0, r4
+ 568 0382 FFF7FEFF 		bl	lv_obj_add_style
+ 569              	.LVL76:
+ 360:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.arc_line, LV_PART_INDICATOR);
+ 570              		.loc 1 360 9 is_stmt 1 view .LVU126
+ARM GAS  /tmp/ccCUVwWy.s 			page 20
+
+
+ 571 0386 4FF40032 		mov	r2, #131072
+ 572 038a 05F15801 		add	r1, r5, #88
+ 573 038e 2046     		mov	r0, r4
+ 574 0390 FFF7FEFF 		bl	lv_obj_add_style
+ 575              	.LVL77:
+ 361:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     }
+ 576              		.loc 1 361 9 view .LVU127
+ 577 0394 4FF40032 		mov	r2, #131072
+ 578 0398 3146     		mov	r1, r6
+ 579 039a 2046     		mov	r0, r4
+ 580 039c FFF7FEFF 		bl	lv_obj_add_style
+ 581              	.LVL78:
+ 582 03a0 5AE6     		b	.L1
+ 583              	.LVL79:
+ 584              	.L21:
+ 366:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.white, 0);
+ 585              		.loc 1 366 10 view .LVU128
+ 366:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.white, 0);
+ 586              		.loc 1 366 13 is_stmt 0 view .LVU129
+ 587 03a2 4649     		ldr	r1, .L38+4
+ 588 03a4 2046     		mov	r0, r4
+ 589 03a6 FFF7FEFF 		bl	lv_obj_check_type
+ 590              	.LVL80:
+ 366:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.white, 0);
+ 591              		.loc 1 366 12 discriminator 1 view .LVU130
+ 592 03aa 98B1     		cbz	r0, .L22
+ 367:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.scrollbar, LV_PART_SCROLLBAR);
+ 593              		.loc 1 367 9 is_stmt 1 view .LVU131
+ 594 03ac 0022     		movs	r2, #0
+ 595 03ae 05F14001 		add	r1, r5, #64
+ 596 03b2 2046     		mov	r0, r4
+ 597 03b4 FFF7FEFF 		bl	lv_obj_add_style
+ 598              	.LVL81:
+ 368:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.ta_cursor, LV_PART_CURSOR | LV_STATE_FOCUSED);
+ 599              		.loc 1 368 9 view .LVU132
+ 600 03b8 4FF48032 		mov	r2, #65536
+ 601 03bc 05F17001 		add	r1, r5, #112
+ 602 03c0 2046     		mov	r0, r4
+ 603 03c2 FFF7FEFF 		bl	lv_obj_add_style
+ 604              	.LVL82:
+ 369:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     }
+ 605              		.loc 1 369 9 view .LVU133
+ 606 03c6 3E4A     		ldr	r2, .L38+8
+ 607 03c8 05F19401 		add	r1, r5, #148
+ 608 03cc 2046     		mov	r0, r4
+ 609 03ce FFF7FEFF 		bl	lv_obj_add_style
+ 610              	.LVL83:
+ 611 03d2 41E6     		b	.L1
+ 612              	.L22:
+ 374:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.light, 0);
+ 613              		.loc 1 374 10 view .LVU134
+ 374:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.light, 0);
+ 614              		.loc 1 374 13 is_stmt 0 view .LVU135
+ 615 03d4 3B49     		ldr	r1, .L38+12
+ 616 03d6 2046     		mov	r0, r4
+ 617 03d8 FFF7FEFF 		bl	lv_obj_check_type
+ 618              	.LVL84:
+ARM GAS  /tmp/ccCUVwWy.s 			page 21
+
+
+ 374:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.light, 0);
+ 619              		.loc 1 374 12 discriminator 1 view .LVU136
+ 620 03dc 30B1     		cbz	r0, .L23
+ 375:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     }
+ 621              		.loc 1 375 9 is_stmt 1 view .LVU137
+ 622 03de 0022     		movs	r2, #0
+ 623 03e0 05F14C01 		add	r1, r5, #76
+ 624 03e4 2046     		mov	r0, r4
+ 625 03e6 FFF7FEFF 		bl	lv_obj_add_style
+ 626              	.LVL85:
+ 627 03ea 35E6     		b	.L1
+ 628              	.L23:
+ 380:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.scr, 0);
+ 629              		.loc 1 380 10 view .LVU138
+ 380:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.scr, 0);
+ 630              		.loc 1 380 13 is_stmt 0 view .LVU139
+ 631 03ec 3649     		ldr	r1, .L38+16
+ 632 03ee 2046     		mov	r0, r4
+ 633 03f0 FFF7FEFF 		bl	lv_obj_check_type
+ 634              	.LVL86:
+ 380:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.scr, 0);
+ 635              		.loc 1 380 12 discriminator 1 view .LVU140
+ 636 03f4 98B1     		cbz	r0, .L24
+ 381:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.white, LV_PART_ITEMS);
+ 637              		.loc 1 381 9 is_stmt 1 view .LVU141
+ 638 03f6 0022     		movs	r2, #0
+ 639 03f8 05F12801 		add	r1, r5, #40
+ 640 03fc 2046     		mov	r0, r4
+ 641 03fe FFF7FEFF 		bl	lv_obj_add_style
+ 642              	.LVL87:
+ 382:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.light, LV_PART_ITEMS | LV_STATE_CHECKED);
+ 643              		.loc 1 382 9 view .LVU142
+ 644 0402 4FF4A022 		mov	r2, #327680
+ 645 0406 05F14001 		add	r1, r5, #64
+ 646 040a 2046     		mov	r0, r4
+ 647 040c FFF7FEFF 		bl	lv_obj_add_style
+ 648              	.LVL88:
+ 383:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     }
+ 649              		.loc 1 383 9 view .LVU143
+ 650 0410 2E4A     		ldr	r2, .L38+20
+ 651 0412 05F14C01 		add	r1, r5, #76
+ 652 0416 2046     		mov	r0, r4
+ 653 0418 FFF7FEFF 		bl	lv_obj_add_style
+ 654              	.LVL89:
+ 655 041c 1CE6     		b	.L1
+ 656              	.L24:
+ 388:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.light, 0);
+ 657              		.loc 1 388 10 view .LVU144
+ 388:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.light, 0);
+ 658              		.loc 1 388 13 is_stmt 0 view .LVU145
+ 659 041e 2C49     		ldr	r1, .L38+24
+ 660 0420 2046     		mov	r0, r4
+ 661 0422 FFF7FEFF 		bl	lv_obj_check_type
+ 662              	.LVL90:
+ 388:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.light, 0);
+ 663              		.loc 1 388 12 discriminator 1 view .LVU146
+ 664 0426 90B9     		cbnz	r0, .L35
+ARM GAS  /tmp/ccCUVwWy.s 			page 22
+
+
+ 395:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.light, 0);
+ 665              		.loc 1 395 10 is_stmt 1 view .LVU147
+ 395:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.light, 0);
+ 666              		.loc 1 395 13 is_stmt 0 view .LVU148
+ 667 0428 2A49     		ldr	r1, .L38+28
+ 668 042a 2046     		mov	r0, r4
+ 669 042c FFF7FEFF 		bl	lv_obj_check_type
+ 670              	.LVL91:
+ 395:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.light, 0);
+ 671              		.loc 1 395 12 discriminator 1 view .LVU149
+ 672 0430 A0B1     		cbz	r0, .L26
+ 396:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.dark, LV_PART_CURSOR);
+ 673              		.loc 1 396 9 is_stmt 1 view .LVU150
+ 674 0432 0022     		movs	r2, #0
+ 675 0434 05F14C01 		add	r1, r5, #76
+ 676 0438 2046     		mov	r0, r4
+ 677 043a FFF7FEFF 		bl	lv_obj_add_style
+ 678              	.LVL92:
+ 397:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     }
+ 679              		.loc 1 397 9 view .LVU151
+ 680 043e 4FF4C022 		mov	r2, #393216
+ 681 0442 05F15801 		add	r1, r5, #88
+ 682 0446 2046     		mov	r0, r4
+ 683 0448 FFF7FEFF 		bl	lv_obj_add_style
+ 684              	.LVL93:
+ 685 044c 04E6     		b	.L1
+ 686              	.L35:
+ 389:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         return;
+ 687              		.loc 1 389 9 view .LVU152
+ 688 044e 0022     		movs	r2, #0
+ 689 0450 05F14C01 		add	r1, r5, #76
+ 690 0454 2046     		mov	r0, r4
+ 691 0456 FFF7FEFF 		bl	lv_obj_add_style
+ 692              	.LVL94:
+ 390:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     }
+ 693              		.loc 1 390 9 view .LVU153
+ 694 045a FDE5     		b	.L1
+ 695              	.L26:
+ 401:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.scr, 0);
+ 696              		.loc 1 401 10 view .LVU154
+ 401:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.scr, 0);
+ 697              		.loc 1 401 13 is_stmt 0 view .LVU155
+ 698 045c 1E49     		ldr	r1, .L38+32
+ 699 045e 2046     		mov	r0, r4
+ 700 0460 FFF7FEFF 		bl	lv_obj_check_type
+ 701              	.LVL95:
+ 401:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.scr, 0);
+ 702              		.loc 1 401 12 discriminator 1 view .LVU156
+ 703 0464 68B1     		cbz	r0, .L27
+ 402:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.scrollbar, LV_PART_SCROLLBAR);
+ 704              		.loc 1 402 9 is_stmt 1 view .LVU157
+ 705 0466 0022     		movs	r2, #0
+ 706 0468 05F12801 		add	r1, r5, #40
+ 707 046c 2046     		mov	r0, r4
+ 708 046e FFF7FEFF 		bl	lv_obj_add_style
+ 709              	.LVL96:
+ 403:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     }
+ARM GAS  /tmp/ccCUVwWy.s 			page 23
+
+
+ 710              		.loc 1 403 9 view .LVU158
+ 711 0472 4FF48032 		mov	r2, #65536
+ 712 0476 05F17001 		add	r1, r5, #112
+ 713 047a 2046     		mov	r0, r4
+ 714 047c FFF7FEFF 		bl	lv_obj_add_style
+ 715              	.LVL97:
+ 716 0480 EAE5     		b	.L1
+ 717              	.L27:
+ 405:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.scrollbar, LV_PART_SCROLLBAR);
+ 718              		.loc 1 405 10 view .LVU159
+ 405:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.scrollbar, LV_PART_SCROLLBAR);
+ 719              		.loc 1 405 13 is_stmt 0 view .LVU160
+ 720 0482 1649     		ldr	r1, .L38+36
+ 721 0484 2046     		mov	r0, r4
+ 722 0486 FFF7FEFF 		bl	lv_obj_check_type
+ 723              	.LVL98:
+ 405:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.scrollbar, LV_PART_SCROLLBAR);
+ 724              		.loc 1 405 12 discriminator 1 view .LVU161
+ 725 048a 38B1     		cbz	r0, .L28
+ 406:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     }
+ 726              		.loc 1 406 9 is_stmt 1 view .LVU162
+ 727 048c 4FF48032 		mov	r2, #65536
+ 728 0490 05F17001 		add	r1, r5, #112
+ 729 0494 2046     		mov	r0, r4
+ 730 0496 FFF7FEFF 		bl	lv_obj_add_style
+ 731              	.LVL99:
+ 732 049a DDE5     		b	.L1
+ 733              	.L28:
+ 411:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.light, 0);
+ 734              		.loc 1 411 10 view .LVU163
+ 411:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.light, 0);
+ 735              		.loc 1 411 13 is_stmt 0 view .LVU164
+ 736 049c 1049     		ldr	r1, .L38+40
+ 737 049e 2046     		mov	r0, r4
+ 738 04a0 FFF7FEFF 		bl	lv_obj_check_type
+ 739              	.LVL100:
+ 411:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_add_style(obj, &theme->styles.light, 0);
+ 740              		.loc 1 411 12 discriminator 1 view .LVU165
+ 741 04a4 0028     		cmp	r0, #0
+ 742 04a6 3FF4D7AD 		beq	.L1
+ 412:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     }
+ 743              		.loc 1 412 9 is_stmt 1 view .LVU166
+ 744 04aa 0022     		movs	r2, #0
+ 745 04ac 05F14C01 		add	r1, r5, #76
+ 746 04b0 2046     		mov	r0, r4
+ 747 04b2 FFF7FEFF 		bl	lv_obj_add_style
+ 748              	.LVL101:
+ 749 04b6 CFE5     		b	.L1
+ 750              	.L39:
+ 751              		.align	2
+ 752              	.L38:
+ 753 04b8 00000000 		.word	lv_spinner_class
+ 754 04bc 00000000 		.word	lv_textarea_class
+ 755 04c0 08000600 		.word	393224
+ 756 04c4 00000000 		.word	lv_calendar_class
+ 757 04c8 00000000 		.word	lv_keyboard_class
+ 758 04cc 04000500 		.word	327684
+ARM GAS  /tmp/ccCUVwWy.s 			page 24
+
+
+ 759 04d0 00000000 		.word	lv_msgbox_class
+ 760 04d4 00000000 		.word	lv_spinbox_class
+ 761 04d8 00000000 		.word	lv_tileview_class
+ 762 04dc 00000000 		.word	lv_tileview_tile_class
+ 763 04e0 00000000 		.word	lv_led_class
+ 764              		.cfi_endproc
+ 765              	.LFE34:
+ 767              		.section	.text.lv_theme_simple_is_inited,"ax",%progbits
+ 768              		.align	1
+ 769              		.global	lv_theme_simple_is_inited
+ 770              		.syntax unified
+ 771              		.thumb
+ 772              		.thumb_func
+ 774              	lv_theme_simple_is_inited:
+ 775              	.LFB31:
+ 181:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     my_theme_t * theme = theme_def;
+ 776              		.loc 1 181 1 view -0
+ 777              		.cfi_startproc
+ 778              		@ args = 0, pretend = 0, frame = 0
+ 779              		@ frame_needed = 0, uses_anonymous_args = 0
+ 780              		@ link register save eliminated.
+ 182:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     if(theme == NULL) return false;
+ 781              		.loc 1 182 5 view .LVU168
+ 182:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     if(theme == NULL) return false;
+ 782              		.loc 1 182 18 is_stmt 0 view .LVU169
+ 783 0000 044B     		ldr	r3, .L43
+ 784 0002 D3F8E431 		ldr	r3, [r3, #484]
+ 785              	.LVL102:
+ 183:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     return theme->inited;
+ 786              		.loc 1 183 5 is_stmt 1 view .LVU170
+ 183:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     return theme->inited;
+ 787              		.loc 1 183 7 is_stmt 0 view .LVU171
+ 788 0006 13B1     		cbz	r3, .L42
+ 184:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** }
+ 789              		.loc 1 184 5 is_stmt 1 view .LVU172
+ 184:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** }
+ 790              		.loc 1 184 17 is_stmt 0 view .LVU173
+ 791 0008 93F8A000 		ldrb	r0, [r3, #160]	@ zero_extendqisi2
+ 792 000c 7047     		bx	lr
+ 793              	.L42:
+ 183:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     return theme->inited;
+ 794              		.loc 1 183 30 discriminator 1 view .LVU174
+ 795 000e 1846     		mov	r0, r3
+ 185:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+ 796              		.loc 1 185 1 view .LVU175
+ 797 0010 7047     		bx	lr
+ 798              	.L44:
+ 799 0012 00BF     		.align	2
+ 800              	.L43:
+ 801 0014 00000000 		.word	lv_global
+ 802              		.cfi_endproc
+ 803              	.LFE31:
+ 805              		.section	.text.style_init_reset,"ax",%progbits
+ 806              		.align	1
+ 807              		.syntax unified
+ 808              		.thumb
+ 809              		.thumb_func
+ARM GAS  /tmp/ccCUVwWy.s 			page 25
+
+
+ 811              	style_init_reset:
+ 812              	.LVL103:
+ 813              	.LFB35:
+ 416:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+ 417:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** static void style_init_reset(lv_style_t * style)
+ 418:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** {
+ 814              		.loc 1 418 1 is_stmt 1 view -0
+ 815              		.cfi_startproc
+ 816              		@ args = 0, pretend = 0, frame = 0
+ 817              		@ frame_needed = 0, uses_anonymous_args = 0
+ 818              		.loc 1 418 1 is_stmt 0 view .LVU177
+ 819 0000 10B5     		push	{r4, lr}
+ 820              	.LCFI1:
+ 821              		.cfi_def_cfa_offset 8
+ 822              		.cfi_offset 4, -8
+ 823              		.cfi_offset 14, -4
+ 824 0002 0446     		mov	r4, r0
+ 419:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     if(lv_theme_simple_is_inited()) {
+ 825              		.loc 1 419 5 is_stmt 1 view .LVU178
+ 826              		.loc 1 419 8 is_stmt 0 view .LVU179
+ 827 0004 FFF7FEFF 		bl	lv_theme_simple_is_inited
+ 828              	.LVL104:
+ 829              		.loc 1 419 7 discriminator 1 view .LVU180
+ 830 0008 18B1     		cbz	r0, .L46
+ 420:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_style_reset(style);
+ 831              		.loc 1 420 9 is_stmt 1 view .LVU181
+ 832 000a 2046     		mov	r0, r4
+ 833 000c FFF7FEFF 		bl	lv_style_reset
+ 834              	.LVL105:
+ 835              	.L45:
+ 421:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     }
+ 422:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     else {
+ 423:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_style_init(style);
+ 424:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     }
+ 425:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** }
+ 836              		.loc 1 425 1 is_stmt 0 view .LVU182
+ 837 0010 10BD     		pop	{r4, pc}
+ 838              	.LVL106:
+ 839              	.L46:
+ 423:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     }
+ 840              		.loc 1 423 9 is_stmt 1 view .LVU183
+ 841 0012 2046     		mov	r0, r4
+ 842 0014 FFF7FEFF 		bl	lv_style_init
+ 843              	.LVL107:
+ 844              		.loc 1 425 1 is_stmt 0 view .LVU184
+ 845 0018 FAE7     		b	.L45
+ 846              		.cfi_endproc
+ 847              	.LFE35:
+ 849              		.section	.text.style_init,"ax",%progbits
+ 850              		.align	1
+ 851              		.syntax unified
+ 852              		.thumb
+ 853              		.thumb_func
+ 855              	style_init:
+ 856              	.LVL108:
+ 857              	.LFB29:
+  78:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     style_init_reset(&theme->styles.scrollbar);
+ARM GAS  /tmp/ccCUVwWy.s 			page 26
+
+
+ 858              		.loc 1 78 1 is_stmt 1 view -0
+ 859              		.cfi_startproc
+ 860              		@ args = 0, pretend = 0, frame = 64
+ 861              		@ frame_needed = 0, uses_anonymous_args = 0
+  78:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     style_init_reset(&theme->styles.scrollbar);
+ 862              		.loc 1 78 1 is_stmt 0 view .LVU186
+ 863 0000 30B5     		push	{r4, r5, lr}
+ 864              	.LCFI2:
+ 865              		.cfi_def_cfa_offset 12
+ 866              		.cfi_offset 4, -12
+ 867              		.cfi_offset 5, -8
+ 868              		.cfi_offset 14, -4
+ 869 0002 91B0     		sub	sp, sp, #68
+ 870              	.LCFI3:
+ 871              		.cfi_def_cfa_offset 80
+ 872 0004 0446     		mov	r4, r0
+  79:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_bg_opa(&theme->styles.scrollbar, LV_OPA_COVER);
+ 873              		.loc 1 79 5 is_stmt 1 view .LVU187
+ 874 0006 00F17005 		add	r5, r0, #112
+ 875 000a 2846     		mov	r0, r5
+ 876              	.LVL109:
+  79:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_bg_opa(&theme->styles.scrollbar, LV_OPA_COVER);
+ 877              		.loc 1 79 5 is_stmt 0 view .LVU188
+ 878 000c FFF7FEFF 		bl	style_init_reset
+ 879              	.LVL110:
+  80:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_bg_color(&theme->styles.scrollbar, COLOR_DARK);
+ 880              		.loc 1 80 5 is_stmt 1 view .LVU189
+ 881 0010 FF21     		movs	r1, #255
+ 882 0012 2846     		mov	r0, r5
+ 883 0014 FFF7FEFF 		bl	lv_style_set_bg_opa
+ 884              	.LVL111:
+  81:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_width(&theme->styles.scrollbar, SCROLLBAR_WIDTH);
+ 885              		.loc 1 81 5 view .LVU190
+ 886 0018 1220     		movs	r0, #18
+ 887 001a FFF7FEFF 		bl	lv_palette_main
+ 888              	.LVL112:
+ 889 001e 8DF80000 		strb	r0, [sp]
+ 890 0022 C0F30723 		ubfx	r3, r0, #8, #8
+ 891 0026 8DF80130 		strb	r3, [sp, #1]
+ 892 002a C0F30740 		ubfx	r0, r0, #16, #8
+ 893 002e 8DF80200 		strb	r0, [sp, #2]
+  81:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_width(&theme->styles.scrollbar, SCROLLBAR_WIDTH);
+ 894              		.loc 1 81 5 is_stmt 0 discriminator 1 view .LVU191
+ 895 0032 0099     		ldr	r1, [sp]
+ 896 0034 2846     		mov	r0, r5
+ 897 0036 FFF7FEFF 		bl	lv_style_set_bg_color
+ 898              	.LVL113:
+  82:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+ 899              		.loc 1 82 5 is_stmt 1 view .LVU192
+ 900 003a 0221     		movs	r1, #2
+ 901 003c 2846     		mov	r0, r5
+ 902 003e FFF7FEFF 		bl	lv_style_set_width
+ 903              	.LVL114:
+  84:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_bg_opa(&theme->styles.scr, LV_OPA_COVER);
+ 904              		.loc 1 84 5 view .LVU193
+ 905 0042 04F12805 		add	r5, r4, #40
+ 906 0046 2846     		mov	r0, r5
+ARM GAS  /tmp/ccCUVwWy.s 			page 27
+
+
+ 907 0048 FFF7FEFF 		bl	style_init_reset
+ 908              	.LVL115:
+  85:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_bg_color(&theme->styles.scr, COLOR_SCR);
+ 909              		.loc 1 85 5 view .LVU194
+ 910 004c FF21     		movs	r1, #255
+ 911 004e 2846     		mov	r0, r5
+ 912 0050 FFF7FEFF 		bl	lv_style_set_bg_opa
+ 913              	.LVL116:
+  86:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_text_color(&theme->styles.scr, COLOR_DIM);
+ 914              		.loc 1 86 5 view .LVU195
+ 915 0054 0421     		movs	r1, #4
+ 916 0056 1220     		movs	r0, #18
+ 917 0058 FFF7FEFF 		bl	lv_palette_lighten
+ 918              	.LVL117:
+ 919 005c 8DF80400 		strb	r0, [sp, #4]
+ 920 0060 C0F30723 		ubfx	r3, r0, #8, #8
+ 921 0064 8DF80530 		strb	r3, [sp, #5]
+ 922 0068 C0F30740 		ubfx	r0, r0, #16, #8
+ 923 006c 8DF80600 		strb	r0, [sp, #6]
+  86:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_text_color(&theme->styles.scr, COLOR_DIM);
+ 924              		.loc 1 86 5 is_stmt 0 discriminator 1 view .LVU196
+ 925 0070 0199     		ldr	r1, [sp, #4]
+ 926 0072 2846     		mov	r0, r5
+ 927 0074 FFF7FEFF 		bl	lv_style_set_bg_color
+ 928              	.LVL118:
+  87:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+ 929              		.loc 1 87 5 is_stmt 1 view .LVU197
+ 930 0078 0221     		movs	r1, #2
+ 931 007a 1220     		movs	r0, #18
+ 932 007c FFF7FEFF 		bl	lv_palette_darken
+ 933              	.LVL119:
+ 934 0080 8DF80800 		strb	r0, [sp, #8]
+ 935 0084 C0F30723 		ubfx	r3, r0, #8, #8
+ 936 0088 8DF80930 		strb	r3, [sp, #9]
+ 937 008c C0F30740 		ubfx	r0, r0, #16, #8
+ 938 0090 8DF80A00 		strb	r0, [sp, #10]
+  87:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+ 939              		.loc 1 87 5 is_stmt 0 discriminator 1 view .LVU198
+ 940 0094 0299     		ldr	r1, [sp, #8]
+ 941 0096 2846     		mov	r0, r5
+ 942 0098 FFF7FEFF 		bl	lv_style_set_text_color
+ 943              	.LVL120:
+  89:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_bg_opa(&theme->styles.transp, LV_OPA_TRANSP);
+ 944              		.loc 1 89 5 is_stmt 1 view .LVU199
+ 945 009c 04F13405 		add	r5, r4, #52
+ 946 00a0 2846     		mov	r0, r5
+ 947 00a2 FFF7FEFF 		bl	style_init_reset
+ 948              	.LVL121:
+  90:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+ 949              		.loc 1 90 5 view .LVU200
+ 950 00a6 0021     		movs	r1, #0
+ 951 00a8 2846     		mov	r0, r5
+ 952 00aa FFF7FEFF 		bl	lv_style_set_bg_opa
+ 953              	.LVL122:
+  92:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_bg_opa(&theme->styles.white, LV_OPA_COVER);
+ 954              		.loc 1 92 5 view .LVU201
+ 955 00ae 04F14005 		add	r5, r4, #64
+ARM GAS  /tmp/ccCUVwWy.s 			page 28
+
+
+ 956 00b2 2846     		mov	r0, r5
+ 957 00b4 FFF7FEFF 		bl	style_init_reset
+ 958              	.LVL123:
+  93:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_bg_color(&theme->styles.white, COLOR_WHITE);
+ 959              		.loc 1 93 5 view .LVU202
+ 960 00b8 FF21     		movs	r1, #255
+ 961 00ba 2846     		mov	r0, r5
+ 962 00bc FFF7FEFF 		bl	lv_style_set_bg_opa
+ 963              	.LVL124:
+  94:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_line_width(&theme->styles.white, 1);
+ 964              		.loc 1 94 5 view .LVU203
+ 965 00c0 FFF7FEFF 		bl	lv_color_white
+ 966              	.LVL125:
+ 967 00c4 8DF80C00 		strb	r0, [sp, #12]
+ 968 00c8 C0F30723 		ubfx	r3, r0, #8, #8
+ 969 00cc 8DF80D30 		strb	r3, [sp, #13]
+ 970 00d0 C0F30740 		ubfx	r0, r0, #16, #8
+ 971 00d4 8DF80E00 		strb	r0, [sp, #14]
+  94:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_line_width(&theme->styles.white, 1);
+ 972              		.loc 1 94 5 is_stmt 0 discriminator 1 view .LVU204
+ 973 00d8 0399     		ldr	r1, [sp, #12]
+ 974 00da 2846     		mov	r0, r5
+ 975 00dc FFF7FEFF 		bl	lv_style_set_bg_color
+ 976              	.LVL126:
+  95:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_line_color(&theme->styles.white, COLOR_WHITE);
+ 977              		.loc 1 95 5 is_stmt 1 view .LVU205
+ 978 00e0 0121     		movs	r1, #1
+ 979 00e2 2846     		mov	r0, r5
+ 980 00e4 FFF7FEFF 		bl	lv_style_set_line_width
+ 981              	.LVL127:
+  96:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_arc_width(&theme->styles.white, 2);
+ 982              		.loc 1 96 5 view .LVU206
+ 983 00e8 FFF7FEFF 		bl	lv_color_white
+ 984              	.LVL128:
+ 985 00ec 8DF81000 		strb	r0, [sp, #16]
+ 986 00f0 C0F30723 		ubfx	r3, r0, #8, #8
+ 987 00f4 8DF81130 		strb	r3, [sp, #17]
+ 988 00f8 C0F30740 		ubfx	r0, r0, #16, #8
+ 989 00fc 8DF81200 		strb	r0, [sp, #18]
+  96:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_arc_width(&theme->styles.white, 2);
+ 990              		.loc 1 96 5 is_stmt 0 discriminator 1 view .LVU207
+ 991 0100 0499     		ldr	r1, [sp, #16]
+ 992 0102 2846     		mov	r0, r5
+ 993 0104 FFF7FEFF 		bl	lv_style_set_line_color
+ 994              	.LVL129:
+  97:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_arc_color(&theme->styles.white, COLOR_WHITE);
+ 995              		.loc 1 97 5 is_stmt 1 view .LVU208
+ 996 0108 0221     		movs	r1, #2
+ 997 010a 2846     		mov	r0, r5
+ 998 010c FFF7FEFF 		bl	lv_style_set_arc_width
+ 999              	.LVL130:
+  98:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+ 1000              		.loc 1 98 5 view .LVU209
+ 1001 0110 FFF7FEFF 		bl	lv_color_white
+ 1002              	.LVL131:
+ 1003 0114 8DF81400 		strb	r0, [sp, #20]
+ 1004 0118 C0F30723 		ubfx	r3, r0, #8, #8
+ARM GAS  /tmp/ccCUVwWy.s 			page 29
+
+
+ 1005 011c 8DF81530 		strb	r3, [sp, #21]
+ 1006 0120 C0F30740 		ubfx	r0, r0, #16, #8
+ 1007 0124 8DF81600 		strb	r0, [sp, #22]
+  98:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+ 1008              		.loc 1 98 5 is_stmt 0 discriminator 1 view .LVU210
+ 1009 0128 0599     		ldr	r1, [sp, #20]
+ 1010 012a 2846     		mov	r0, r5
+ 1011 012c FFF7FEFF 		bl	lv_style_set_arc_color
+ 1012              	.LVL132:
+ 100:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_bg_opa(&theme->styles.light, LV_OPA_COVER);
+ 1013              		.loc 1 100 5 is_stmt 1 view .LVU211
+ 1014 0130 04F14C05 		add	r5, r4, #76
+ 1015 0134 2846     		mov	r0, r5
+ 1016 0136 FFF7FEFF 		bl	style_init_reset
+ 1017              	.LVL133:
+ 101:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_bg_color(&theme->styles.light, COLOR_LIGHT);
+ 1018              		.loc 1 101 5 view .LVU212
+ 1019 013a FF21     		movs	r1, #255
+ 1020 013c 2846     		mov	r0, r5
+ 1021 013e FFF7FEFF 		bl	lv_style_set_bg_opa
+ 1022              	.LVL134:
+ 102:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_line_width(&theme->styles.light, 1);
+ 1023              		.loc 1 102 5 view .LVU213
+ 1024 0142 0221     		movs	r1, #2
+ 1025 0144 1220     		movs	r0, #18
+ 1026 0146 FFF7FEFF 		bl	lv_palette_lighten
+ 1027              	.LVL135:
+ 1028 014a 8DF81800 		strb	r0, [sp, #24]
+ 1029 014e C0F30723 		ubfx	r3, r0, #8, #8
+ 1030 0152 8DF81930 		strb	r3, [sp, #25]
+ 1031 0156 C0F30740 		ubfx	r0, r0, #16, #8
+ 1032 015a 8DF81A00 		strb	r0, [sp, #26]
+ 102:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_line_width(&theme->styles.light, 1);
+ 1033              		.loc 1 102 5 is_stmt 0 discriminator 1 view .LVU214
+ 1034 015e 0699     		ldr	r1, [sp, #24]
+ 1035 0160 2846     		mov	r0, r5
+ 1036 0162 FFF7FEFF 		bl	lv_style_set_bg_color
+ 1037              	.LVL136:
+ 103:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_line_color(&theme->styles.light, COLOR_LIGHT);
+ 1038              		.loc 1 103 5 is_stmt 1 view .LVU215
+ 1039 0166 0121     		movs	r1, #1
+ 1040 0168 2846     		mov	r0, r5
+ 1041 016a FFF7FEFF 		bl	lv_style_set_line_width
+ 1042              	.LVL137:
+ 104:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_arc_width(&theme->styles.light, 2);
+ 1043              		.loc 1 104 5 view .LVU216
+ 1044 016e 0221     		movs	r1, #2
+ 1045 0170 1220     		movs	r0, #18
+ 1046 0172 FFF7FEFF 		bl	lv_palette_lighten
+ 1047              	.LVL138:
+ 1048 0176 8DF81C00 		strb	r0, [sp, #28]
+ 1049 017a C0F30723 		ubfx	r3, r0, #8, #8
+ 1050 017e 8DF81D30 		strb	r3, [sp, #29]
+ 1051 0182 C0F30740 		ubfx	r0, r0, #16, #8
+ 1052 0186 8DF81E00 		strb	r0, [sp, #30]
+ 104:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_arc_width(&theme->styles.light, 2);
+ 1053              		.loc 1 104 5 is_stmt 0 discriminator 1 view .LVU217
+ARM GAS  /tmp/ccCUVwWy.s 			page 30
+
+
+ 1054 018a 0799     		ldr	r1, [sp, #28]
+ 1055 018c 2846     		mov	r0, r5
+ 1056 018e FFF7FEFF 		bl	lv_style_set_line_color
+ 1057              	.LVL139:
+ 105:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_arc_color(&theme->styles.light, COLOR_LIGHT);
+ 1058              		.loc 1 105 5 is_stmt 1 view .LVU218
+ 1059 0192 0221     		movs	r1, #2
+ 1060 0194 2846     		mov	r0, r5
+ 1061 0196 FFF7FEFF 		bl	lv_style_set_arc_width
+ 1062              	.LVL140:
+ 106:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+ 1063              		.loc 1 106 5 view .LVU219
+ 1064 019a 0221     		movs	r1, #2
+ 1065 019c 1220     		movs	r0, #18
+ 1066 019e FFF7FEFF 		bl	lv_palette_lighten
+ 1067              	.LVL141:
+ 1068 01a2 8DF82000 		strb	r0, [sp, #32]
+ 1069 01a6 C0F30723 		ubfx	r3, r0, #8, #8
+ 1070 01aa 8DF82130 		strb	r3, [sp, #33]
+ 1071 01ae C0F30740 		ubfx	r0, r0, #16, #8
+ 1072 01b2 8DF82200 		strb	r0, [sp, #34]
+ 106:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+ 1073              		.loc 1 106 5 is_stmt 0 discriminator 1 view .LVU220
+ 1074 01b6 0899     		ldr	r1, [sp, #32]
+ 1075 01b8 2846     		mov	r0, r5
+ 1076 01ba FFF7FEFF 		bl	lv_style_set_arc_color
+ 1077              	.LVL142:
+ 108:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_bg_opa(&theme->styles.dark, LV_OPA_COVER);
+ 1078              		.loc 1 108 5 is_stmt 1 view .LVU221
+ 1079 01be 04F15805 		add	r5, r4, #88
+ 1080 01c2 2846     		mov	r0, r5
+ 1081 01c4 FFF7FEFF 		bl	style_init_reset
+ 1082              	.LVL143:
+ 109:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_bg_color(&theme->styles.dark, COLOR_DARK);
+ 1083              		.loc 1 109 5 view .LVU222
+ 1084 01c8 FF21     		movs	r1, #255
+ 1085 01ca 2846     		mov	r0, r5
+ 1086 01cc FFF7FEFF 		bl	lv_style_set_bg_opa
+ 1087              	.LVL144:
+ 110:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_line_width(&theme->styles.dark, 1);
+ 1088              		.loc 1 110 5 view .LVU223
+ 1089 01d0 1220     		movs	r0, #18
+ 1090 01d2 FFF7FEFF 		bl	lv_palette_main
+ 1091              	.LVL145:
+ 1092 01d6 8DF82400 		strb	r0, [sp, #36]
+ 1093 01da C0F30723 		ubfx	r3, r0, #8, #8
+ 1094 01de 8DF82530 		strb	r3, [sp, #37]
+ 1095 01e2 C0F30740 		ubfx	r0, r0, #16, #8
+ 1096 01e6 8DF82600 		strb	r0, [sp, #38]
+ 110:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_line_width(&theme->styles.dark, 1);
+ 1097              		.loc 1 110 5 is_stmt 0 discriminator 1 view .LVU224
+ 1098 01ea 0999     		ldr	r1, [sp, #36]
+ 1099 01ec 2846     		mov	r0, r5
+ 1100 01ee FFF7FEFF 		bl	lv_style_set_bg_color
+ 1101              	.LVL146:
+ 111:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_line_color(&theme->styles.dark, COLOR_DARK);
+ 1102              		.loc 1 111 5 is_stmt 1 view .LVU225
+ARM GAS  /tmp/ccCUVwWy.s 			page 31
+
+
+ 1103 01f2 0121     		movs	r1, #1
+ 1104 01f4 2846     		mov	r0, r5
+ 1105 01f6 FFF7FEFF 		bl	lv_style_set_line_width
+ 1106              	.LVL147:
+ 112:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_arc_width(&theme->styles.dark, 2);
+ 1107              		.loc 1 112 5 view .LVU226
+ 1108 01fa 1220     		movs	r0, #18
+ 1109 01fc FFF7FEFF 		bl	lv_palette_main
+ 1110              	.LVL148:
+ 1111 0200 8DF82800 		strb	r0, [sp, #40]
+ 1112 0204 C0F30723 		ubfx	r3, r0, #8, #8
+ 1113 0208 8DF82930 		strb	r3, [sp, #41]
+ 1114 020c C0F30740 		ubfx	r0, r0, #16, #8
+ 1115 0210 8DF82A00 		strb	r0, [sp, #42]
+ 112:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_arc_width(&theme->styles.dark, 2);
+ 1116              		.loc 1 112 5 is_stmt 0 discriminator 1 view .LVU227
+ 1117 0214 0A99     		ldr	r1, [sp, #40]
+ 1118 0216 2846     		mov	r0, r5
+ 1119 0218 FFF7FEFF 		bl	lv_style_set_line_color
+ 1120              	.LVL149:
+ 113:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_arc_color(&theme->styles.dark, COLOR_DARK);
+ 1121              		.loc 1 113 5 is_stmt 1 view .LVU228
+ 1122 021c 0221     		movs	r1, #2
+ 1123 021e 2846     		mov	r0, r5
+ 1124 0220 FFF7FEFF 		bl	lv_style_set_arc_width
+ 1125              	.LVL150:
+ 114:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+ 1126              		.loc 1 114 5 view .LVU229
+ 1127 0224 1220     		movs	r0, #18
+ 1128 0226 FFF7FEFF 		bl	lv_palette_main
+ 1129              	.LVL151:
+ 1130 022a 8DF82C00 		strb	r0, [sp, #44]
+ 1131 022e C0F30723 		ubfx	r3, r0, #8, #8
+ 1132 0232 8DF82D30 		strb	r3, [sp, #45]
+ 1133 0236 C0F30740 		ubfx	r0, r0, #16, #8
+ 1134 023a 8DF82E00 		strb	r0, [sp, #46]
+ 114:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+ 1135              		.loc 1 114 5 is_stmt 0 discriminator 1 view .LVU230
+ 1136 023e 0B99     		ldr	r1, [sp, #44]
+ 1137 0240 2846     		mov	r0, r5
+ 1138 0242 FFF7FEFF 		bl	lv_style_set_arc_color
+ 1139              	.LVL152:
+ 116:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_bg_opa(&theme->styles.dim, LV_OPA_COVER);
+ 1140              		.loc 1 116 5 is_stmt 1 view .LVU231
+ 1141 0246 04F16405 		add	r5, r4, #100
+ 1142 024a 2846     		mov	r0, r5
+ 1143 024c FFF7FEFF 		bl	style_init_reset
+ 1144              	.LVL153:
+ 117:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_bg_color(&theme->styles.dim, COLOR_DIM);
+ 1145              		.loc 1 117 5 view .LVU232
+ 1146 0250 FF21     		movs	r1, #255
+ 1147 0252 2846     		mov	r0, r5
+ 1148 0254 FFF7FEFF 		bl	lv_style_set_bg_opa
+ 1149              	.LVL154:
+ 118:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_line_width(&theme->styles.dim, 1);
+ 1150              		.loc 1 118 5 view .LVU233
+ 1151 0258 0221     		movs	r1, #2
+ARM GAS  /tmp/ccCUVwWy.s 			page 32
+
+
+ 1152 025a 1220     		movs	r0, #18
+ 1153 025c FFF7FEFF 		bl	lv_palette_darken
+ 1154              	.LVL155:
+ 1155 0260 8DF83000 		strb	r0, [sp, #48]
+ 1156 0264 C0F30723 		ubfx	r3, r0, #8, #8
+ 1157 0268 8DF83130 		strb	r3, [sp, #49]
+ 1158 026c C0F30740 		ubfx	r0, r0, #16, #8
+ 1159 0270 8DF83200 		strb	r0, [sp, #50]
+ 118:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_line_width(&theme->styles.dim, 1);
+ 1160              		.loc 1 118 5 is_stmt 0 discriminator 1 view .LVU234
+ 1161 0274 0C99     		ldr	r1, [sp, #48]
+ 1162 0276 2846     		mov	r0, r5
+ 1163 0278 FFF7FEFF 		bl	lv_style_set_bg_color
+ 1164              	.LVL156:
+ 119:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_line_color(&theme->styles.dim, COLOR_DIM);
+ 1165              		.loc 1 119 5 is_stmt 1 view .LVU235
+ 1166 027c 0121     		movs	r1, #1
+ 1167 027e 2846     		mov	r0, r5
+ 1168 0280 FFF7FEFF 		bl	lv_style_set_line_width
+ 1169              	.LVL157:
+ 120:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_arc_width(&theme->styles.dim, 2);
+ 1170              		.loc 1 120 5 view .LVU236
+ 1171 0284 0221     		movs	r1, #2
+ 1172 0286 1220     		movs	r0, #18
+ 1173 0288 FFF7FEFF 		bl	lv_palette_darken
+ 1174              	.LVL158:
+ 1175 028c 8DF83400 		strb	r0, [sp, #52]
+ 1176 0290 C0F30723 		ubfx	r3, r0, #8, #8
+ 1177 0294 8DF83530 		strb	r3, [sp, #53]
+ 1178 0298 C0F30740 		ubfx	r0, r0, #16, #8
+ 1179 029c 8DF83600 		strb	r0, [sp, #54]
+ 120:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_arc_width(&theme->styles.dim, 2);
+ 1180              		.loc 1 120 5 is_stmt 0 discriminator 1 view .LVU237
+ 1181 02a0 0D99     		ldr	r1, [sp, #52]
+ 1182 02a2 2846     		mov	r0, r5
+ 1183 02a4 FFF7FEFF 		bl	lv_style_set_line_color
+ 1184              	.LVL159:
+ 121:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_arc_color(&theme->styles.dim, COLOR_DIM);
+ 1185              		.loc 1 121 5 is_stmt 1 view .LVU238
+ 1186 02a8 0221     		movs	r1, #2
+ 1187 02aa 2846     		mov	r0, r5
+ 1188 02ac FFF7FEFF 		bl	lv_style_set_arc_width
+ 1189              	.LVL160:
+ 122:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+ 1190              		.loc 1 122 5 view .LVU239
+ 1191 02b0 0221     		movs	r1, #2
+ 1192 02b2 1220     		movs	r0, #18
+ 1193 02b4 FFF7FEFF 		bl	lv_palette_darken
+ 1194              	.LVL161:
+ 1195 02b8 8DF83800 		strb	r0, [sp, #56]
+ 1196 02bc C0F30723 		ubfx	r3, r0, #8, #8
+ 1197 02c0 8DF83930 		strb	r3, [sp, #57]
+ 1198 02c4 C0F30740 		ubfx	r0, r0, #16, #8
+ 1199 02c8 8DF83A00 		strb	r0, [sp, #58]
+ 122:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+ 1200              		.loc 1 122 5 is_stmt 0 discriminator 1 view .LVU240
+ 1201 02cc 0E99     		ldr	r1, [sp, #56]
+ARM GAS  /tmp/ccCUVwWy.s 			page 33
+
+
+ 1202 02ce 2846     		mov	r0, r5
+ 1203 02d0 FFF7FEFF 		bl	lv_style_set_arc_color
+ 1204              	.LVL162:
+ 125:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_arc_width(&theme->styles.arc_line, 6);
+ 1205              		.loc 1 125 5 is_stmt 1 view .LVU241
+ 1206 02d4 04F17C05 		add	r5, r4, #124
+ 1207 02d8 2846     		mov	r0, r5
+ 1208 02da FFF7FEFF 		bl	style_init_reset
+ 1209              	.LVL163:
+ 126:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     style_init_reset(&theme->styles.arc_knob);
+ 1210              		.loc 1 126 5 view .LVU242
+ 1211 02de 0621     		movs	r1, #6
+ 1212 02e0 2846     		mov	r0, r5
+ 1213 02e2 FFF7FEFF 		bl	lv_style_set_arc_width
+ 1214              	.LVL164:
+ 127:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_pad_all(&theme->styles.arc_knob, 5);
+ 1215              		.loc 1 127 5 view .LVU243
+ 1216 02e6 04F18805 		add	r5, r4, #136
+ 1217 02ea 2846     		mov	r0, r5
+ 1218 02ec FFF7FEFF 		bl	style_init_reset
+ 1219              	.LVL165:
+ 128:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** #endif
+ 1220              		.loc 1 128 5 view .LVU244
+ 1221 02f0 0521     		movs	r1, #5
+ 1222 02f2 2846     		mov	r0, r5
+ 1223 02f4 FFF7FEFF 		bl	lv_style_set_pad_all
+ 1224              	.LVL166:
+ 132:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_border_side(&theme->styles.ta_cursor, LV_BORDER_SIDE_LEFT);
+ 1225              		.loc 1 132 5 view .LVU245
+ 1226 02f8 9434     		adds	r4, r4, #148
+ 1227              	.LVL167:
+ 132:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_border_side(&theme->styles.ta_cursor, LV_BORDER_SIDE_LEFT);
+ 1228              		.loc 1 132 5 is_stmt 0 view .LVU246
+ 1229 02fa 2046     		mov	r0, r4
+ 1230 02fc FFF7FEFF 		bl	style_init_reset
+ 1231              	.LVL168:
+ 133:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_border_color(&theme->styles.ta_cursor, COLOR_DIM);
+ 1232              		.loc 1 133 5 is_stmt 1 view .LVU247
+ 1233 0300 0421     		movs	r1, #4
+ 1234 0302 2046     		mov	r0, r4
+ 1235 0304 FFF7FEFF 		bl	lv_style_set_border_side
+ 1236              	.LVL169:
+ 134:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_border_width(&theme->styles.ta_cursor, 2);
+ 1237              		.loc 1 134 5 view .LVU248
+ 1238 0308 0221     		movs	r1, #2
+ 1239 030a 1220     		movs	r0, #18
+ 1240 030c FFF7FEFF 		bl	lv_palette_darken
+ 1241              	.LVL170:
+ 1242 0310 8DF83C00 		strb	r0, [sp, #60]
+ 1243 0314 C0F30723 		ubfx	r3, r0, #8, #8
+ 1244 0318 8DF83D30 		strb	r3, [sp, #61]
+ 1245 031c C0F30740 		ubfx	r0, r0, #16, #8
+ 1246 0320 8DF83E00 		strb	r0, [sp, #62]
+ 134:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_border_width(&theme->styles.ta_cursor, 2);
+ 1247              		.loc 1 134 5 is_stmt 0 discriminator 1 view .LVU249
+ 1248 0324 0F99     		ldr	r1, [sp, #60]
+ 1249 0326 2046     		mov	r0, r4
+ARM GAS  /tmp/ccCUVwWy.s 			page 34
+
+
+ 1250 0328 FFF7FEFF 		bl	lv_style_set_border_color
+ 1251              	.LVL171:
+ 135:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_bg_opa(&theme->styles.ta_cursor, LV_OPA_TRANSP);
+ 1252              		.loc 1 135 5 is_stmt 1 view .LVU250
+ 1253 032c 0221     		movs	r1, #2
+ 1254 032e 2046     		mov	r0, r4
+ 1255 0330 FFF7FEFF 		bl	lv_style_set_border_width
+ 1256              	.LVL172:
+ 136:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     lv_style_set_anim_duration(&theme->styles.ta_cursor, 500);
+ 1257              		.loc 1 136 5 view .LVU251
+ 1258 0334 0021     		movs	r1, #0
+ 1259 0336 2046     		mov	r0, r4
+ 1260 0338 FFF7FEFF 		bl	lv_style_set_bg_opa
+ 1261              	.LVL173:
+ 137:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** #endif
+ 1262              		.loc 1 137 5 view .LVU252
+ 1263 033c 4FF4FA71 		mov	r1, #500
+ 1264 0340 2046     		mov	r0, r4
+ 1265 0342 FFF7FEFF 		bl	lv_style_set_anim_duration
+ 1266              	.LVL174:
+ 139:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+ 1267              		.loc 1 139 1 is_stmt 0 view .LVU253
+ 1268 0346 11B0     		add	sp, sp, #68
+ 1269              	.LCFI4:
+ 1270              		.cfi_def_cfa_offset 12
+ 1271              		@ sp needed
+ 1272 0348 30BD     		pop	{r4, r5, pc}
+ 139:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+ 1273              		.loc 1 139 1 view .LVU254
+ 1274              		.cfi_endproc
+ 1275              	.LFE29:
+ 1277              		.section	.text.lv_theme_simple_init,"ax",%progbits
+ 1278              		.align	1
+ 1279              		.global	lv_theme_simple_init
+ 1280              		.syntax unified
+ 1281              		.thumb
+ 1282              		.thumb_func
+ 1284              	lv_theme_simple_init:
+ 1285              	.LVL175:
+ 1286              	.LFB30:
+ 146:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     LV_CHECK_ARG(disp != NULL, return NULL);
+ 1287              		.loc 1 146 1 is_stmt 1 view -0
+ 1288              		.cfi_startproc
+ 1289              		@ args = 0, pretend = 0, frame = 0
+ 1290              		@ frame_needed = 0, uses_anonymous_args = 0
+ 146:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     LV_CHECK_ARG(disp != NULL, return NULL);
+ 1291              		.loc 1 146 1 is_stmt 0 view .LVU256
+ 1292 0000 38B5     		push	{r3, r4, r5, lr}
+ 1293              	.LCFI5:
+ 1294              		.cfi_def_cfa_offset 16
+ 1295              		.cfi_offset 3, -16
+ 1296              		.cfi_offset 4, -12
+ 1297              		.cfi_offset 5, -8
+ 1298              		.cfi_offset 14, -4
+ 147:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+ 1299              		.loc 1 147 5 is_stmt 1 view .LVU257
+ 147:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+ARM GAS  /tmp/ccCUVwWy.s 			page 35
+
+
+ 1300              		.loc 1 147 5 is_stmt 0 discriminator 1 view .LVU258
+ 1301 0002 0546     		mov	r5, r0
+ 1302 0004 D0B1     		cbz	r0, .L51
+ 147:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+ 1303              		.loc 1 147 5 is_stmt 1 discriminator 3 view .LVU259
+ 147:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+ 1304              		.loc 1 147 44 discriminator 3 view .LVU260
+ 152:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         theme_def = lv_malloc_zeroed(sizeof(my_theme_t));
+ 1305              		.loc 1 152 5 view .LVU261
+ 152:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         theme_def = lv_malloc_zeroed(sizeof(my_theme_t));
+ 1306              		.loc 1 152 9 is_stmt 0 view .LVU262
+ 1307 0006 FFF7FEFF 		bl	lv_theme_simple_is_inited
+ 1308              	.LVL176:
+ 152:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         theme_def = lv_malloc_zeroed(sizeof(my_theme_t));
+ 1309              		.loc 1 152 7 discriminator 1 view .LVU263
+ 1310 000a C0B1     		cbz	r0, .L57
+ 1311              	.L53:
+ 154:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     }
+ 1312              		.loc 1 154 36 is_stmt 1 view .LVU264
+ 157:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+ 1313              		.loc 1 157 5 view .LVU265
+ 157:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+ 1314              		.loc 1 157 18 is_stmt 0 view .LVU266
+ 1315 000c 114B     		ldr	r3, .L59
+ 1316 000e D3F8E441 		ldr	r4, [r3, #484]
+ 1317              	.LVL177:
+ 159:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     theme->base.font_small = LV_FONT_DEFAULT;
+ 1318              		.loc 1 159 5 is_stmt 1 view .LVU267
+ 159:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     theme->base.font_small = LV_FONT_DEFAULT;
+ 1319              		.loc 1 159 22 is_stmt 0 view .LVU268
+ 1320 0012 E560     		str	r5, [r4, #12]
+ 160:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     theme->base.font_normal = LV_FONT_DEFAULT;
+ 1321              		.loc 1 160 5 is_stmt 1 view .LVU269
+ 160:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     theme->base.font_normal = LV_FONT_DEFAULT;
+ 1322              		.loc 1 160 28 is_stmt 0 view .LVU270
+ 1323 0014 104B     		ldr	r3, .L59+4
+ 1324 0016 A361     		str	r3, [r4, #24]
+ 161:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     theme->base.font_large = LV_FONT_DEFAULT;
+ 1325              		.loc 1 161 5 is_stmt 1 view .LVU271
+ 161:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     theme->base.font_large = LV_FONT_DEFAULT;
+ 1326              		.loc 1 161 29 is_stmt 0 view .LVU272
+ 1327 0018 E361     		str	r3, [r4, #28]
+ 162:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     theme->base.apply_cb = theme_apply;
+ 1328              		.loc 1 162 5 is_stmt 1 view .LVU273
+ 162:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     theme->base.apply_cb = theme_apply;
+ 1329              		.loc 1 162 28 is_stmt 0 view .LVU274
+ 1330 001a 2362     		str	r3, [r4, #32]
+ 163:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** #if LV_USE_EXT_DATA
+ 1331              		.loc 1 163 5 is_stmt 1 view .LVU275
+ 163:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** #if LV_USE_EXT_DATA
+ 1332              		.loc 1 163 26 is_stmt 0 view .LVU276
+ 1333 001c 0F4B     		ldr	r3, .L59+8
+ 1334 001e 2360     		str	r3, [r4]
+ 169:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+ 1335              		.loc 1 169 5 is_stmt 1 view .LVU277
+ 1336 0020 2046     		mov	r0, r4
+ 1337 0022 FFF7FEFF 		bl	style_init
+ARM GAS  /tmp/ccCUVwWy.s 			page 36
+
+
+ 1338              	.LVL178:
+ 171:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_report_style_change(NULL);
+ 1339              		.loc 1 171 5 view .LVU278
+ 171:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_report_style_change(NULL);
+ 1340              		.loc 1 171 8 is_stmt 0 view .LVU279
+ 1341 0026 2846     		mov	r0, r5
+ 1342 0028 FFF7FEFF 		bl	lv_display_get_theme
+ 1343              	.LVL179:
+ 171:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         lv_obj_report_style_change(NULL);
+ 1344              		.loc 1 171 7 discriminator 1 view .LVU280
+ 1345 002c A042     		cmp	r0, r4
+ 1346 002e 0DD0     		beq	.L58
+ 1347              	.L54:
+ 175:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+ 1348              		.loc 1 175 5 is_stmt 1 view .LVU281
+ 175:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+ 1349              		.loc 1 175 19 is_stmt 0 view .LVU282
+ 1350 0030 0123     		movs	r3, #1
+ 1351 0032 84F8A030 		strb	r3, [r4, #160]
+ 177:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** }
+ 1352              		.loc 1 177 5 is_stmt 1 view .LVU283
+ 177:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** }
+ 1353              		.loc 1 177 12 is_stmt 0 view .LVU284
+ 1354 0036 074B     		ldr	r3, .L59
+ 1355 0038 D3F8E401 		ldr	r0, [r3, #484]
+ 1356              	.LVL180:
+ 1357              	.L51:
+ 178:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+ 1358              		.loc 1 178 1 view .LVU285
+ 1359 003c 38BD     		pop	{r3, r4, r5, pc}
+ 1360              	.LVL181:
+ 1361              	.L57:
+ 153:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         LV_ASSERT_MALLOC(theme_def);
+ 1362              		.loc 1 153 9 is_stmt 1 view .LVU286
+ 153:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         LV_ASSERT_MALLOC(theme_def);
+ 1363              		.loc 1 153 21 is_stmt 0 view .LVU287
+ 1364 003e A420     		movs	r0, #164
+ 1365 0040 FFF7FEFF 		bl	lv_malloc_zeroed
+ 1366              	.LVL182:
+ 153:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         LV_ASSERT_MALLOC(theme_def);
+ 1367              		.loc 1 153 19 discriminator 1 view .LVU288
+ 1368 0044 034B     		ldr	r3, .L59
+ 1369 0046 C3F8E401 		str	r0, [r3, #484]
+ 1370 004a DFE7     		b	.L53
+ 1371              	.LVL183:
+ 1372              	.L58:
+ 172:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     }
+ 1373              		.loc 1 172 9 is_stmt 1 view .LVU289
+ 1374 004c 0020     		movs	r0, #0
+ 1375 004e FFF7FEFF 		bl	lv_obj_report_style_change
+ 1376              	.LVL184:
+ 1377 0052 EDE7     		b	.L54
+ 1378              	.L60:
+ 1379              		.align	2
+ 1380              	.L59:
+ 1381 0054 00000000 		.word	lv_global
+ 1382 0058 00000000 		.word	lv_font_montserrat_14
+ARM GAS  /tmp/ccCUVwWy.s 			page 37
+
+
+ 1383 005c 00000000 		.word	theme_apply
+ 1384              		.cfi_endproc
+ 1385              	.LFE30:
+ 1387              		.section	.text.lv_theme_simple_get,"ax",%progbits
+ 1388              		.align	1
+ 1389              		.global	lv_theme_simple_get
+ 1390              		.syntax unified
+ 1391              		.thumb
+ 1392              		.thumb_func
+ 1394              	lv_theme_simple_get:
+ 1395              	.LFB32:
+ 188:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     if(!lv_theme_simple_is_inited()) {
+ 1396              		.loc 1 188 1 view -0
+ 1397              		.cfi_startproc
+ 1398              		@ args = 0, pretend = 0, frame = 0
+ 1399              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1400 0000 08B5     		push	{r3, lr}
+ 1401              	.LCFI6:
+ 1402              		.cfi_def_cfa_offset 8
+ 1403              		.cfi_offset 3, -8
+ 1404              		.cfi_offset 14, -4
+ 189:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         return NULL;
+ 1405              		.loc 1 189 5 view .LVU291
+ 189:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         return NULL;
+ 1406              		.loc 1 189 9 is_stmt 0 view .LVU292
+ 1407 0002 FFF7FEFF 		bl	lv_theme_simple_is_inited
+ 1408              	.LVL185:
+ 189:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         return NULL;
+ 1409              		.loc 1 189 7 discriminator 1 view .LVU293
+ 1410 0006 10B1     		cbz	r0, .L61
+ 193:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** }
+ 1411              		.loc 1 193 5 is_stmt 1 view .LVU294
+ 193:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** }
+ 1412              		.loc 1 193 12 is_stmt 0 view .LVU295
+ 1413 0008 014B     		ldr	r3, .L65
+ 1414 000a D3F8E401 		ldr	r0, [r3, #484]
+ 1415              	.L61:
+ 194:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+ 1416              		.loc 1 194 1 view .LVU296
+ 1417 000e 08BD     		pop	{r3, pc}
+ 1418              	.L66:
+ 1419              		.align	2
+ 1420              	.L65:
+ 1421 0010 00000000 		.word	lv_global
+ 1422              		.cfi_endproc
+ 1423              	.LFE32:
+ 1425              		.section	.text.lv_theme_simple_deinit,"ax",%progbits
+ 1426              		.align	1
+ 1427              		.global	lv_theme_simple_deinit
+ 1428              		.syntax unified
+ 1429              		.thumb
+ 1430              		.thumb_func
+ 1432              	lv_theme_simple_deinit:
+ 1433              	.LFB33:
+ 197:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     my_theme_t * theme = theme_def;
+ 1434              		.loc 1 197 1 is_stmt 1 view -0
+ 1435              		.cfi_startproc
+ARM GAS  /tmp/ccCUVwWy.s 			page 38
+
+
+ 1436              		@ args = 0, pretend = 0, frame = 0
+ 1437              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1438 0000 38B5     		push	{r3, r4, r5, lr}
+ 1439              	.LCFI7:
+ 1440              		.cfi_def_cfa_offset 16
+ 1441              		.cfi_offset 3, -16
+ 1442              		.cfi_offset 4, -12
+ 1443              		.cfi_offset 5, -8
+ 1444              		.cfi_offset 14, -4
+ 198:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     if(theme) {
+ 1445              		.loc 1 198 5 view .LVU298
+ 198:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     if(theme) {
+ 1446              		.loc 1 198 18 is_stmt 0 view .LVU299
+ 1447 0002 0E4B     		ldr	r3, .L73
+ 1448 0004 D3F8E451 		ldr	r5, [r3, #484]
+ 1449              	.LVL186:
+ 199:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         if(theme->inited) {
+ 1450              		.loc 1 199 5 is_stmt 1 view .LVU300
+ 199:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         if(theme->inited) {
+ 1451              		.loc 1 199 7 is_stmt 0 view .LVU301
+ 1452 0008 B5B1     		cbz	r5, .L67
+ 200:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****             lv_style_t * theme_styles = (lv_style_t *)(&(theme->styles));
+ 1453              		.loc 1 200 9 is_stmt 1 view .LVU302
+ 200:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****             lv_style_t * theme_styles = (lv_style_t *)(&(theme->styles));
+ 1454              		.loc 1 200 17 is_stmt 0 view .LVU303
+ 1455 000a 95F8A030 		ldrb	r3, [r5, #160]	@ zero_extendqisi2
+ 200:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****             lv_style_t * theme_styles = (lv_style_t *)(&(theme->styles));
+ 1456              		.loc 1 200 11 view .LVU304
+ 1457 000e 5BB1     		cbz	r3, .L69
+ 1458              	.LBB4:
+ 201:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****             uint32_t i;
+ 1459              		.loc 1 201 13 is_stmt 1 view .LVU305
+ 201:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****             uint32_t i;
+ 1460              		.loc 1 201 26 is_stmt 0 view .LVU306
+ 1461 0010 2835     		adds	r5, r5, #40
+ 1462              	.LVL187:
+ 202:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****             for(i = 0; i < sizeof(my_theme_styles_t) / sizeof(lv_style_t); i++) {
+ 1463              		.loc 1 202 13 is_stmt 1 view .LVU307
+ 203:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****                 lv_style_reset(theme_styles + i);
+ 1464              		.loc 1 203 13 view .LVU308
+ 203:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****                 lv_style_reset(theme_styles + i);
+ 1465              		.loc 1 203 19 is_stmt 0 view .LVU309
+ 1466 0012 0024     		movs	r4, #0
+ 203:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****                 lv_style_reset(theme_styles + i);
+ 1467              		.loc 1 203 13 view .LVU310
+ 1468 0014 06E0     		b	.L70
+ 1469              	.LVL188:
+ 1470              	.L71:
+ 204:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****             }
+ 1471              		.loc 1 204 17 is_stmt 1 view .LVU311
+ 204:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****             }
+ 1472              		.loc 1 204 45 is_stmt 0 view .LVU312
+ 1473 0016 04EB4400 		add	r0, r4, r4, lsl #1
+ 204:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****             }
+ 1474              		.loc 1 204 17 view .LVU313
+ 1475 001a 05EB8000 		add	r0, r5, r0, lsl #2
+ 1476 001e FFF7FEFF 		bl	lv_style_reset
+ARM GAS  /tmp/ccCUVwWy.s 			page 39
+
+
+ 1477              	.LVL189:
+ 203:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****                 lv_style_reset(theme_styles + i);
+ 1478              		.loc 1 203 77 is_stmt 1 discriminator 1 view .LVU314
+ 1479 0022 0134     		adds	r4, r4, #1
+ 1480              	.LVL190:
+ 1481              	.L70:
+ 203:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****                 lv_style_reset(theme_styles + i);
+ 1482              		.loc 1 203 26 discriminator 2 view .LVU315
+ 1483 0024 092C     		cmp	r4, #9
+ 1484 0026 F6D9     		bls	.L71
+ 1485              	.LVL191:
+ 1486              	.L69:
+ 203:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****                 lv_style_reset(theme_styles + i);
+ 1487              		.loc 1 203 26 is_stmt 0 discriminator 2 view .LVU316
+ 1488              	.LBE4:
+ 213:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****         theme_def = NULL;
+ 1489              		.loc 1 213 9 is_stmt 1 view .LVU317
+ 1490 0028 044C     		ldr	r4, .L73
+ 1491 002a D4F8E401 		ldr	r0, [r4, #484]
+ 1492 002e FFF7FEFF 		bl	lv_free
+ 1493              	.LVL192:
+ 214:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     }
+ 1494              		.loc 1 214 9 view .LVU318
+ 214:Drivers/lvgl/src/themes/simple/lv_theme_simple.c ****     }
+ 1495              		.loc 1 214 19 is_stmt 0 view .LVU319
+ 1496 0032 0023     		movs	r3, #0
+ 1497 0034 C4F8E431 		str	r3, [r4, #484]
+ 1498              	.L67:
+ 216:Drivers/lvgl/src/themes/simple/lv_theme_simple.c **** 
+ 1499              		.loc 1 216 1 view .LVU320
+ 1500 0038 38BD     		pop	{r3, r4, r5, pc}
+ 1501              	.L74:
+ 1502 003a 00BF     		.align	2
+ 1503              	.L73:
+ 1504 003c 00000000 		.word	lv_global
+ 1505              		.cfi_endproc
+ 1506              	.LFE33:
+ 1508              		.text
+ 1509              	.Letext0:
+ 1510              		.file 2 "/usr/arm-none-eabi/include/machine/_default_types.h"
+ 1511              		.file 3 "/usr/arm-none-eabi/include/sys/_stdint.h"
+ 1512              		.file 4 "/usr/lib/gcc/arm-none-eabi/16.2.0/include/stddef.h"
+ 1513              		.file 5 "Drivers/lvgl/src/themes/simple/../../../include/lvgl/core/../lv_types.h"
+ 1514              		.file 6 "Drivers/lvgl/src/themes/simple/../../../include/lvgl/core/../draw/lv_draw.h"
+ 1515              		.file 7 "Drivers/lvgl/src/themes/simple/../../core/../draw/sw/../lv_draw_private.h"
+ 1516              		.file 8 "Drivers/lvgl/src/themes/simple/../../core/../misc/lv_timer_private.h"
+ 1517              		.file 9 "Drivers/lvgl/src/themes/simple/../lv_theme_private.h"
+ 1518              		.file 10 "Drivers/lvgl/src/themes/simple/../../../include/lvgl/core/../font/lv_font.h"
+ 1519              		.file 11 "Drivers/lvgl/src/themes/simple/../../core/../draw/lv_draw_buf_private.h"
+ 1520              		.file 12 "Drivers/lvgl/src/themes/simple/../../../include/lvgl/core/../font/../draw/lv_draw_buf.h"
+ 1521              		.file 13 "Drivers/lvgl/src/themes/simple/../../../include/lvgl/core/lv_area.h"
+ 1522              		.file 14 "Drivers/lvgl/src/themes/simple/../../../include/lvgl/core/../font/../draw/lv_color.h"
+ 1523              		.file 15 "Drivers/lvgl/src/themes/simple/../../../include/lvgl/core/../font/../draw/lv_palette.h"
+ 1524              		.file 16 "Drivers/lvgl/src/themes/simple/../../../include/lvgl/core/../font/../draw/lv_image_dsc.h
+ 1525              		.file 17 "Drivers/lvgl/src/themes/simple/../../../include/lvgl/core/../layouts/lv_layout.h"
+ 1526              		.file 18 "Drivers/lvgl/src/themes/simple/../../../include/lvgl/core/lv_style.h"
+ 1527              		.file 19 "Drivers/lvgl/src/themes/simple/../../../include/lvgl/core/../display/../core/lv_timer.h"
+ARM GAS  /tmp/ccCUVwWy.s 			page 40
+
+
+ 1528              		.file 20 "Drivers/lvgl/src/themes/simple/../../../include/lvgl/core/lv_obj_style.h"
+ 1529              		.file 21 "Drivers/lvgl/src/themes/simple/../../../include/lvgl/core/lv_obj.h"
+ 1530              		.file 22 "Drivers/lvgl/src/themes/simple/../../../include/lvgl/core/../misc/lv_ll.h"
+ 1531              		.file 23 "Drivers/lvgl/src/themes/simple/../../../include/lvgl/themes/lv_theme.h"
+ 1532              		.file 24 "Drivers/lvgl/src/themes/simple/../../../include/lvgl/tick/lv_tick.h"
+ 1533              		.file 25 "Drivers/lvgl/src/themes/simple/../../../include/lvgl/widgets/lv_arc.h"
+ 1534              		.file 26 "Drivers/lvgl/src/themes/simple/../../../include/lvgl/widgets/lv_bar.h"
+ 1535              		.file 27 "Drivers/lvgl/src/themes/simple/../../../include/lvgl/widgets/lv_button.h"
+ 1536              		.file 28 "Drivers/lvgl/src/themes/simple/../../../include/lvgl/widgets/lv_buttonmatrix.h"
+ 1537              		.file 29 "Drivers/lvgl/src/themes/simple/../../../include/lvgl/widgets/lv_calendar.h"
+ 1538              		.file 30 "Drivers/lvgl/src/themes/simple/../../../include/lvgl/widgets/lv_chart.h"
+ 1539              		.file 31 "Drivers/lvgl/src/themes/simple/../../../include/lvgl/widgets/lv_checkbox.h"
+ 1540              		.file 32 "Drivers/lvgl/src/themes/simple/../../../include/lvgl/widgets/lv_dropdown.h"
+ 1541              		.file 33 "Drivers/lvgl/src/themes/simple/../../../include/lvgl/widgets/lv_keyboard.h"
+ 1542              		.file 34 "Drivers/lvgl/src/themes/simple/../../../include/lvgl/widgets/lv_led.h"
+ 1543              		.file 35 "Drivers/lvgl/src/themes/simple/../../../include/lvgl/widgets/lv_msgbox.h"
+ 1544              		.file 36 "Drivers/lvgl/src/themes/simple/../../../include/lvgl/widgets/lv_roller.h"
+ 1545              		.file 37 "Drivers/lvgl/src/themes/simple/../../../include/lvgl/widgets/lv_slider.h"
+ 1546              		.file 38 "Drivers/lvgl/src/themes/simple/../../../include/lvgl/widgets/lv_textarea.h"
+ 1547              		.file 39 "Drivers/lvgl/src/themes/simple/../../../include/lvgl/widgets/lv_spinbox.h"
+ 1548              		.file 40 "Drivers/lvgl/src/themes/simple/../../../include/lvgl/widgets/lv_spinner.h"
+ 1549              		.file 41 "Drivers/lvgl/src/themes/simple/../../../include/lvgl/widgets/lv_switch.h"
+ 1550              		.file 42 "Drivers/lvgl/src/themes/simple/../../../include/lvgl/widgets/lv_table.h"
+ 1551              		.file 43 "Drivers/lvgl/src/themes/simple/../../../include/lvgl/widgets/lv_tabview.h"
+ 1552              		.file 44 "Drivers/lvgl/src/themes/simple/../../../include/lvgl/widgets/lv_tileview.h"
+ 1553              		.file 45 "Drivers/lvgl/src/themes/simple/../../core/../draw/sw/../../osal/lv_os_none.h"
+ 1554              		.file 46 "Drivers/lvgl/src/themes/simple/../../core/../draw/sw/../../misc/cache/../lv_iter_private
+ 1555              		.file 47 "Drivers/lvgl/src/themes/simple/../../core/../draw/sw/../../misc/cache/lv_cache.h"
+ 1556              		.file 48 "Drivers/lvgl/src/themes/simple/../../core/../stdlib/builtin/lv_tlsf.h"
+ 1557              		.file 49 "Drivers/lvgl/src/themes/simple/../../core/../misc/lv_anim_private.h"
+ 1558              		.file 50 "Drivers/lvgl/src/themes/simple/../../core/../tick/lv_tick_private.h"
+ 1559              		.file 51 "Drivers/lvgl/src/themes/simple/../../core/../draw/sw/lv_draw_sw_mask_private.h"
+ 1560              		.file 52 "Drivers/lvgl/src/themes/simple/../../core/../stdlib/builtin/lv_tlsf_private.h"
+ 1561              		.file 53 "Drivers/lvgl/src/themes/simple/../../core/../layouts/lv_layout_private.h"
+ 1562              		.file 54 "Drivers/lvgl/src/themes/simple/../../core/lv_global.h"
+ 1563              		.file 55 "Drivers/lvgl/src/themes/simple/../../../include/lvgl/core/../font/../draw/../debugging/.
+ 1564              		.file 56 "Drivers/lvgl/src/themes/simple/../../../include/lvgl/core/lv_style_gen.h"
+ 1565              		.file 57 "Drivers/lvgl/src/themes/simple/../../../include/lvgl/core/lv_obj_tree.h"
+ 1566              		.file 58 "Drivers/lvgl/src/themes/simple/../../../include/lvgl/core/../display/lv_display.h"
+ARM GAS  /tmp/ccCUVwWy.s 			page 41
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 lv_theme_simple.c
+     /tmp/ccCUVwWy.s:21     .text.theme_apply:00000000 $t
+     /tmp/ccCUVwWy.s:26     .text.theme_apply:00000000 theme_apply
+     /tmp/ccCUVwWy.s:520    .text.theme_apply:00000310 $d
+     /tmp/ccCUVwWy.s:541    .text.theme_apply:00000354 $t
+     /tmp/ccCUVwWy.s:753    .text.theme_apply:000004b8 $d
+     /tmp/ccCUVwWy.s:768    .text.lv_theme_simple_is_inited:00000000 $t
+     /tmp/ccCUVwWy.s:774    .text.lv_theme_simple_is_inited:00000000 lv_theme_simple_is_inited
+     /tmp/ccCUVwWy.s:801    .text.lv_theme_simple_is_inited:00000014 $d
+     /tmp/ccCUVwWy.s:806    .text.style_init_reset:00000000 $t
+     /tmp/ccCUVwWy.s:811    .text.style_init_reset:00000000 style_init_reset
+     /tmp/ccCUVwWy.s:850    .text.style_init:00000000 $t
+     /tmp/ccCUVwWy.s:855    .text.style_init:00000000 style_init
+     /tmp/ccCUVwWy.s:1278   .text.lv_theme_simple_init:00000000 $t
+     /tmp/ccCUVwWy.s:1284   .text.lv_theme_simple_init:00000000 lv_theme_simple_init
+     /tmp/ccCUVwWy.s:1381   .text.lv_theme_simple_init:00000054 $d
+     /tmp/ccCUVwWy.s:1388   .text.lv_theme_simple_get:00000000 $t
+     /tmp/ccCUVwWy.s:1394   .text.lv_theme_simple_get:00000000 lv_theme_simple_get
+     /tmp/ccCUVwWy.s:1421   .text.lv_theme_simple_get:00000010 $d
+     /tmp/ccCUVwWy.s:1426   .text.lv_theme_simple_deinit:00000000 $t
+     /tmp/ccCUVwWy.s:1432   .text.lv_theme_simple_deinit:00000000 lv_theme_simple_deinit
+     /tmp/ccCUVwWy.s:1504   .text.lv_theme_simple_deinit:0000003c $d
+
+UNDEFINED SYMBOLS
+lv_obj_get_parent
+lv_obj_check_type
+lv_obj_add_style
+lv_global
+lv_obj_class
+lv_tabview_class
+lv_button_class
+lv_buttonmatrix_class
+lv_msgbox_class
+lv_bar_class
+lv_slider_class
+lv_table_class
+lv_checkbox_class
+lv_switch_class
+lv_chart_class
+lv_roller_class
+lv_dropdown_class
+lv_dropdownlist_class
+lv_arc_class
+lv_spinner_class
+lv_textarea_class
+lv_calendar_class
+lv_keyboard_class
+lv_spinbox_class
+lv_tileview_class
+lv_tileview_tile_class
+lv_led_class
+lv_style_reset
+lv_style_init
+lv_style_set_bg_opa
+lv_palette_main
+lv_style_set_bg_color
+ARM GAS  /tmp/ccCUVwWy.s 			page 42
+
+
+lv_style_set_width
+lv_palette_lighten
+lv_palette_darken
+lv_style_set_text_color
+lv_color_white
+lv_style_set_line_width
+lv_style_set_line_color
+lv_style_set_arc_width
+lv_style_set_arc_color
+lv_style_set_pad_all
+lv_style_set_border_side
+lv_style_set_border_color
+lv_style_set_border_width
+lv_style_set_anim_duration
+lv_display_get_theme
+lv_malloc_zeroed
+lv_obj_report_style_change
+lv_font_montserrat_14
+lv_free

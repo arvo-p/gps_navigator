@@ -1,0 +1,1686 @@
+ARM GAS  /tmp/cc6bkUl0.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.arch armv7e-m
+   3              		.fpu fpv4-sp-d16
+   4              		.eabi_attribute 27, 1
+   5              		.eabi_attribute 28, 1
+   6              		.eabi_attribute 20, 1
+   7              		.eabi_attribute 21, 1
+   8              		.eabi_attribute 23, 3
+   9              		.eabi_attribute 24, 1
+  10              		.eabi_attribute 25, 1
+  11              		.eabi_attribute 26, 1
+  12              		.eabi_attribute 30, 1
+  13              		.eabi_attribute 34, 1
+  14              		.eabi_attribute 18, 4
+  15              		.file	"mems.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.file 1 "Core/Src/mems.c"
+  20              		.section	.rodata.MEMS_SetHint.str1.4,"aMS",%progbits,1
+  21              		.align	2
+  22              	.LC0:
+  23 0000 4D454D53 		.ascii	"MEMS\000"
+  23      00
+  24 0005 000000   		.align	2
+  25              	.LC1:
+  26 0008 54686973 		.ascii	"This example shows MEMS Features\000"
+  26      20657861 
+  26      6D706C65 
+  26      2073686F 
+  26      7773204D 
+  27 0029 000000   		.align	2
+  28              	.LC2:
+  29 002c 6D6F7665 		.ascii	"move board around axis\000"
+  29      20626F61 
+  29      72642061 
+  29      726F756E 
+  29      64206178 
+  30 0043 00       		.align	2
+  31              	.LC3:
+  32 0044 746F2073 		.ascii	"to start test\000"
+  32      74617274 
+  32      20746573 
+  32      7400
+  33              		.section	.text.MEMS_SetHint,"ax",%progbits
+  34              		.align	1
+  35              		.syntax unified
+  36              		.thumb
+  37              		.thumb_func
+  39              	MEMS_SetHint:
+  40              	.LFB138:
+   1:Core/Src/mems.c **** /**
+   2:Core/Src/mems.c ****   ******************************************************************************
+   3:Core/Src/mems.c ****   * @file    BSP/Src/mems.c  
+   4:Core/Src/mems.c ****   * @author  MCD Application Team
+   5:Core/Src/mems.c ****   * @brief   This example code shows how to use MEMS features.
+   6:Core/Src/mems.c ****   ******************************************************************************
+ARM GAS  /tmp/cc6bkUl0.s 			page 2
+
+
+   7:Core/Src/mems.c ****   * @attention
+   8:Core/Src/mems.c ****   *
+   9:Core/Src/mems.c ****   * Copyright (c) 2017 STMicroelectronics.
+  10:Core/Src/mems.c ****   * All rights reserved.
+  11:Core/Src/mems.c ****   *
+  12:Core/Src/mems.c ****   * This software is licensed under terms that can be found in the LICENSE file
+  13:Core/Src/mems.c ****   * in the root directory of this software component.
+  14:Core/Src/mems.c ****   * If no LICENSE file comes with this software, it is provided AS-IS.
+  15:Core/Src/mems.c ****   *
+  16:Core/Src/mems.c ****   ******************************************************************************
+  17:Core/Src/mems.c ****   */
+  18:Core/Src/mems.c **** 
+  19:Core/Src/mems.c **** /* Includes ------------------------------------------------------------------*/
+  20:Core/Src/mems.c **** #include "main.h"
+  21:Core/Src/mems.c **** 
+  22:Core/Src/mems.c **** /** @addtogroup STM32F4xx_HAL_Examples
+  23:Core/Src/mems.c ****   * @{
+  24:Core/Src/mems.c ****   */
+  25:Core/Src/mems.c **** 
+  26:Core/Src/mems.c **** /** @addtogroup BSP
+  27:Core/Src/mems.c ****   * @{
+  28:Core/Src/mems.c ****   */
+  29:Core/Src/mems.c **** 
+  30:Core/Src/mems.c **** /* Private typedef -----------------------------------------------------------*/
+  31:Core/Src/mems.c **** /* Private define ------------------------------------------------------------*/
+  32:Core/Src/mems.c **** #define  CIRCLE_RADIUS        30
+  33:Core/Src/mems.c **** 
+  34:Core/Src/mems.c **** /* Private macro -------------------------------------------------------------*/
+  35:Core/Src/mems.c **** #define CIRCLE_UP_X_POS (BSP_LCD_GetXSize()/2)
+  36:Core/Src/mems.c **** #define CIRCLE_UP_Y_POS (90+CIRCLE_RADIUS+10)
+  37:Core/Src/mems.c **** 
+  38:Core/Src/mems.c **** #define CIRCLE_DOWN_X_POS CIRCLE_UP_X_POS
+  39:Core/Src/mems.c **** #define CIRCLE_DOWN_Y_POS (310-CIRCLE_RADIUS-10)
+  40:Core/Src/mems.c **** 
+  41:Core/Src/mems.c **** #define CIRCLE_LEFT_X_POS (BSP_LCD_GetXSize()/5)
+  42:Core/Src/mems.c **** #define CIRCLE_LEFT_Y_POS (310-110)
+  43:Core/Src/mems.c **** 
+  44:Core/Src/mems.c **** #define CIRCLE_RIGHT_X_POS (4*(BSP_LCD_GetXSize()/5))
+  45:Core/Src/mems.c **** #define CIRCLE_RIGHT_Y_POS CIRCLE_LEFT_Y_POS
+  46:Core/Src/mems.c **** 
+  47:Core/Src/mems.c **** #define CIRCLE_CENTRAL_X_POS CIRCLE_UP_X_POS
+  48:Core/Src/mems.c **** #define CIRCLE_CENTRAL_Y_POS CIRCLE_LEFT_Y_POS
+  49:Core/Src/mems.c **** 
+  50:Core/Src/mems.c **** /* Private macro -------------------------------------------------------------*/
+  51:Core/Src/mems.c **** #define ABS(x)         (x < 0) ? (-x) : x
+  52:Core/Src/mems.c **** 
+  53:Core/Src/mems.c **** /* Private variables ---------------------------------------------------------*/
+  54:Core/Src/mems.c **** float Buffer[3];
+  55:Core/Src/mems.c **** float Xval, Yval, Zval = 0x00;
+  56:Core/Src/mems.c **** uint8_t state = 0;
+  57:Core/Src/mems.c **** 
+  58:Core/Src/mems.c **** /* Private function prototypes -----------------------------------------------*/
+  59:Core/Src/mems.c **** static void MEMS_SetHint(void);
+  60:Core/Src/mems.c **** static void Gyroscope_DrawBackground(uint8_t state);
+  61:Core/Src/mems.c **** 
+  62:Core/Src/mems.c **** /* Private functions ---------------------------------------------------------*/
+  63:Core/Src/mems.c **** 
+ARM GAS  /tmp/cc6bkUl0.s 			page 3
+
+
+  64:Core/Src/mems.c **** /**
+  65:Core/Src/mems.c ****   * @brief  MEMS demo
+  66:Core/Src/mems.c ****   * @param  None
+  67:Core/Src/mems.c ****   * @retval None
+  68:Core/Src/mems.c ****   */
+  69:Core/Src/mems.c **** void MEMS_demo(void)
+  70:Core/Src/mems.c **** {
+  71:Core/Src/mems.c ****   MEMS_SetHint();
+  72:Core/Src/mems.c ****   
+  73:Core/Src/mems.c ****   if (BSP_GYRO_Init() != GYRO_OK)
+  74:Core/Src/mems.c ****   {
+  75:Core/Src/mems.c ****     BSP_LCD_SetBackColor(LCD_COLOR_WHITE); 
+  76:Core/Src/mems.c ****     BSP_LCD_SetTextColor(LCD_COLOR_RED);
+  77:Core/Src/mems.c ****     BSP_LCD_DisplayStringAt(0, BSP_LCD_GetYSize()- 95, (uint8_t*)"ERROR", CENTER_MODE);
+  78:Core/Src/mems.c ****     BSP_LCD_DisplayStringAt(0, BSP_LCD_GetYSize()- 80, (uint8_t*)"MEMS cannot be initialized", CENT
+  79:Core/Src/mems.c ****   }
+  80:Core/Src/mems.c ****   else
+  81:Core/Src/mems.c ****   {
+  82:Core/Src/mems.c ****     Gyroscope_DrawBackground(state);
+  83:Core/Src/mems.c ****   }
+  84:Core/Src/mems.c ****   
+  85:Core/Src/mems.c ****   BSP_GYRO_Reset();
+  86:Core/Src/mems.c ****   
+  87:Core/Src/mems.c ****   while (1)
+  88:Core/Src/mems.c ****   {	
+  89:Core/Src/mems.c ****     /* Read Gyro Angular data */
+  90:Core/Src/mems.c ****     BSP_GYRO_GetXYZ(Buffer);
+  91:Core/Src/mems.c ****     
+  92:Core/Src/mems.c ****     /* Update autoreload and capture compare registers value */
+  93:Core/Src/mems.c ****     Xval = ABS((Buffer[0]));
+  94:Core/Src/mems.c ****     Yval = ABS((Buffer[1])); 
+  95:Core/Src/mems.c ****     Zval = ABS((Buffer[2])); 
+  96:Core/Src/mems.c ****     
+  97:Core/Src/mems.c ****     if((Xval>Yval) && (Xval>Zval))
+  98:Core/Src/mems.c ****     {
+  99:Core/Src/mems.c ****       if(Buffer[0] > 10000.0f)
+ 100:Core/Src/mems.c ****       { 
+ 101:Core/Src/mems.c ****         if((state & 1) == 0)
+ 102:Core/Src/mems.c ****         {
+ 103:Core/Src/mems.c ****           Gyroscope_DrawBackground(1);			
+ 104:Core/Src/mems.c ****           state |= 1;
+ 105:Core/Src/mems.c ****           HAL_Delay(1000);
+ 106:Core/Src/mems.c ****         }        
+ 107:Core/Src/mems.c ****       }
+ 108:Core/Src/mems.c ****       else if(Buffer[0] < -10000.0f)
+ 109:Core/Src/mems.c ****       { 
+ 110:Core/Src/mems.c ****         if((state & 2) == 0)
+ 111:Core/Src/mems.c ****         {          
+ 112:Core/Src/mems.c ****           Gyroscope_DrawBackground(2);            
+ 113:Core/Src/mems.c ****           state |= 2;
+ 114:Core/Src/mems.c ****           HAL_Delay(1000);
+ 115:Core/Src/mems.c ****         }           
+ 116:Core/Src/mems.c ****       }      
+ 117:Core/Src/mems.c ****     }
+ 118:Core/Src/mems.c ****     else if ((Yval>Xval) && (Yval>Zval))
+ 119:Core/Src/mems.c ****     {
+ 120:Core/Src/mems.c ****       if(Buffer[1] < -10000.0f)
+ARM GAS  /tmp/cc6bkUl0.s 			page 4
+
+
+ 121:Core/Src/mems.c ****       {
+ 122:Core/Src/mems.c ****         if((state & 4) == 0)
+ 123:Core/Src/mems.c ****         {                     
+ 124:Core/Src/mems.c ****           Gyroscope_DrawBackground(4);            
+ 125:Core/Src/mems.c ****           state |= 4;
+ 126:Core/Src/mems.c ****           HAL_Delay(1000);
+ 127:Core/Src/mems.c ****         }   
+ 128:Core/Src/mems.c ****       }
+ 129:Core/Src/mems.c ****       else if(Buffer[1] > 10000.0f)
+ 130:Core/Src/mems.c ****       {
+ 131:Core/Src/mems.c ****         if((state & 8) == 0)
+ 132:Core/Src/mems.c ****         {          
+ 133:Core/Src/mems.c ****           Gyroscope_DrawBackground(8);            
+ 134:Core/Src/mems.c ****           state |= 8;
+ 135:Core/Src/mems.c ****           HAL_Delay(1000);
+ 136:Core/Src/mems.c ****         }
+ 137:Core/Src/mems.c ****       }     
+ 138:Core/Src/mems.c ****     } 
+ 139:Core/Src/mems.c ****     else if ((Zval>Xval) && (Zval>Yval))
+ 140:Core/Src/mems.c ****     {
+ 141:Core/Src/mems.c ****       if(Buffer[2] < -10000.0f)
+ 142:Core/Src/mems.c ****       {
+ 143:Core/Src/mems.c ****         if((state & 16) == 0)
+ 144:Core/Src/mems.c ****         {                     
+ 145:Core/Src/mems.c ****           Gyroscope_DrawBackground(16);            
+ 146:Core/Src/mems.c ****           state |= 16;
+ 147:Core/Src/mems.c ****           HAL_Delay(1000);
+ 148:Core/Src/mems.c ****         }   
+ 149:Core/Src/mems.c ****       }		 
+ 150:Core/Src/mems.c ****       else if(Buffer[2] > 10000.0f)
+ 151:Core/Src/mems.c ****       {
+ 152:Core/Src/mems.c ****         if((state & 32) == 0)
+ 153:Core/Src/mems.c ****         {          
+ 154:Core/Src/mems.c ****           Gyroscope_DrawBackground(32);            
+ 155:Core/Src/mems.c ****           state |= 32;
+ 156:Core/Src/mems.c ****           HAL_Delay(1000);			
+ 157:Core/Src/mems.c ****         }
+ 158:Core/Src/mems.c ****       }  	
+ 159:Core/Src/mems.c ****     } 
+ 160:Core/Src/mems.c ****     if (state != 0x3F)	
+ 161:Core/Src/mems.c ****     {
+ 162:Core/Src/mems.c ****     }
+ 163:Core/Src/mems.c ****     else if (CheckForUserInput() > 0)
+ 164:Core/Src/mems.c ****     { 
+ 165:Core/Src/mems.c ****       state = 0;    
+ 166:Core/Src/mems.c ****       return;
+ 167:Core/Src/mems.c ****     }
+ 168:Core/Src/mems.c ****   }
+ 169:Core/Src/mems.c **** }
+ 170:Core/Src/mems.c **** 
+ 171:Core/Src/mems.c **** /**
+ 172:Core/Src/mems.c ****   * @brief  Display MEMS demo hint
+ 173:Core/Src/mems.c ****   * @param  None
+ 174:Core/Src/mems.c ****   * @retval None
+ 175:Core/Src/mems.c ****   */
+ 176:Core/Src/mems.c **** static void MEMS_SetHint(void)
+ 177:Core/Src/mems.c **** {
+ARM GAS  /tmp/cc6bkUl0.s 			page 5
+
+
+  41              		.loc 1 177 1 view -0
+  42              		.cfi_startproc
+  43              		@ args = 0, pretend = 0, frame = 0
+  44              		@ frame_needed = 0, uses_anonymous_args = 0
+  45 0000 10B5     		push	{r4, lr}
+  46              	.LCFI0:
+  47              		.cfi_def_cfa_offset 8
+  48              		.cfi_offset 4, -8
+  49              		.cfi_offset 14, -4
+ 178:Core/Src/mems.c ****   /* Clear the LCD */
+ 179:Core/Src/mems.c ****   BSP_LCD_Clear(LCD_COLOR_WHITE);
+  50              		.loc 1 179 3 view .LVU1
+  51 0002 4FF0FF30 		mov	r0, #-1
+  52 0006 FFF7FEFF 		bl	BSP_LCD_Clear
+  53              	.LVL0:
+ 180:Core/Src/mems.c ****   
+ 181:Core/Src/mems.c ****   /* Set LCD Demo description */
+ 182:Core/Src/mems.c ****   BSP_LCD_SetTextColor(LCD_COLOR_BLUE);
+  54              		.loc 1 182 3 view .LVU2
+  55 000a 294C     		ldr	r4, .L3
+  56 000c 2046     		mov	r0, r4
+  57 000e FFF7FEFF 		bl	BSP_LCD_SetTextColor
+  58              	.LVL1:
+ 183:Core/Src/mems.c ****   BSP_LCD_FillRect(0, 0, BSP_LCD_GetXSize(), 80);
+  59              		.loc 1 183 3 view .LVU3
+  60              		.loc 1 183 26 is_stmt 0 view .LVU4
+  61 0012 FFF7FEFF 		bl	BSP_LCD_GetXSize
+  62              	.LVL2:
+  63              		.loc 1 183 3 discriminator 1 view .LVU5
+  64 0016 5023     		movs	r3, #80
+  65 0018 82B2     		uxth	r2, r0
+  66 001a 0021     		movs	r1, #0
+  67 001c 0846     		mov	r0, r1
+  68 001e FFF7FEFF 		bl	BSP_LCD_FillRect
+  69              	.LVL3:
+ 184:Core/Src/mems.c ****   BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
+  70              		.loc 1 184 3 is_stmt 1 view .LVU6
+  71 0022 4FF0FF30 		mov	r0, #-1
+  72 0026 FFF7FEFF 		bl	BSP_LCD_SetTextColor
+  73              	.LVL4:
+ 185:Core/Src/mems.c ****   BSP_LCD_SetBackColor(LCD_COLOR_BLUE); 
+  74              		.loc 1 185 3 view .LVU7
+  75 002a 2046     		mov	r0, r4
+  76 002c FFF7FEFF 		bl	BSP_LCD_SetBackColor
+  77              	.LVL5:
+ 186:Core/Src/mems.c ****   BSP_LCD_SetFont(&Font24);
+  78              		.loc 1 186 3 view .LVU8
+  79 0030 2048     		ldr	r0, .L3+4
+  80 0032 FFF7FEFF 		bl	BSP_LCD_SetFont
+  81              	.LVL6:
+ 187:Core/Src/mems.c ****   BSP_LCD_DisplayStringAt(0, 0, (uint8_t*)"MEMS", CENTER_MODE);
+  82              		.loc 1 187 3 view .LVU9
+  83 0036 0123     		movs	r3, #1
+  84 0038 1F4A     		ldr	r2, .L3+8
+  85 003a 0021     		movs	r1, #0
+  86 003c 0846     		mov	r0, r1
+  87 003e FFF7FEFF 		bl	BSP_LCD_DisplayStringAt
+ARM GAS  /tmp/cc6bkUl0.s 			page 6
+
+
+  88              	.LVL7:
+ 188:Core/Src/mems.c ****   BSP_LCD_SetFont(&Font12);
+  89              		.loc 1 188 3 view .LVU10
+  90 0042 1E48     		ldr	r0, .L3+12
+  91 0044 FFF7FEFF 		bl	BSP_LCD_SetFont
+  92              	.LVL8:
+ 189:Core/Src/mems.c ****   BSP_LCD_DisplayStringAt(0, 30, (uint8_t*)"This example shows MEMS Features", CENTER_MODE);
+  93              		.loc 1 189 3 view .LVU11
+  94 0048 0123     		movs	r3, #1
+  95 004a 1D4A     		ldr	r2, .L3+16
+  96 004c 1E21     		movs	r1, #30
+  97 004e 0020     		movs	r0, #0
+  98 0050 FFF7FEFF 		bl	BSP_LCD_DisplayStringAt
+  99              	.LVL9:
+ 190:Core/Src/mems.c ****   BSP_LCD_DisplayStringAt(0, 45, (uint8_t*)"move board around axis", CENTER_MODE);
+ 100              		.loc 1 190 3 view .LVU12
+ 101 0054 0123     		movs	r3, #1
+ 102 0056 1B4A     		ldr	r2, .L3+20
+ 103 0058 2D21     		movs	r1, #45
+ 104 005a 0020     		movs	r0, #0
+ 105 005c FFF7FEFF 		bl	BSP_LCD_DisplayStringAt
+ 106              	.LVL10:
+ 191:Core/Src/mems.c ****   BSP_LCD_DisplayStringAt(0, 60, (uint8_t*)"to start test", CENTER_MODE);
+ 107              		.loc 1 191 3 view .LVU13
+ 108 0060 0123     		movs	r3, #1
+ 109 0062 194A     		ldr	r2, .L3+24
+ 110 0064 3C21     		movs	r1, #60
+ 111 0066 0020     		movs	r0, #0
+ 112 0068 FFF7FEFF 		bl	BSP_LCD_DisplayStringAt
+ 113              	.LVL11:
+ 192:Core/Src/mems.c ****   
+ 193:Core/Src/mems.c ****   /* Set the LCD Text Color */
+ 194:Core/Src/mems.c ****   BSP_LCD_SetTextColor(LCD_COLOR_BLUE);  
+ 114              		.loc 1 194 3 view .LVU14
+ 115 006c 2046     		mov	r0, r4
+ 116 006e FFF7FEFF 		bl	BSP_LCD_SetTextColor
+ 117              	.LVL12:
+ 195:Core/Src/mems.c ****   BSP_LCD_DrawRect(10, 90, BSP_LCD_GetXSize() - 20, BSP_LCD_GetYSize()- 100);
+ 118              		.loc 1 195 3 view .LVU15
+ 119              		.loc 1 195 28 is_stmt 0 view .LVU16
+ 120 0072 FFF7FEFF 		bl	BSP_LCD_GetXSize
+ 121              	.LVL13:
+ 122 0076 0446     		mov	r4, r0
+ 123              		.loc 1 195 53 discriminator 1 view .LVU17
+ 124 0078 FFF7FEFF 		bl	BSP_LCD_GetYSize
+ 125              	.LVL14:
+ 126              		.loc 1 195 3 discriminator 2 view .LVU18
+ 127 007c A0F16403 		sub	r3, r0, #100
+ 128              		.loc 1 195 3 discriminator 1 view .LVU19
+ 129 0080 A4F11402 		sub	r2, r4, #20
+ 130              		.loc 1 195 3 discriminator 2 view .LVU20
+ 131 0084 9BB2     		uxth	r3, r3
+ 132 0086 92B2     		uxth	r2, r2
+ 133 0088 5A21     		movs	r1, #90
+ 134 008a 0A20     		movs	r0, #10
+ 135 008c FFF7FEFF 		bl	BSP_LCD_DrawRect
+ 136              	.LVL15:
+ARM GAS  /tmp/cc6bkUl0.s 			page 7
+
+
+ 196:Core/Src/mems.c ****   BSP_LCD_DrawRect(11, 91, BSP_LCD_GetXSize() - 22, BSP_LCD_GetYSize()- 102);
+ 137              		.loc 1 196 3 is_stmt 1 view .LVU21
+ 138              		.loc 1 196 28 is_stmt 0 view .LVU22
+ 139 0090 FFF7FEFF 		bl	BSP_LCD_GetXSize
+ 140              	.LVL16:
+ 141 0094 0446     		mov	r4, r0
+ 142              		.loc 1 196 53 discriminator 1 view .LVU23
+ 143 0096 FFF7FEFF 		bl	BSP_LCD_GetYSize
+ 144              	.LVL17:
+ 145              		.loc 1 196 3 discriminator 2 view .LVU24
+ 146 009a A0F16603 		sub	r3, r0, #102
+ 147              		.loc 1 196 3 discriminator 1 view .LVU25
+ 148 009e A4F11602 		sub	r2, r4, #22
+ 149              		.loc 1 196 3 discriminator 2 view .LVU26
+ 150 00a2 9BB2     		uxth	r3, r3
+ 151 00a4 92B2     		uxth	r2, r2
+ 152 00a6 5B21     		movs	r1, #91
+ 153 00a8 0B20     		movs	r0, #11
+ 154 00aa FFF7FEFF 		bl	BSP_LCD_DrawRect
+ 155              	.LVL18:
+ 197:Core/Src/mems.c **** }
+ 156              		.loc 1 197 1 view .LVU27
+ 157 00ae 10BD     		pop	{r4, pc}
+ 158              	.L4:
+ 159              		.align	2
+ 160              	.L3:
+ 161 00b0 FF0000FF 		.word	-16776961
+ 162 00b4 00000000 		.word	Font24
+ 163 00b8 00000000 		.word	.LC0
+ 164 00bc 00000000 		.word	Font12
+ 165 00c0 08000000 		.word	.LC1
+ 166 00c4 2C000000 		.word	.LC2
+ 167 00c8 44000000 		.word	.LC3
+ 168              		.cfi_endproc
+ 169              	.LFE138:
+ 171              		.section	.rodata.Gyroscope_DrawBackground.str1.4,"aMS",%progbits,1
+ 172              		.align	2
+ 173              	.LC4:
+ 174 0000 582B00   		.ascii	"X+\000"
+ 175 0003 00       		.align	2
+ 176              	.LC5:
+ 177 0004 582D00   		.ascii	"X-\000"
+ 178 0007 00       		.align	2
+ 179              	.LC6:
+ 180 0008 592D00   		.ascii	"Y-\000"
+ 181 000b 00       		.align	2
+ 182              	.LC7:
+ 183 000c 592B00   		.ascii	"Y+\000"
+ 184 000f 00       		.align	2
+ 185              	.LC8:
+ 186 0010 5A2D00   		.ascii	"Z-\000"
+ 187 0013 00       		.align	2
+ 188              	.LC9:
+ 189 0014 5A2B00   		.ascii	"Z+\000"
+ 190              		.section	.text.Gyroscope_DrawBackground,"ax",%progbits
+ 191              		.align	1
+ 192              		.syntax unified
+ARM GAS  /tmp/cc6bkUl0.s 			page 8
+
+
+ 193              		.thumb
+ 194              		.thumb_func
+ 196              	Gyroscope_DrawBackground:
+ 197              	.LVL19:
+ 198              	.LFB139:
+ 198:Core/Src/mems.c **** 
+ 199:Core/Src/mems.c **** /**
+ 200:Core/Src/mems.c ****   * @brief  Draw Touchscreen Background
+ 201:Core/Src/mems.c ****   * @param  Localstate: Touch zone state
+ 202:Core/Src/mems.c ****   * @retval None
+ 203:Core/Src/mems.c ****   */
+ 204:Core/Src/mems.c **** static void Gyroscope_DrawBackground (uint8_t Localstate)
+ 205:Core/Src/mems.c **** {
+ 199              		.loc 1 205 1 is_stmt 1 view -0
+ 200              		.cfi_startproc
+ 201              		@ args = 0, pretend = 0, frame = 0
+ 202              		@ frame_needed = 0, uses_anonymous_args = 0
+ 203              		.loc 1 205 1 is_stmt 0 view .LVU29
+ 204 0000 10B5     		push	{r4, lr}
+ 205              	.LCFI1:
+ 206              		.cfi_def_cfa_offset 8
+ 207              		.cfi_offset 4, -8
+ 208              		.cfi_offset 14, -4
+ 206:Core/Src/mems.c ****   switch(Localstate)
+ 209              		.loc 1 206 3 is_stmt 1 view .LVU30
+ 210 0002 2028     		cmp	r0, #32
+ 211 0004 00F26581 		bhi	.L5
+ 212 0008 DFE810F0 		tbh	[pc, r0, lsl #1]
+ 213              	.L8:
+ 214 000c 2100     		.2byte	(.L14-.L8)/2
+ 215 000e 9400     		.2byte	(.L13-.L8)/2
+ 216 0010 B500     		.2byte	(.L12-.L8)/2
+ 217 0012 6301     		.2byte	(.L5-.L8)/2
+ 218 0014 D700     		.2byte	(.L11-.L8)/2
+ 219 0016 6301     		.2byte	(.L5-.L8)/2
+ 220 0018 6301     		.2byte	(.L5-.L8)/2
+ 221 001a 6301     		.2byte	(.L5-.L8)/2
+ 222 001c FC00     		.2byte	(.L10-.L8)/2
+ 223 001e 6301     		.2byte	(.L5-.L8)/2
+ 224 0020 6301     		.2byte	(.L5-.L8)/2
+ 225 0022 6301     		.2byte	(.L5-.L8)/2
+ 226 0024 6301     		.2byte	(.L5-.L8)/2
+ 227 0026 6301     		.2byte	(.L5-.L8)/2
+ 228 0028 6301     		.2byte	(.L5-.L8)/2
+ 229 002a 6301     		.2byte	(.L5-.L8)/2
+ 230 002c 2501     		.2byte	(.L9-.L8)/2
+ 231 002e 6301     		.2byte	(.L5-.L8)/2
+ 232 0030 6301     		.2byte	(.L5-.L8)/2
+ 233 0032 6301     		.2byte	(.L5-.L8)/2
+ 234 0034 6301     		.2byte	(.L5-.L8)/2
+ 235 0036 6301     		.2byte	(.L5-.L8)/2
+ 236 0038 6301     		.2byte	(.L5-.L8)/2
+ 237 003a 6301     		.2byte	(.L5-.L8)/2
+ 238 003c 6301     		.2byte	(.L5-.L8)/2
+ 239 003e 6301     		.2byte	(.L5-.L8)/2
+ 240 0040 6301     		.2byte	(.L5-.L8)/2
+ 241 0042 6301     		.2byte	(.L5-.L8)/2
+ARM GAS  /tmp/cc6bkUl0.s 			page 9
+
+
+ 242 0044 6301     		.2byte	(.L5-.L8)/2
+ 243 0046 6301     		.2byte	(.L5-.L8)/2
+ 244 0048 6301     		.2byte	(.L5-.L8)/2
+ 245 004a 6301     		.2byte	(.L5-.L8)/2
+ 246 004c 4B01     		.2byte	(.L7-.L8)/2
+ 247              		.p2align 1
+ 248              	.L14:
+ 207:Core/Src/mems.c ****   {
+ 208:Core/Src/mems.c ****   case 0:
+ 209:Core/Src/mems.c ****     /* Circle for Y Positive Log */
+ 210:Core/Src/mems.c ****     BSP_LCD_SetTextColor(LCD_COLOR_BLUE); 
+ 249              		.loc 1 210 5 view .LVU31
+ 250 004e A748     		ldr	r0, .L21
+ 251              	.LVL20:
+ 252              		.loc 1 210 5 is_stmt 0 view .LVU32
+ 253 0050 FFF7FEFF 		bl	BSP_LCD_SetTextColor
+ 254              	.LVL21:
+ 211:Core/Src/mems.c ****     BSP_LCD_FillCircle(CIRCLE_LEFT_X_POS, CIRCLE_LEFT_Y_POS, CIRCLE_RADIUS);
+ 255              		.loc 1 211 5 is_stmt 1 view .LVU33
+ 256              		.loc 1 211 24 is_stmt 0 view .LVU34
+ 257 0054 FFF7FEFF 		bl	BSP_LCD_GetXSize
+ 258              	.LVL22:
+ 259              		.loc 1 211 24 discriminator 1 view .LVU35
+ 260 0058 A54C     		ldr	r4, .L21+4
+ 261 005a A4FB0030 		umull	r3, r0, r4, r0
+ 262              		.loc 1 211 5 discriminator 1 view .LVU36
+ 263 005e 1E22     		movs	r2, #30
+ 264 0060 C821     		movs	r1, #200
+ 265 0062 C0F38F00 		ubfx	r0, r0, #2, #16
+ 266 0066 FFF7FEFF 		bl	BSP_LCD_FillCircle
+ 267              	.LVL23:
+ 212:Core/Src/mems.c ****     
+ 213:Core/Src/mems.c ****     /* Circle for Y Positive Log */
+ 214:Core/Src/mems.c ****     BSP_LCD_SetTextColor(LCD_COLOR_GREEN); 
+ 268              		.loc 1 214 5 is_stmt 1 view .LVU37
+ 269 006a 4FF0FF20 		mov	r0, #-16711936
+ 270 006e FFF7FEFF 		bl	BSP_LCD_SetTextColor
+ 271              	.LVL24:
+ 215:Core/Src/mems.c ****     BSP_LCD_FillCircle(CIRCLE_RIGHT_X_POS, CIRCLE_RIGHT_Y_POS, CIRCLE_RADIUS);
+ 272              		.loc 1 215 5 view .LVU38
+ 273              		.loc 1 215 24 is_stmt 0 view .LVU39
+ 274 0072 FFF7FEFF 		bl	BSP_LCD_GetXSize
+ 275              	.LVL25:
+ 276              		.loc 1 215 24 discriminator 1 view .LVU40
+ 277 0076 A4FB0030 		umull	r3, r0, r4, r0
+ 278              		.loc 1 215 5 discriminator 1 view .LVU41
+ 279 007a 20F00300 		bic	r0, r0, #3
+ 280 007e 80B2     		uxth	r0, r0
+ 281 0080 1E22     		movs	r2, #30
+ 282 0082 C821     		movs	r1, #200
+ 283 0084 FFF7FEFF 		bl	BSP_LCD_FillCircle
+ 284              	.LVL26:
+ 216:Core/Src/mems.c ****     
+ 217:Core/Src/mems.c ****     /* Circle for X Negative Log */
+ 218:Core/Src/mems.c ****     BSP_LCD_SetTextColor(LCD_COLOR_YELLOW); 
+ 285              		.loc 1 218 5 is_stmt 1 view .LVU42
+ 286 0088 6FF0FF00 		mvn	r0, #255
+ARM GAS  /tmp/cc6bkUl0.s 			page 10
+
+
+ 287 008c FFF7FEFF 		bl	BSP_LCD_SetTextColor
+ 288              	.LVL27:
+ 219:Core/Src/mems.c ****     BSP_LCD_FillCircle(CIRCLE_UP_X_POS, CIRCLE_UP_Y_POS, CIRCLE_RADIUS);
+ 289              		.loc 1 219 5 view .LVU43
+ 290              		.loc 1 219 24 is_stmt 0 view .LVU44
+ 291 0090 FFF7FEFF 		bl	BSP_LCD_GetXSize
+ 292              	.LVL28:
+ 293              		.loc 1 219 5 discriminator 1 view .LVU45
+ 294 0094 1E22     		movs	r2, #30
+ 295 0096 8221     		movs	r1, #130
+ 296 0098 C0F34F00 		ubfx	r0, r0, #1, #16
+ 297 009c FFF7FEFF 		bl	BSP_LCD_FillCircle
+ 298              	.LVL29:
+ 220:Core/Src/mems.c ****     
+ 221:Core/Src/mems.c ****     /* Circle for X Negative Log */
+ 222:Core/Src/mems.c ****     BSP_LCD_SetTextColor(LCD_COLOR_RED); 
+ 299              		.loc 1 222 5 is_stmt 1 view .LVU46
+ 300 00a0 9448     		ldr	r0, .L21+8
+ 301 00a2 FFF7FEFF 		bl	BSP_LCD_SetTextColor
+ 302              	.LVL30:
+ 223:Core/Src/mems.c ****     BSP_LCD_FillCircle(CIRCLE_DOWN_X_POS, CIRCLE_DOWN_Y_POS, CIRCLE_RADIUS);
+ 303              		.loc 1 223 5 view .LVU47
+ 304              		.loc 1 223 24 is_stmt 0 view .LVU48
+ 305 00a6 FFF7FEFF 		bl	BSP_LCD_GetXSize
+ 306              	.LVL31:
+ 307              		.loc 1 223 5 discriminator 1 view .LVU49
+ 308 00aa 1E22     		movs	r2, #30
+ 309 00ac 4FF48771 		mov	r1, #270
+ 310 00b0 C0F34F00 		ubfx	r0, r0, #1, #16
+ 311 00b4 FFF7FEFF 		bl	BSP_LCD_FillCircle
+ 312              	.LVL32:
+ 224:Core/Src/mems.c ****     
+ 225:Core/Src/mems.c ****     /* Circle for Z Negative Log */
+ 226:Core/Src/mems.c ****     BSP_LCD_SetTextColor(LCD_COLOR_ORANGE); 
+ 313              		.loc 1 226 5 is_stmt 1 view .LVU50
+ 314 00b8 8F48     		ldr	r0, .L21+12
+ 315 00ba FFF7FEFF 		bl	BSP_LCD_SetTextColor
+ 316              	.LVL33:
+ 227:Core/Src/mems.c ****     BSP_LCD_FillCircle(CIRCLE_CENTRAL_X_POS, CIRCLE_CENTRAL_Y_POS, CIRCLE_RADIUS);
+ 317              		.loc 1 227 5 view .LVU51
+ 318              		.loc 1 227 24 is_stmt 0 view .LVU52
+ 319 00be FFF7FEFF 		bl	BSP_LCD_GetXSize
+ 320              	.LVL34:
+ 321              		.loc 1 227 5 discriminator 1 view .LVU53
+ 322 00c2 1E22     		movs	r2, #30
+ 323 00c4 C821     		movs	r1, #200
+ 324 00c6 C0F34F00 		ubfx	r0, r0, #1, #16
+ 325 00ca FFF7FEFF 		bl	BSP_LCD_FillCircle
+ 326              	.LVL35:
+ 228:Core/Src/mems.c ****     BSP_LCD_SetTextColor(LCD_COLOR_WHITE); 
+ 327              		.loc 1 228 5 is_stmt 1 view .LVU54
+ 328 00ce 4FF0FF30 		mov	r0, #-1
+ 329 00d2 FFF7FEFF 		bl	BSP_LCD_SetTextColor
+ 330              	.LVL36:
+ 229:Core/Src/mems.c ****     BSP_LCD_FillCircle(CIRCLE_LEFT_X_POS, CIRCLE_LEFT_Y_POS, CIRCLE_RADIUS - 2);        
+ 331              		.loc 1 229 5 view .LVU55
+ 332              		.loc 1 229 24 is_stmt 0 view .LVU56
+ARM GAS  /tmp/cc6bkUl0.s 			page 11
+
+
+ 333 00d6 FFF7FEFF 		bl	BSP_LCD_GetXSize
+ 334              	.LVL37:
+ 335              		.loc 1 229 24 discriminator 1 view .LVU57
+ 336 00da A4FB0030 		umull	r3, r0, r4, r0
+ 337              		.loc 1 229 5 discriminator 1 view .LVU58
+ 338 00de 1C22     		movs	r2, #28
+ 339 00e0 C821     		movs	r1, #200
+ 340 00e2 C0F38F00 		ubfx	r0, r0, #2, #16
+ 341 00e6 FFF7FEFF 		bl	BSP_LCD_FillCircle
+ 342              	.LVL38:
+ 230:Core/Src/mems.c ****     BSP_LCD_FillCircle(CIRCLE_RIGHT_X_POS, CIRCLE_RIGHT_Y_POS,  CIRCLE_RADIUS - 2); 
+ 343              		.loc 1 230 5 is_stmt 1 view .LVU59
+ 344              		.loc 1 230 24 is_stmt 0 view .LVU60
+ 345 00ea FFF7FEFF 		bl	BSP_LCD_GetXSize
+ 346              	.LVL39:
+ 347              		.loc 1 230 24 discriminator 1 view .LVU61
+ 348 00ee A4FB0030 		umull	r3, r0, r4, r0
+ 349              		.loc 1 230 5 discriminator 1 view .LVU62
+ 350 00f2 20F00300 		bic	r0, r0, #3
+ 351 00f6 80B2     		uxth	r0, r0
+ 352 00f8 1C22     		movs	r2, #28
+ 353 00fa C821     		movs	r1, #200
+ 354 00fc FFF7FEFF 		bl	BSP_LCD_FillCircle
+ 355              	.LVL40:
+ 231:Core/Src/mems.c ****     BSP_LCD_FillCircle(CIRCLE_UP_X_POS, CIRCLE_UP_Y_POS, CIRCLE_RADIUS - 2);
+ 356              		.loc 1 231 5 is_stmt 1 view .LVU63
+ 357              		.loc 1 231 24 is_stmt 0 view .LVU64
+ 358 0100 FFF7FEFF 		bl	BSP_LCD_GetXSize
+ 359              	.LVL41:
+ 360              		.loc 1 231 5 discriminator 1 view .LVU65
+ 361 0104 1C22     		movs	r2, #28
+ 362 0106 8221     		movs	r1, #130
+ 363 0108 C0F34F00 		ubfx	r0, r0, #1, #16
+ 364 010c FFF7FEFF 		bl	BSP_LCD_FillCircle
+ 365              	.LVL42:
+ 232:Core/Src/mems.c ****     BSP_LCD_FillCircle(CIRCLE_DOWN_X_POS, CIRCLE_DOWN_Y_POS, CIRCLE_RADIUS - 2);
+ 366              		.loc 1 232 5 is_stmt 1 view .LVU66
+ 367              		.loc 1 232 24 is_stmt 0 view .LVU67
+ 368 0110 FFF7FEFF 		bl	BSP_LCD_GetXSize
+ 369              	.LVL43:
+ 370              		.loc 1 232 5 discriminator 1 view .LVU68
+ 371 0114 1C22     		movs	r2, #28
+ 372 0116 4FF48771 		mov	r1, #270
+ 373 011a C0F34F00 		ubfx	r0, r0, #1, #16
+ 374 011e FFF7FEFF 		bl	BSP_LCD_FillCircle
+ 375              	.LVL44:
+ 233:Core/Src/mems.c ****     BSP_LCD_FillCircle(CIRCLE_CENTRAL_X_POS, CIRCLE_CENTRAL_Y_POS, CIRCLE_RADIUS - 2);
+ 376              		.loc 1 233 5 is_stmt 1 view .LVU69
+ 377              		.loc 1 233 24 is_stmt 0 view .LVU70
+ 378 0122 FFF7FEFF 		bl	BSP_LCD_GetXSize
+ 379              	.LVL45:
+ 380              		.loc 1 233 5 discriminator 1 view .LVU71
+ 381 0126 1C22     		movs	r2, #28
+ 382 0128 C821     		movs	r1, #200
+ 383 012a C0F34F00 		ubfx	r0, r0, #1, #16
+ 384 012e FFF7FEFF 		bl	BSP_LCD_FillCircle
+ 385              	.LVL46:
+ARM GAS  /tmp/cc6bkUl0.s 			page 12
+
+
+ 234:Core/Src/mems.c ****     break;
+ 386              		.loc 1 234 5 is_stmt 1 view .LVU72
+ 387 0132 CEE0     		b	.L5
+ 388              	.LVL47:
+ 389              	.L13:
+ 235:Core/Src/mems.c ****     
+ 236:Core/Src/mems.c ****     /* X positive Log */
+ 237:Core/Src/mems.c ****   case 1:
+ 238:Core/Src/mems.c ****     BSP_LCD_SetTextColor(LCD_COLOR_RED); 
+ 390              		.loc 1 238 5 view .LVU73
+ 391 0134 6F48     		ldr	r0, .L21+8
+ 392              	.LVL48:
+ 393              		.loc 1 238 5 is_stmt 0 view .LVU74
+ 394 0136 FFF7FEFF 		bl	BSP_LCD_SetTextColor
+ 395              	.LVL49:
+ 239:Core/Src/mems.c ****     BSP_LCD_FillCircle(CIRCLE_DOWN_X_POS, CIRCLE_DOWN_Y_POS, CIRCLE_RADIUS);
+ 396              		.loc 1 239 5 is_stmt 1 view .LVU75
+ 397              		.loc 1 239 24 is_stmt 0 view .LVU76
+ 398 013a FFF7FEFF 		bl	BSP_LCD_GetXSize
+ 399              	.LVL50:
+ 400              		.loc 1 239 5 discriminator 1 view .LVU77
+ 401 013e 1E22     		movs	r2, #30
+ 402 0140 4FF48771 		mov	r1, #270
+ 403 0144 C0F34F00 		ubfx	r0, r0, #1, #16
+ 404 0148 FFF7FEFF 		bl	BSP_LCD_FillCircle
+ 405              	.LVL51:
+ 240:Core/Src/mems.c ****     BSP_LCD_SetFont(&Font24);
+ 406              		.loc 1 240 5 is_stmt 1 view .LVU78
+ 407 014c 6B48     		ldr	r0, .L21+16
+ 408 014e FFF7FEFF 		bl	BSP_LCD_SetFont
+ 409              	.LVL52:
+ 241:Core/Src/mems.c ****     BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
+ 410              		.loc 1 241 5 view .LVU79
+ 411 0152 4FF0FF30 		mov	r0, #-1
+ 412 0156 FFF7FEFF 		bl	BSP_LCD_SetTextColor
+ 413              	.LVL53:
+ 242:Core/Src/mems.c ****     BSP_LCD_SetBackColor(LCD_COLOR_RED);
+ 414              		.loc 1 242 5 view .LVU80
+ 415 015a 6648     		ldr	r0, .L21+8
+ 416 015c FFF7FEFF 		bl	BSP_LCD_SetBackColor
+ 417              	.LVL54:
+ 243:Core/Src/mems.c ****     BSP_LCD_DisplayStringAt(CIRCLE_DOWN_X_POS-(CIRCLE_RADIUS/2), CIRCLE_DOWN_Y_POS-(CIRCLE_RADIUS/2
+ 418              		.loc 1 243 5 view .LVU81
+ 419              		.loc 1 243 29 is_stmt 0 view .LVU82
+ 420 0160 FFF7FEFF 		bl	BSP_LCD_GetXSize
+ 421              	.LVL55:
+ 422              		.loc 1 243 29 discriminator 1 view .LVU83
+ 423 0164 4008     		lsrs	r0, r0, #1
+ 424              		.loc 1 243 5 discriminator 1 view .LVU84
+ 425 0166 0F38     		subs	r0, r0, #15
+ 426 0168 0323     		movs	r3, #3
+ 427 016a 654A     		ldr	r2, .L21+20
+ 428 016c FF21     		movs	r1, #255
+ 429 016e 80B2     		uxth	r0, r0
+ 430 0170 FFF7FEFF 		bl	BSP_LCD_DisplayStringAt
+ 431              	.LVL56:
+ 244:Core/Src/mems.c ****     break;
+ARM GAS  /tmp/cc6bkUl0.s 			page 13
+
+
+ 432              		.loc 1 244 5 is_stmt 1 view .LVU85
+ 433 0174 ADE0     		b	.L5
+ 434              	.LVL57:
+ 435              	.L12:
+ 245:Core/Src/mems.c ****     
+ 246:Core/Src/mems.c ****     /* X Negative Log */
+ 247:Core/Src/mems.c ****   case 2:
+ 248:Core/Src/mems.c ****     BSP_LCD_SetTextColor(LCD_COLOR_YELLOW); 
+ 436              		.loc 1 248 5 view .LVU86
+ 437 0176 6FF0FF00 		mvn	r0, #255
+ 438              	.LVL58:
+ 439              		.loc 1 248 5 is_stmt 0 view .LVU87
+ 440 017a FFF7FEFF 		bl	BSP_LCD_SetTextColor
+ 441              	.LVL59:
+ 249:Core/Src/mems.c ****     BSP_LCD_FillCircle(CIRCLE_UP_X_POS, CIRCLE_UP_Y_POS, CIRCLE_RADIUS);
+ 442              		.loc 1 249 5 is_stmt 1 view .LVU88
+ 443              		.loc 1 249 24 is_stmt 0 view .LVU89
+ 444 017e FFF7FEFF 		bl	BSP_LCD_GetXSize
+ 445              	.LVL60:
+ 446              		.loc 1 249 5 discriminator 1 view .LVU90
+ 447 0182 1E22     		movs	r2, #30
+ 448 0184 8221     		movs	r1, #130
+ 449 0186 C0F34F00 		ubfx	r0, r0, #1, #16
+ 450 018a FFF7FEFF 		bl	BSP_LCD_FillCircle
+ 451              	.LVL61:
+ 250:Core/Src/mems.c ****     BSP_LCD_SetFont(&Font24);
+ 452              		.loc 1 250 5 is_stmt 1 view .LVU91
+ 453 018e 5B48     		ldr	r0, .L21+16
+ 454 0190 FFF7FEFF 		bl	BSP_LCD_SetFont
+ 455              	.LVL62:
+ 251:Core/Src/mems.c ****     BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
+ 456              		.loc 1 251 5 view .LVU92
+ 457 0194 4FF07F40 		mov	r0, #-16777216
+ 458 0198 FFF7FEFF 		bl	BSP_LCD_SetTextColor
+ 459              	.LVL63:
+ 252:Core/Src/mems.c ****     BSP_LCD_SetBackColor(LCD_COLOR_YELLOW);
+ 460              		.loc 1 252 5 view .LVU93
+ 461 019c 6FF0FF00 		mvn	r0, #255
+ 462 01a0 FFF7FEFF 		bl	BSP_LCD_SetBackColor
+ 463              	.LVL64:
+ 253:Core/Src/mems.c ****     BSP_LCD_DisplayStringAt(CIRCLE_UP_X_POS-(CIRCLE_RADIUS/2), CIRCLE_UP_Y_POS-(CIRCLE_RADIUS/2), (
+ 464              		.loc 1 253 5 view .LVU94
+ 465              		.loc 1 253 29 is_stmt 0 view .LVU95
+ 466 01a4 FFF7FEFF 		bl	BSP_LCD_GetXSize
+ 467              	.LVL65:
+ 468              		.loc 1 253 29 discriminator 1 view .LVU96
+ 469 01a8 4008     		lsrs	r0, r0, #1
+ 470              		.loc 1 253 5 discriminator 1 view .LVU97
+ 471 01aa 0F38     		subs	r0, r0, #15
+ 472 01ac 0323     		movs	r3, #3
+ 473 01ae 554A     		ldr	r2, .L21+24
+ 474 01b0 7321     		movs	r1, #115
+ 475 01b2 80B2     		uxth	r0, r0
+ 476 01b4 FFF7FEFF 		bl	BSP_LCD_DisplayStringAt
+ 477              	.LVL66:
+ 254:Core/Src/mems.c ****     break;
+ 478              		.loc 1 254 5 is_stmt 1 view .LVU98
+ARM GAS  /tmp/cc6bkUl0.s 			page 14
+
+
+ 479 01b8 8BE0     		b	.L5
+ 480              	.LVL67:
+ 481              	.L11:
+ 255:Core/Src/mems.c ****     
+ 256:Core/Src/mems.c ****     /* Y Negative Log */
+ 257:Core/Src/mems.c ****   case 4:
+ 258:Core/Src/mems.c ****     BSP_LCD_SetTextColor(LCD_COLOR_BLUE); 
+ 482              		.loc 1 258 5 view .LVU99
+ 483 01ba 4C48     		ldr	r0, .L21
+ 484              	.LVL68:
+ 485              		.loc 1 258 5 is_stmt 0 view .LVU100
+ 486 01bc FFF7FEFF 		bl	BSP_LCD_SetTextColor
+ 487              	.LVL69:
+ 259:Core/Src/mems.c ****     BSP_LCD_FillCircle(CIRCLE_LEFT_X_POS, CIRCLE_LEFT_Y_POS, CIRCLE_RADIUS);
+ 488              		.loc 1 259 5 is_stmt 1 view .LVU101
+ 489              		.loc 1 259 24 is_stmt 0 view .LVU102
+ 490 01c0 FFF7FEFF 		bl	BSP_LCD_GetXSize
+ 491              	.LVL70:
+ 492              		.loc 1 259 24 discriminator 1 view .LVU103
+ 493 01c4 4A4C     		ldr	r4, .L21+4
+ 494 01c6 A4FB0030 		umull	r3, r0, r4, r0
+ 495              		.loc 1 259 5 discriminator 1 view .LVU104
+ 496 01ca 1E22     		movs	r2, #30
+ 497 01cc C821     		movs	r1, #200
+ 498 01ce C0F38F00 		ubfx	r0, r0, #2, #16
+ 499 01d2 FFF7FEFF 		bl	BSP_LCD_FillCircle
+ 500              	.LVL71:
+ 260:Core/Src/mems.c ****     BSP_LCD_SetFont(&Font24);
+ 501              		.loc 1 260 5 is_stmt 1 view .LVU105
+ 502 01d6 4948     		ldr	r0, .L21+16
+ 503 01d8 FFF7FEFF 		bl	BSP_LCD_SetFont
+ 504              	.LVL72:
+ 261:Core/Src/mems.c ****     BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
+ 505              		.loc 1 261 5 view .LVU106
+ 506 01dc 4FF0FF30 		mov	r0, #-1
+ 507 01e0 FFF7FEFF 		bl	BSP_LCD_SetTextColor
+ 508              	.LVL73:
+ 262:Core/Src/mems.c ****     BSP_LCD_SetBackColor(LCD_COLOR_BLUE);
+ 509              		.loc 1 262 5 view .LVU107
+ 510 01e4 4148     		ldr	r0, .L21
+ 511 01e6 FFF7FEFF 		bl	BSP_LCD_SetBackColor
+ 512              	.LVL74:
+ 263:Core/Src/mems.c ****     BSP_LCD_DisplayStringAt(CIRCLE_LEFT_X_POS-(CIRCLE_RADIUS/2), CIRCLE_LEFT_Y_POS-(CIRCLE_RADIUS/2
+ 513              		.loc 1 263 5 view .LVU108
+ 514              		.loc 1 263 29 is_stmt 0 view .LVU109
+ 515 01ea FFF7FEFF 		bl	BSP_LCD_GetXSize
+ 516              	.LVL75:
+ 517              		.loc 1 263 29 discriminator 1 view .LVU110
+ 518 01ee A4FB0030 		umull	r3, r0, r4, r0
+ 519 01f2 8008     		lsrs	r0, r0, #2
+ 520              		.loc 1 263 5 discriminator 1 view .LVU111
+ 521 01f4 0F38     		subs	r0, r0, #15
+ 522 01f6 0323     		movs	r3, #3
+ 523 01f8 434A     		ldr	r2, .L21+28
+ 524 01fa B921     		movs	r1, #185
+ 525 01fc 80B2     		uxth	r0, r0
+ 526 01fe FFF7FEFF 		bl	BSP_LCD_DisplayStringAt
+ARM GAS  /tmp/cc6bkUl0.s 			page 15
+
+
+ 527              	.LVL76:
+ 264:Core/Src/mems.c ****     break;
+ 528              		.loc 1 264 5 is_stmt 1 view .LVU112
+ 529 0202 66E0     		b	.L5
+ 530              	.LVL77:
+ 531              	.L10:
+ 265:Core/Src/mems.c ****     
+ 266:Core/Src/mems.c ****     /* Y Positive Log */
+ 267:Core/Src/mems.c ****   case 8:
+ 268:Core/Src/mems.c ****     BSP_LCD_SetTextColor(LCD_COLOR_GREEN); 
+ 532              		.loc 1 268 5 view .LVU113
+ 533 0204 4FF0FF20 		mov	r0, #-16711936
+ 534              	.LVL78:
+ 535              		.loc 1 268 5 is_stmt 0 view .LVU114
+ 536 0208 FFF7FEFF 		bl	BSP_LCD_SetTextColor
+ 537              	.LVL79:
+ 269:Core/Src/mems.c ****     BSP_LCD_FillCircle(CIRCLE_RIGHT_X_POS, CIRCLE_RIGHT_Y_POS, CIRCLE_RADIUS);
+ 538              		.loc 1 269 5 is_stmt 1 view .LVU115
+ 539              		.loc 1 269 24 is_stmt 0 view .LVU116
+ 540 020c FFF7FEFF 		bl	BSP_LCD_GetXSize
+ 541              	.LVL80:
+ 542              		.loc 1 269 24 discriminator 1 view .LVU117
+ 543 0210 374C     		ldr	r4, .L21+4
+ 544 0212 A4FB0030 		umull	r3, r0, r4, r0
+ 545              		.loc 1 269 5 discriminator 1 view .LVU118
+ 546 0216 20F00300 		bic	r0, r0, #3
+ 547 021a 80B2     		uxth	r0, r0
+ 548 021c 1E22     		movs	r2, #30
+ 549 021e C821     		movs	r1, #200
+ 550 0220 FFF7FEFF 		bl	BSP_LCD_FillCircle
+ 551              	.LVL81:
+ 270:Core/Src/mems.c ****     BSP_LCD_SetFont(&Font24);
+ 552              		.loc 1 270 5 is_stmt 1 view .LVU119
+ 553 0224 3548     		ldr	r0, .L21+16
+ 554 0226 FFF7FEFF 		bl	BSP_LCD_SetFont
+ 555              	.LVL82:
+ 271:Core/Src/mems.c ****     BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
+ 556              		.loc 1 271 5 view .LVU120
+ 557 022a 4FF07F40 		mov	r0, #-16777216
+ 558 022e FFF7FEFF 		bl	BSP_LCD_SetTextColor
+ 559              	.LVL83:
+ 272:Core/Src/mems.c ****     BSP_LCD_SetBackColor(LCD_COLOR_GREEN);
+ 560              		.loc 1 272 5 view .LVU121
+ 561 0232 4FF0FF20 		mov	r0, #-16711936
+ 562 0236 FFF7FEFF 		bl	BSP_LCD_SetBackColor
+ 563              	.LVL84:
+ 273:Core/Src/mems.c ****     BSP_LCD_DisplayStringAt(CIRCLE_RIGHT_X_POS-(CIRCLE_RADIUS/2), CIRCLE_RIGHT_Y_POS-(CIRCLE_RADIUS
+ 564              		.loc 1 273 5 view .LVU122
+ 565              		.loc 1 273 29 is_stmt 0 view .LVU123
+ 566 023a FFF7FEFF 		bl	BSP_LCD_GetXSize
+ 567              	.LVL85:
+ 568              		.loc 1 273 29 discriminator 1 view .LVU124
+ 569 023e A4FB0030 		umull	r3, r0, r4, r0
+ 570              		.loc 1 273 5 discriminator 1 view .LVU125
+ 571 0242 20F00300 		bic	r0, r0, #3
+ 572 0246 0F38     		subs	r0, r0, #15
+ 573 0248 0323     		movs	r3, #3
+ARM GAS  /tmp/cc6bkUl0.s 			page 16
+
+
+ 574 024a 304A     		ldr	r2, .L21+32
+ 575 024c B921     		movs	r1, #185
+ 576 024e 80B2     		uxth	r0, r0
+ 577 0250 FFF7FEFF 		bl	BSP_LCD_DisplayStringAt
+ 578              	.LVL86:
+ 274:Core/Src/mems.c ****     break;
+ 579              		.loc 1 274 5 is_stmt 1 view .LVU126
+ 580 0254 3DE0     		b	.L5
+ 581              	.LVL87:
+ 582              	.L9:
+ 275:Core/Src/mems.c ****     
+ 276:Core/Src/mems.c ****     /* Z Negative Log */
+ 277:Core/Src/mems.c ****   case 16:	 
+ 278:Core/Src/mems.c ****     if((state & 32) == 0)
+ 583              		.loc 1 278 5 view .LVU127
+ 584              		.loc 1 278 15 is_stmt 0 view .LVU128
+ 585 0256 2E4B     		ldr	r3, .L21+36
+ 586 0258 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 587              		.loc 1 278 7 view .LVU129
+ 588 025a 13F0200F 		tst	r3, #32
+ 589 025e 14D0     		beq	.L19
+ 590              	.LVL88:
+ 591              	.L15:
+ 279:Core/Src/mems.c ****     {    
+ 280:Core/Src/mems.c ****       BSP_LCD_SetTextColor(LCD_COLOR_ORANGE);
+ 281:Core/Src/mems.c ****       BSP_LCD_FillCircle(CIRCLE_CENTRAL_X_POS, CIRCLE_CENTRAL_Y_POS, CIRCLE_RADIUS);
+ 282:Core/Src/mems.c ****     }
+ 283:Core/Src/mems.c ****     BSP_LCD_SetFont(&Font16);
+ 592              		.loc 1 283 5 is_stmt 1 view .LVU130
+ 593 0260 2C48     		ldr	r0, .L21+40
+ 594 0262 FFF7FEFF 		bl	BSP_LCD_SetFont
+ 595              	.LVL89:
+ 284:Core/Src/mems.c ****     BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
+ 596              		.loc 1 284 5 view .LVU131
+ 597 0266 4FF0FF30 		mov	r0, #-1
+ 598 026a FFF7FEFF 		bl	BSP_LCD_SetTextColor
+ 599              	.LVL90:
+ 285:Core/Src/mems.c ****     BSP_LCD_SetBackColor(LCD_COLOR_ORANGE);
+ 600              		.loc 1 285 5 view .LVU132
+ 601 026e 2248     		ldr	r0, .L21+12
+ 602 0270 FFF7FEFF 		bl	BSP_LCD_SetBackColor
+ 603              	.LVL91:
+ 286:Core/Src/mems.c ****     BSP_LCD_DisplayStringAt(CIRCLE_CENTRAL_X_POS-(CIRCLE_RADIUS/2), CIRCLE_CENTRAL_Y_POS-(CIRCLE_RA
+ 604              		.loc 1 286 5 view .LVU133
+ 605              		.loc 1 286 29 is_stmt 0 view .LVU134
+ 606 0274 FFF7FEFF 		bl	BSP_LCD_GetXSize
+ 607              	.LVL92:
+ 608              		.loc 1 286 29 discriminator 1 view .LVU135
+ 609 0278 4008     		lsrs	r0, r0, #1
+ 610              		.loc 1 286 5 discriminator 1 view .LVU136
+ 611 027a 0F38     		subs	r0, r0, #15
+ 612 027c 0323     		movs	r3, #3
+ 613 027e 264A     		ldr	r2, .L21+44
+ 614 0280 B921     		movs	r1, #185
+ 615 0282 80B2     		uxth	r0, r0
+ 616 0284 FFF7FEFF 		bl	BSP_LCD_DisplayStringAt
+ 617              	.LVL93:
+ARM GAS  /tmp/cc6bkUl0.s 			page 17
+
+
+ 287:Core/Src/mems.c ****     break;
+ 618              		.loc 1 287 5 is_stmt 1 view .LVU137
+ 619 0288 23E0     		b	.L5
+ 620              	.LVL94:
+ 621              	.L19:
+ 280:Core/Src/mems.c ****       BSP_LCD_FillCircle(CIRCLE_CENTRAL_X_POS, CIRCLE_CENTRAL_Y_POS, CIRCLE_RADIUS);
+ 622              		.loc 1 280 7 view .LVU138
+ 623 028a 1B48     		ldr	r0, .L21+12
+ 624              	.LVL95:
+ 280:Core/Src/mems.c ****       BSP_LCD_FillCircle(CIRCLE_CENTRAL_X_POS, CIRCLE_CENTRAL_Y_POS, CIRCLE_RADIUS);
+ 625              		.loc 1 280 7 is_stmt 0 view .LVU139
+ 626 028c FFF7FEFF 		bl	BSP_LCD_SetTextColor
+ 627              	.LVL96:
+ 281:Core/Src/mems.c ****     }
+ 628              		.loc 1 281 7 is_stmt 1 view .LVU140
+ 281:Core/Src/mems.c ****     }
+ 629              		.loc 1 281 26 is_stmt 0 view .LVU141
+ 630 0290 FFF7FEFF 		bl	BSP_LCD_GetXSize
+ 631              	.LVL97:
+ 281:Core/Src/mems.c ****     }
+ 632              		.loc 1 281 7 discriminator 1 view .LVU142
+ 633 0294 1E22     		movs	r2, #30
+ 634 0296 C821     		movs	r1, #200
+ 635 0298 C0F34F00 		ubfx	r0, r0, #1, #16
+ 636 029c FFF7FEFF 		bl	BSP_LCD_FillCircle
+ 637              	.LVL98:
+ 638 02a0 DEE7     		b	.L15
+ 639              	.LVL99:
+ 640              	.L7:
+ 288:Core/Src/mems.c ****     
+ 289:Core/Src/mems.c ****     /* Z Positive Log */
+ 290:Core/Src/mems.c ****   case 32:
+ 291:Core/Src/mems.c ****     if((state & 16) == 0)
+ 641              		.loc 1 291 5 is_stmt 1 view .LVU143
+ 642              		.loc 1 291 15 is_stmt 0 view .LVU144
+ 643 02a2 1B4B     		ldr	r3, .L21+36
+ 644 02a4 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 645              		.loc 1 291 7 view .LVU145
+ 646 02a6 13F0100F 		tst	r3, #16
+ 647 02aa 13D0     		beq	.L20
+ 648              	.LVL100:
+ 649              	.L16:
+ 292:Core/Src/mems.c ****     {	 
+ 293:Core/Src/mems.c ****       BSP_LCD_SetTextColor(LCD_COLOR_ORANGE); 
+ 294:Core/Src/mems.c ****       BSP_LCD_FillCircle(CIRCLE_CENTRAL_X_POS, CIRCLE_CENTRAL_Y_POS, CIRCLE_RADIUS);
+ 295:Core/Src/mems.c ****     }		
+ 296:Core/Src/mems.c ****     BSP_LCD_SetFont(&Font16);
+ 650              		.loc 1 296 5 is_stmt 1 view .LVU146
+ 651 02ac 1948     		ldr	r0, .L21+40
+ 652 02ae FFF7FEFF 		bl	BSP_LCD_SetFont
+ 653              	.LVL101:
+ 297:Core/Src/mems.c ****     BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
+ 654              		.loc 1 297 5 view .LVU147
+ 655 02b2 4FF07F40 		mov	r0, #-16777216
+ 656 02b6 FFF7FEFF 		bl	BSP_LCD_SetTextColor
+ 657              	.LVL102:
+ 298:Core/Src/mems.c ****     BSP_LCD_SetBackColor(LCD_COLOR_ORANGE);
+ARM GAS  /tmp/cc6bkUl0.s 			page 18
+
+
+ 658              		.loc 1 298 5 view .LVU148
+ 659 02ba 0F48     		ldr	r0, .L21+12
+ 660 02bc FFF7FEFF 		bl	BSP_LCD_SetBackColor
+ 661              	.LVL103:
+ 299:Core/Src/mems.c ****     BSP_LCD_DisplayStringAt(CIRCLE_CENTRAL_X_POS, CIRCLE_CENTRAL_Y_POS, (uint8_t*)"Z+", LEFT_MODE);
+ 662              		.loc 1 299 5 view .LVU149
+ 663              		.loc 1 299 29 is_stmt 0 view .LVU150
+ 664 02c0 FFF7FEFF 		bl	BSP_LCD_GetXSize
+ 665              	.LVL104:
+ 666              		.loc 1 299 5 discriminator 1 view .LVU151
+ 667 02c4 0323     		movs	r3, #3
+ 668 02c6 154A     		ldr	r2, .L21+48
+ 669 02c8 C821     		movs	r1, #200
+ 670 02ca C0F34F00 		ubfx	r0, r0, #1, #16
+ 671 02ce FFF7FEFF 		bl	BSP_LCD_DisplayStringAt
+ 672              	.LVL105:
+ 300:Core/Src/mems.c ****     break;
+ 673              		.loc 1 300 5 is_stmt 1 view .LVU152
+ 674              	.L5:
+ 301:Core/Src/mems.c ****   }
+ 302:Core/Src/mems.c **** }
+ 675              		.loc 1 302 1 is_stmt 0 view .LVU153
+ 676 02d2 10BD     		pop	{r4, pc}
+ 677              	.LVL106:
+ 678              	.L20:
+ 293:Core/Src/mems.c ****       BSP_LCD_FillCircle(CIRCLE_CENTRAL_X_POS, CIRCLE_CENTRAL_Y_POS, CIRCLE_RADIUS);
+ 679              		.loc 1 293 7 is_stmt 1 view .LVU154
+ 680 02d4 0848     		ldr	r0, .L21+12
+ 681              	.LVL107:
+ 293:Core/Src/mems.c ****       BSP_LCD_FillCircle(CIRCLE_CENTRAL_X_POS, CIRCLE_CENTRAL_Y_POS, CIRCLE_RADIUS);
+ 682              		.loc 1 293 7 is_stmt 0 view .LVU155
+ 683 02d6 FFF7FEFF 		bl	BSP_LCD_SetTextColor
+ 684              	.LVL108:
+ 294:Core/Src/mems.c ****     }		
+ 685              		.loc 1 294 7 is_stmt 1 view .LVU156
+ 294:Core/Src/mems.c ****     }		
+ 686              		.loc 1 294 26 is_stmt 0 view .LVU157
+ 687 02da FFF7FEFF 		bl	BSP_LCD_GetXSize
+ 688              	.LVL109:
+ 294:Core/Src/mems.c ****     }		
+ 689              		.loc 1 294 7 discriminator 1 view .LVU158
+ 690 02de 1E22     		movs	r2, #30
+ 691 02e0 C821     		movs	r1, #200
+ 692 02e2 C0F34F00 		ubfx	r0, r0, #1, #16
+ 693 02e6 FFF7FEFF 		bl	BSP_LCD_FillCircle
+ 694              	.LVL110:
+ 695 02ea DFE7     		b	.L16
+ 696              	.L22:
+ 697              		.align	2
+ 698              	.L21:
+ 699 02ec FF0000FF 		.word	-16776961
+ 700 02f0 CDCCCCCC 		.word	-858993459
+ 701 02f4 0000FFFF 		.word	-65536
+ 702 02f8 00A5FFFF 		.word	-23296
+ 703 02fc 00000000 		.word	Font24
+ 704 0300 00000000 		.word	.LC4
+ 705 0304 04000000 		.word	.LC5
+ARM GAS  /tmp/cc6bkUl0.s 			page 19
+
+
+ 706 0308 08000000 		.word	.LC6
+ 707 030c 0C000000 		.word	.LC7
+ 708 0310 00000000 		.word	state
+ 709 0314 00000000 		.word	Font16
+ 710 0318 10000000 		.word	.LC8
+ 711 031c 14000000 		.word	.LC9
+ 712              		.cfi_endproc
+ 713              	.LFE139:
+ 715              		.section	.rodata.MEMS_demo.str1.4,"aMS",%progbits,1
+ 716              		.align	2
+ 717              	.LC10:
+ 718 0000 4552524F 		.ascii	"ERROR\000"
+ 718      5200
+ 719 0006 0000     		.align	2
+ 720              	.LC11:
+ 721 0008 4D454D53 		.ascii	"MEMS cannot be initialized\000"
+ 721      2063616E 
+ 721      6E6F7420 
+ 721      62652069 
+ 721      6E697469 
+ 722              		.section	.text.MEMS_demo,"ax",%progbits
+ 723              		.align	1
+ 724              		.global	MEMS_demo
+ 725              		.syntax unified
+ 726              		.thumb
+ 727              		.thumb_func
+ 729              	MEMS_demo:
+ 730              	.LFB137:
+  70:Core/Src/mems.c ****   MEMS_SetHint();
+ 731              		.loc 1 70 1 is_stmt 1 view -0
+ 732              		.cfi_startproc
+ 733              		@ args = 0, pretend = 0, frame = 0
+ 734              		@ frame_needed = 0, uses_anonymous_args = 0
+ 735 0000 10B5     		push	{r4, lr}
+ 736              	.LCFI2:
+ 737              		.cfi_def_cfa_offset 8
+ 738              		.cfi_offset 4, -8
+ 739              		.cfi_offset 14, -4
+  71:Core/Src/mems.c ****   
+ 740              		.loc 1 71 3 view .LVU160
+ 741 0002 FFF7FEFF 		bl	MEMS_SetHint
+ 742              	.LVL111:
+  73:Core/Src/mems.c ****   {
+ 743              		.loc 1 73 3 view .LVU161
+  73:Core/Src/mems.c ****   {
+ 744              		.loc 1 73 7 is_stmt 0 view .LVU162
+ 745 0006 FFF7FEFF 		bl	BSP_GYRO_Init
+ 746              	.LVL112:
+  73:Core/Src/mems.c ****   {
+ 747              		.loc 1 73 6 discriminator 1 view .LVU163
+ 748 000a E8B1     		cbz	r0, .L24
+  75:Core/Src/mems.c ****     BSP_LCD_SetTextColor(LCD_COLOR_RED);
+ 749              		.loc 1 75 5 is_stmt 1 view .LVU164
+ 750 000c 4FF0FF30 		mov	r0, #-1
+ 751 0010 FFF7FEFF 		bl	BSP_LCD_SetBackColor
+ 752              	.LVL113:
+  76:Core/Src/mems.c ****     BSP_LCD_DisplayStringAt(0, BSP_LCD_GetYSize()- 95, (uint8_t*)"ERROR", CENTER_MODE);
+ARM GAS  /tmp/cc6bkUl0.s 			page 20
+
+
+ 753              		.loc 1 76 5 view .LVU165
+ 754 0014 8C48     		ldr	r0, .L82
+ 755 0016 FFF7FEFF 		bl	BSP_LCD_SetTextColor
+ 756              	.LVL114:
+  77:Core/Src/mems.c ****     BSP_LCD_DisplayStringAt(0, BSP_LCD_GetYSize()- 80, (uint8_t*)"MEMS cannot be initialized", CENT
+ 757              		.loc 1 77 5 view .LVU166
+  77:Core/Src/mems.c ****     BSP_LCD_DisplayStringAt(0, BSP_LCD_GetYSize()- 80, (uint8_t*)"MEMS cannot be initialized", CENT
+ 758              		.loc 1 77 32 is_stmt 0 view .LVU167
+ 759 001a FFF7FEFF 		bl	BSP_LCD_GetYSize
+ 760              	.LVL115:
+  77:Core/Src/mems.c ****     BSP_LCD_DisplayStringAt(0, BSP_LCD_GetYSize()- 80, (uint8_t*)"MEMS cannot be initialized", CENT
+ 761              		.loc 1 77 5 discriminator 1 view .LVU168
+ 762 001e A0F15F01 		sub	r1, r0, #95
+ 763 0022 0123     		movs	r3, #1
+ 764 0024 894A     		ldr	r2, .L82+4
+ 765 0026 89B2     		uxth	r1, r1
+ 766 0028 0020     		movs	r0, #0
+ 767 002a FFF7FEFF 		bl	BSP_LCD_DisplayStringAt
+ 768              	.LVL116:
+  78:Core/Src/mems.c ****   }
+ 769              		.loc 1 78 5 is_stmt 1 view .LVU169
+  78:Core/Src/mems.c ****   }
+ 770              		.loc 1 78 32 is_stmt 0 view .LVU170
+ 771 002e FFF7FEFF 		bl	BSP_LCD_GetYSize
+ 772              	.LVL117:
+  78:Core/Src/mems.c ****   }
+ 773              		.loc 1 78 5 discriminator 1 view .LVU171
+ 774 0032 A0F15001 		sub	r1, r0, #80
+ 775 0036 0123     		movs	r3, #1
+ 776 0038 854A     		ldr	r2, .L82+8
+ 777 003a 89B2     		uxth	r1, r1
+ 778 003c 0020     		movs	r0, #0
+ 779 003e FFF7FEFF 		bl	BSP_LCD_DisplayStringAt
+ 780              	.LVL118:
+ 781              	.L25:
+  85:Core/Src/mems.c ****   
+ 782              		.loc 1 85 3 is_stmt 1 view .LVU172
+ 783 0042 FFF7FEFF 		bl	BSP_GYRO_Reset
+ 784              	.LVL119:
+ 785 0046 43E0     		b	.L50
+ 786              	.L24:
+  82:Core/Src/mems.c ****   }
+ 787              		.loc 1 82 5 view .LVU173
+ 788 0048 824B     		ldr	r3, .L82+12
+ 789 004a 1878     		ldrb	r0, [r3]	@ zero_extendqisi2
+ 790 004c FFF7FEFF 		bl	Gyroscope_DrawBackground
+ 791              	.LVL120:
+ 792 0050 F7E7     		b	.L25
+ 793              	.L79:
+  93:Core/Src/mems.c ****     Yval = ABS((Buffer[1])); 
+ 794              		.loc 1 93 12 is_stmt 0 discriminator 1 view .LVU174
+ 795 0052 F1EE467A 		vneg.f32	s15, s12
+ 796 0056 48E0     		b	.L26
+ 797              	.L80:
+  94:Core/Src/mems.c ****     Zval = ABS((Buffer[2])); 
+ 798              		.loc 1 94 12 discriminator 1 view .LVU175
+ 799 0058 B1EE657A 		vneg.f32	s14, s11
+ARM GAS  /tmp/cc6bkUl0.s 			page 21
+
+
+ 800 005c 52E0     		b	.L28
+ 801              	.L81:
+  95:Core/Src/mems.c ****     
+ 802              		.loc 1 95 12 discriminator 1 view .LVU176
+ 803 005e F1EE456A 		vneg.f32	s13, s10
+ 804 0062 5CE0     		b	.L30
+ 805              	.L73:
+ 108:Core/Src/mems.c ****       { 
+ 806              		.loc 1 108 12 is_stmt 1 view .LVU177
+ 108:Core/Src/mems.c ****       { 
+ 807              		.loc 1 108 14 is_stmt 0 view .LVU178
+ 808 0064 DFED7C7A 		vldr.32	s15, .L82+16
+ 809 0068 B4EEE76A 		vcmpe.f32	s12, s15
+ 810 006c F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 811 0070 29D5     		bpl	.L37
+ 110:Core/Src/mems.c ****         {          
+ 812              		.loc 1 110 9 is_stmt 1 view .LVU179
+ 110:Core/Src/mems.c ****         {          
+ 813              		.loc 1 110 19 is_stmt 0 view .LVU180
+ 814 0072 784B     		ldr	r3, .L82+12
+ 815 0074 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 110:Core/Src/mems.c ****         {          
+ 816              		.loc 1 110 11 view .LVU181
+ 817 0076 13F0020F 		tst	r3, #2
+ 818 007a 24D1     		bne	.L37
+ 112:Core/Src/mems.c ****           state |= 2;
+ 819              		.loc 1 112 11 is_stmt 1 view .LVU182
+ 820 007c 0220     		movs	r0, #2
+ 821 007e FFF7FEFF 		bl	Gyroscope_DrawBackground
+ 822              	.LVL121:
+ 113:Core/Src/mems.c ****           HAL_Delay(1000);
+ 823              		.loc 1 113 11 view .LVU183
+ 113:Core/Src/mems.c ****           HAL_Delay(1000);
+ 824              		.loc 1 113 17 is_stmt 0 view .LVU184
+ 825 0082 744A     		ldr	r2, .L82+12
+ 826 0084 1378     		ldrb	r3, [r2]	@ zero_extendqisi2
+ 827 0086 43F00203 		orr	r3, r3, #2
+ 828 008a 1370     		strb	r3, [r2]
+ 114:Core/Src/mems.c ****         }           
+ 829              		.loc 1 114 11 is_stmt 1 view .LVU185
+ 830 008c 4FF47A70 		mov	r0, #1000
+ 831 0090 FFF7FEFF 		bl	HAL_Delay
+ 832              	.LVL122:
+ 833 0094 17E0     		b	.L37
+ 834              	.L32:
+ 118:Core/Src/mems.c ****     {
+ 835              		.loc 1 118 10 view .LVU186
+ 118:Core/Src/mems.c ****     {
+ 836              		.loc 1 118 13 is_stmt 0 view .LVU187
+ 837 0096 F4EEC77A 		vcmpe.f32	s15, s14
+ 838 009a F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 839 009e 40F18A80 		bpl	.L39
+ 118:Core/Src/mems.c ****     {
+ 840              		.loc 1 118 26 discriminator 1 view .LVU188
+ 841 00a2 B4EEE67A 		vcmpe.f32	s14, s13
+ 842 00a6 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 843 00aa 40F38480 		ble	.L39
+ARM GAS  /tmp/cc6bkUl0.s 			page 22
+
+
+ 120:Core/Src/mems.c ****       {
+ 844              		.loc 1 120 7 is_stmt 1 view .LVU189
+ 120:Core/Src/mems.c ****       {
+ 845              		.loc 1 120 9 is_stmt 0 view .LVU190
+ 846 00ae DFED6A7A 		vldr.32	s15, .L82+16
+ 847 00b2 F4EEE75A 		vcmpe.f32	s11, s15
+ 848 00b6 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 849 00ba 63D5     		bpl	.L74
+ 122:Core/Src/mems.c ****         {                     
+ 850              		.loc 1 122 9 is_stmt 1 view .LVU191
+ 122:Core/Src/mems.c ****         {                     
+ 851              		.loc 1 122 19 is_stmt 0 view .LVU192
+ 852 00bc 654B     		ldr	r3, .L82+12
+ 853 00be 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 122:Core/Src/mems.c ****         {                     
+ 854              		.loc 1 122 11 view .LVU193
+ 855 00c0 13F0040F 		tst	r3, #4
+ 856 00c4 51D0     		beq	.L77
+ 857              	.L37:
+ 160:Core/Src/mems.c ****     {
+ 858              		.loc 1 160 5 is_stmt 1 view .LVU194
+ 160:Core/Src/mems.c ****     {
+ 859              		.loc 1 160 15 is_stmt 0 view .LVU195
+ 860 00c6 634B     		ldr	r3, .L82+12
+ 861 00c8 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 160:Core/Src/mems.c ****     {
+ 862              		.loc 1 160 8 view .LVU196
+ 863 00ca 3F2B     		cmp	r3, #63
+ 864 00cc 00F0B380 		beq	.L78
+ 865              	.L50:
+  87:Core/Src/mems.c ****   {	
+ 866              		.loc 1 87 3 is_stmt 1 view .LVU197
+  90:Core/Src/mems.c ****     
+ 867              		.loc 1 90 5 view .LVU198
+ 868 00d0 624C     		ldr	r4, .L82+20
+ 869 00d2 2046     		mov	r0, r4
+ 870 00d4 FFF7FEFF 		bl	BSP_GYRO_GetXYZ
+ 871              	.LVL123:
+  93:Core/Src/mems.c ****     Yval = ABS((Buffer[1])); 
+ 872              		.loc 1 93 5 view .LVU199
+  93:Core/Src/mems.c ****     Yval = ABS((Buffer[1])); 
+ 873              		.loc 1 93 12 is_stmt 0 view .LVU200
+ 874 00d8 94ED006A 		vldr.32	s12, [r4]
+ 875 00dc B5EEC06A 		vcmpe.f32	s12, #0
+ 876 00e0 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 877 00e4 B5D4     		bmi	.L79
+  93:Core/Src/mems.c ****     Yval = ABS((Buffer[1])); 
+ 878              		.loc 1 93 12 discriminator 2 view .LVU201
+ 879 00e6 F0EE467A 		vmov.f32	s15, s12
+ 880              	.L26:
+  93:Core/Src/mems.c ****     Yval = ABS((Buffer[1])); 
+ 881              		.loc 1 93 10 discriminator 3 view .LVU202
+ 882 00ea 5D4B     		ldr	r3, .L82+24
+ 883 00ec C3ED007A 		vstr.32	s15, [r3]
+  94:Core/Src/mems.c ****     Zval = ABS((Buffer[2])); 
+ 884              		.loc 1 94 5 is_stmt 1 view .LVU203
+  94:Core/Src/mems.c ****     Zval = ABS((Buffer[2])); 
+ARM GAS  /tmp/cc6bkUl0.s 			page 23
+
+
+ 885              		.loc 1 94 12 is_stmt 0 view .LVU204
+ 886 00f0 5A4B     		ldr	r3, .L82+20
+ 887 00f2 D3ED015A 		vldr.32	s11, [r3, #4]
+ 888 00f6 F5EEC05A 		vcmpe.f32	s11, #0
+ 889 00fa F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 890 00fe ABD4     		bmi	.L80
+  94:Core/Src/mems.c ****     Zval = ABS((Buffer[2])); 
+ 891              		.loc 1 94 12 discriminator 2 view .LVU205
+ 892 0100 B0EE657A 		vmov.f32	s14, s11
+ 893              	.L28:
+  94:Core/Src/mems.c ****     Zval = ABS((Buffer[2])); 
+ 894              		.loc 1 94 10 discriminator 3 view .LVU206
+ 895 0104 574B     		ldr	r3, .L82+28
+ 896 0106 83ED007A 		vstr.32	s14, [r3]
+  95:Core/Src/mems.c ****     
+ 897              		.loc 1 95 5 is_stmt 1 view .LVU207
+  95:Core/Src/mems.c ****     
+ 898              		.loc 1 95 12 is_stmt 0 view .LVU208
+ 899 010a 544B     		ldr	r3, .L82+20
+ 900 010c 93ED025A 		vldr.32	s10, [r3, #8]
+ 901 0110 B5EEC05A 		vcmpe.f32	s10, #0
+ 902 0114 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 903 0118 A1D4     		bmi	.L81
+  95:Core/Src/mems.c ****     
+ 904              		.loc 1 95 12 discriminator 2 view .LVU209
+ 905 011a F0EE456A 		vmov.f32	s13, s10
+ 906              	.L30:
+  95:Core/Src/mems.c ****     
+ 907              		.loc 1 95 10 discriminator 3 view .LVU210
+ 908 011e 524B     		ldr	r3, .L82+32
+ 909 0120 C3ED006A 		vstr.32	s13, [r3]
+  97:Core/Src/mems.c ****     {
+ 910              		.loc 1 97 5 is_stmt 1 view .LVU211
+  97:Core/Src/mems.c ****     {
+ 911              		.loc 1 97 7 is_stmt 0 view .LVU212
+ 912 0124 F4EEC77A 		vcmpe.f32	s15, s14
+ 913 0128 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 914 012c B3DD     		ble	.L32
+  97:Core/Src/mems.c ****     {
+ 915              		.loc 1 97 20 discriminator 1 view .LVU213
+ 916 012e F4EEE67A 		vcmpe.f32	s15, s13
+ 917 0132 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 918 0136 AEDD     		ble	.L32
+  99:Core/Src/mems.c ****       { 
+ 919              		.loc 1 99 7 is_stmt 1 view .LVU214
+  99:Core/Src/mems.c ****       { 
+ 920              		.loc 1 99 9 is_stmt 0 view .LVU215
+ 921 0138 DFED4C7A 		vldr.32	s15, .L82+36
+ 922 013c B4EEE76A 		vcmpe.f32	s12, s15
+ 923 0140 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 924 0144 8EDD     		ble	.L73
+ 101:Core/Src/mems.c ****         {
+ 925              		.loc 1 101 9 is_stmt 1 view .LVU216
+ 101:Core/Src/mems.c ****         {
+ 926              		.loc 1 101 19 is_stmt 0 view .LVU217
+ 927 0146 434B     		ldr	r3, .L82+12
+ 928 0148 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ARM GAS  /tmp/cc6bkUl0.s 			page 24
+
+
+ 101:Core/Src/mems.c ****         {
+ 929              		.loc 1 101 11 view .LVU218
+ 930 014a 13F0010F 		tst	r3, #1
+ 931 014e BAD1     		bne	.L37
+ 103:Core/Src/mems.c ****           state |= 1;
+ 932              		.loc 1 103 11 is_stmt 1 view .LVU219
+ 933 0150 0120     		movs	r0, #1
+ 934 0152 FFF7FEFF 		bl	Gyroscope_DrawBackground
+ 935              	.LVL124:
+ 104:Core/Src/mems.c ****           HAL_Delay(1000);
+ 936              		.loc 1 104 11 view .LVU220
+ 104:Core/Src/mems.c ****           HAL_Delay(1000);
+ 937              		.loc 1 104 17 is_stmt 0 view .LVU221
+ 938 0156 3F4A     		ldr	r2, .L82+12
+ 939 0158 1378     		ldrb	r3, [r2]	@ zero_extendqisi2
+ 940 015a 43F00103 		orr	r3, r3, #1
+ 941 015e 1370     		strb	r3, [r2]
+ 105:Core/Src/mems.c ****         }        
+ 942              		.loc 1 105 11 is_stmt 1 view .LVU222
+ 943 0160 4FF47A70 		mov	r0, #1000
+ 944 0164 FFF7FEFF 		bl	HAL_Delay
+ 945              	.LVL125:
+ 946 0168 ADE7     		b	.L37
+ 947              	.L77:
+ 124:Core/Src/mems.c ****           state |= 4;
+ 948              		.loc 1 124 11 view .LVU223
+ 949 016a 0420     		movs	r0, #4
+ 950 016c FFF7FEFF 		bl	Gyroscope_DrawBackground
+ 951              	.LVL126:
+ 125:Core/Src/mems.c ****           HAL_Delay(1000);
+ 952              		.loc 1 125 11 view .LVU224
+ 125:Core/Src/mems.c ****           HAL_Delay(1000);
+ 953              		.loc 1 125 17 is_stmt 0 view .LVU225
+ 954 0170 384A     		ldr	r2, .L82+12
+ 955 0172 1378     		ldrb	r3, [r2]	@ zero_extendqisi2
+ 956 0174 43F00403 		orr	r3, r3, #4
+ 957 0178 1370     		strb	r3, [r2]
+ 126:Core/Src/mems.c ****         }   
+ 958              		.loc 1 126 11 is_stmt 1 view .LVU226
+ 959 017a 4FF47A70 		mov	r0, #1000
+ 960 017e FFF7FEFF 		bl	HAL_Delay
+ 961              	.LVL127:
+ 962 0182 A0E7     		b	.L37
+ 963              	.L74:
+ 129:Core/Src/mems.c ****       {
+ 964              		.loc 1 129 12 view .LVU227
+ 129:Core/Src/mems.c ****       {
+ 965              		.loc 1 129 14 is_stmt 0 view .LVU228
+ 966 0184 DFED397A 		vldr.32	s15, .L82+36
+ 967 0188 F4EEE75A 		vcmpe.f32	s11, s15
+ 968 018c F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 969 0190 99DD     		ble	.L37
+ 131:Core/Src/mems.c ****         {          
+ 970              		.loc 1 131 9 is_stmt 1 view .LVU229
+ 131:Core/Src/mems.c ****         {          
+ 971              		.loc 1 131 19 is_stmt 0 view .LVU230
+ 972 0192 304B     		ldr	r3, .L82+12
+ARM GAS  /tmp/cc6bkUl0.s 			page 25
+
+
+ 973 0194 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 131:Core/Src/mems.c ****         {          
+ 974              		.loc 1 131 11 view .LVU231
+ 975 0196 13F0080F 		tst	r3, #8
+ 976 019a 94D1     		bne	.L37
+ 133:Core/Src/mems.c ****           state |= 8;
+ 977              		.loc 1 133 11 is_stmt 1 view .LVU232
+ 978 019c 0820     		movs	r0, #8
+ 979 019e FFF7FEFF 		bl	Gyroscope_DrawBackground
+ 980              	.LVL128:
+ 134:Core/Src/mems.c ****           HAL_Delay(1000);
+ 981              		.loc 1 134 11 view .LVU233
+ 134:Core/Src/mems.c ****           HAL_Delay(1000);
+ 982              		.loc 1 134 17 is_stmt 0 view .LVU234
+ 983 01a2 2C4A     		ldr	r2, .L82+12
+ 984 01a4 1378     		ldrb	r3, [r2]	@ zero_extendqisi2
+ 985 01a6 43F00803 		orr	r3, r3, #8
+ 986 01aa 1370     		strb	r3, [r2]
+ 135:Core/Src/mems.c ****         }
+ 987              		.loc 1 135 11 is_stmt 1 view .LVU235
+ 988 01ac 4FF47A70 		mov	r0, #1000
+ 989 01b0 FFF7FEFF 		bl	HAL_Delay
+ 990              	.LVL129:
+ 991 01b4 87E7     		b	.L37
+ 992              	.L39:
+ 139:Core/Src/mems.c ****     {
+ 993              		.loc 1 139 10 view .LVU236
+ 139:Core/Src/mems.c ****     {
+ 994              		.loc 1 139 13 is_stmt 0 view .LVU237
+ 995 01b6 F4EEE67A 		vcmpe.f32	s15, s13
+ 996 01ba F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 997 01be 82D5     		bpl	.L37
+ 139:Core/Src/mems.c ****     {
+ 998              		.loc 1 139 26 discriminator 1 view .LVU238
+ 999 01c0 B4EEE67A 		vcmpe.f32	s14, s13
+ 1000 01c4 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 1001 01c8 7FF57DAF 		bpl	.L37
+ 141:Core/Src/mems.c ****       {
+ 1002              		.loc 1 141 7 is_stmt 1 view .LVU239
+ 141:Core/Src/mems.c ****       {
+ 1003              		.loc 1 141 9 is_stmt 0 view .LVU240
+ 1004 01cc DFED227A 		vldr.32	s15, .L82+16
+ 1005 01d0 B4EEE75A 		vcmpe.f32	s10, s15
+ 1006 01d4 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 1007 01d8 12D5     		bpl	.L75
+ 143:Core/Src/mems.c ****         {                     
+ 1008              		.loc 1 143 9 is_stmt 1 view .LVU241
+ 143:Core/Src/mems.c ****         {                     
+ 1009              		.loc 1 143 19 is_stmt 0 view .LVU242
+ 1010 01da 1E4B     		ldr	r3, .L82+12
+ 1011 01dc 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 143:Core/Src/mems.c ****         {                     
+ 1012              		.loc 1 143 11 view .LVU243
+ 1013 01de 13F0100F 		tst	r3, #16
+ 1014 01e2 7FF470AF 		bne	.L37
+ 145:Core/Src/mems.c ****           state |= 16;
+ 1015              		.loc 1 145 11 is_stmt 1 view .LVU244
+ARM GAS  /tmp/cc6bkUl0.s 			page 26
+
+
+ 1016 01e6 1020     		movs	r0, #16
+ 1017 01e8 FFF7FEFF 		bl	Gyroscope_DrawBackground
+ 1018              	.LVL130:
+ 146:Core/Src/mems.c ****           HAL_Delay(1000);
+ 1019              		.loc 1 146 11 view .LVU245
+ 146:Core/Src/mems.c ****           HAL_Delay(1000);
+ 1020              		.loc 1 146 17 is_stmt 0 view .LVU246
+ 1021 01ec 194A     		ldr	r2, .L82+12
+ 1022 01ee 1378     		ldrb	r3, [r2]	@ zero_extendqisi2
+ 1023 01f0 43F01003 		orr	r3, r3, #16
+ 1024 01f4 1370     		strb	r3, [r2]
+ 147:Core/Src/mems.c ****         }   
+ 1025              		.loc 1 147 11 is_stmt 1 view .LVU247
+ 1026 01f6 4FF47A70 		mov	r0, #1000
+ 1027 01fa FFF7FEFF 		bl	HAL_Delay
+ 1028              	.LVL131:
+ 1029 01fe 62E7     		b	.L37
+ 1030              	.L75:
+ 150:Core/Src/mems.c ****       {
+ 1031              		.loc 1 150 12 view .LVU248
+ 150:Core/Src/mems.c ****       {
+ 1032              		.loc 1 150 14 is_stmt 0 view .LVU249
+ 1033 0200 DFED1A7A 		vldr.32	s15, .L82+36
+ 1034 0204 B4EEE75A 		vcmpe.f32	s10, s15
+ 1035 0208 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 1036 020c 7FF75BAF 		ble	.L37
+ 152:Core/Src/mems.c ****         {          
+ 1037              		.loc 1 152 9 is_stmt 1 view .LVU250
+ 152:Core/Src/mems.c ****         {          
+ 1038              		.loc 1 152 19 is_stmt 0 view .LVU251
+ 1039 0210 104B     		ldr	r3, .L82+12
+ 1040 0212 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 152:Core/Src/mems.c ****         {          
+ 1041              		.loc 1 152 11 view .LVU252
+ 1042 0214 13F0200F 		tst	r3, #32
+ 1043 0218 7FF455AF 		bne	.L37
+ 154:Core/Src/mems.c ****           state |= 32;
+ 1044              		.loc 1 154 11 is_stmt 1 view .LVU253
+ 1045 021c 2020     		movs	r0, #32
+ 1046 021e FFF7FEFF 		bl	Gyroscope_DrawBackground
+ 1047              	.LVL132:
+ 155:Core/Src/mems.c ****           HAL_Delay(1000);			
+ 1048              		.loc 1 155 11 view .LVU254
+ 155:Core/Src/mems.c ****           HAL_Delay(1000);			
+ 1049              		.loc 1 155 17 is_stmt 0 view .LVU255
+ 1050 0222 0C4A     		ldr	r2, .L82+12
+ 1051 0224 1378     		ldrb	r3, [r2]	@ zero_extendqisi2
+ 1052 0226 43F02003 		orr	r3, r3, #32
+ 1053 022a 1370     		strb	r3, [r2]
+ 156:Core/Src/mems.c ****         }
+ 1054              		.loc 1 156 11 is_stmt 1 view .LVU256
+ 1055 022c 4FF47A70 		mov	r0, #1000
+ 1056 0230 FFF7FEFF 		bl	HAL_Delay
+ 1057              	.LVL133:
+ 1058 0234 47E7     		b	.L37
+ 1059              	.L78:
+ 163:Core/Src/mems.c ****     { 
+ARM GAS  /tmp/cc6bkUl0.s 			page 27
+
+
+ 1060              		.loc 1 163 10 view .LVU257
+ 163:Core/Src/mems.c ****     { 
+ 1061              		.loc 1 163 14 is_stmt 0 view .LVU258
+ 1062 0236 FFF7FEFF 		bl	CheckForUserInput
+ 1063              	.LVL134:
+ 163:Core/Src/mems.c ****     { 
+ 1064              		.loc 1 163 13 discriminator 1 view .LVU259
+ 1065 023a 0028     		cmp	r0, #0
+ 1066 023c 3FF448AF 		beq	.L50
+ 165:Core/Src/mems.c ****       return;
+ 1067              		.loc 1 165 7 is_stmt 1 view .LVU260
+ 165:Core/Src/mems.c ****       return;
+ 1068              		.loc 1 165 13 is_stmt 0 view .LVU261
+ 1069 0240 044B     		ldr	r3, .L82+12
+ 1070 0242 0022     		movs	r2, #0
+ 1071 0244 1A70     		strb	r2, [r3]
+ 166:Core/Src/mems.c ****     }
+ 1072              		.loc 1 166 7 is_stmt 1 view .LVU262
+ 169:Core/Src/mems.c **** 
+ 1073              		.loc 1 169 1 is_stmt 0 view .LVU263
+ 1074 0246 10BD     		pop	{r4, pc}
+ 1075              	.L83:
+ 1076              		.align	2
+ 1077              	.L82:
+ 1078 0248 0000FFFF 		.word	-65536
+ 1079 024c 00000000 		.word	.LC10
+ 1080 0250 08000000 		.word	.LC11
+ 1081 0254 00000000 		.word	state
+ 1082 0258 00401CC6 		.word	-971227136
+ 1083 025c 00000000 		.word	Buffer
+ 1084 0260 00000000 		.word	Xval
+ 1085 0264 00000000 		.word	Yval
+ 1086 0268 00000000 		.word	Zval
+ 1087 026c 00401C46 		.word	1176256512
+ 1088              		.cfi_endproc
+ 1089              	.LFE137:
+ 1091              		.global	state
+ 1092              		.section	.bss.state,"aw",%nobits
+ 1095              	state:
+ 1096 0000 00       		.space	1
+ 1097              		.global	Zval
+ 1098              		.section	.bss.Zval,"aw",%nobits
+ 1099              		.align	2
+ 1102              	Zval:
+ 1103 0000 00000000 		.space	4
+ 1104              		.global	Yval
+ 1105              		.section	.bss.Yval,"aw",%nobits
+ 1106              		.align	2
+ 1109              	Yval:
+ 1110 0000 00000000 		.space	4
+ 1111              		.global	Xval
+ 1112              		.section	.bss.Xval,"aw",%nobits
+ 1113              		.align	2
+ 1116              	Xval:
+ 1117 0000 00000000 		.space	4
+ 1118              		.global	Buffer
+ 1119              		.section	.bss.Buffer,"aw",%nobits
+ARM GAS  /tmp/cc6bkUl0.s 			page 28
+
+
+ 1120              		.align	2
+ 1123              	Buffer:
+ 1124 0000 00000000 		.space	12
+ 1124      00000000 
+ 1124      00000000 
+ 1125              		.text
+ 1126              	.Letext0:
+ 1127              		.file 2 "/usr/arm-none-eabi/include/machine/_default_types.h"
+ 1128              		.file 3 "/usr/arm-none-eabi/include/sys/_stdint.h"
+ 1129              		.file 4 "Drivers/BSP/STM32F429I-Discovery/../../../Utilities/Fonts/fonts.h"
+ 1130              		.file 5 "Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_lcd.h"
+ 1131              		.file 6 "Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_gyroscope.h"
+ 1132              		.file 7 "Core/Inc/main.h"
+ 1133              		.file 8 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h"
+ARM GAS  /tmp/cc6bkUl0.s 			page 29
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 mems.c
+     /tmp/cc6bkUl0.s:21     .rodata.MEMS_SetHint.str1.4:00000000 $d
+     /tmp/cc6bkUl0.s:34     .text.MEMS_SetHint:00000000 $t
+     /tmp/cc6bkUl0.s:39     .text.MEMS_SetHint:00000000 MEMS_SetHint
+     /tmp/cc6bkUl0.s:161    .text.MEMS_SetHint:000000b0 $d
+     /tmp/cc6bkUl0.s:172    .rodata.Gyroscope_DrawBackground.str1.4:00000000 $d
+     /tmp/cc6bkUl0.s:191    .text.Gyroscope_DrawBackground:00000000 $t
+     /tmp/cc6bkUl0.s:196    .text.Gyroscope_DrawBackground:00000000 Gyroscope_DrawBackground
+     /tmp/cc6bkUl0.s:214    .text.Gyroscope_DrawBackground:0000000c $d
+     /tmp/cc6bkUl0.s:247    .text.Gyroscope_DrawBackground:0000004e $t
+     /tmp/cc6bkUl0.s:699    .text.Gyroscope_DrawBackground:000002ec $d
+     /tmp/cc6bkUl0.s:1095   .bss.state:00000000 state
+     /tmp/cc6bkUl0.s:716    .rodata.MEMS_demo.str1.4:00000000 $d
+     /tmp/cc6bkUl0.s:723    .text.MEMS_demo:00000000 $t
+     /tmp/cc6bkUl0.s:729    .text.MEMS_demo:00000000 MEMS_demo
+     /tmp/cc6bkUl0.s:1078   .text.MEMS_demo:00000248 $d
+     /tmp/cc6bkUl0.s:1123   .bss.Buffer:00000000 Buffer
+     /tmp/cc6bkUl0.s:1116   .bss.Xval:00000000 Xval
+     /tmp/cc6bkUl0.s:1109   .bss.Yval:00000000 Yval
+     /tmp/cc6bkUl0.s:1102   .bss.Zval:00000000 Zval
+     /tmp/cc6bkUl0.s:1096   .bss.state:00000000 $d
+     /tmp/cc6bkUl0.s:1099   .bss.Zval:00000000 $d
+     /tmp/cc6bkUl0.s:1106   .bss.Yval:00000000 $d
+     /tmp/cc6bkUl0.s:1113   .bss.Xval:00000000 $d
+     /tmp/cc6bkUl0.s:1120   .bss.Buffer:00000000 $d
+
+UNDEFINED SYMBOLS
+BSP_LCD_Clear
+BSP_LCD_SetTextColor
+BSP_LCD_GetXSize
+BSP_LCD_FillRect
+BSP_LCD_SetBackColor
+BSP_LCD_SetFont
+BSP_LCD_DisplayStringAt
+BSP_LCD_GetYSize
+BSP_LCD_DrawRect
+Font24
+Font12
+BSP_LCD_FillCircle
+Font16
+BSP_GYRO_Init
+BSP_GYRO_Reset
+HAL_Delay
+BSP_GYRO_GetXYZ
+CheckForUserInput

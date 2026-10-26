@@ -1,0 +1,1149 @@
+ARM GAS  /tmp/ccvUaxw5.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.arch armv7e-m
+   3              		.fpu fpv4-sp-d16
+   4              		.eabi_attribute 27, 1
+   5              		.eabi_attribute 28, 1
+   6              		.eabi_attribute 20, 1
+   7              		.eabi_attribute 21, 1
+   8              		.eabi_attribute 23, 3
+   9              		.eabi_attribute 24, 1
+  10              		.eabi_attribute 25, 1
+  11              		.eabi_attribute 26, 1
+  12              		.eabi_attribute 30, 1
+  13              		.eabi_attribute 34, 1
+  14              		.eabi_attribute 18, 4
+  15              		.file	"ts_calibration.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.file 1 "Core/Src/ts_calibration.c"
+  20              		.section	.rodata.TouchscreenCalibration_SetHint.str1.4,"aMS",%progbits,1
+  21              		.align	2
+  22              	.LC0:
+  23 0000 4265666F 		.ascii	"Before using the Touchscreen\000"
+  23      72652075 
+  23      73696E67 
+  23      20746865 
+  23      20546F75 
+  24 001d 000000   		.align	2
+  25              	.LC1:
+  26 0020 796F7520 		.ascii	"you need to calibrate it.\000"
+  26      6E656564 
+  26      20746F20 
+  26      63616C69 
+  26      62726174 
+  27 003a 0000     		.align	2
+  28              	.LC2:
+  29 003c 50726573 		.ascii	"Press on the black circles\000"
+  29      73206F6E 
+  29      20746865 
+  29      20626C61 
+  29      636B2063 
+  30              		.section	.text.TouchscreenCalibration_SetHint,"ax",%progbits
+  31              		.align	1
+  32              		.syntax unified
+  33              		.thumb
+  34              		.thumb_func
+  36              	TouchscreenCalibration_SetHint:
+  37              	.LFB138:
+   1:Core/Src/ts_calibration.c **** /**
+   2:Core/Src/ts_calibration.c ****   ******************************************************************************
+   3:Core/Src/ts_calibration.c ****   * @file    BSP/Src/ts_calibration.c 
+   4:Core/Src/ts_calibration.c ****   * @author  MCD Application Team
+   5:Core/Src/ts_calibration.c ****   * @brief   This example code shows how to calibrate the touchscreen.
+   6:Core/Src/ts_calibration.c ****   ******************************************************************************
+   7:Core/Src/ts_calibration.c ****   * @attention
+   8:Core/Src/ts_calibration.c ****   *
+   9:Core/Src/ts_calibration.c ****   * Copyright (c) 2017 STMicroelectronics.
+ARM GAS  /tmp/ccvUaxw5.s 			page 2
+
+
+  10:Core/Src/ts_calibration.c ****   * All rights reserved.
+  11:Core/Src/ts_calibration.c ****   *
+  12:Core/Src/ts_calibration.c ****   * This software is licensed under terms that can be found in the LICENSE file
+  13:Core/Src/ts_calibration.c ****   * in the root directory of this software component.
+  14:Core/Src/ts_calibration.c ****   * If no LICENSE file comes with this software, it is provided AS-IS.
+  15:Core/Src/ts_calibration.c ****   *
+  16:Core/Src/ts_calibration.c ****   ******************************************************************************
+  17:Core/Src/ts_calibration.c ****   */
+  18:Core/Src/ts_calibration.c **** 
+  19:Core/Src/ts_calibration.c **** /* Includes ------------------------------------------------------------------*/
+  20:Core/Src/ts_calibration.c **** #include "main.h"
+  21:Core/Src/ts_calibration.c **** 
+  22:Core/Src/ts_calibration.c **** /** @addtogroup STM32F4xx_HAL_Examples
+  23:Core/Src/ts_calibration.c ****   * @{
+  24:Core/Src/ts_calibration.c ****   */
+  25:Core/Src/ts_calibration.c **** 
+  26:Core/Src/ts_calibration.c **** /** @addtogroup BSP
+  27:Core/Src/ts_calibration.c ****   * @{
+  28:Core/Src/ts_calibration.c ****   */ 
+  29:Core/Src/ts_calibration.c **** 
+  30:Core/Src/ts_calibration.c **** /* Private typedef -----------------------------------------------------------*/
+  31:Core/Src/ts_calibration.c **** /* Private define ------------------------------------------------------------*/
+  32:Core/Src/ts_calibration.c **** /* Private macro -------------------------------------------------------------*/
+  33:Core/Src/ts_calibration.c **** /* Private variables ---------------------------------------------------------*/
+  34:Core/Src/ts_calibration.c **** static TS_StateTypeDef  TS_State;
+  35:Core/Src/ts_calibration.c **** static uint8_t Calibration_Done = 0;
+  36:Core/Src/ts_calibration.c **** static int16_t  A1, A2, B1, B2;
+  37:Core/Src/ts_calibration.c **** static int16_t aPhysX[2], aPhysY[2], aLogX[2], aLogY[2];
+  38:Core/Src/ts_calibration.c **** 
+  39:Core/Src/ts_calibration.c **** /* Private function prototypes -----------------------------------------------*/
+  40:Core/Src/ts_calibration.c **** static void TouchscreenCalibration_SetHint(void);
+  41:Core/Src/ts_calibration.c **** static void GetPhysValues(int16_t LogX, int16_t LogY, int16_t * pPhysX, int16_t * pPhysY);
+  42:Core/Src/ts_calibration.c **** static void WaitForPressedState(uint8_t Pressed);
+  43:Core/Src/ts_calibration.c **** 
+  44:Core/Src/ts_calibration.c **** /* Private functions ---------------------------------------------------------*/
+  45:Core/Src/ts_calibration.c **** 
+  46:Core/Src/ts_calibration.c **** /**
+  47:Core/Src/ts_calibration.c ****   * @brief  Performs the TS calibration
+  48:Core/Src/ts_calibration.c ****   * @param  None
+  49:Core/Src/ts_calibration.c ****   * @retval None
+  50:Core/Src/ts_calibration.c ****   */
+  51:Core/Src/ts_calibration.c **** void Touchscreen_Calibration(void)
+  52:Core/Src/ts_calibration.c **** { 
+  53:Core/Src/ts_calibration.c ****   uint8_t status = 0;
+  54:Core/Src/ts_calibration.c ****   uint8_t i = 0;
+  55:Core/Src/ts_calibration.c ****   
+  56:Core/Src/ts_calibration.c ****   TouchscreenCalibration_SetHint();
+  57:Core/Src/ts_calibration.c ****   
+  58:Core/Src/ts_calibration.c ****   status = BSP_TS_Init(BSP_LCD_GetXSize(), BSP_LCD_GetYSize());
+  59:Core/Src/ts_calibration.c ****   
+  60:Core/Src/ts_calibration.c ****   if (status != TS_OK)
+  61:Core/Src/ts_calibration.c ****   {
+  62:Core/Src/ts_calibration.c ****     BSP_LCD_SetBackColor(LCD_COLOR_WHITE); 
+  63:Core/Src/ts_calibration.c ****     BSP_LCD_SetTextColor(LCD_COLOR_RED);
+  64:Core/Src/ts_calibration.c ****     BSP_LCD_DisplayStringAt(0, BSP_LCD_GetYSize()- 95, (uint8_t*)"ERROR", CENTER_MODE);
+  65:Core/Src/ts_calibration.c ****     BSP_LCD_DisplayStringAt(0, BSP_LCD_GetYSize()- 80, (uint8_t*)"Touchscreen cannot be initialized
+  66:Core/Src/ts_calibration.c ****   }
+ARM GAS  /tmp/ccvUaxw5.s 			page 3
+
+
+  67:Core/Src/ts_calibration.c ****   
+  68:Core/Src/ts_calibration.c ****   while (1)
+  69:Core/Src/ts_calibration.c ****   {
+  70:Core/Src/ts_calibration.c ****     if (status == TS_OK)
+  71:Core/Src/ts_calibration.c ****     {
+  72:Core/Src/ts_calibration.c ****       aLogX[0] = 15;
+  73:Core/Src/ts_calibration.c ****       aLogY[0] = 15;
+  74:Core/Src/ts_calibration.c ****       aLogX[1] = BSP_LCD_GetXSize() - 15;
+  75:Core/Src/ts_calibration.c ****       aLogY[1] = BSP_LCD_GetYSize() - 15;
+  76:Core/Src/ts_calibration.c ****       
+  77:Core/Src/ts_calibration.c ****       for (i = 0; i < 2; i++) 
+  78:Core/Src/ts_calibration.c ****       {
+  79:Core/Src/ts_calibration.c ****         GetPhysValues(aLogX[i], aLogY[i], &aPhysX[i], &aPhysY[i]);
+  80:Core/Src/ts_calibration.c ****       }
+  81:Core/Src/ts_calibration.c ****       A1 = (1000 * ( aLogX[1] - aLogX[0]))/ ( aPhysX[1] - aPhysX[0]); 
+  82:Core/Src/ts_calibration.c ****       B1 = (1000 * aLogX[0]) - A1 * aPhysX[0]; 
+  83:Core/Src/ts_calibration.c ****       
+  84:Core/Src/ts_calibration.c ****       A2 = (1000 * ( aLogY[1] - aLogY[0]))/ ( aPhysY[1] - aPhysY[0]); 
+  85:Core/Src/ts_calibration.c ****       B2 = (1000 * aLogY[0]) - A2 * aPhysY[0]; 
+  86:Core/Src/ts_calibration.c ****       
+  87:Core/Src/ts_calibration.c ****       Calibration_Done = 1;
+  88:Core/Src/ts_calibration.c ****       return;
+  89:Core/Src/ts_calibration.c ****     }
+  90:Core/Src/ts_calibration.c ****     
+  91:Core/Src/ts_calibration.c ****     HAL_Delay(5);
+  92:Core/Src/ts_calibration.c ****   }
+  93:Core/Src/ts_calibration.c **** }
+  94:Core/Src/ts_calibration.c **** 
+  95:Core/Src/ts_calibration.c **** /**
+  96:Core/Src/ts_calibration.c ****   * @brief  Display calibration hint
+  97:Core/Src/ts_calibration.c ****   * @param  None
+  98:Core/Src/ts_calibration.c ****   * @retval None
+  99:Core/Src/ts_calibration.c ****   */
+ 100:Core/Src/ts_calibration.c **** static void TouchscreenCalibration_SetHint(void)
+ 101:Core/Src/ts_calibration.c **** {
+  38              		.loc 1 101 1 view -0
+  39              		.cfi_startproc
+  40              		@ args = 0, pretend = 0, frame = 0
+  41              		@ frame_needed = 0, uses_anonymous_args = 0
+  42 0000 08B5     		push	{r3, lr}
+  43              	.LCFI0:
+  44              		.cfi_def_cfa_offset 8
+  45              		.cfi_offset 3, -8
+  46              		.cfi_offset 14, -4
+ 102:Core/Src/ts_calibration.c ****   /* Clear the LCD */ 
+ 103:Core/Src/ts_calibration.c ****   BSP_LCD_Clear(LCD_COLOR_WHITE);
+  47              		.loc 1 103 3 view .LVU1
+  48 0002 4FF0FF30 		mov	r0, #-1
+  49 0006 FFF7FEFF 		bl	BSP_LCD_Clear
+  50              	.LVL0:
+ 104:Core/Src/ts_calibration.c ****   
+ 105:Core/Src/ts_calibration.c ****   /* Set Touchscreen Demo description */
+ 106:Core/Src/ts_calibration.c ****   BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
+  51              		.loc 1 106 3 view .LVU2
+  52 000a 4FF07F40 		mov	r0, #-16777216
+  53 000e FFF7FEFF 		bl	BSP_LCD_SetTextColor
+  54              	.LVL1:
+ARM GAS  /tmp/ccvUaxw5.s 			page 4
+
+
+ 107:Core/Src/ts_calibration.c ****   BSP_LCD_SetBackColor(LCD_COLOR_WHITE);
+  55              		.loc 1 107 3 view .LVU3
+  56 0012 4FF0FF30 		mov	r0, #-1
+  57 0016 FFF7FEFF 		bl	BSP_LCD_SetBackColor
+  58              	.LVL2:
+ 108:Core/Src/ts_calibration.c **** 
+ 109:Core/Src/ts_calibration.c ****   BSP_LCD_SetFont(&Font12);
+  59              		.loc 1 109 3 view .LVU4
+  60 001a 1148     		ldr	r0, .L3
+  61 001c FFF7FEFF 		bl	BSP_LCD_SetFont
+  62              	.LVL3:
+ 110:Core/Src/ts_calibration.c ****   BSP_LCD_DisplayStringAt(0, BSP_LCD_GetYSize()/2 - 27, (uint8_t*)"Before using the Touchscreen", C
+  63              		.loc 1 110 3 view .LVU5
+  64              		.loc 1 110 30 is_stmt 0 view .LVU6
+  65 0020 FFF7FEFF 		bl	BSP_LCD_GetYSize
+  66              	.LVL4:
+  67              		.loc 1 110 48 discriminator 1 view .LVU7
+  68 0024 4108     		lsrs	r1, r0, #1
+  69              		.loc 1 110 3 discriminator 1 view .LVU8
+  70 0026 1B39     		subs	r1, r1, #27
+  71 0028 0123     		movs	r3, #1
+  72 002a 0E4A     		ldr	r2, .L3+4
+  73 002c 89B2     		uxth	r1, r1
+  74 002e 0020     		movs	r0, #0
+  75 0030 FFF7FEFF 		bl	BSP_LCD_DisplayStringAt
+  76              	.LVL5:
+ 111:Core/Src/ts_calibration.c ****   BSP_LCD_DisplayStringAt(0, BSP_LCD_GetYSize()/2 - 12, (uint8_t*)"you need to calibrate it.", CENT
+  77              		.loc 1 111 3 is_stmt 1 view .LVU9
+  78              		.loc 1 111 30 is_stmt 0 view .LVU10
+  79 0034 FFF7FEFF 		bl	BSP_LCD_GetYSize
+  80              	.LVL6:
+  81              		.loc 1 111 48 discriminator 1 view .LVU11
+  82 0038 4108     		lsrs	r1, r0, #1
+  83              		.loc 1 111 3 discriminator 1 view .LVU12
+  84 003a 0C39     		subs	r1, r1, #12
+  85 003c 0123     		movs	r3, #1
+  86 003e 0A4A     		ldr	r2, .L3+8
+  87 0040 89B2     		uxth	r1, r1
+  88 0042 0020     		movs	r0, #0
+  89 0044 FFF7FEFF 		bl	BSP_LCD_DisplayStringAt
+  90              	.LVL7:
+ 112:Core/Src/ts_calibration.c ****   BSP_LCD_DisplayStringAt(0, BSP_LCD_GetYSize()/2 + 3, (uint8_t*)"Press on the black circles", CENT
+  91              		.loc 1 112 3 is_stmt 1 view .LVU13
+  92              		.loc 1 112 30 is_stmt 0 view .LVU14
+  93 0048 FFF7FEFF 		bl	BSP_LCD_GetYSize
+  94              	.LVL8:
+  95              		.loc 1 112 48 discriminator 1 view .LVU15
+  96 004c 4108     		lsrs	r1, r0, #1
+  97              		.loc 1 112 3 discriminator 1 view .LVU16
+  98 004e 0331     		adds	r1, r1, #3
+  99 0050 0123     		movs	r3, #1
+ 100 0052 064A     		ldr	r2, .L3+12
+ 101 0054 89B2     		uxth	r1, r1
+ 102 0056 0020     		movs	r0, #0
+ 103 0058 FFF7FEFF 		bl	BSP_LCD_DisplayStringAt
+ 104              	.LVL9:
+ 113:Core/Src/ts_calibration.c **** }
+ARM GAS  /tmp/ccvUaxw5.s 			page 5
+
+
+ 105              		.loc 1 113 1 view .LVU17
+ 106 005c 08BD     		pop	{r3, pc}
+ 107              	.L4:
+ 108 005e 00BF     		.align	2
+ 109              	.L3:
+ 110 0060 00000000 		.word	Font12
+ 111 0064 00000000 		.word	.LC0
+ 112 0068 20000000 		.word	.LC1
+ 113 006c 3C000000 		.word	.LC2
+ 114              		.cfi_endproc
+ 115              	.LFE138:
+ 117              		.section	.text.WaitForPressedState,"ax",%progbits
+ 118              		.align	1
+ 119              		.syntax unified
+ 120              		.thumb
+ 121              		.thumb_func
+ 123              	WaitForPressedState:
+ 124              	.LVL10:
+ 125              	.LFB140:
+ 114:Core/Src/ts_calibration.c **** 
+ 115:Core/Src/ts_calibration.c **** /**
+ 116:Core/Src/ts_calibration.c ****   * @brief  Get Physical position
+ 117:Core/Src/ts_calibration.c ****   * @param  LogX : logical X position
+ 118:Core/Src/ts_calibration.c ****   * @param  LogY : logical Y position
+ 119:Core/Src/ts_calibration.c ****   * @param  pPhysX : Physical X position
+ 120:Core/Src/ts_calibration.c ****   * @param  pPhysY : Physical Y position
+ 121:Core/Src/ts_calibration.c ****   * @retval None
+ 122:Core/Src/ts_calibration.c ****   */
+ 123:Core/Src/ts_calibration.c **** static void GetPhysValues(int16_t LogX, int16_t LogY, int16_t * pPhysX, int16_t * pPhysY) 
+ 124:Core/Src/ts_calibration.c **** {
+ 125:Core/Src/ts_calibration.c ****   /* Draw the ring */
+ 126:Core/Src/ts_calibration.c ****   BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
+ 127:Core/Src/ts_calibration.c ****   BSP_LCD_FillCircle(LogX, LogY, 5);
+ 128:Core/Src/ts_calibration.c ****   BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
+ 129:Core/Src/ts_calibration.c ****   BSP_LCD_FillCircle(LogX, LogY, 2);
+ 130:Core/Src/ts_calibration.c ****   
+ 131:Core/Src/ts_calibration.c ****   /* Wait until touch is pressed */
+ 132:Core/Src/ts_calibration.c ****   WaitForPressedState(1);
+ 133:Core/Src/ts_calibration.c ****   
+ 134:Core/Src/ts_calibration.c ****   BSP_TS_GetState(&TS_State);
+ 135:Core/Src/ts_calibration.c ****   *pPhysX = TS_State.X;
+ 136:Core/Src/ts_calibration.c ****   *pPhysY = TS_State.Y; 
+ 137:Core/Src/ts_calibration.c ****   
+ 138:Core/Src/ts_calibration.c ****   /* Wait until touch is released */
+ 139:Core/Src/ts_calibration.c ****   WaitForPressedState(0);
+ 140:Core/Src/ts_calibration.c ****   BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
+ 141:Core/Src/ts_calibration.c ****   BSP_LCD_FillCircle(LogX, LogY, 5);
+ 142:Core/Src/ts_calibration.c **** }
+ 143:Core/Src/ts_calibration.c **** 
+ 144:Core/Src/ts_calibration.c **** /**
+ 145:Core/Src/ts_calibration.c ****   * @brief  Wait For Pressed State.
+ 146:Core/Src/ts_calibration.c ****   * @param  None
+ 147:Core/Src/ts_calibration.c ****   * @retval None
+ 148:Core/Src/ts_calibration.c ****   */
+ 149:Core/Src/ts_calibration.c **** static void WaitForPressedState(uint8_t Pressed) 
+ 150:Core/Src/ts_calibration.c **** {
+ 126              		.loc 1 150 1 is_stmt 1 view -0
+ARM GAS  /tmp/ccvUaxw5.s 			page 6
+
+
+ 127              		.cfi_startproc
+ 128              		@ args = 0, pretend = 0, frame = 8
+ 129              		@ frame_needed = 0, uses_anonymous_args = 0
+ 130              		.loc 1 150 1 is_stmt 0 view .LVU19
+ 131 0000 30B5     		push	{r4, r5, lr}
+ 132              	.LCFI1:
+ 133              		.cfi_def_cfa_offset 12
+ 134              		.cfi_offset 4, -12
+ 135              		.cfi_offset 5, -8
+ 136              		.cfi_offset 14, -4
+ 137 0002 83B0     		sub	sp, sp, #12
+ 138              	.LCFI2:
+ 139              		.cfi_def_cfa_offset 24
+ 140 0004 0446     		mov	r4, r0
+ 141              	.LVL11:
+ 142              	.L6:
+ 151:Core/Src/ts_calibration.c ****   TS_StateTypeDef  State;
+ 143              		.loc 1 151 3 is_stmt 1 view .LVU20
+ 152:Core/Src/ts_calibration.c ****   
+ 153:Core/Src/ts_calibration.c ****   do 
+ 144              		.loc 1 153 3 view .LVU21
+ 154:Core/Src/ts_calibration.c ****   {
+ 155:Core/Src/ts_calibration.c ****     BSP_TS_GetState(&State);
+ 145              		.loc 1 155 5 view .LVU22
+ 146 0006 6846     		mov	r0, sp
+ 147 0008 FFF7FEFF 		bl	BSP_TS_GetState
+ 148              	.LVL12:
+ 156:Core/Src/ts_calibration.c ****     HAL_Delay(10);
+ 149              		.loc 1 156 5 view .LVU23
+ 150 000c 0A20     		movs	r0, #10
+ 151 000e FFF7FEFF 		bl	HAL_Delay
+ 152              	.LVL13:
+ 157:Core/Src/ts_calibration.c ****     if (State.TouchDetected == Pressed) 
+ 153              		.loc 1 157 5 view .LVU24
+ 154              		.loc 1 157 14 is_stmt 0 view .LVU25
+ 155 0012 BDF80030 		ldrh	r3, [sp]
+ 156              		.loc 1 157 8 view .LVU26
+ 157 0016 A342     		cmp	r3, r4
+ 158 0018 F5D1     		bne	.L6
+ 159              	.LBB2:
+ 158:Core/Src/ts_calibration.c ****     {
+ 159:Core/Src/ts_calibration.c ****       uint16_t TimeStart = HAL_GetTick();
+ 160              		.loc 1 159 7 is_stmt 1 view .LVU27
+ 161              		.loc 1 159 28 is_stmt 0 view .LVU28
+ 162 001a FFF7FEFF 		bl	HAL_GetTick
+ 163              	.LVL14:
+ 164 001e 0546     		mov	r5, r0
+ 165              	.LVL15:
+ 166              	.L8:
+ 160:Core/Src/ts_calibration.c ****       do {
+ 167              		.loc 1 160 7 is_stmt 1 view .LVU29
+ 161:Core/Src/ts_calibration.c ****         BSP_TS_GetState(&State);
+ 168              		.loc 1 161 9 view .LVU30
+ 169 0020 6846     		mov	r0, sp
+ 170 0022 FFF7FEFF 		bl	BSP_TS_GetState
+ 171              	.LVL16:
+ 162:Core/Src/ts_calibration.c ****         HAL_Delay(10);
+ARM GAS  /tmp/ccvUaxw5.s 			page 7
+
+
+ 172              		.loc 1 162 9 view .LVU31
+ 173 0026 0A20     		movs	r0, #10
+ 174 0028 FFF7FEFF 		bl	HAL_Delay
+ 175              	.LVL17:
+ 163:Core/Src/ts_calibration.c ****         if (State.TouchDetected != Pressed) 
+ 176              		.loc 1 163 9 view .LVU32
+ 177              		.loc 1 163 18 is_stmt 0 view .LVU33
+ 178 002c BDF80030 		ldrh	r3, [sp]
+ 179              		.loc 1 163 12 view .LVU34
+ 180 0030 9C42     		cmp	r4, r3
+ 181 0032 E8D1     		bne	.L6
+ 164:Core/Src/ts_calibration.c ****         {
+ 165:Core/Src/ts_calibration.c ****           break;
+ 166:Core/Src/ts_calibration.c ****         } else if ((HAL_GetTick() - 100) > TimeStart) 
+ 182              		.loc 1 166 16 is_stmt 1 view .LVU35
+ 183              		.loc 1 166 21 is_stmt 0 view .LVU36
+ 184 0034 FFF7FEFF 		bl	HAL_GetTick
+ 185              	.LVL18:
+ 186              		.loc 1 166 35 discriminator 1 view .LVU37
+ 187 0038 6438     		subs	r0, r0, #100
+ 188              		.loc 1 166 42 discriminator 1 view .LVU38
+ 189 003a ABB2     		uxth	r3, r5
+ 190              		.loc 1 166 19 discriminator 1 view .LVU39
+ 191 003c 9842     		cmp	r0, r3
+ 192 003e EFD9     		bls	.L8
+ 193              	.LBE2:
+ 167:Core/Src/ts_calibration.c ****         {
+ 168:Core/Src/ts_calibration.c ****           return;
+ 169:Core/Src/ts_calibration.c ****         }
+ 170:Core/Src/ts_calibration.c ****       } while (1);
+ 171:Core/Src/ts_calibration.c ****     }
+ 172:Core/Src/ts_calibration.c ****   } while (1);
+ 173:Core/Src/ts_calibration.c **** }
+ 194              		.loc 1 173 1 view .LVU40
+ 195 0040 03B0     		add	sp, sp, #12
+ 196              	.LCFI3:
+ 197              		.cfi_def_cfa_offset 12
+ 198              		@ sp needed
+ 199 0042 30BD     		pop	{r4, r5, pc}
+ 200              		.loc 1 173 1 view .LVU41
+ 201              		.cfi_endproc
+ 202              	.LFE140:
+ 204              		.section	.text.GetPhysValues,"ax",%progbits
+ 205              		.align	1
+ 206              		.syntax unified
+ 207              		.thumb
+ 208              		.thumb_func
+ 210              	GetPhysValues:
+ 211              	.LVL19:
+ 212              	.LFB139:
+ 124:Core/Src/ts_calibration.c ****   /* Draw the ring */
+ 213              		.loc 1 124 1 is_stmt 1 view -0
+ 214              		.cfi_startproc
+ 215              		@ args = 0, pretend = 0, frame = 0
+ 216              		@ frame_needed = 0, uses_anonymous_args = 0
+ 124:Core/Src/ts_calibration.c ****   /* Draw the ring */
+ 217              		.loc 1 124 1 is_stmt 0 view .LVU43
+ARM GAS  /tmp/ccvUaxw5.s 			page 8
+
+
+ 218 0000 2DE9F041 		push	{r4, r5, r6, r7, r8, lr}
+ 219              	.LCFI4:
+ 220              		.cfi_def_cfa_offset 24
+ 221              		.cfi_offset 4, -24
+ 222              		.cfi_offset 5, -20
+ 223              		.cfi_offset 6, -16
+ 224              		.cfi_offset 7, -12
+ 225              		.cfi_offset 8, -8
+ 226              		.cfi_offset 14, -4
+ 227 0004 0446     		mov	r4, r0
+ 228 0006 0D46     		mov	r5, r1
+ 229 0008 9046     		mov	r8, r2
+ 230 000a 1F46     		mov	r7, r3
+ 126:Core/Src/ts_calibration.c ****   BSP_LCD_FillCircle(LogX, LogY, 5);
+ 231              		.loc 1 126 3 is_stmt 1 view .LVU44
+ 232 000c 4FF07F40 		mov	r0, #-16777216
+ 233              	.LVL20:
+ 126:Core/Src/ts_calibration.c ****   BSP_LCD_FillCircle(LogX, LogY, 5);
+ 234              		.loc 1 126 3 is_stmt 0 view .LVU45
+ 235 0010 FFF7FEFF 		bl	BSP_LCD_SetTextColor
+ 236              	.LVL21:
+ 127:Core/Src/ts_calibration.c ****   BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
+ 237              		.loc 1 127 3 is_stmt 1 view .LVU46
+ 238 0014 A4B2     		uxth	r4, r4
+ 239              	.LVL22:
+ 127:Core/Src/ts_calibration.c ****   BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
+ 240              		.loc 1 127 3 is_stmt 0 view .LVU47
+ 241 0016 ADB2     		uxth	r5, r5
+ 242              	.LVL23:
+ 127:Core/Src/ts_calibration.c ****   BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
+ 243              		.loc 1 127 3 view .LVU48
+ 244 0018 0522     		movs	r2, #5
+ 245 001a 2946     		mov	r1, r5
+ 246 001c 2046     		mov	r0, r4
+ 247 001e FFF7FEFF 		bl	BSP_LCD_FillCircle
+ 248              	.LVL24:
+ 128:Core/Src/ts_calibration.c ****   BSP_LCD_FillCircle(LogX, LogY, 2);
+ 249              		.loc 1 128 3 is_stmt 1 view .LVU49
+ 250 0022 4FF0FF30 		mov	r0, #-1
+ 251 0026 FFF7FEFF 		bl	BSP_LCD_SetTextColor
+ 252              	.LVL25:
+ 129:Core/Src/ts_calibration.c ****   
+ 253              		.loc 1 129 3 view .LVU50
+ 254 002a 0222     		movs	r2, #2
+ 255 002c 2946     		mov	r1, r5
+ 256 002e 2046     		mov	r0, r4
+ 257 0030 FFF7FEFF 		bl	BSP_LCD_FillCircle
+ 258              	.LVL26:
+ 132:Core/Src/ts_calibration.c ****   
+ 259              		.loc 1 132 3 view .LVU51
+ 260 0034 0120     		movs	r0, #1
+ 261 0036 FFF7FEFF 		bl	WaitForPressedState
+ 262              	.LVL27:
+ 134:Core/Src/ts_calibration.c ****   *pPhysX = TS_State.X;
+ 263              		.loc 1 134 3 view .LVU52
+ 264 003a 0C4E     		ldr	r6, .L12
+ 265 003c 3046     		mov	r0, r6
+ARM GAS  /tmp/ccvUaxw5.s 			page 9
+
+
+ 266 003e FFF7FEFF 		bl	BSP_TS_GetState
+ 267              	.LVL28:
+ 135:Core/Src/ts_calibration.c ****   *pPhysY = TS_State.Y; 
+ 268              		.loc 1 135 3 view .LVU53
+ 135:Core/Src/ts_calibration.c ****   *pPhysY = TS_State.Y; 
+ 269              		.loc 1 135 21 is_stmt 0 view .LVU54
+ 270 0042 B6F90230 		ldrsh	r3, [r6, #2]
+ 135:Core/Src/ts_calibration.c ****   *pPhysY = TS_State.Y; 
+ 271              		.loc 1 135 11 view .LVU55
+ 272 0046 A8F80030 		strh	r3, [r8]	@ movhi
+ 136:Core/Src/ts_calibration.c ****   
+ 273              		.loc 1 136 3 is_stmt 1 view .LVU56
+ 136:Core/Src/ts_calibration.c ****   
+ 274              		.loc 1 136 21 is_stmt 0 view .LVU57
+ 275 004a B6F90430 		ldrsh	r3, [r6, #4]
+ 136:Core/Src/ts_calibration.c ****   
+ 276              		.loc 1 136 11 view .LVU58
+ 277 004e 3B80     		strh	r3, [r7]	@ movhi
+ 139:Core/Src/ts_calibration.c ****   BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
+ 278              		.loc 1 139 3 is_stmt 1 view .LVU59
+ 279 0050 0020     		movs	r0, #0
+ 280 0052 FFF7FEFF 		bl	WaitForPressedState
+ 281              	.LVL29:
+ 140:Core/Src/ts_calibration.c ****   BSP_LCD_FillCircle(LogX, LogY, 5);
+ 282              		.loc 1 140 3 view .LVU60
+ 283 0056 4FF0FF30 		mov	r0, #-1
+ 284 005a FFF7FEFF 		bl	BSP_LCD_SetTextColor
+ 285              	.LVL30:
+ 141:Core/Src/ts_calibration.c **** }
+ 286              		.loc 1 141 3 view .LVU61
+ 287 005e 0522     		movs	r2, #5
+ 288 0060 2946     		mov	r1, r5
+ 289 0062 2046     		mov	r0, r4
+ 290 0064 FFF7FEFF 		bl	BSP_LCD_FillCircle
+ 291              	.LVL31:
+ 142:Core/Src/ts_calibration.c **** 
+ 292              		.loc 1 142 1 is_stmt 0 view .LVU62
+ 293 0068 BDE8F081 		pop	{r4, r5, r6, r7, r8, pc}
+ 294              	.LVL32:
+ 295              	.L13:
+ 142:Core/Src/ts_calibration.c **** 
+ 296              		.loc 1 142 1 view .LVU63
+ 297              		.align	2
+ 298              	.L12:
+ 299 006c 00000000 		.word	TS_State
+ 300              		.cfi_endproc
+ 301              	.LFE139:
+ 303              		.section	.rodata.Touchscreen_Calibration.str1.4,"aMS",%progbits,1
+ 304              		.align	2
+ 305              	.LC3:
+ 306 0000 4552524F 		.ascii	"ERROR\000"
+ 306      5200
+ 307 0006 0000     		.align	2
+ 308              	.LC4:
+ 309 0008 546F7563 		.ascii	"Touchscreen cannot be initialized\000"
+ 309      68736372 
+ 309      65656E20 
+ARM GAS  /tmp/ccvUaxw5.s 			page 10
+
+
+ 309      63616E6E 
+ 309      6F742062 
+ 310              		.section	.text.Touchscreen_Calibration,"ax",%progbits
+ 311              		.align	1
+ 312              		.global	Touchscreen_Calibration
+ 313              		.syntax unified
+ 314              		.thumb
+ 315              		.thumb_func
+ 317              	Touchscreen_Calibration:
+ 318              	.LFB137:
+  52:Core/Src/ts_calibration.c ****   uint8_t status = 0;
+ 319              		.loc 1 52 1 is_stmt 1 view -0
+ 320              		.cfi_startproc
+ 321              		@ args = 0, pretend = 0, frame = 0
+ 322              		@ frame_needed = 0, uses_anonymous_args = 0
+ 323 0000 70B5     		push	{r4, r5, r6, lr}
+ 324              	.LCFI5:
+ 325              		.cfi_def_cfa_offset 16
+ 326              		.cfi_offset 4, -16
+ 327              		.cfi_offset 5, -12
+ 328              		.cfi_offset 6, -8
+ 329              		.cfi_offset 14, -4
+  53:Core/Src/ts_calibration.c ****   uint8_t i = 0;
+ 330              		.loc 1 53 3 view .LVU65
+ 331              	.LVL33:
+  54:Core/Src/ts_calibration.c ****   
+ 332              		.loc 1 54 3 view .LVU66
+  56:Core/Src/ts_calibration.c ****   
+ 333              		.loc 1 56 3 view .LVU67
+ 334 0002 FFF7FEFF 		bl	TouchscreenCalibration_SetHint
+ 335              	.LVL34:
+  58:Core/Src/ts_calibration.c ****   
+ 336              		.loc 1 58 3 view .LVU68
+  58:Core/Src/ts_calibration.c ****   
+ 337              		.loc 1 58 24 is_stmt 0 view .LVU69
+ 338 0006 FFF7FEFF 		bl	BSP_LCD_GetXSize
+ 339              	.LVL35:
+ 340 000a 0446     		mov	r4, r0
+  58:Core/Src/ts_calibration.c ****   
+ 341              		.loc 1 58 44 discriminator 1 view .LVU70
+ 342 000c FFF7FEFF 		bl	BSP_LCD_GetYSize
+ 343              	.LVL36:
+  58:Core/Src/ts_calibration.c ****   
+ 344              		.loc 1 58 12 discriminator 2 view .LVU71
+ 345 0010 81B2     		uxth	r1, r0
+ 346 0012 A0B2     		uxth	r0, r4
+ 347 0014 FFF7FEFF 		bl	BSP_TS_Init
+ 348              	.LVL37:
+  60:Core/Src/ts_calibration.c ****   {
+ 349              		.loc 1 60 3 is_stmt 1 view .LVU72
+  60:Core/Src/ts_calibration.c ****   {
+ 350              		.loc 1 60 6 is_stmt 0 view .LVU73
+ 351 0018 0446     		mov	r4, r0
+ 352 001a 20B9     		cbnz	r0, .L22
+ 353              	.LVL38:
+ 354              	.L19:
+  68:Core/Src/ts_calibration.c ****   {
+ARM GAS  /tmp/ccvUaxw5.s 			page 11
+
+
+ 355              		.loc 1 68 3 is_stmt 1 view .LVU74
+  70:Core/Src/ts_calibration.c ****     {
+ 356              		.loc 1 70 5 view .LVU75
+  70:Core/Src/ts_calibration.c ****     {
+ 357              		.loc 1 70 8 is_stmt 0 view .LVU76
+ 358 001c FCB1     		cbz	r4, .L23
+  91:Core/Src/ts_calibration.c ****   }
+ 359              		.loc 1 91 5 is_stmt 1 view .LVU77
+ 360 001e 0520     		movs	r0, #5
+ 361 0020 FFF7FEFF 		bl	HAL_Delay
+ 362              	.LVL39:
+  68:Core/Src/ts_calibration.c ****   {
+ 363              		.loc 1 68 9 discriminator 1 view .LVU78
+  70:Core/Src/ts_calibration.c ****     {
+ 364              		.loc 1 70 8 is_stmt 0 discriminator 1 view .LVU79
+ 365 0024 FAE7     		b	.L19
+ 366              	.LVL40:
+ 367              	.L22:
+  62:Core/Src/ts_calibration.c ****     BSP_LCD_SetTextColor(LCD_COLOR_RED);
+ 368              		.loc 1 62 5 is_stmt 1 view .LVU80
+ 369 0026 4FF0FF30 		mov	r0, #-1
+ 370              	.LVL41:
+  62:Core/Src/ts_calibration.c ****     BSP_LCD_SetTextColor(LCD_COLOR_RED);
+ 371              		.loc 1 62 5 is_stmt 0 view .LVU81
+ 372 002a FFF7FEFF 		bl	BSP_LCD_SetBackColor
+ 373              	.LVL42:
+  63:Core/Src/ts_calibration.c ****     BSP_LCD_DisplayStringAt(0, BSP_LCD_GetYSize()- 95, (uint8_t*)"ERROR", CENTER_MODE);
+ 374              		.loc 1 63 5 is_stmt 1 view .LVU82
+ 375 002e 3F48     		ldr	r0, .L24
+ 376 0030 FFF7FEFF 		bl	BSP_LCD_SetTextColor
+ 377              	.LVL43:
+  64:Core/Src/ts_calibration.c ****     BSP_LCD_DisplayStringAt(0, BSP_LCD_GetYSize()- 80, (uint8_t*)"Touchscreen cannot be initialized
+ 378              		.loc 1 64 5 view .LVU83
+  64:Core/Src/ts_calibration.c ****     BSP_LCD_DisplayStringAt(0, BSP_LCD_GetYSize()- 80, (uint8_t*)"Touchscreen cannot be initialized
+ 379              		.loc 1 64 32 is_stmt 0 view .LVU84
+ 380 0034 FFF7FEFF 		bl	BSP_LCD_GetYSize
+ 381              	.LVL44:
+  64:Core/Src/ts_calibration.c ****     BSP_LCD_DisplayStringAt(0, BSP_LCD_GetYSize()- 80, (uint8_t*)"Touchscreen cannot be initialized
+ 382              		.loc 1 64 5 discriminator 1 view .LVU85
+ 383 0038 A0F15F01 		sub	r1, r0, #95
+ 384 003c 0123     		movs	r3, #1
+ 385 003e 3C4A     		ldr	r2, .L24+4
+ 386 0040 89B2     		uxth	r1, r1
+ 387 0042 0020     		movs	r0, #0
+ 388 0044 FFF7FEFF 		bl	BSP_LCD_DisplayStringAt
+ 389              	.LVL45:
+  65:Core/Src/ts_calibration.c ****   }
+ 390              		.loc 1 65 5 is_stmt 1 view .LVU86
+  65:Core/Src/ts_calibration.c ****   }
+ 391              		.loc 1 65 32 is_stmt 0 view .LVU87
+ 392 0048 FFF7FEFF 		bl	BSP_LCD_GetYSize
+ 393              	.LVL46:
+  65:Core/Src/ts_calibration.c ****   }
+ 394              		.loc 1 65 5 discriminator 1 view .LVU88
+ 395 004c A0F15001 		sub	r1, r0, #80
+ 396 0050 0123     		movs	r3, #1
+ 397 0052 384A     		ldr	r2, .L24+8
+ARM GAS  /tmp/ccvUaxw5.s 			page 12
+
+
+ 398 0054 89B2     		uxth	r1, r1
+ 399 0056 0020     		movs	r0, #0
+ 400 0058 FFF7FEFF 		bl	BSP_LCD_DisplayStringAt
+ 401              	.LVL47:
+ 402 005c DEE7     		b	.L19
+ 403              	.L23:
+  72:Core/Src/ts_calibration.c ****       aLogY[0] = 15;
+ 404              		.loc 1 72 7 is_stmt 1 view .LVU89
+  72:Core/Src/ts_calibration.c ****       aLogY[0] = 15;
+ 405              		.loc 1 72 16 is_stmt 0 view .LVU90
+ 406 005e 364E     		ldr	r6, .L24+12
+ 407 0060 0F23     		movs	r3, #15
+ 408 0062 3380     		strh	r3, [r6]	@ movhi
+  73:Core/Src/ts_calibration.c ****       aLogX[1] = BSP_LCD_GetXSize() - 15;
+ 409              		.loc 1 73 7 is_stmt 1 view .LVU91
+  73:Core/Src/ts_calibration.c ****       aLogX[1] = BSP_LCD_GetXSize() - 15;
+ 410              		.loc 1 73 16 is_stmt 0 view .LVU92
+ 411 0064 354D     		ldr	r5, .L24+16
+ 412 0066 2B80     		strh	r3, [r5]	@ movhi
+  74:Core/Src/ts_calibration.c ****       aLogY[1] = BSP_LCD_GetYSize() - 15;
+ 413              		.loc 1 74 7 is_stmt 1 view .LVU93
+  74:Core/Src/ts_calibration.c ****       aLogY[1] = BSP_LCD_GetYSize() - 15;
+ 414              		.loc 1 74 18 is_stmt 0 view .LVU94
+ 415 0068 FFF7FEFF 		bl	BSP_LCD_GetXSize
+ 416              	.LVL48:
+  74:Core/Src/ts_calibration.c ****       aLogY[1] = BSP_LCD_GetYSize() - 15;
+ 417              		.loc 1 74 37 discriminator 1 view .LVU95
+ 418 006c 0F38     		subs	r0, r0, #15
+  74:Core/Src/ts_calibration.c ****       aLogY[1] = BSP_LCD_GetYSize() - 15;
+ 419              		.loc 1 74 16 discriminator 1 view .LVU96
+ 420 006e 7080     		strh	r0, [r6, #2]	@ movhi
+  75:Core/Src/ts_calibration.c ****       
+ 421              		.loc 1 75 7 is_stmt 1 view .LVU97
+  75:Core/Src/ts_calibration.c ****       
+ 422              		.loc 1 75 18 is_stmt 0 view .LVU98
+ 423 0070 FFF7FEFF 		bl	BSP_LCD_GetYSize
+ 424              	.LVL49:
+  75:Core/Src/ts_calibration.c ****       
+ 425              		.loc 1 75 37 discriminator 1 view .LVU99
+ 426 0074 0F38     		subs	r0, r0, #15
+  75:Core/Src/ts_calibration.c ****       
+ 427              		.loc 1 75 16 discriminator 1 view .LVU100
+ 428 0076 6880     		strh	r0, [r5, #2]	@ movhi
+  77:Core/Src/ts_calibration.c ****       {
+ 429              		.loc 1 77 7 is_stmt 1 view .LVU101
+  77:Core/Src/ts_calibration.c ****       {
+ 430              		.loc 1 77 7 is_stmt 0 view .LVU102
+ 431 0078 0FE0     		b	.L17
+ 432              	.LVL50:
+ 433              	.L18:
+  79:Core/Src/ts_calibration.c ****       }
+ 434              		.loc 1 79 9 is_stmt 1 view .LVU103
+ 435 007a 314B     		ldr	r3, .L24+20
+ 436 007c 03EB4403 		add	r3, r3, r4, lsl #1
+ 437 0080 304A     		ldr	r2, .L24+24
+ 438 0082 02EB4402 		add	r2, r2, r4, lsl #1
+ 439 0086 2D49     		ldr	r1, .L24+16
+ARM GAS  /tmp/ccvUaxw5.s 			page 13
+
+
+ 440 0088 31F91410 		ldrsh	r1, [r1, r4, lsl #1]
+ 441 008c 2A48     		ldr	r0, .L24+12
+ 442 008e 30F91400 		ldrsh	r0, [r0, r4, lsl #1]
+ 443 0092 FFF7FEFF 		bl	GetPhysValues
+ 444              	.LVL51:
+  77:Core/Src/ts_calibration.c ****       {
+ 445              		.loc 1 77 27 discriminator 1 view .LVU104
+ 446 0096 0134     		adds	r4, r4, #1
+ 447              	.LVL52:
+  77:Core/Src/ts_calibration.c ****       {
+ 448              		.loc 1 77 27 is_stmt 0 discriminator 1 view .LVU105
+ 449 0098 E4B2     		uxtb	r4, r4
+ 450              	.LVL53:
+ 451              	.L17:
+  77:Core/Src/ts_calibration.c ****       {
+ 452              		.loc 1 77 21 is_stmt 1 discriminator 2 view .LVU106
+ 453 009a 012C     		cmp	r4, #1
+ 454 009c EDD9     		bls	.L18
+  81:Core/Src/ts_calibration.c ****       B1 = (1000 * aLogX[0]) - A1 * aPhysX[0]; 
+ 455              		.loc 1 81 7 view .LVU107
+  81:Core/Src/ts_calibration.c ****       B1 = (1000 * aLogX[0]) - A1 * aPhysX[0]; 
+ 456              		.loc 1 81 27 is_stmt 0 view .LVU108
+ 457 009e 264B     		ldr	r3, .L24+12
+ 458 00a0 B3F90220 		ldrsh	r2, [r3, #2]
+  81:Core/Src/ts_calibration.c ****       B1 = (1000 * aLogX[0]) - A1 * aPhysX[0]; 
+ 459              		.loc 1 81 38 view .LVU109
+ 460 00a4 B3F90030 		ldrsh	r3, [r3]
+  81:Core/Src/ts_calibration.c ****       B1 = (1000 * aLogX[0]) - A1 * aPhysX[0]; 
+ 461              		.loc 1 81 31 view .LVU110
+ 462 00a8 D21A     		subs	r2, r2, r3
+  81:Core/Src/ts_calibration.c ****       B1 = (1000 * aLogX[0]) - A1 * aPhysX[0]; 
+ 463              		.loc 1 81 18 view .LVU111
+ 464 00aa 4FF47A71 		mov	r1, #1000
+ 465 00ae 01FB02F2 		mul	r2, r1, r2
+  81:Core/Src/ts_calibration.c ****       B1 = (1000 * aLogX[0]) - A1 * aPhysX[0]; 
+ 466              		.loc 1 81 53 view .LVU112
+ 467 00b2 2448     		ldr	r0, .L24+24
+ 468 00b4 B0F90240 		ldrsh	r4, [r0, #2]
+ 469              	.LVL54:
+  81:Core/Src/ts_calibration.c ****       B1 = (1000 * aLogX[0]) - A1 * aPhysX[0]; 
+ 470              		.loc 1 81 65 view .LVU113
+ 471 00b8 B0F90000 		ldrsh	r0, [r0]
+  81:Core/Src/ts_calibration.c ****       B1 = (1000 * aLogX[0]) - A1 * aPhysX[0]; 
+ 472              		.loc 1 81 57 view .LVU114
+ 473 00bc 241A     		subs	r4, r4, r0
+  81:Core/Src/ts_calibration.c ****       B1 = (1000 * aLogX[0]) - A1 * aPhysX[0]; 
+ 474              		.loc 1 81 43 view .LVU115
+ 475 00be 92FBF4F2 		sdiv	r2, r2, r4
+  81:Core/Src/ts_calibration.c ****       B1 = (1000 * aLogX[0]) - A1 * aPhysX[0]; 
+ 476              		.loc 1 81 10 view .LVU116
+ 477 00c2 214C     		ldr	r4, .L24+28
+ 478 00c4 2280     		strh	r2, [r4]	@ movhi
+  82:Core/Src/ts_calibration.c ****       
+ 479              		.loc 1 82 7 is_stmt 1 view .LVU117
+  82:Core/Src/ts_calibration.c ****       
+ 480              		.loc 1 82 25 is_stmt 0 view .LVU118
+ 481 00c6 9BB2     		uxth	r3, r3
+ARM GAS  /tmp/ccvUaxw5.s 			page 14
+
+
+  82:Core/Src/ts_calibration.c ****       
+ 482              		.loc 1 82 18 view .LVU119
+ 483 00c8 C3EB4314 		rsb	r4, r3, r3, lsl #5
+ 484 00cc 03EB8403 		add	r3, r3, r4, lsl #2
+ 485 00d0 DB00     		lsls	r3, r3, #3
+ 486 00d2 9BB2     		uxth	r3, r3
+  82:Core/Src/ts_calibration.c ****       
+ 487              		.loc 1 82 43 view .LVU120
+ 488 00d4 80B2     		uxth	r0, r0
+  82:Core/Src/ts_calibration.c ****       
+ 489              		.loc 1 82 35 view .LVU121
+ 490 00d6 12FB00F2 		smulbb	r2, r2, r0
+ 491 00da 92B2     		uxth	r2, r2
+  82:Core/Src/ts_calibration.c ****       
+ 492              		.loc 1 82 30 view .LVU122
+ 493 00dc 9B1A     		subs	r3, r3, r2
+  82:Core/Src/ts_calibration.c ****       
+ 494              		.loc 1 82 10 view .LVU123
+ 495 00de 1B4A     		ldr	r2, .L24+32
+ 496 00e0 1380     		strh	r3, [r2]	@ movhi
+  84:Core/Src/ts_calibration.c ****       B2 = (1000 * aLogY[0]) - A2 * aPhysY[0]; 
+ 497              		.loc 1 84 7 is_stmt 1 view .LVU124
+  84:Core/Src/ts_calibration.c ****       B2 = (1000 * aLogY[0]) - A2 * aPhysY[0]; 
+ 498              		.loc 1 84 27 is_stmt 0 view .LVU125
+ 499 00e2 164B     		ldr	r3, .L24+16
+ 500 00e4 B3F90220 		ldrsh	r2, [r3, #2]
+  84:Core/Src/ts_calibration.c ****       B2 = (1000 * aLogY[0]) - A2 * aPhysY[0]; 
+ 501              		.loc 1 84 38 view .LVU126
+ 502 00e8 B3F90030 		ldrsh	r3, [r3]
+  84:Core/Src/ts_calibration.c ****       B2 = (1000 * aLogY[0]) - A2 * aPhysY[0]; 
+ 503              		.loc 1 84 31 view .LVU127
+ 504 00ec D21A     		subs	r2, r2, r3
+  84:Core/Src/ts_calibration.c ****       B2 = (1000 * aLogY[0]) - A2 * aPhysY[0]; 
+ 505              		.loc 1 84 18 view .LVU128
+ 506 00ee 01FB02F2 		mul	r2, r1, r2
+  84:Core/Src/ts_calibration.c ****       B2 = (1000 * aLogY[0]) - A2 * aPhysY[0]; 
+ 507              		.loc 1 84 53 view .LVU129
+ 508 00f2 1349     		ldr	r1, .L24+20
+ 509 00f4 B1F90200 		ldrsh	r0, [r1, #2]
+  84:Core/Src/ts_calibration.c ****       B2 = (1000 * aLogY[0]) - A2 * aPhysY[0]; 
+ 510              		.loc 1 84 65 view .LVU130
+ 511 00f8 B1F90010 		ldrsh	r1, [r1]
+  84:Core/Src/ts_calibration.c ****       B2 = (1000 * aLogY[0]) - A2 * aPhysY[0]; 
+ 512              		.loc 1 84 57 view .LVU131
+ 513 00fc 401A     		subs	r0, r0, r1
+  84:Core/Src/ts_calibration.c ****       B2 = (1000 * aLogY[0]) - A2 * aPhysY[0]; 
+ 514              		.loc 1 84 43 view .LVU132
+ 515 00fe 92FBF0F2 		sdiv	r2, r2, r0
+  84:Core/Src/ts_calibration.c ****       B2 = (1000 * aLogY[0]) - A2 * aPhysY[0]; 
+ 516              		.loc 1 84 10 view .LVU133
+ 517 0102 1348     		ldr	r0, .L24+36
+ 518 0104 0280     		strh	r2, [r0]	@ movhi
+  85:Core/Src/ts_calibration.c ****       
+ 519              		.loc 1 85 7 is_stmt 1 view .LVU134
+  85:Core/Src/ts_calibration.c ****       
+ 520              		.loc 1 85 25 is_stmt 0 view .LVU135
+ 521 0106 9BB2     		uxth	r3, r3
+ARM GAS  /tmp/ccvUaxw5.s 			page 15
+
+
+  85:Core/Src/ts_calibration.c ****       
+ 522              		.loc 1 85 18 view .LVU136
+ 523 0108 C3EB4310 		rsb	r0, r3, r3, lsl #5
+ 524 010c 03EB8003 		add	r3, r3, r0, lsl #2
+ 525 0110 DB00     		lsls	r3, r3, #3
+ 526 0112 9BB2     		uxth	r3, r3
+  85:Core/Src/ts_calibration.c ****       
+ 527              		.loc 1 85 43 view .LVU137
+ 528 0114 89B2     		uxth	r1, r1
+  85:Core/Src/ts_calibration.c ****       
+ 529              		.loc 1 85 35 view .LVU138
+ 530 0116 12FB01F2 		smulbb	r2, r2, r1
+ 531 011a 92B2     		uxth	r2, r2
+  85:Core/Src/ts_calibration.c ****       
+ 532              		.loc 1 85 30 view .LVU139
+ 533 011c 9B1A     		subs	r3, r3, r2
+  85:Core/Src/ts_calibration.c ****       
+ 534              		.loc 1 85 10 view .LVU140
+ 535 011e 0D4A     		ldr	r2, .L24+40
+ 536 0120 1380     		strh	r3, [r2]	@ movhi
+  87:Core/Src/ts_calibration.c ****       return;
+ 537              		.loc 1 87 7 is_stmt 1 view .LVU141
+  87:Core/Src/ts_calibration.c ****       return;
+ 538              		.loc 1 87 24 is_stmt 0 view .LVU142
+ 539 0122 0D4B     		ldr	r3, .L24+44
+ 540 0124 0122     		movs	r2, #1
+ 541 0126 1A70     		strb	r2, [r3]
+  88:Core/Src/ts_calibration.c ****     }
+ 542              		.loc 1 88 7 is_stmt 1 view .LVU143
+  93:Core/Src/ts_calibration.c **** 
+ 543              		.loc 1 93 1 is_stmt 0 view .LVU144
+ 544 0128 70BD     		pop	{r4, r5, r6, pc}
+ 545              	.L25:
+ 546 012a 00BF     		.align	2
+ 547              	.L24:
+ 548 012c 0000FFFF 		.word	-65536
+ 549 0130 00000000 		.word	.LC3
+ 550 0134 08000000 		.word	.LC4
+ 551 0138 00000000 		.word	aLogX
+ 552 013c 00000000 		.word	aLogY
+ 553 0140 00000000 		.word	aPhysY
+ 554 0144 00000000 		.word	aPhysX
+ 555 0148 00000000 		.word	A1
+ 556 014c 00000000 		.word	B1
+ 557 0150 00000000 		.word	A2
+ 558 0154 00000000 		.word	B2
+ 559 0158 00000000 		.word	Calibration_Done
+ 560              		.cfi_endproc
+ 561              	.LFE137:
+ 563              		.section	.text.Calibration_GetX,"ax",%progbits
+ 564              		.align	1
+ 565              		.global	Calibration_GetX
+ 566              		.syntax unified
+ 567              		.thumb
+ 568              		.thumb_func
+ 570              	Calibration_GetX:
+ 571              	.LVL55:
+ARM GAS  /tmp/ccvUaxw5.s 			page 16
+
+
+ 572              	.LFB141:
+ 174:Core/Src/ts_calibration.c **** 
+ 175:Core/Src/ts_calibration.c **** /**
+ 176:Core/Src/ts_calibration.c ****   * @brief  Calibrate X position
+ 177:Core/Src/ts_calibration.c ****   * @param  x : X position
+ 178:Core/Src/ts_calibration.c ****   * @retval Calibrated x
+ 179:Core/Src/ts_calibration.c ****   */
+ 180:Core/Src/ts_calibration.c **** uint16_t Calibration_GetX(uint16_t x)
+ 181:Core/Src/ts_calibration.c **** {
+ 573              		.loc 1 181 1 is_stmt 1 view -0
+ 574              		.cfi_startproc
+ 575              		@ args = 0, pretend = 0, frame = 0
+ 576              		@ frame_needed = 0, uses_anonymous_args = 0
+ 577              		@ link register save eliminated.
+ 182:Core/Src/ts_calibration.c ****   return (((A1 * x) + B1)/1000);
+ 578              		.loc 1 182 3 view .LVU146
+ 579              		.loc 1 182 16 is_stmt 0 view .LVU147
+ 580 0000 074B     		ldr	r3, .L27
+ 581 0002 B3F90020 		ldrsh	r2, [r3]
+ 582              		.loc 1 182 21 view .LVU148
+ 583 0006 074B     		ldr	r3, .L27+4
+ 584 0008 B3F90030 		ldrsh	r3, [r3]
+ 585 000c 00FB0230 		mla	r0, r0, r2, r3
+ 586              	.LVL56:
+ 587              		.loc 1 182 26 view .LVU149
+ 588 0010 054B     		ldr	r3, .L27+8
+ 589 0012 83FB0023 		smull	r2, r3, r3, r0
+ 590 0016 C017     		asrs	r0, r0, #31
+ 591 0018 C0EBA310 		rsb	r0, r0, r3, asr #6
+ 183:Core/Src/ts_calibration.c **** }
+ 592              		.loc 1 183 1 view .LVU150
+ 593 001c 80B2     		uxth	r0, r0
+ 594 001e 7047     		bx	lr
+ 595              	.L28:
+ 596              		.align	2
+ 597              	.L27:
+ 598 0020 00000000 		.word	A1
+ 599 0024 00000000 		.word	B1
+ 600 0028 D34D6210 		.word	274877907
+ 601              		.cfi_endproc
+ 602              	.LFE141:
+ 604              		.section	.text.Calibration_GetY,"ax",%progbits
+ 605              		.align	1
+ 606              		.global	Calibration_GetY
+ 607              		.syntax unified
+ 608              		.thumb
+ 609              		.thumb_func
+ 611              	Calibration_GetY:
+ 612              	.LVL57:
+ 613              	.LFB142:
+ 184:Core/Src/ts_calibration.c **** 
+ 185:Core/Src/ts_calibration.c **** /**
+ 186:Core/Src/ts_calibration.c ****   * @brief  Calibrate Y position
+ 187:Core/Src/ts_calibration.c ****   * @param  y : Y position
+ 188:Core/Src/ts_calibration.c ****   * @retval Calibrated y
+ 189:Core/Src/ts_calibration.c ****   */
+ 190:Core/Src/ts_calibration.c **** uint16_t Calibration_GetY(uint16_t y)
+ARM GAS  /tmp/ccvUaxw5.s 			page 17
+
+
+ 191:Core/Src/ts_calibration.c **** {
+ 614              		.loc 1 191 1 is_stmt 1 view -0
+ 615              		.cfi_startproc
+ 616              		@ args = 0, pretend = 0, frame = 0
+ 617              		@ frame_needed = 0, uses_anonymous_args = 0
+ 618              		@ link register save eliminated.
+ 192:Core/Src/ts_calibration.c ****   return (((A2 * y) + B2)/1000);
+ 619              		.loc 1 192 3 view .LVU152
+ 620              		.loc 1 192 16 is_stmt 0 view .LVU153
+ 621 0000 074B     		ldr	r3, .L30
+ 622 0002 B3F90020 		ldrsh	r2, [r3]
+ 623              		.loc 1 192 21 view .LVU154
+ 624 0006 074B     		ldr	r3, .L30+4
+ 625 0008 B3F90030 		ldrsh	r3, [r3]
+ 626 000c 00FB0230 		mla	r0, r0, r2, r3
+ 627              	.LVL58:
+ 628              		.loc 1 192 26 view .LVU155
+ 629 0010 054B     		ldr	r3, .L30+8
+ 630 0012 83FB0023 		smull	r2, r3, r3, r0
+ 631 0016 C017     		asrs	r0, r0, #31
+ 632 0018 C0EBA310 		rsb	r0, r0, r3, asr #6
+ 193:Core/Src/ts_calibration.c **** }
+ 633              		.loc 1 193 1 view .LVU156
+ 634 001c 80B2     		uxth	r0, r0
+ 635 001e 7047     		bx	lr
+ 636              	.L31:
+ 637              		.align	2
+ 638              	.L30:
+ 639 0020 00000000 		.word	A2
+ 640 0024 00000000 		.word	B2
+ 641 0028 D34D6210 		.word	274877907
+ 642              		.cfi_endproc
+ 643              	.LFE142:
+ 645              		.section	.text.IsCalibrationDone,"ax",%progbits
+ 646              		.align	1
+ 647              		.global	IsCalibrationDone
+ 648              		.syntax unified
+ 649              		.thumb
+ 650              		.thumb_func
+ 652              	IsCalibrationDone:
+ 653              	.LFB143:
+ 194:Core/Src/ts_calibration.c **** 
+ 195:Core/Src/ts_calibration.c **** /**
+ 196:Core/Src/ts_calibration.c ****   * @brief  check if the TS is calibrated
+ 197:Core/Src/ts_calibration.c ****   * @param  None
+ 198:Core/Src/ts_calibration.c ****   * @retval Calibration state (1 : calibrated / 0: no)
+ 199:Core/Src/ts_calibration.c ****   */ 
+ 200:Core/Src/ts_calibration.c **** uint8_t IsCalibrationDone(void)
+ 201:Core/Src/ts_calibration.c **** {
+ 654              		.loc 1 201 1 is_stmt 1 view -0
+ 655              		.cfi_startproc
+ 656              		@ args = 0, pretend = 0, frame = 0
+ 657              		@ frame_needed = 0, uses_anonymous_args = 0
+ 658              		@ link register save eliminated.
+ 202:Core/Src/ts_calibration.c ****   return (Calibration_Done);
+ 659              		.loc 1 202 3 view .LVU158
+ 203:Core/Src/ts_calibration.c **** }
+ARM GAS  /tmp/ccvUaxw5.s 			page 18
+
+
+ 660              		.loc 1 203 1 is_stmt 0 view .LVU159
+ 661 0000 014B     		ldr	r3, .L33
+ 662 0002 1878     		ldrb	r0, [r3]	@ zero_extendqisi2
+ 663 0004 7047     		bx	lr
+ 664              	.L34:
+ 665 0006 00BF     		.align	2
+ 666              	.L33:
+ 667 0008 00000000 		.word	Calibration_Done
+ 668              		.cfi_endproc
+ 669              	.LFE143:
+ 671              		.section	.bss.aLogY,"aw",%nobits
+ 672              		.align	2
+ 675              	aLogY:
+ 676 0000 00000000 		.space	4
+ 677              		.section	.bss.aLogX,"aw",%nobits
+ 678              		.align	2
+ 681              	aLogX:
+ 682 0000 00000000 		.space	4
+ 683              		.section	.bss.aPhysY,"aw",%nobits
+ 684              		.align	2
+ 687              	aPhysY:
+ 688 0000 00000000 		.space	4
+ 689              		.section	.bss.aPhysX,"aw",%nobits
+ 690              		.align	2
+ 693              	aPhysX:
+ 694 0000 00000000 		.space	4
+ 695              		.section	.bss.B2,"aw",%nobits
+ 696              		.align	1
+ 699              	B2:
+ 700 0000 0000     		.space	2
+ 701              		.section	.bss.B1,"aw",%nobits
+ 702              		.align	1
+ 705              	B1:
+ 706 0000 0000     		.space	2
+ 707              		.section	.bss.A2,"aw",%nobits
+ 708              		.align	1
+ 711              	A2:
+ 712 0000 0000     		.space	2
+ 713              		.section	.bss.A1,"aw",%nobits
+ 714              		.align	1
+ 717              	A1:
+ 718 0000 0000     		.space	2
+ 719              		.section	.bss.Calibration_Done,"aw",%nobits
+ 722              	Calibration_Done:
+ 723 0000 00       		.space	1
+ 724              		.section	.bss.TS_State,"aw",%nobits
+ 725              		.align	2
+ 728              	TS_State:
+ 729 0000 00000000 		.space	8
+ 729      00000000 
+ 730              		.text
+ 731              	.Letext0:
+ 732              		.file 2 "/usr/arm-none-eabi/include/machine/_default_types.h"
+ 733              		.file 3 "/usr/arm-none-eabi/include/sys/_stdint.h"
+ 734              		.file 4 "Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.h"
+ 735              		.file 5 "Drivers/BSP/STM32F429I-Discovery/../../../Utilities/Fonts/fonts.h"
+ 736              		.file 6 "Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_lcd.h"
+ARM GAS  /tmp/ccvUaxw5.s 			page 19
+
+
+ 737              		.file 7 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h"
+ARM GAS  /tmp/ccvUaxw5.s 			page 20
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 ts_calibration.c
+     /tmp/ccvUaxw5.s:21     .rodata.TouchscreenCalibration_SetHint.str1.4:00000000 $d
+     /tmp/ccvUaxw5.s:31     .text.TouchscreenCalibration_SetHint:00000000 $t
+     /tmp/ccvUaxw5.s:36     .text.TouchscreenCalibration_SetHint:00000000 TouchscreenCalibration_SetHint
+     /tmp/ccvUaxw5.s:110    .text.TouchscreenCalibration_SetHint:00000060 $d
+     /tmp/ccvUaxw5.s:118    .text.WaitForPressedState:00000000 $t
+     /tmp/ccvUaxw5.s:123    .text.WaitForPressedState:00000000 WaitForPressedState
+     /tmp/ccvUaxw5.s:205    .text.GetPhysValues:00000000 $t
+     /tmp/ccvUaxw5.s:210    .text.GetPhysValues:00000000 GetPhysValues
+     /tmp/ccvUaxw5.s:299    .text.GetPhysValues:0000006c $d
+     /tmp/ccvUaxw5.s:728    .bss.TS_State:00000000 TS_State
+     /tmp/ccvUaxw5.s:304    .rodata.Touchscreen_Calibration.str1.4:00000000 $d
+     /tmp/ccvUaxw5.s:311    .text.Touchscreen_Calibration:00000000 $t
+     /tmp/ccvUaxw5.s:317    .text.Touchscreen_Calibration:00000000 Touchscreen_Calibration
+     /tmp/ccvUaxw5.s:548    .text.Touchscreen_Calibration:0000012c $d
+     /tmp/ccvUaxw5.s:681    .bss.aLogX:00000000 aLogX
+     /tmp/ccvUaxw5.s:675    .bss.aLogY:00000000 aLogY
+     /tmp/ccvUaxw5.s:687    .bss.aPhysY:00000000 aPhysY
+     /tmp/ccvUaxw5.s:693    .bss.aPhysX:00000000 aPhysX
+     /tmp/ccvUaxw5.s:717    .bss.A1:00000000 A1
+     /tmp/ccvUaxw5.s:705    .bss.B1:00000000 B1
+     /tmp/ccvUaxw5.s:711    .bss.A2:00000000 A2
+     /tmp/ccvUaxw5.s:699    .bss.B2:00000000 B2
+     /tmp/ccvUaxw5.s:722    .bss.Calibration_Done:00000000 Calibration_Done
+     /tmp/ccvUaxw5.s:564    .text.Calibration_GetX:00000000 $t
+     /tmp/ccvUaxw5.s:570    .text.Calibration_GetX:00000000 Calibration_GetX
+     /tmp/ccvUaxw5.s:598    .text.Calibration_GetX:00000020 $d
+     /tmp/ccvUaxw5.s:605    .text.Calibration_GetY:00000000 $t
+     /tmp/ccvUaxw5.s:611    .text.Calibration_GetY:00000000 Calibration_GetY
+     /tmp/ccvUaxw5.s:639    .text.Calibration_GetY:00000020 $d
+     /tmp/ccvUaxw5.s:646    .text.IsCalibrationDone:00000000 $t
+     /tmp/ccvUaxw5.s:652    .text.IsCalibrationDone:00000000 IsCalibrationDone
+     /tmp/ccvUaxw5.s:667    .text.IsCalibrationDone:00000008 $d
+     /tmp/ccvUaxw5.s:672    .bss.aLogY:00000000 $d
+     /tmp/ccvUaxw5.s:678    .bss.aLogX:00000000 $d
+     /tmp/ccvUaxw5.s:684    .bss.aPhysY:00000000 $d
+     /tmp/ccvUaxw5.s:690    .bss.aPhysX:00000000 $d
+     /tmp/ccvUaxw5.s:696    .bss.B2:00000000 $d
+     /tmp/ccvUaxw5.s:702    .bss.B1:00000000 $d
+     /tmp/ccvUaxw5.s:708    .bss.A2:00000000 $d
+     /tmp/ccvUaxw5.s:714    .bss.A1:00000000 $d
+     /tmp/ccvUaxw5.s:723    .bss.Calibration_Done:00000000 $d
+     /tmp/ccvUaxw5.s:725    .bss.TS_State:00000000 $d
+
+UNDEFINED SYMBOLS
+BSP_LCD_Clear
+BSP_LCD_SetTextColor
+BSP_LCD_SetBackColor
+BSP_LCD_SetFont
+BSP_LCD_GetYSize
+BSP_LCD_DisplayStringAt
+Font12
+BSP_TS_GetState
+HAL_Delay
+HAL_GetTick
+BSP_LCD_FillCircle
+ARM GAS  /tmp/ccvUaxw5.s 			page 21
+
+
+BSP_LCD_GetXSize
+BSP_TS_Init

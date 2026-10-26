@@ -1,0 +1,2002 @@
+ARM GAS  /tmp/ccPeTMlS.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.arch armv7e-m
+   3              		.fpu fpv4-sp-d16
+   4              		.eabi_attribute 27, 1
+   5              		.eabi_attribute 28, 1
+   6              		.eabi_attribute 20, 1
+   7              		.eabi_attribute 21, 1
+   8              		.eabi_attribute 23, 3
+   9              		.eabi_attribute 24, 1
+  10              		.eabi_attribute 25, 1
+  11              		.eabi_attribute 26, 1
+  12              		.eabi_attribute 30, 1
+  13              		.eabi_attribute 34, 1
+  14              		.eabi_attribute 18, 4
+  15              		.file	"lcd_log.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.file 1 "Utilities/Log/lcd_log.c"
+  20              		.section	.text.LCD_LOG_DeInit,"ax",%progbits
+  21              		.align	1
+  22              		.global	LCD_LOG_DeInit
+  23              		.syntax unified
+  24              		.thumb
+  25              		.thumb_func
+  27              	LCD_LOG_DeInit:
+  28              	.LFB138:
+   1:Utilities/Log/lcd_log.c **** /**
+   2:Utilities/Log/lcd_log.c ****   ******************************************************************************
+   3:Utilities/Log/lcd_log.c ****   * @file    lcd_log.c
+   4:Utilities/Log/lcd_log.c ****   * @author  MCD Application Team
+   5:Utilities/Log/lcd_log.c ****   * @brief   This file provides all the LCD Log firmware functions.
+   6:Utilities/Log/lcd_log.c ****   *          
+   7:Utilities/Log/lcd_log.c ****   *          The LCD Log module allows to automatically set a header and footer
+   8:Utilities/Log/lcd_log.c ****   *          on any application using the LCD display and allows to dump user,
+   9:Utilities/Log/lcd_log.c ****   *          debug and error messages by using the following macros: LCD_ErrLog(),
+  10:Utilities/Log/lcd_log.c ****   *          LCD_UsrLog() and LCD_DbgLog().
+  11:Utilities/Log/lcd_log.c ****   *         
+  12:Utilities/Log/lcd_log.c ****   *          It supports also the scroll feature by embedding an internal software
+  13:Utilities/Log/lcd_log.c ****   *          cache for display. This feature allows to dump message sequentially
+  14:Utilities/Log/lcd_log.c ****   *          on the display even if the number of displayed lines is bigger than
+  15:Utilities/Log/lcd_log.c ****   *          the total number of line allowed by the display.
+  16:Utilities/Log/lcd_log.c ****   *      
+  17:Utilities/Log/lcd_log.c ****   ******************************************************************************
+  18:Utilities/Log/lcd_log.c ****   * @attention
+  19:Utilities/Log/lcd_log.c ****   *
+  20:Utilities/Log/lcd_log.c ****   * Copyright (c) 2016 STMicroelectronics.
+  21:Utilities/Log/lcd_log.c ****   * All rights reserved.
+  22:Utilities/Log/lcd_log.c ****   *
+  23:Utilities/Log/lcd_log.c ****   * This software is licensed under terms that can be found in the LICENSE file
+  24:Utilities/Log/lcd_log.c ****   * in the root directory of this software component.
+  25:Utilities/Log/lcd_log.c ****   * If no LICENSE file comes with this software, it is provided AS-IS.
+  26:Utilities/Log/lcd_log.c ****   *
+  27:Utilities/Log/lcd_log.c ****   ******************************************************************************
+  28:Utilities/Log/lcd_log.c ****   */
+  29:Utilities/Log/lcd_log.c **** 
+  30:Utilities/Log/lcd_log.c **** /* Includes ------------------------------------------------------------------*/
+ARM GAS  /tmp/ccPeTMlS.s 			page 2
+
+
+  31:Utilities/Log/lcd_log.c **** #include  <stdio.h>
+  32:Utilities/Log/lcd_log.c **** #include  "lcd_log.h"
+  33:Utilities/Log/lcd_log.c **** 
+  34:Utilities/Log/lcd_log.c **** /** @addtogroup Utilities
+  35:Utilities/Log/lcd_log.c ****   * @{
+  36:Utilities/Log/lcd_log.c ****   */
+  37:Utilities/Log/lcd_log.c **** 
+  38:Utilities/Log/lcd_log.c **** /** @addtogroup STM32_EVAL
+  39:Utilities/Log/lcd_log.c **** * @{
+  40:Utilities/Log/lcd_log.c **** */
+  41:Utilities/Log/lcd_log.c **** 
+  42:Utilities/Log/lcd_log.c **** /** @addtogroup Common
+  43:Utilities/Log/lcd_log.c ****   * @{
+  44:Utilities/Log/lcd_log.c ****   */
+  45:Utilities/Log/lcd_log.c **** 
+  46:Utilities/Log/lcd_log.c **** /** @defgroup LCD_LOG 
+  47:Utilities/Log/lcd_log.c **** * @brief LCD Log LCD_Application module
+  48:Utilities/Log/lcd_log.c **** * @{
+  49:Utilities/Log/lcd_log.c **** */ 
+  50:Utilities/Log/lcd_log.c **** 
+  51:Utilities/Log/lcd_log.c **** /** @defgroup LCD_LOG_Private_Types
+  52:Utilities/Log/lcd_log.c **** * @{
+  53:Utilities/Log/lcd_log.c **** */ 
+  54:Utilities/Log/lcd_log.c **** /**
+  55:Utilities/Log/lcd_log.c **** * @}
+  56:Utilities/Log/lcd_log.c **** */ 
+  57:Utilities/Log/lcd_log.c **** 
+  58:Utilities/Log/lcd_log.c **** 
+  59:Utilities/Log/lcd_log.c **** /** @defgroup LCD_LOG_Private_Defines
+  60:Utilities/Log/lcd_log.c **** * @{
+  61:Utilities/Log/lcd_log.c **** */ 
+  62:Utilities/Log/lcd_log.c **** 
+  63:Utilities/Log/lcd_log.c **** /**
+  64:Utilities/Log/lcd_log.c **** * @}
+  65:Utilities/Log/lcd_log.c **** */ 
+  66:Utilities/Log/lcd_log.c **** 
+  67:Utilities/Log/lcd_log.c **** /* Define the display window settings */
+  68:Utilities/Log/lcd_log.c **** #define     YWINDOW_MIN         4
+  69:Utilities/Log/lcd_log.c **** 
+  70:Utilities/Log/lcd_log.c **** /** @defgroup LCD_LOG_Private_Macros
+  71:Utilities/Log/lcd_log.c **** * @{
+  72:Utilities/Log/lcd_log.c **** */ 
+  73:Utilities/Log/lcd_log.c **** /**
+  74:Utilities/Log/lcd_log.c **** * @}
+  75:Utilities/Log/lcd_log.c **** */ 
+  76:Utilities/Log/lcd_log.c **** 
+  77:Utilities/Log/lcd_log.c **** 
+  78:Utilities/Log/lcd_log.c **** /** @defgroup LCD_LOG_Private_Variables
+  79:Utilities/Log/lcd_log.c **** * @{
+  80:Utilities/Log/lcd_log.c **** */ 
+  81:Utilities/Log/lcd_log.c **** 
+  82:Utilities/Log/lcd_log.c **** LCD_LOG_line LCD_CacheBuffer [LCD_CACHE_DEPTH]; 
+  83:Utilities/Log/lcd_log.c **** uint32_t LCD_LineColor;
+  84:Utilities/Log/lcd_log.c **** uint16_t LCD_CacheBuffer_xptr;
+  85:Utilities/Log/lcd_log.c **** uint16_t LCD_CacheBuffer_yptr_top;
+  86:Utilities/Log/lcd_log.c **** uint16_t LCD_CacheBuffer_yptr_bottom;
+  87:Utilities/Log/lcd_log.c **** 
+ARM GAS  /tmp/ccPeTMlS.s 			page 3
+
+
+  88:Utilities/Log/lcd_log.c **** uint16_t LCD_CacheBuffer_yptr_top_bak;
+  89:Utilities/Log/lcd_log.c **** uint16_t LCD_CacheBuffer_yptr_bottom_bak;
+  90:Utilities/Log/lcd_log.c **** 
+  91:Utilities/Log/lcd_log.c **** FunctionalState LCD_CacheBuffer_yptr_invert;
+  92:Utilities/Log/lcd_log.c **** FunctionalState LCD_ScrollActive;
+  93:Utilities/Log/lcd_log.c **** FunctionalState LCD_Lock;
+  94:Utilities/Log/lcd_log.c **** FunctionalState LCD_Scrolled;
+  95:Utilities/Log/lcd_log.c **** uint16_t LCD_ScrollBackStep;
+  96:Utilities/Log/lcd_log.c **** 
+  97:Utilities/Log/lcd_log.c **** /**
+  98:Utilities/Log/lcd_log.c **** * @}
+  99:Utilities/Log/lcd_log.c **** */ 
+ 100:Utilities/Log/lcd_log.c **** 
+ 101:Utilities/Log/lcd_log.c **** 
+ 102:Utilities/Log/lcd_log.c **** /** @defgroup LCD_LOG_Private_FunctionPrototypes
+ 103:Utilities/Log/lcd_log.c **** * @{
+ 104:Utilities/Log/lcd_log.c **** */ 
+ 105:Utilities/Log/lcd_log.c **** 
+ 106:Utilities/Log/lcd_log.c **** /**
+ 107:Utilities/Log/lcd_log.c **** * @}
+ 108:Utilities/Log/lcd_log.c **** */ 
+ 109:Utilities/Log/lcd_log.c **** 
+ 110:Utilities/Log/lcd_log.c **** 
+ 111:Utilities/Log/lcd_log.c **** /** @defgroup LCD_LOG_Private_Functions
+ 112:Utilities/Log/lcd_log.c **** * @{
+ 113:Utilities/Log/lcd_log.c **** */ 
+ 114:Utilities/Log/lcd_log.c **** 
+ 115:Utilities/Log/lcd_log.c **** 
+ 116:Utilities/Log/lcd_log.c **** /**
+ 117:Utilities/Log/lcd_log.c ****   * @brief  Initializes the LCD Log module 
+ 118:Utilities/Log/lcd_log.c ****   * @param  None
+ 119:Utilities/Log/lcd_log.c ****   * @retval None
+ 120:Utilities/Log/lcd_log.c ****   */
+ 121:Utilities/Log/lcd_log.c **** 
+ 122:Utilities/Log/lcd_log.c **** void LCD_LOG_Init ( void)
+ 123:Utilities/Log/lcd_log.c **** {
+ 124:Utilities/Log/lcd_log.c ****   /* Deinit LCD cache */
+ 125:Utilities/Log/lcd_log.c ****   LCD_LOG_DeInit();
+ 126:Utilities/Log/lcd_log.c ****   
+ 127:Utilities/Log/lcd_log.c ****   /* Clear the LCD */
+ 128:Utilities/Log/lcd_log.c ****   BSP_LCD_Clear(LCD_LOG_BACKGROUND_COLOR);  
+ 129:Utilities/Log/lcd_log.c **** }
+ 130:Utilities/Log/lcd_log.c **** 
+ 131:Utilities/Log/lcd_log.c **** /**
+ 132:Utilities/Log/lcd_log.c ****   * @brief DeInitializes the LCD Log module. 
+ 133:Utilities/Log/lcd_log.c ****   * @param  None
+ 134:Utilities/Log/lcd_log.c ****   * @retval None
+ 135:Utilities/Log/lcd_log.c ****   */
+ 136:Utilities/Log/lcd_log.c **** void LCD_LOG_DeInit(void)
+ 137:Utilities/Log/lcd_log.c **** {
+  29              		.loc 1 137 1 view -0
+  30              		.cfi_startproc
+  31              		@ args = 0, pretend = 0, frame = 0
+  32              		@ frame_needed = 0, uses_anonymous_args = 0
+  33              		@ link register save eliminated.
+ 138:Utilities/Log/lcd_log.c ****   LCD_LineColor = LCD_LOG_TEXT_COLOR;
+  34              		.loc 1 138 3 view .LVU1
+ARM GAS  /tmp/ccPeTMlS.s 			page 4
+
+
+  35              		.loc 1 138 17 is_stmt 0 view .LVU2
+  36 0000 0D4B     		ldr	r3, .L2
+  37 0002 0E4A     		ldr	r2, .L2+4
+  38 0004 1A60     		str	r2, [r3]
+ 139:Utilities/Log/lcd_log.c ****   LCD_CacheBuffer_xptr = 0;
+  39              		.loc 1 139 3 is_stmt 1 view .LVU3
+  40              		.loc 1 139 24 is_stmt 0 view .LVU4
+  41 0006 0023     		movs	r3, #0
+  42 0008 4FF00002 		mov	r2, #0	@ movhi
+  43 000c 0C49     		ldr	r1, .L2+8
+  44 000e 0B80     		strh	r3, [r1]	@ movhi
+ 140:Utilities/Log/lcd_log.c ****   LCD_CacheBuffer_yptr_top = 0;
+  45              		.loc 1 140 3 is_stmt 1 view .LVU5
+  46              		.loc 1 140 28 is_stmt 0 view .LVU6
+  47 0010 0C49     		ldr	r1, .L2+12
+  48 0012 0B80     		strh	r3, [r1]	@ movhi
+ 141:Utilities/Log/lcd_log.c ****   LCD_CacheBuffer_yptr_bottom = 0;
+  49              		.loc 1 141 3 is_stmt 1 view .LVU7
+  50              		.loc 1 141 31 is_stmt 0 view .LVU8
+  51 0014 0C49     		ldr	r1, .L2+16
+  52 0016 0B80     		strh	r3, [r1]	@ movhi
+ 142:Utilities/Log/lcd_log.c ****   
+ 143:Utilities/Log/lcd_log.c ****   LCD_CacheBuffer_yptr_top_bak = 0;
+  53              		.loc 1 143 3 is_stmt 1 view .LVU9
+  54              		.loc 1 143 32 is_stmt 0 view .LVU10
+  55 0018 0C49     		ldr	r1, .L2+20
+  56 001a 0B80     		strh	r3, [r1]	@ movhi
+ 144:Utilities/Log/lcd_log.c ****   LCD_CacheBuffer_yptr_bottom_bak = 0;
+  57              		.loc 1 144 3 is_stmt 1 view .LVU11
+  58              		.loc 1 144 35 is_stmt 0 view .LVU12
+  59 001c 0C49     		ldr	r1, .L2+24
+  60 001e 0B80     		strh	r3, [r1]	@ movhi
+ 145:Utilities/Log/lcd_log.c ****   
+ 146:Utilities/Log/lcd_log.c ****   LCD_CacheBuffer_yptr_invert= ENABLE;
+  61              		.loc 1 146 3 is_stmt 1 view .LVU13
+  62              		.loc 1 146 30 is_stmt 0 view .LVU14
+  63 0020 0C49     		ldr	r1, .L2+28
+  64 0022 0120     		movs	r0, #1
+  65 0024 0870     		strb	r0, [r1]
+ 147:Utilities/Log/lcd_log.c ****   LCD_ScrollActive = DISABLE;
+  66              		.loc 1 147 3 is_stmt 1 view .LVU15
+  67              		.loc 1 147 20 is_stmt 0 view .LVU16
+  68 0026 0C49     		ldr	r1, .L2+32
+  69 0028 0A70     		strb	r2, [r1]
+ 148:Utilities/Log/lcd_log.c ****   LCD_Lock = DISABLE;
+  70              		.loc 1 148 3 is_stmt 1 view .LVU17
+  71              		.loc 1 148 12 is_stmt 0 view .LVU18
+  72 002a 0C49     		ldr	r1, .L2+36
+  73 002c 0A70     		strb	r2, [r1]
+ 149:Utilities/Log/lcd_log.c ****   LCD_Scrolled = DISABLE;
+  74              		.loc 1 149 3 is_stmt 1 view .LVU19
+  75              		.loc 1 149 16 is_stmt 0 view .LVU20
+  76 002e 0C49     		ldr	r1, .L2+40
+  77 0030 0A70     		strb	r2, [r1]
+ 150:Utilities/Log/lcd_log.c ****   LCD_ScrollBackStep = 0;
+  78              		.loc 1 150 3 is_stmt 1 view .LVU21
+  79              		.loc 1 150 22 is_stmt 0 view .LVU22
+ARM GAS  /tmp/ccPeTMlS.s 			page 5
+
+
+  80 0032 0C4A     		ldr	r2, .L2+44
+  81 0034 1380     		strh	r3, [r2]	@ movhi
+ 151:Utilities/Log/lcd_log.c **** }
+  82              		.loc 1 151 1 view .LVU23
+  83 0036 7047     		bx	lr
+  84              	.L3:
+  85              		.align	2
+  86              	.L2:
+  87 0038 00000000 		.word	LCD_LineColor
+  88 003c 800000FF 		.word	-16777088
+  89 0040 00000000 		.word	LCD_CacheBuffer_xptr
+  90 0044 00000000 		.word	LCD_CacheBuffer_yptr_top
+  91 0048 00000000 		.word	LCD_CacheBuffer_yptr_bottom
+  92 004c 00000000 		.word	LCD_CacheBuffer_yptr_top_bak
+  93 0050 00000000 		.word	LCD_CacheBuffer_yptr_bottom_bak
+  94 0054 00000000 		.word	LCD_CacheBuffer_yptr_invert
+  95 0058 00000000 		.word	LCD_ScrollActive
+  96 005c 00000000 		.word	LCD_Lock
+  97 0060 00000000 		.word	LCD_Scrolled
+  98 0064 00000000 		.word	LCD_ScrollBackStep
+  99              		.cfi_endproc
+ 100              	.LFE138:
+ 102              		.section	.text.LCD_LOG_Init,"ax",%progbits
+ 103              		.align	1
+ 104              		.global	LCD_LOG_Init
+ 105              		.syntax unified
+ 106              		.thumb
+ 107              		.thumb_func
+ 109              	LCD_LOG_Init:
+ 110              	.LFB137:
+ 123:Utilities/Log/lcd_log.c ****   /* Deinit LCD cache */
+ 111              		.loc 1 123 1 is_stmt 1 view -0
+ 112              		.cfi_startproc
+ 113              		@ args = 0, pretend = 0, frame = 0
+ 114              		@ frame_needed = 0, uses_anonymous_args = 0
+ 115 0000 08B5     		push	{r3, lr}
+ 116              	.LCFI0:
+ 117              		.cfi_def_cfa_offset 8
+ 118              		.cfi_offset 3, -8
+ 119              		.cfi_offset 14, -4
+ 125:Utilities/Log/lcd_log.c ****   
+ 120              		.loc 1 125 3 view .LVU25
+ 121 0002 FFF7FEFF 		bl	LCD_LOG_DeInit
+ 122              	.LVL0:
+ 128:Utilities/Log/lcd_log.c **** }
+ 123              		.loc 1 128 3 view .LVU26
+ 124 0006 4FF0FF30 		mov	r0, #-1
+ 125 000a FFF7FEFF 		bl	BSP_LCD_Clear
+ 126              	.LVL1:
+ 129:Utilities/Log/lcd_log.c **** 
+ 127              		.loc 1 129 1 is_stmt 0 view .LVU27
+ 128 000e 08BD     		pop	{r3, pc}
+ 129              		.cfi_endproc
+ 130              	.LFE137:
+ 132              		.section	.text.LCD_LOG_SetHeader,"ax",%progbits
+ 133              		.align	1
+ 134              		.global	LCD_LOG_SetHeader
+ARM GAS  /tmp/ccPeTMlS.s 			page 6
+
+
+ 135              		.syntax unified
+ 136              		.thumb
+ 137              		.thumb_func
+ 139              	LCD_LOG_SetHeader:
+ 140              	.LVL2:
+ 141              	.LFB139:
+ 152:Utilities/Log/lcd_log.c **** 
+ 153:Utilities/Log/lcd_log.c **** /**
+ 154:Utilities/Log/lcd_log.c ****   * @brief  Display the application header on the LCD screen 
+ 155:Utilities/Log/lcd_log.c ****   * @param  header: pointer to the string to be displayed
+ 156:Utilities/Log/lcd_log.c ****   * @retval None
+ 157:Utilities/Log/lcd_log.c ****   */
+ 158:Utilities/Log/lcd_log.c **** void LCD_LOG_SetHeader (uint8_t *header)
+ 159:Utilities/Log/lcd_log.c **** {
+ 142              		.loc 1 159 1 is_stmt 1 view -0
+ 143              		.cfi_startproc
+ 144              		@ args = 0, pretend = 0, frame = 0
+ 145              		@ frame_needed = 0, uses_anonymous_args = 0
+ 146              		.loc 1 159 1 is_stmt 0 view .LVU29
+ 147 0000 70B5     		push	{r4, r5, r6, lr}
+ 148              	.LCFI1:
+ 149              		.cfi_def_cfa_offset 16
+ 150              		.cfi_offset 4, -16
+ 151              		.cfi_offset 5, -12
+ 152              		.cfi_offset 6, -8
+ 153              		.cfi_offset 14, -4
+ 154 0002 0646     		mov	r6, r0
+ 160:Utilities/Log/lcd_log.c ****   /* Set the LCD Font */
+ 161:Utilities/Log/lcd_log.c ****   BSP_LCD_SetFont (&LCD_LOG_HEADER_FONT);
+ 155              		.loc 1 161 3 is_stmt 1 view .LVU30
+ 156 0004 154C     		ldr	r4, .L8
+ 157 0006 2046     		mov	r0, r4
+ 158              	.LVL3:
+ 159              		.loc 1 161 3 is_stmt 0 view .LVU31
+ 160 0008 FFF7FEFF 		bl	BSP_LCD_SetFont
+ 161              	.LVL4:
+ 162:Utilities/Log/lcd_log.c **** 
+ 163:Utilities/Log/lcd_log.c ****   BSP_LCD_SetTextColor(LCD_LOG_SOLID_BACKGROUND_COLOR);
+ 162              		.loc 1 163 3 is_stmt 1 view .LVU32
+ 163 000c 144D     		ldr	r5, .L8+4
+ 164 000e 2846     		mov	r0, r5
+ 165 0010 FFF7FEFF 		bl	BSP_LCD_SetTextColor
+ 166              	.LVL5:
+ 164:Utilities/Log/lcd_log.c ****   BSP_LCD_FillRect(0, 0, BSP_LCD_GetXSize(), LCD_LOG_HEADER_FONT.Height * 3);
+ 167              		.loc 1 164 3 view .LVU33
+ 168              		.loc 1 164 26 is_stmt 0 view .LVU34
+ 169 0014 FFF7FEFF 		bl	BSP_LCD_GetXSize
+ 170              	.LVL6:
+ 171              		.loc 1 164 65 discriminator 1 view .LVU35
+ 172 0018 E388     		ldrh	r3, [r4, #6]
+ 173              		.loc 1 164 3 discriminator 1 view .LVU36
+ 174 001a 03EB4303 		add	r3, r3, r3, lsl #1
+ 175 001e 9BB2     		uxth	r3, r3
+ 176 0020 82B2     		uxth	r2, r0
+ 177 0022 0021     		movs	r1, #0
+ 178 0024 0846     		mov	r0, r1
+ 179 0026 FFF7FEFF 		bl	BSP_LCD_FillRect
+ARM GAS  /tmp/ccPeTMlS.s 			page 7
+
+
+ 180              	.LVL7:
+ 165:Utilities/Log/lcd_log.c ****   
+ 166:Utilities/Log/lcd_log.c ****   /* Set the LCD Text Color */
+ 167:Utilities/Log/lcd_log.c ****   BSP_LCD_SetTextColor(LCD_LOG_SOLID_TEXT_COLOR);
+ 181              		.loc 1 167 3 is_stmt 1 view .LVU37
+ 182 002a 4FF0FF30 		mov	r0, #-1
+ 183 002e FFF7FEFF 		bl	BSP_LCD_SetTextColor
+ 184              	.LVL8:
+ 168:Utilities/Log/lcd_log.c ****   BSP_LCD_SetBackColor(LCD_LOG_SOLID_BACKGROUND_COLOR);
+ 185              		.loc 1 168 3 view .LVU38
+ 186 0032 2846     		mov	r0, r5
+ 187 0034 FFF7FEFF 		bl	BSP_LCD_SetBackColor
+ 188              	.LVL9:
+ 169:Utilities/Log/lcd_log.c **** 
+ 170:Utilities/Log/lcd_log.c ****   BSP_LCD_DisplayStringAt(0, LCD_LOG_HEADER_FONT.Height, header, CENTER_MODE);
+ 189              		.loc 1 170 3 view .LVU39
+ 190 0038 0123     		movs	r3, #1
+ 191 003a 3246     		mov	r2, r6
+ 192 003c E188     		ldrh	r1, [r4, #6]
+ 193 003e 0020     		movs	r0, #0
+ 194 0040 FFF7FEFF 		bl	BSP_LCD_DisplayStringAt
+ 195              	.LVL10:
+ 171:Utilities/Log/lcd_log.c **** 
+ 172:Utilities/Log/lcd_log.c ****   BSP_LCD_SetBackColor(LCD_LOG_BACKGROUND_COLOR);
+ 196              		.loc 1 172 3 view .LVU40
+ 197 0044 4FF0FF30 		mov	r0, #-1
+ 198 0048 FFF7FEFF 		bl	BSP_LCD_SetBackColor
+ 199              	.LVL11:
+ 173:Utilities/Log/lcd_log.c ****   BSP_LCD_SetTextColor(LCD_LOG_TEXT_COLOR);
+ 200              		.loc 1 173 3 view .LVU41
+ 201 004c 0548     		ldr	r0, .L8+8
+ 202 004e FFF7FEFF 		bl	BSP_LCD_SetTextColor
+ 203              	.LVL12:
+ 174:Utilities/Log/lcd_log.c ****   BSP_LCD_SetFont (&LCD_LOG_TEXT_FONT);
+ 204              		.loc 1 174 3 view .LVU42
+ 205 0052 0548     		ldr	r0, .L8+12
+ 206 0054 FFF7FEFF 		bl	BSP_LCD_SetFont
+ 207              	.LVL13:
+ 175:Utilities/Log/lcd_log.c **** }
+ 208              		.loc 1 175 1 is_stmt 0 view .LVU43
+ 209 0058 70BD     		pop	{r4, r5, r6, pc}
+ 210              	.LVL14:
+ 211              	.L9:
+ 212              		.loc 1 175 1 view .LVU44
+ 213 005a 00BF     		.align	2
+ 214              	.L8:
+ 215 005c 00000000 		.word	Font16
+ 216 0060 FF0000FF 		.word	-16776961
+ 217 0064 800000FF 		.word	-16777088
+ 218 0068 00000000 		.word	Font12
+ 219              		.cfi_endproc
+ 220              	.LFE139:
+ 222              		.section	.text.LCD_LOG_SetFooter,"ax",%progbits
+ 223              		.align	1
+ 224              		.global	LCD_LOG_SetFooter
+ 225              		.syntax unified
+ 226              		.thumb
+ARM GAS  /tmp/ccPeTMlS.s 			page 8
+
+
+ 227              		.thumb_func
+ 229              	LCD_LOG_SetFooter:
+ 230              	.LVL15:
+ 231              	.LFB140:
+ 176:Utilities/Log/lcd_log.c **** 
+ 177:Utilities/Log/lcd_log.c **** /**
+ 178:Utilities/Log/lcd_log.c ****   * @brief  Display the application footer on the LCD screen 
+ 179:Utilities/Log/lcd_log.c ****   * @param  footer: pointer to the string to be displayed
+ 180:Utilities/Log/lcd_log.c ****   * @retval None
+ 181:Utilities/Log/lcd_log.c ****   */
+ 182:Utilities/Log/lcd_log.c **** void LCD_LOG_SetFooter(uint8_t *footer)
+ 183:Utilities/Log/lcd_log.c **** {
+ 232              		.loc 1 183 1 is_stmt 1 view -0
+ 233              		.cfi_startproc
+ 234              		@ args = 0, pretend = 0, frame = 0
+ 235              		@ frame_needed = 0, uses_anonymous_args = 0
+ 236              		.loc 1 183 1 is_stmt 0 view .LVU46
+ 237 0000 F8B5     		push	{r3, r4, r5, r6, r7, lr}
+ 238              	.LCFI2:
+ 239              		.cfi_def_cfa_offset 24
+ 240              		.cfi_offset 3, -24
+ 241              		.cfi_offset 4, -20
+ 242              		.cfi_offset 5, -16
+ 243              		.cfi_offset 6, -12
+ 244              		.cfi_offset 7, -8
+ 245              		.cfi_offset 14, -4
+ 246 0002 0746     		mov	r7, r0
+ 184:Utilities/Log/lcd_log.c ****   /* Set the LCD Font */
+ 185:Utilities/Log/lcd_log.c ****   BSP_LCD_SetFont (&LCD_LOG_FOOTER_FONT);
+ 247              		.loc 1 185 3 is_stmt 1 view .LVU47
+ 248 0004 194D     		ldr	r5, .L12
+ 249 0006 2846     		mov	r0, r5
+ 250              	.LVL16:
+ 251              		.loc 1 185 3 is_stmt 0 view .LVU48
+ 252 0008 FFF7FEFF 		bl	BSP_LCD_SetFont
+ 253              	.LVL17:
+ 186:Utilities/Log/lcd_log.c **** 
+ 187:Utilities/Log/lcd_log.c ****   BSP_LCD_SetTextColor(LCD_LOG_SOLID_BACKGROUND_COLOR);
+ 254              		.loc 1 187 3 is_stmt 1 view .LVU49
+ 255 000c 184E     		ldr	r6, .L12+4
+ 256 000e 3046     		mov	r0, r6
+ 257 0010 FFF7FEFF 		bl	BSP_LCD_SetTextColor
+ 258              	.LVL18:
+ 188:Utilities/Log/lcd_log.c ****   BSP_LCD_FillRect(0, BSP_LCD_GetYSize() - LCD_LOG_FOOTER_FONT.Height - 4, BSP_LCD_GetXSize(), LCD_
+ 259              		.loc 1 188 3 view .LVU50
+ 260              		.loc 1 188 23 is_stmt 0 view .LVU51
+ 261 0014 FFF7FEFF 		bl	BSP_LCD_GetYSize
+ 262              	.LVL19:
+ 263              		.loc 1 188 63 discriminator 1 view .LVU52
+ 264 0018 EB88     		ldrh	r3, [r5, #6]
+ 265              		.loc 1 188 42 discriminator 1 view .LVU53
+ 266 001a C41A     		subs	r4, r0, r3
+ 267 001c A4B2     		uxth	r4, r4
+ 268              		.loc 1 188 76 discriminator 1 view .LVU54
+ 269 001e FFF7FEFF 		bl	BSP_LCD_GetXSize
+ 270              	.LVL20:
+ 271              		.loc 1 188 115 discriminator 2 view .LVU55
+ARM GAS  /tmp/ccPeTMlS.s 			page 9
+
+
+ 272 0022 EB88     		ldrh	r3, [r5, #6]
+ 273              		.loc 1 188 3 discriminator 2 view .LVU56
+ 274 0024 0433     		adds	r3, r3, #4
+ 275              		.loc 1 188 3 discriminator 1 view .LVU57
+ 276 0026 211F     		subs	r1, r4, #4
+ 277              		.loc 1 188 3 discriminator 2 view .LVU58
+ 278 0028 9BB2     		uxth	r3, r3
+ 279 002a 82B2     		uxth	r2, r0
+ 280 002c 89B2     		uxth	r1, r1
+ 281 002e 0020     		movs	r0, #0
+ 282 0030 FFF7FEFF 		bl	BSP_LCD_FillRect
+ 283              	.LVL21:
+ 189:Utilities/Log/lcd_log.c ****   
+ 190:Utilities/Log/lcd_log.c ****   /* Set the LCD Text Color */
+ 191:Utilities/Log/lcd_log.c ****   BSP_LCD_SetTextColor(LCD_LOG_SOLID_TEXT_COLOR);
+ 284              		.loc 1 191 3 is_stmt 1 view .LVU59
+ 285 0034 4FF0FF30 		mov	r0, #-1
+ 286 0038 FFF7FEFF 		bl	BSP_LCD_SetTextColor
+ 287              	.LVL22:
+ 192:Utilities/Log/lcd_log.c ****   BSP_LCD_SetBackColor(LCD_LOG_SOLID_BACKGROUND_COLOR);
+ 288              		.loc 1 192 3 view .LVU60
+ 289 003c 3046     		mov	r0, r6
+ 290 003e FFF7FEFF 		bl	BSP_LCD_SetBackColor
+ 291              	.LVL23:
+ 193:Utilities/Log/lcd_log.c **** 
+ 194:Utilities/Log/lcd_log.c ****   BSP_LCD_DisplayStringAt(0, BSP_LCD_GetYSize() - LCD_LOG_FOOTER_FONT.Height, footer, CENTER_MODE);
+ 292              		.loc 1 194 3 view .LVU61
+ 293              		.loc 1 194 30 is_stmt 0 view .LVU62
+ 294 0042 FFF7FEFF 		bl	BSP_LCD_GetYSize
+ 295              	.LVL24:
+ 296              		.loc 1 194 70 discriminator 1 view .LVU63
+ 297 0046 EB88     		ldrh	r3, [r5, #6]
+ 298              		.loc 1 194 3 discriminator 1 view .LVU64
+ 299 0048 C11A     		subs	r1, r0, r3
+ 300 004a 0123     		movs	r3, #1
+ 301 004c 3A46     		mov	r2, r7
+ 302 004e 89B2     		uxth	r1, r1
+ 303 0050 0020     		movs	r0, #0
+ 304 0052 FFF7FEFF 		bl	BSP_LCD_DisplayStringAt
+ 305              	.LVL25:
+ 195:Utilities/Log/lcd_log.c **** 
+ 196:Utilities/Log/lcd_log.c ****   BSP_LCD_SetBackColor(LCD_LOG_BACKGROUND_COLOR);
+ 306              		.loc 1 196 3 is_stmt 1 view .LVU65
+ 307 0056 4FF0FF30 		mov	r0, #-1
+ 308 005a FFF7FEFF 		bl	BSP_LCD_SetBackColor
+ 309              	.LVL26:
+ 197:Utilities/Log/lcd_log.c ****   BSP_LCD_SetTextColor(LCD_LOG_TEXT_COLOR);
+ 310              		.loc 1 197 3 view .LVU66
+ 311 005e 0548     		ldr	r0, .L12+8
+ 312 0060 FFF7FEFF 		bl	BSP_LCD_SetTextColor
+ 313              	.LVL27:
+ 198:Utilities/Log/lcd_log.c ****   BSP_LCD_SetFont (&LCD_LOG_TEXT_FONT);
+ 314              		.loc 1 198 3 view .LVU67
+ 315 0064 2846     		mov	r0, r5
+ 316 0066 FFF7FEFF 		bl	BSP_LCD_SetFont
+ 317              	.LVL28:
+ 199:Utilities/Log/lcd_log.c **** }
+ARM GAS  /tmp/ccPeTMlS.s 			page 10
+
+
+ 318              		.loc 1 199 1 is_stmt 0 view .LVU68
+ 319 006a F8BD     		pop	{r3, r4, r5, r6, r7, pc}
+ 320              	.LVL29:
+ 321              	.L13:
+ 322              		.loc 1 199 1 view .LVU69
+ 323              		.align	2
+ 324              	.L12:
+ 325 006c 00000000 		.word	Font12
+ 326 0070 FF0000FF 		.word	-16776961
+ 327 0074 800000FF 		.word	-16777088
+ 328              		.cfi_endproc
+ 329              	.LFE140:
+ 331              		.section	.text.LCD_LOG_ClearTextZone,"ax",%progbits
+ 332              		.align	1
+ 333              		.global	LCD_LOG_ClearTextZone
+ 334              		.syntax unified
+ 335              		.thumb
+ 336              		.thumb_func
+ 338              	LCD_LOG_ClearTextZone:
+ 339              	.LFB141:
+ 200:Utilities/Log/lcd_log.c **** 
+ 201:Utilities/Log/lcd_log.c **** /**
+ 202:Utilities/Log/lcd_log.c ****   * @brief  Clear the Text Zone 
+ 203:Utilities/Log/lcd_log.c ****   * @param  None 
+ 204:Utilities/Log/lcd_log.c ****   * @retval None
+ 205:Utilities/Log/lcd_log.c ****   */
+ 206:Utilities/Log/lcd_log.c **** void LCD_LOG_ClearTextZone(void)
+ 207:Utilities/Log/lcd_log.c **** {
+ 340              		.loc 1 207 1 is_stmt 1 view -0
+ 341              		.cfi_startproc
+ 342              		@ args = 0, pretend = 0, frame = 0
+ 343              		@ frame_needed = 0, uses_anonymous_args = 0
+ 344 0000 10B5     		push	{r4, lr}
+ 345              	.LCFI3:
+ 346              		.cfi_def_cfa_offset 8
+ 347              		.cfi_offset 4, -8
+ 348              		.cfi_offset 14, -4
+ 208:Utilities/Log/lcd_log.c ****   uint8_t i=0;
+ 349              		.loc 1 208 3 view .LVU71
+ 209:Utilities/Log/lcd_log.c ****   
+ 210:Utilities/Log/lcd_log.c ****   for (i= 0 ; i < YWINDOW_SIZE; i++)
+ 350              		.loc 1 210 3 view .LVU72
+ 351              	.LVL30:
+ 352              		.loc 1 210 9 is_stmt 0 view .LVU73
+ 353 0002 0024     		movs	r4, #0
+ 354              		.loc 1 210 3 view .LVU74
+ 355 0004 04E0     		b	.L15
+ 356              	.LVL31:
+ 357              	.L16:
+ 211:Utilities/Log/lcd_log.c ****   {
+ 212:Utilities/Log/lcd_log.c ****     BSP_LCD_ClearStringLine(i + YWINDOW_MIN);
+ 358              		.loc 1 212 5 is_stmt 1 view .LVU75
+ 359 0006 201D     		adds	r0, r4, #4
+ 360 0008 FFF7FEFF 		bl	BSP_LCD_ClearStringLine
+ 361              	.LVL32:
+ 210:Utilities/Log/lcd_log.c ****   {
+ 362              		.loc 1 210 34 discriminator 1 view .LVU76
+ARM GAS  /tmp/ccPeTMlS.s 			page 11
+
+
+ 363 000c 0134     		adds	r4, r4, #1
+ 364              	.LVL33:
+ 210:Utilities/Log/lcd_log.c ****   {
+ 365              		.loc 1 210 34 is_stmt 0 discriminator 1 view .LVU77
+ 366 000e E4B2     		uxtb	r4, r4
+ 367              	.LVL34:
+ 368              	.L15:
+ 210:Utilities/Log/lcd_log.c ****   {
+ 369              		.loc 1 210 17 is_stmt 1 discriminator 2 view .LVU78
+ 370 0010 102C     		cmp	r4, #16
+ 371 0012 F8D9     		bls	.L16
+ 213:Utilities/Log/lcd_log.c ****   }
+ 214:Utilities/Log/lcd_log.c ****   
+ 215:Utilities/Log/lcd_log.c ****   LCD_LOG_DeInit();
+ 372              		.loc 1 215 3 view .LVU79
+ 373 0014 FFF7FEFF 		bl	LCD_LOG_DeInit
+ 374              	.LVL35:
+ 216:Utilities/Log/lcd_log.c **** }
+ 375              		.loc 1 216 1 is_stmt 0 view .LVU80
+ 376 0018 10BD     		pop	{r4, pc}
+ 377              		.loc 1 216 1 view .LVU81
+ 378              		.cfi_endproc
+ 379              	.LFE141:
+ 381              		.section	.text.LCD_LOG_UpdateDisplay,"ax",%progbits
+ 382              		.align	1
+ 383              		.global	LCD_LOG_UpdateDisplay
+ 384              		.syntax unified
+ 385              		.thumb
+ 386              		.thumb_func
+ 388              	LCD_LOG_UpdateDisplay:
+ 389              	.LFB143:
+ 217:Utilities/Log/lcd_log.c **** 
+ 218:Utilities/Log/lcd_log.c **** /**
+ 219:Utilities/Log/lcd_log.c ****   * @brief  Redirect the printf to the LCD
+ 220:Utilities/Log/lcd_log.c ****   * @param  c: character to be displayed
+ 221:Utilities/Log/lcd_log.c ****   * @param  f: output file pointer
+ 222:Utilities/Log/lcd_log.c ****   * @retval None
+ 223:Utilities/Log/lcd_log.c ****  */
+ 224:Utilities/Log/lcd_log.c **** LCD_LOG_PUTCHAR
+ 225:Utilities/Log/lcd_log.c **** {
+ 226:Utilities/Log/lcd_log.c ****   
+ 227:Utilities/Log/lcd_log.c ****   sFONT *cFont = BSP_LCD_GetFont();
+ 228:Utilities/Log/lcd_log.c ****   uint32_t idx;
+ 229:Utilities/Log/lcd_log.c ****   
+ 230:Utilities/Log/lcd_log.c ****   if(LCD_Lock == DISABLE)
+ 231:Utilities/Log/lcd_log.c ****   {
+ 232:Utilities/Log/lcd_log.c ****     if(LCD_ScrollActive == ENABLE)
+ 233:Utilities/Log/lcd_log.c ****     {
+ 234:Utilities/Log/lcd_log.c ****       LCD_CacheBuffer_yptr_bottom = LCD_CacheBuffer_yptr_bottom_bak;
+ 235:Utilities/Log/lcd_log.c ****       LCD_CacheBuffer_yptr_top    = LCD_CacheBuffer_yptr_top_bak;
+ 236:Utilities/Log/lcd_log.c ****       LCD_ScrollActive = DISABLE;
+ 237:Utilities/Log/lcd_log.c ****       LCD_Scrolled = DISABLE;
+ 238:Utilities/Log/lcd_log.c ****       LCD_ScrollBackStep = 0;
+ 239:Utilities/Log/lcd_log.c ****       
+ 240:Utilities/Log/lcd_log.c ****     }
+ 241:Utilities/Log/lcd_log.c ****     
+ 242:Utilities/Log/lcd_log.c ****     if(( LCD_CacheBuffer_xptr < (BSP_LCD_GetXSize()) /cFont->Width ) &&  ( ch != '\n'))
+ARM GAS  /tmp/ccPeTMlS.s 			page 12
+
+
+ 243:Utilities/Log/lcd_log.c ****     {
+ 244:Utilities/Log/lcd_log.c ****       LCD_CacheBuffer[LCD_CacheBuffer_yptr_bottom].line[LCD_CacheBuffer_xptr++] = (uint16_t)ch;
+ 245:Utilities/Log/lcd_log.c ****     }   
+ 246:Utilities/Log/lcd_log.c ****     else 
+ 247:Utilities/Log/lcd_log.c ****     {
+ 248:Utilities/Log/lcd_log.c ****       if(LCD_CacheBuffer_yptr_top >= LCD_CacheBuffer_yptr_bottom)
+ 249:Utilities/Log/lcd_log.c ****       {
+ 250:Utilities/Log/lcd_log.c ****         
+ 251:Utilities/Log/lcd_log.c ****         if(LCD_CacheBuffer_yptr_invert == DISABLE)
+ 252:Utilities/Log/lcd_log.c ****         {
+ 253:Utilities/Log/lcd_log.c ****           LCD_CacheBuffer_yptr_top++;
+ 254:Utilities/Log/lcd_log.c ****           
+ 255:Utilities/Log/lcd_log.c ****           if(LCD_CacheBuffer_yptr_top == LCD_CACHE_DEPTH)
+ 256:Utilities/Log/lcd_log.c ****           {
+ 257:Utilities/Log/lcd_log.c ****             LCD_CacheBuffer_yptr_top = 0;  
+ 258:Utilities/Log/lcd_log.c ****           }
+ 259:Utilities/Log/lcd_log.c ****         }
+ 260:Utilities/Log/lcd_log.c ****         else
+ 261:Utilities/Log/lcd_log.c ****         {
+ 262:Utilities/Log/lcd_log.c ****           LCD_CacheBuffer_yptr_invert= DISABLE;
+ 263:Utilities/Log/lcd_log.c ****         }
+ 264:Utilities/Log/lcd_log.c ****       }
+ 265:Utilities/Log/lcd_log.c ****       
+ 266:Utilities/Log/lcd_log.c ****       for(idx = LCD_CacheBuffer_xptr ; idx < (BSP_LCD_GetXSize()) /cFont->Width; idx++)
+ 267:Utilities/Log/lcd_log.c ****       {
+ 268:Utilities/Log/lcd_log.c ****         LCD_CacheBuffer[LCD_CacheBuffer_yptr_bottom].line[LCD_CacheBuffer_xptr++] = ' ';
+ 269:Utilities/Log/lcd_log.c ****       }   
+ 270:Utilities/Log/lcd_log.c ****       LCD_CacheBuffer[LCD_CacheBuffer_yptr_bottom].color = LCD_LineColor;  
+ 271:Utilities/Log/lcd_log.c ****       
+ 272:Utilities/Log/lcd_log.c ****       LCD_CacheBuffer_xptr = 0;
+ 273:Utilities/Log/lcd_log.c ****       
+ 274:Utilities/Log/lcd_log.c ****       LCD_LOG_UpdateDisplay (); 
+ 275:Utilities/Log/lcd_log.c ****       
+ 276:Utilities/Log/lcd_log.c ****       LCD_CacheBuffer_yptr_bottom ++; 
+ 277:Utilities/Log/lcd_log.c ****       
+ 278:Utilities/Log/lcd_log.c ****       if (LCD_CacheBuffer_yptr_bottom == LCD_CACHE_DEPTH) 
+ 279:Utilities/Log/lcd_log.c ****       {
+ 280:Utilities/Log/lcd_log.c ****         LCD_CacheBuffer_yptr_bottom = 0;
+ 281:Utilities/Log/lcd_log.c ****         LCD_CacheBuffer_yptr_top = 1;    
+ 282:Utilities/Log/lcd_log.c ****         LCD_CacheBuffer_yptr_invert = ENABLE;
+ 283:Utilities/Log/lcd_log.c ****       }
+ 284:Utilities/Log/lcd_log.c ****       
+ 285:Utilities/Log/lcd_log.c ****       if( ch != '\n')
+ 286:Utilities/Log/lcd_log.c ****       {
+ 287:Utilities/Log/lcd_log.c ****         LCD_CacheBuffer[LCD_CacheBuffer_yptr_bottom].line[LCD_CacheBuffer_xptr++] = (uint16_t)ch;
+ 288:Utilities/Log/lcd_log.c ****       }
+ 289:Utilities/Log/lcd_log.c ****       
+ 290:Utilities/Log/lcd_log.c ****     }
+ 291:Utilities/Log/lcd_log.c ****   }
+ 292:Utilities/Log/lcd_log.c ****   return ch;
+ 293:Utilities/Log/lcd_log.c **** }
+ 294:Utilities/Log/lcd_log.c ****   
+ 295:Utilities/Log/lcd_log.c **** /**
+ 296:Utilities/Log/lcd_log.c ****   * @brief  Update the text area display
+ 297:Utilities/Log/lcd_log.c ****   * @param  None
+ 298:Utilities/Log/lcd_log.c ****   * @retval None
+ 299:Utilities/Log/lcd_log.c ****   */
+ARM GAS  /tmp/ccPeTMlS.s 			page 13
+
+
+ 300:Utilities/Log/lcd_log.c **** void LCD_LOG_UpdateDisplay (void)
+ 301:Utilities/Log/lcd_log.c **** {
+ 390              		.loc 1 301 1 is_stmt 1 view -0
+ 391              		.cfi_startproc
+ 392              		@ args = 0, pretend = 0, frame = 0
+ 393              		@ frame_needed = 0, uses_anonymous_args = 0
+ 394 0000 2DE9F041 		push	{r4, r5, r6, r7, r8, lr}
+ 395              	.LCFI4:
+ 396              		.cfi_def_cfa_offset 24
+ 397              		.cfi_offset 4, -24
+ 398              		.cfi_offset 5, -20
+ 399              		.cfi_offset 6, -16
+ 400              		.cfi_offset 7, -12
+ 401              		.cfi_offset 8, -8
+ 402              		.cfi_offset 14, -4
+ 302:Utilities/Log/lcd_log.c ****   uint8_t cnt = 0 ;
+ 403              		.loc 1 302 3 view .LVU83
+ 404              	.LVL36:
+ 303:Utilities/Log/lcd_log.c ****   uint16_t length = 0 ;
+ 405              		.loc 1 303 3 view .LVU84
+ 304:Utilities/Log/lcd_log.c ****   uint16_t ptr = 0, index = 0;
+ 406              		.loc 1 304 3 view .LVU85
+ 305:Utilities/Log/lcd_log.c ****   
+ 306:Utilities/Log/lcd_log.c ****   if((LCD_CacheBuffer_yptr_bottom  < (YWINDOW_SIZE -1)) && 
+ 407              		.loc 1 306 3 view .LVU86
+ 408              		.loc 1 306 36 is_stmt 0 view .LVU87
+ 409 0004 244B     		ldr	r3, .L26
+ 410 0006 1E88     		ldrh	r6, [r3]
+ 411              		.loc 1 306 5 view .LVU88
+ 412 0008 0F2E     		cmp	r6, #15
+ 413 000a 03D8     		bhi	.L19
+ 307:Utilities/Log/lcd_log.c ****      (LCD_CacheBuffer_yptr_bottom  >= LCD_CacheBuffer_yptr_top))
+ 414              		.loc 1 307 36 view .LVU89
+ 415 000c 234B     		ldr	r3, .L26+4
+ 416 000e 1B88     		ldrh	r3, [r3]
+ 306:Utilities/Log/lcd_log.c ****      (LCD_CacheBuffer_yptr_bottom  >= LCD_CacheBuffer_yptr_top))
+ 417              		.loc 1 306 57 discriminator 1 view .LVU90
+ 418 0010 9E42     		cmp	r6, r3
+ 419 0012 09D2     		bcs	.L25
+ 420              	.L19:
+ 308:Utilities/Log/lcd_log.c ****   {
+ 309:Utilities/Log/lcd_log.c ****     BSP_LCD_SetTextColor(LCD_CacheBuffer[cnt + LCD_CacheBuffer_yptr_bottom].color);
+ 310:Utilities/Log/lcd_log.c ****     BSP_LCD_DisplayStringAtLine ((YWINDOW_MIN + LCD_CacheBuffer_yptr_bottom),
+ 311:Utilities/Log/lcd_log.c ****                            (uint8_t *)(LCD_CacheBuffer[cnt + LCD_CacheBuffer_yptr_bottom].line));
+ 312:Utilities/Log/lcd_log.c ****   }
+ 313:Utilities/Log/lcd_log.c ****   else
+ 314:Utilities/Log/lcd_log.c ****   {
+ 315:Utilities/Log/lcd_log.c ****     
+ 316:Utilities/Log/lcd_log.c ****     if(LCD_CacheBuffer_yptr_bottom < LCD_CacheBuffer_yptr_top)
+ 421              		.loc 1 316 5 is_stmt 1 view .LVU91
+ 422              		.loc 1 316 36 is_stmt 0 view .LVU92
+ 423 0014 214B     		ldr	r3, .L26+4
+ 424 0016 1B88     		ldrh	r3, [r3]
+ 425              		.loc 1 316 7 view .LVU93
+ 426 0018 9E42     		cmp	r6, r3
+ 427 001a 01D2     		bcs	.L21
+ 317:Utilities/Log/lcd_log.c ****     {
+ARM GAS  /tmp/ccPeTMlS.s 			page 14
+
+
+ 318:Utilities/Log/lcd_log.c ****       /* Virtual length for rolling */
+ 319:Utilities/Log/lcd_log.c ****       length = LCD_CACHE_DEPTH + LCD_CacheBuffer_yptr_bottom ;
+ 428              		.loc 1 319 7 is_stmt 1 view .LVU94
+ 429              		.loc 1 319 14 is_stmt 0 view .LVU95
+ 430 001c 7536     		adds	r6, r6, #117
+ 431 001e B6B2     		uxth	r6, r6
+ 432              	.L21:
+ 433              	.LVL37:
+ 320:Utilities/Log/lcd_log.c ****     }
+ 321:Utilities/Log/lcd_log.c ****     else
+ 322:Utilities/Log/lcd_log.c ****     {
+ 323:Utilities/Log/lcd_log.c ****       length = LCD_CacheBuffer_yptr_bottom;
+ 324:Utilities/Log/lcd_log.c ****     }
+ 325:Utilities/Log/lcd_log.c ****     
+ 326:Utilities/Log/lcd_log.c ****     ptr = length - YWINDOW_SIZE + 1;
+ 434              		.loc 1 326 5 is_stmt 1 view .LVU96
+ 435              		.loc 1 326 9 is_stmt 0 view .LVU97
+ 436 0020 103E     		subs	r6, r6, #16
+ 437              	.LVL38:
+ 438              		.loc 1 326 9 view .LVU98
+ 439 0022 B6B2     		uxth	r6, r6
+ 440              	.LVL39:
+ 327:Utilities/Log/lcd_log.c ****     
+ 328:Utilities/Log/lcd_log.c ****     for  (cnt = 0 ; cnt < YWINDOW_SIZE ; cnt ++)
+ 441              		.loc 1 328 5 is_stmt 1 view .LVU99
+ 442              		.loc 1 328 15 is_stmt 0 view .LVU100
+ 443 0024 0025     		movs	r5, #0
+ 444              		.loc 1 328 5 view .LVU101
+ 445 0026 32E0     		b	.L22
+ 446              	.LVL40:
+ 447              	.L25:
+ 309:Utilities/Log/lcd_log.c ****     BSP_LCD_DisplayStringAtLine ((YWINDOW_MIN + LCD_CacheBuffer_yptr_bottom),
+ 448              		.loc 1 309 5 is_stmt 1 view .LVU102
+ 449 0028 1D4C     		ldr	r4, .L26+8
+ 450 002a 06EB4616 		add	r6, r6, r6, lsl #5
+ 451 002e 04EB8603 		add	r3, r4, r6, lsl #2
+ 452 0032 D3F88000 		ldr	r0, [r3, #128]
+ 453 0036 FFF7FEFF 		bl	BSP_LCD_SetTextColor
+ 454              	.LVL41:
+ 310:Utilities/Log/lcd_log.c ****                            (uint8_t *)(LCD_CacheBuffer[cnt + LCD_CacheBuffer_yptr_bottom].line));
+ 455              		.loc 1 310 5 view .LVU103
+ 456 003a 174B     		ldr	r3, .L26
+ 457 003c 1B88     		ldrh	r3, [r3]
+ 311:Utilities/Log/lcd_log.c ****   }
+ 458              		.loc 1 311 39 is_stmt 0 view .LVU104
+ 459 003e 03EB4311 		add	r1, r3, r3, lsl #5
+ 310:Utilities/Log/lcd_log.c ****                            (uint8_t *)(LCD_CacheBuffer[cnt + LCD_CacheBuffer_yptr_bottom].line));
+ 460              		.loc 1 310 5 view .LVU105
+ 461 0042 0433     		adds	r3, r3, #4
+ 462 0044 04EB8101 		add	r1, r4, r1, lsl #2
+ 463 0048 98B2     		uxth	r0, r3
+ 464 004a FFF7FEFF 		bl	BSP_LCD_DisplayStringAtLine
+ 465              	.LVL42:
+ 310:Utilities/Log/lcd_log.c ****                            (uint8_t *)(LCD_CacheBuffer[cnt + LCD_CacheBuffer_yptr_bottom].line));
+ 466              		.loc 1 310 5 discriminator 1 view .LVU106
+ 467 004e 20E0     		b	.L18
+ 468              	.LVL43:
+ARM GAS  /tmp/ccPeTMlS.s 			page 15
+
+
+ 469              	.L23:
+ 329:Utilities/Log/lcd_log.c ****     {
+ 330:Utilities/Log/lcd_log.c ****       
+ 331:Utilities/Log/lcd_log.c ****       index = (cnt + ptr )% LCD_CACHE_DEPTH ;
+ 470              		.loc 1 331 7 is_stmt 1 view .LVU107
+ 471              		.loc 1 331 20 is_stmt 0 view .LVU108
+ 472 0050 AA19     		adds	r2, r5, r6
+ 473              		.loc 1 331 27 view .LVU109
+ 474 0052 144B     		ldr	r3, .L26+12
+ 475 0054 83FB0213 		smull	r1, r3, r3, r2
+ 476 0058 1344     		add	r3, r3, r2
+ 477 005a D417     		asrs	r4, r2, #31
+ 478 005c C4EBA314 		rsb	r4, r4, r3, asr #6
+ 479 0060 7523     		movs	r3, #117
+ 480 0062 03FB1424 		mls	r4, r3, r4, r2
+ 481              	.LVL44:
+ 332:Utilities/Log/lcd_log.c ****       
+ 333:Utilities/Log/lcd_log.c ****       BSP_LCD_SetTextColor(LCD_CacheBuffer[index].color);
+ 482              		.loc 1 333 7 is_stmt 1 view .LVU110
+ 483 0066 A4B2     		uxth	r4, r4
+ 484              		.loc 1 333 7 is_stmt 0 view .LVU111
+ 485 0068 DFF83480 		ldr	r8, .L26+8
+ 486 006c 6701     		lsls	r7, r4, #5
+ 487 006e 04EB4413 		add	r3, r4, r4, lsl #5
+ 488 0072 08EB8303 		add	r3, r8, r3, lsl #2
+ 489 0076 D3F88000 		ldr	r0, [r3, #128]
+ 490 007a FFF7FEFF 		bl	BSP_LCD_SetTextColor
+ 491              	.LVL45:
+ 334:Utilities/Log/lcd_log.c ****       BSP_LCD_DisplayStringAtLine ((cnt + YWINDOW_MIN), 
+ 492              		.loc 1 334 7 is_stmt 1 view .LVU112
+ 335:Utilities/Log/lcd_log.c ****                              (uint8_t *)(LCD_CacheBuffer[index].line));
+ 493              		.loc 1 335 41 is_stmt 0 view .LVU113
+ 494 007e 3919     		adds	r1, r7, r4
+ 334:Utilities/Log/lcd_log.c ****       BSP_LCD_DisplayStringAtLine ((cnt + YWINDOW_MIN), 
+ 495              		.loc 1 334 7 view .LVU114
+ 496 0080 08EB8101 		add	r1, r8, r1, lsl #2
+ 497 0084 281D     		adds	r0, r5, #4
+ 498 0086 FFF7FEFF 		bl	BSP_LCD_DisplayStringAtLine
+ 499              	.LVL46:
+ 328:Utilities/Log/lcd_log.c ****     {
+ 500              		.loc 1 328 46 is_stmt 1 discriminator 1 view .LVU115
+ 501 008a 0135     		adds	r5, r5, #1
+ 502              	.LVL47:
+ 328:Utilities/Log/lcd_log.c ****     {
+ 503              		.loc 1 328 46 is_stmt 0 discriminator 1 view .LVU116
+ 504 008c EDB2     		uxtb	r5, r5
+ 505              	.LVL48:
+ 506              	.L22:
+ 328:Utilities/Log/lcd_log.c ****     {
+ 507              		.loc 1 328 25 is_stmt 1 discriminator 2 view .LVU117
+ 508 008e 102D     		cmp	r5, #16
+ 509 0090 DED9     		bls	.L23
+ 510              	.LVL49:
+ 511              	.L18:
+ 336:Utilities/Log/lcd_log.c ****       
+ 337:Utilities/Log/lcd_log.c ****     }
+ 338:Utilities/Log/lcd_log.c ****   }
+ARM GAS  /tmp/ccPeTMlS.s 			page 16
+
+
+ 339:Utilities/Log/lcd_log.c ****   
+ 340:Utilities/Log/lcd_log.c **** }
+ 512              		.loc 1 340 1 is_stmt 0 view .LVU118
+ 513 0092 BDE8F081 		pop	{r4, r5, r6, r7, r8, pc}
+ 514              	.L27:
+ 515 0096 00BF     		.align	2
+ 516              	.L26:
+ 517 0098 00000000 		.word	LCD_CacheBuffer_yptr_bottom
+ 518 009c 00000000 		.word	LCD_CacheBuffer_yptr_top
+ 519 00a0 00000000 		.word	LCD_CacheBuffer
+ 520 00a4 8DC0088C 		.word	-1945583475
+ 521              		.cfi_endproc
+ 522              	.LFE143:
+ 524              		.section	.text.__io_putchar,"ax",%progbits
+ 525              		.align	1
+ 526              		.global	__io_putchar
+ 527              		.syntax unified
+ 528              		.thumb
+ 529              		.thumb_func
+ 531              	__io_putchar:
+ 532              	.LVL50:
+ 533              	.LFB142:
+ 225:Utilities/Log/lcd_log.c ****   
+ 534              		.loc 1 225 1 is_stmt 1 view -0
+ 535              		.cfi_startproc
+ 536              		@ args = 0, pretend = 0, frame = 0
+ 537              		@ frame_needed = 0, uses_anonymous_args = 0
+ 225:Utilities/Log/lcd_log.c ****   
+ 538              		.loc 1 225 1 is_stmt 0 view .LVU120
+ 539 0000 70B5     		push	{r4, r5, r6, lr}
+ 540              	.LCFI5:
+ 541              		.cfi_def_cfa_offset 16
+ 542              		.cfi_offset 4, -16
+ 543              		.cfi_offset 5, -12
+ 544              		.cfi_offset 6, -8
+ 545              		.cfi_offset 14, -4
+ 546 0002 0646     		mov	r6, r0
+ 227:Utilities/Log/lcd_log.c ****   uint32_t idx;
+ 547              		.loc 1 227 3 is_stmt 1 view .LVU121
+ 227:Utilities/Log/lcd_log.c ****   uint32_t idx;
+ 548              		.loc 1 227 18 is_stmt 0 view .LVU122
+ 549 0004 FFF7FEFF 		bl	BSP_LCD_GetFont
+ 550              	.LVL51:
+ 228:Utilities/Log/lcd_log.c ****   
+ 551              		.loc 1 228 3 is_stmt 1 view .LVU123
+ 230:Utilities/Log/lcd_log.c ****   {
+ 552              		.loc 1 230 3 view .LVU124
+ 230:Utilities/Log/lcd_log.c ****   {
+ 553              		.loc 1 230 15 is_stmt 0 view .LVU125
+ 554 0008 464B     		ldr	r3, .L40
+ 555 000a 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 230:Utilities/Log/lcd_log.c ****   {
+ 556              		.loc 1 230 5 view .LVU126
+ 557 000c 002B     		cmp	r3, #0
+ 558 000e 7ED1     		bne	.L29
+ 559 0010 0546     		mov	r5, r0
+ 232:Utilities/Log/lcd_log.c ****     {
+ARM GAS  /tmp/ccPeTMlS.s 			page 17
+
+
+ 560              		.loc 1 232 5 is_stmt 1 view .LVU127
+ 232:Utilities/Log/lcd_log.c ****     {
+ 561              		.loc 1 232 25 is_stmt 0 view .LVU128
+ 562 0012 454B     		ldr	r3, .L40+4
+ 563 0014 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 232:Utilities/Log/lcd_log.c ****     {
+ 564              		.loc 1 232 7 view .LVU129
+ 565 0016 012B     		cmp	r3, #1
+ 566 0018 17D0     		beq	.L38
+ 567              	.L30:
+ 242:Utilities/Log/lcd_log.c ****     {
+ 568              		.loc 1 242 5 is_stmt 1 view .LVU130
+ 242:Utilities/Log/lcd_log.c ****     {
+ 569              		.loc 1 242 31 is_stmt 0 view .LVU131
+ 570 001a 444B     		ldr	r3, .L40+8
+ 571 001c 1C88     		ldrh	r4, [r3]
+ 242:Utilities/Log/lcd_log.c ****     {
+ 572              		.loc 1 242 34 view .LVU132
+ 573 001e FFF7FEFF 		bl	BSP_LCD_GetXSize
+ 574              	.LVL52:
+ 242:Utilities/Log/lcd_log.c ****     {
+ 575              		.loc 1 242 60 discriminator 1 view .LVU133
+ 576 0022 AB88     		ldrh	r3, [r5, #4]
+ 242:Utilities/Log/lcd_log.c ****     {
+ 577              		.loc 1 242 54 discriminator 1 view .LVU134
+ 578 0024 B0FBF3F0 		udiv	r0, r0, r3
+ 242:Utilities/Log/lcd_log.c ****     {
+ 579              		.loc 1 242 7 discriminator 1 view .LVU135
+ 580 0028 8442     		cmp	r4, r0
+ 581 002a 1ED2     		bcs	.L31
+ 242:Utilities/Log/lcd_log.c ****     {
+ 582              		.loc 1 242 70 discriminator 2 view .LVU136
+ 583 002c 0A2E     		cmp	r6, #10
+ 584 002e 1CD0     		beq	.L31
+ 244:Utilities/Log/lcd_log.c ****     }   
+ 585              		.loc 1 244 7 is_stmt 1 view .LVU137
+ 244:Utilities/Log/lcd_log.c ****     }   
+ 586              		.loc 1 244 56 is_stmt 0 view .LVU138
+ 587 0030 3F4B     		ldr	r3, .L40+12
+ 588 0032 1B88     		ldrh	r3, [r3]
+ 244:Utilities/Log/lcd_log.c ****     }   
+ 589              		.loc 1 244 77 view .LVU139
+ 590 0034 3D4A     		ldr	r2, .L40+8
+ 591 0036 1188     		ldrh	r1, [r2]
+ 592 0038 481C     		adds	r0, r1, #1
+ 593 003a 1080     		strh	r0, [r2]	@ movhi
+ 244:Utilities/Log/lcd_log.c ****     }   
+ 594              		.loc 1 244 81 view .LVU140
+ 595 003c 03EB4313 		add	r3, r3, r3, lsl #5
+ 596 0040 3C4A     		ldr	r2, .L40+16
+ 597 0042 02EB8303 		add	r3, r2, r3, lsl #2
+ 598 0046 5E54     		strb	r6, [r3, r1]
+ 599 0048 61E0     		b	.L29
+ 600              	.LVL53:
+ 601              	.L38:
+ 234:Utilities/Log/lcd_log.c ****       LCD_CacheBuffer_yptr_top    = LCD_CacheBuffer_yptr_top_bak;
+ 602              		.loc 1 234 7 is_stmt 1 view .LVU141
+ARM GAS  /tmp/ccPeTMlS.s 			page 18
+
+
+ 234:Utilities/Log/lcd_log.c ****       LCD_CacheBuffer_yptr_top    = LCD_CacheBuffer_yptr_top_bak;
+ 603              		.loc 1 234 35 is_stmt 0 view .LVU142
+ 604 004a 3B4B     		ldr	r3, .L40+20
+ 605 004c 1A88     		ldrh	r2, [r3]
+ 606 004e 384B     		ldr	r3, .L40+12
+ 607 0050 1A80     		strh	r2, [r3]	@ movhi
+ 235:Utilities/Log/lcd_log.c ****       LCD_ScrollActive = DISABLE;
+ 608              		.loc 1 235 7 is_stmt 1 view .LVU143
+ 235:Utilities/Log/lcd_log.c ****       LCD_ScrollActive = DISABLE;
+ 609              		.loc 1 235 35 is_stmt 0 view .LVU144
+ 610 0052 3A4B     		ldr	r3, .L40+24
+ 611 0054 1A88     		ldrh	r2, [r3]
+ 612 0056 3A4B     		ldr	r3, .L40+28
+ 613 0058 1A80     		strh	r2, [r3]	@ movhi
+ 236:Utilities/Log/lcd_log.c ****       LCD_Scrolled = DISABLE;
+ 614              		.loc 1 236 7 is_stmt 1 view .LVU145
+ 236:Utilities/Log/lcd_log.c ****       LCD_Scrolled = DISABLE;
+ 615              		.loc 1 236 24 is_stmt 0 view .LVU146
+ 616 005a 0023     		movs	r3, #0
+ 617 005c 324A     		ldr	r2, .L40+4
+ 618 005e 1370     		strb	r3, [r2]
+ 237:Utilities/Log/lcd_log.c ****       LCD_ScrollBackStep = 0;
+ 619              		.loc 1 237 7 is_stmt 1 view .LVU147
+ 237:Utilities/Log/lcd_log.c ****       LCD_ScrollBackStep = 0;
+ 620              		.loc 1 237 20 is_stmt 0 view .LVU148
+ 621 0060 384A     		ldr	r2, .L40+32
+ 622 0062 1370     		strb	r3, [r2]
+ 238:Utilities/Log/lcd_log.c ****       
+ 623              		.loc 1 238 7 is_stmt 1 view .LVU149
+ 238:Utilities/Log/lcd_log.c ****       
+ 624              		.loc 1 238 26 is_stmt 0 view .LVU150
+ 625 0064 384A     		ldr	r2, .L40+36
+ 626 0066 1380     		strh	r3, [r2]	@ movhi
+ 627 0068 D7E7     		b	.L30
+ 628              	.LVL54:
+ 629              	.L31:
+ 248:Utilities/Log/lcd_log.c ****       {
+ 630              		.loc 1 248 7 is_stmt 1 view .LVU151
+ 248:Utilities/Log/lcd_log.c ****       {
+ 631              		.loc 1 248 35 is_stmt 0 view .LVU152
+ 632 006a 354B     		ldr	r3, .L40+28
+ 633 006c 1B88     		ldrh	r3, [r3]
+ 634 006e 304A     		ldr	r2, .L40+12
+ 635 0070 1288     		ldrh	r2, [r2]
+ 248:Utilities/Log/lcd_log.c ****       {
+ 636              		.loc 1 248 9 view .LVU153
+ 637 0072 9342     		cmp	r3, r2
+ 638 0074 0FD3     		bcc	.L32
+ 251:Utilities/Log/lcd_log.c ****         {
+ 639              		.loc 1 251 9 is_stmt 1 view .LVU154
+ 251:Utilities/Log/lcd_log.c ****         {
+ 640              		.loc 1 251 40 is_stmt 0 view .LVU155
+ 641 0076 354A     		ldr	r2, .L40+40
+ 642 0078 1278     		ldrb	r2, [r2]	@ zero_extendqisi2
+ 251:Utilities/Log/lcd_log.c ****         {
+ 643              		.loc 1 251 11 view .LVU156
+ 644 007a 4AB9     		cbnz	r2, .L33
+ARM GAS  /tmp/ccPeTMlS.s 			page 19
+
+
+ 253:Utilities/Log/lcd_log.c ****           
+ 645              		.loc 1 253 11 is_stmt 1 view .LVU157
+ 253:Utilities/Log/lcd_log.c ****           
+ 646              		.loc 1 253 35 is_stmt 0 view .LVU158
+ 647 007c 0133     		adds	r3, r3, #1
+ 648 007e 9BB2     		uxth	r3, r3
+ 649 0080 2F4A     		ldr	r2, .L40+28
+ 650 0082 1380     		strh	r3, [r2]	@ movhi
+ 255:Utilities/Log/lcd_log.c ****           {
+ 651              		.loc 1 255 11 is_stmt 1 view .LVU159
+ 255:Utilities/Log/lcd_log.c ****           {
+ 652              		.loc 1 255 13 is_stmt 0 view .LVU160
+ 653 0084 752B     		cmp	r3, #117
+ 654 0086 06D1     		bne	.L32
+ 257:Utilities/Log/lcd_log.c ****           }
+ 655              		.loc 1 257 13 is_stmt 1 view .LVU161
+ 257:Utilities/Log/lcd_log.c ****           }
+ 656              		.loc 1 257 38 is_stmt 0 view .LVU162
+ 657 0088 1346     		mov	r3, r2
+ 658 008a 0022     		movs	r2, #0
+ 659 008c 1A80     		strh	r2, [r3]	@ movhi
+ 660 008e 02E0     		b	.L32
+ 661              	.L33:
+ 262:Utilities/Log/lcd_log.c ****         }
+ 662              		.loc 1 262 11 is_stmt 1 view .LVU163
+ 262:Utilities/Log/lcd_log.c ****         }
+ 663              		.loc 1 262 38 is_stmt 0 view .LVU164
+ 664 0090 2E4B     		ldr	r3, .L40+40
+ 665 0092 0022     		movs	r2, #0
+ 666 0094 1A70     		strb	r2, [r3]
+ 667              	.L32:
+ 266:Utilities/Log/lcd_log.c ****       {
+ 668              		.loc 1 266 7 is_stmt 1 view .LVU165
+ 266:Utilities/Log/lcd_log.c ****       {
+ 669              		.loc 1 266 15 is_stmt 0 view .LVU166
+ 670 0096 254B     		ldr	r3, .L40+8
+ 671 0098 1C88     		ldrh	r4, [r3]
+ 672              	.LVL55:
+ 266:Utilities/Log/lcd_log.c ****       {
+ 673              		.loc 1 266 7 view .LVU167
+ 674 009a 0DE0     		b	.L34
+ 675              	.L35:
+ 268:Utilities/Log/lcd_log.c ****       }   
+ 676              		.loc 1 268 9 is_stmt 1 view .LVU168
+ 268:Utilities/Log/lcd_log.c ****       }   
+ 677              		.loc 1 268 58 is_stmt 0 view .LVU169
+ 678 009c 244B     		ldr	r3, .L40+12
+ 679 009e 1B88     		ldrh	r3, [r3]
+ 268:Utilities/Log/lcd_log.c ****       }   
+ 680              		.loc 1 268 79 view .LVU170
+ 681 00a0 224A     		ldr	r2, .L40+8
+ 682 00a2 1188     		ldrh	r1, [r2]
+ 683 00a4 481C     		adds	r0, r1, #1
+ 684 00a6 1080     		strh	r0, [r2]	@ movhi
+ 268:Utilities/Log/lcd_log.c ****       }   
+ 685              		.loc 1 268 83 view .LVU171
+ 686 00a8 03EB4313 		add	r3, r3, r3, lsl #5
+ARM GAS  /tmp/ccPeTMlS.s 			page 20
+
+
+ 687 00ac 214A     		ldr	r2, .L40+16
+ 688 00ae 02EB8303 		add	r3, r2, r3, lsl #2
+ 689 00b2 2022     		movs	r2, #32
+ 690 00b4 5A54     		strb	r2, [r3, r1]
+ 266:Utilities/Log/lcd_log.c ****       {
+ 691              		.loc 1 266 85 is_stmt 1 discriminator 1 view .LVU172
+ 692 00b6 0134     		adds	r4, r4, #1
+ 693              	.LVL56:
+ 694              	.L34:
+ 266:Utilities/Log/lcd_log.c ****       {
+ 695              		.loc 1 266 44 discriminator 2 view .LVU173
+ 266:Utilities/Log/lcd_log.c ****       {
+ 696              		.loc 1 266 47 is_stmt 0 discriminator 2 view .LVU174
+ 697 00b8 FFF7FEFF 		bl	BSP_LCD_GetXSize
+ 698              	.LVL57:
+ 266:Utilities/Log/lcd_log.c ****       {
+ 699              		.loc 1 266 73 discriminator 3 view .LVU175
+ 700 00bc AB88     		ldrh	r3, [r5, #4]
+ 266:Utilities/Log/lcd_log.c ****       {
+ 701              		.loc 1 266 67 discriminator 3 view .LVU176
+ 702 00be B0FBF3F3 		udiv	r3, r0, r3
+ 266:Utilities/Log/lcd_log.c ****       {
+ 703              		.loc 1 266 44 discriminator 3 view .LVU177
+ 704 00c2 A342     		cmp	r3, r4
+ 705 00c4 EAD8     		bhi	.L35
+ 270:Utilities/Log/lcd_log.c ****       
+ 706              		.loc 1 270 7 is_stmt 1 view .LVU178
+ 270:Utilities/Log/lcd_log.c ****       
+ 707              		.loc 1 270 51 is_stmt 0 view .LVU179
+ 708 00c6 1A4C     		ldr	r4, .L40+12
+ 709              	.LVL58:
+ 270:Utilities/Log/lcd_log.c ****       
+ 710              		.loc 1 270 51 view .LVU180
+ 711 00c8 2388     		ldrh	r3, [r4]
+ 270:Utilities/Log/lcd_log.c ****       
+ 712              		.loc 1 270 58 view .LVU181
+ 713 00ca 03EB4313 		add	r3, r3, r3, lsl #5
+ 714 00ce 194A     		ldr	r2, .L40+16
+ 715 00d0 02EB8303 		add	r3, r2, r3, lsl #2
+ 716 00d4 1E4A     		ldr	r2, .L40+44
+ 717 00d6 1268     		ldr	r2, [r2]
+ 718 00d8 C3F88020 		str	r2, [r3, #128]
+ 272:Utilities/Log/lcd_log.c ****       
+ 719              		.loc 1 272 7 is_stmt 1 view .LVU182
+ 272:Utilities/Log/lcd_log.c ****       
+ 720              		.loc 1 272 28 is_stmt 0 view .LVU183
+ 721 00dc 134B     		ldr	r3, .L40+8
+ 722 00de 0022     		movs	r2, #0
+ 723 00e0 1A80     		strh	r2, [r3]	@ movhi
+ 274:Utilities/Log/lcd_log.c ****       
+ 724              		.loc 1 274 7 is_stmt 1 view .LVU184
+ 725 00e2 FFF7FEFF 		bl	LCD_LOG_UpdateDisplay
+ 726              	.LVL59:
+ 276:Utilities/Log/lcd_log.c ****       
+ 727              		.loc 1 276 7 view .LVU185
+ 276:Utilities/Log/lcd_log.c ****       
+ 728              		.loc 1 276 35 is_stmt 0 view .LVU186
+ARM GAS  /tmp/ccPeTMlS.s 			page 21
+
+
+ 729 00e6 2388     		ldrh	r3, [r4]
+ 730 00e8 0133     		adds	r3, r3, #1
+ 731 00ea 9BB2     		uxth	r3, r3
+ 732 00ec 2380     		strh	r3, [r4]	@ movhi
+ 278:Utilities/Log/lcd_log.c ****       {
+ 733              		.loc 1 278 7 is_stmt 1 view .LVU187
+ 278:Utilities/Log/lcd_log.c ****       {
+ 734              		.loc 1 278 10 is_stmt 0 view .LVU188
+ 735 00ee 752B     		cmp	r3, #117
+ 736 00f0 0FD0     		beq	.L39
+ 737              	.L36:
+ 285:Utilities/Log/lcd_log.c ****       {
+ 738              		.loc 1 285 7 is_stmt 1 view .LVU189
+ 285:Utilities/Log/lcd_log.c ****       {
+ 739              		.loc 1 285 9 is_stmt 0 view .LVU190
+ 740 00f2 0A2E     		cmp	r6, #10
+ 741 00f4 0BD0     		beq	.L29
+ 287:Utilities/Log/lcd_log.c ****       }
+ 742              		.loc 1 287 9 is_stmt 1 view .LVU191
+ 287:Utilities/Log/lcd_log.c ****       }
+ 743              		.loc 1 287 58 is_stmt 0 view .LVU192
+ 744 00f6 0E4B     		ldr	r3, .L40+12
+ 745 00f8 1B88     		ldrh	r3, [r3]
+ 287:Utilities/Log/lcd_log.c ****       }
+ 746              		.loc 1 287 79 view .LVU193
+ 747 00fa 0C4A     		ldr	r2, .L40+8
+ 748 00fc 1188     		ldrh	r1, [r2]
+ 749 00fe 481C     		adds	r0, r1, #1
+ 750 0100 1080     		strh	r0, [r2]	@ movhi
+ 287:Utilities/Log/lcd_log.c ****       }
+ 751              		.loc 1 287 83 view .LVU194
+ 752 0102 03EB4313 		add	r3, r3, r3, lsl #5
+ 753 0106 0B4A     		ldr	r2, .L40+16
+ 754 0108 02EB8303 		add	r3, r2, r3, lsl #2
+ 755 010c 5E54     		strb	r6, [r3, r1]
+ 756              	.LVL60:
+ 757              	.L29:
+ 292:Utilities/Log/lcd_log.c **** }
+ 758              		.loc 1 292 3 is_stmt 1 view .LVU195
+ 293:Utilities/Log/lcd_log.c ****   
+ 759              		.loc 1 293 1 is_stmt 0 view .LVU196
+ 760 010e 3046     		mov	r0, r6
+ 761 0110 70BD     		pop	{r4, r5, r6, pc}
+ 762              	.LVL61:
+ 763              	.L39:
+ 280:Utilities/Log/lcd_log.c ****         LCD_CacheBuffer_yptr_top = 1;    
+ 764              		.loc 1 280 9 is_stmt 1 view .LVU197
+ 280:Utilities/Log/lcd_log.c ****         LCD_CacheBuffer_yptr_top = 1;    
+ 765              		.loc 1 280 37 is_stmt 0 view .LVU198
+ 766 0112 0022     		movs	r2, #0
+ 767 0114 2280     		strh	r2, [r4]	@ movhi
+ 281:Utilities/Log/lcd_log.c ****         LCD_CacheBuffer_yptr_invert = ENABLE;
+ 768              		.loc 1 281 9 is_stmt 1 view .LVU199
+ 281:Utilities/Log/lcd_log.c ****         LCD_CacheBuffer_yptr_invert = ENABLE;
+ 769              		.loc 1 281 34 is_stmt 0 view .LVU200
+ 770 0116 0A4B     		ldr	r3, .L40+28
+ 771 0118 0122     		movs	r2, #1
+ARM GAS  /tmp/ccPeTMlS.s 			page 22
+
+
+ 772 011a 1A80     		strh	r2, [r3]	@ movhi
+ 282:Utilities/Log/lcd_log.c ****       }
+ 773              		.loc 1 282 9 is_stmt 1 view .LVU201
+ 282:Utilities/Log/lcd_log.c ****       }
+ 774              		.loc 1 282 37 is_stmt 0 view .LVU202
+ 775 011c 0B4B     		ldr	r3, .L40+40
+ 776 011e 1A70     		strb	r2, [r3]
+ 777 0120 E7E7     		b	.L36
+ 778              	.L41:
+ 779 0122 00BF     		.align	2
+ 780              	.L40:
+ 781 0124 00000000 		.word	LCD_Lock
+ 782 0128 00000000 		.word	LCD_ScrollActive
+ 783 012c 00000000 		.word	LCD_CacheBuffer_xptr
+ 784 0130 00000000 		.word	LCD_CacheBuffer_yptr_bottom
+ 785 0134 00000000 		.word	LCD_CacheBuffer
+ 786 0138 00000000 		.word	LCD_CacheBuffer_yptr_bottom_bak
+ 787 013c 00000000 		.word	LCD_CacheBuffer_yptr_top_bak
+ 788 0140 00000000 		.word	LCD_CacheBuffer_yptr_top
+ 789 0144 00000000 		.word	LCD_Scrolled
+ 790 0148 00000000 		.word	LCD_ScrollBackStep
+ 791 014c 00000000 		.word	LCD_CacheBuffer_yptr_invert
+ 792 0150 00000000 		.word	LCD_LineColor
+ 793              		.cfi_endproc
+ 794              	.LFE142:
+ 796              		.section	.text.LCD_LOG_ScrollBack,"ax",%progbits
+ 797              		.align	1
+ 798              		.global	LCD_LOG_ScrollBack
+ 799              		.syntax unified
+ 800              		.thumb
+ 801              		.thumb_func
+ 803              	LCD_LOG_ScrollBack:
+ 804              	.LFB144:
+ 341:Utilities/Log/lcd_log.c **** 
+ 342:Utilities/Log/lcd_log.c **** #if( LCD_SCROLL_ENABLED == 1)
+ 343:Utilities/Log/lcd_log.c **** /**
+ 344:Utilities/Log/lcd_log.c ****   * @brief  Display previous text frame
+ 345:Utilities/Log/lcd_log.c ****   * @param  None
+ 346:Utilities/Log/lcd_log.c ****   * @retval Status
+ 347:Utilities/Log/lcd_log.c ****   */
+ 348:Utilities/Log/lcd_log.c **** ErrorStatus LCD_LOG_ScrollBack(void)
+ 349:Utilities/Log/lcd_log.c **** {
+ 805              		.loc 1 349 1 is_stmt 1 view -0
+ 806              		.cfi_startproc
+ 807              		@ args = 0, pretend = 0, frame = 0
+ 808              		@ frame_needed = 0, uses_anonymous_args = 0
+ 809 0000 08B5     		push	{r3, lr}
+ 810              	.LCFI6:
+ 811              		.cfi_def_cfa_offset 8
+ 812              		.cfi_offset 3, -8
+ 813              		.cfi_offset 14, -4
+ 350:Utilities/Log/lcd_log.c ****     
+ 351:Utilities/Log/lcd_log.c ****   if(LCD_ScrollActive == DISABLE)
+ 814              		.loc 1 351 3 view .LVU204
+ 815              		.loc 1 351 23 is_stmt 0 view .LVU205
+ 816 0002 2D4B     		ldr	r3, .L57
+ 817 0004 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ARM GAS  /tmp/ccPeTMlS.s 			page 23
+
+
+ 818              		.loc 1 351 5 view .LVU206
+ 819 0006 CBB9     		cbnz	r3, .L43
+ 352:Utilities/Log/lcd_log.c ****   {
+ 353:Utilities/Log/lcd_log.c ****     
+ 354:Utilities/Log/lcd_log.c ****     LCD_CacheBuffer_yptr_bottom_bak = LCD_CacheBuffer_yptr_bottom;
+ 820              		.loc 1 354 5 is_stmt 1 view .LVU207
+ 821              		.loc 1 354 37 is_stmt 0 view .LVU208
+ 822 0008 2C4B     		ldr	r3, .L57+4
+ 823 000a 1B88     		ldrh	r3, [r3]
+ 824 000c 2C4A     		ldr	r2, .L57+8
+ 825 000e 1380     		strh	r3, [r2]	@ movhi
+ 355:Utilities/Log/lcd_log.c ****     LCD_CacheBuffer_yptr_top_bak    = LCD_CacheBuffer_yptr_top;
+ 826              		.loc 1 355 5 is_stmt 1 view .LVU209
+ 827              		.loc 1 355 37 is_stmt 0 view .LVU210
+ 828 0010 2C4A     		ldr	r2, .L57+12
+ 829 0012 1288     		ldrh	r2, [r2]
+ 830 0014 2C49     		ldr	r1, .L57+16
+ 831 0016 0A80     		strh	r2, [r1]	@ movhi
+ 356:Utilities/Log/lcd_log.c ****     
+ 357:Utilities/Log/lcd_log.c ****     
+ 358:Utilities/Log/lcd_log.c ****     if(LCD_CacheBuffer_yptr_bottom > LCD_CacheBuffer_yptr_top) 
+ 832              		.loc 1 358 5 is_stmt 1 view .LVU211
+ 833              		.loc 1 358 7 is_stmt 0 view .LVU212
+ 834 0018 9342     		cmp	r3, r2
+ 835 001a 02D9     		bls	.L44
+ 359:Utilities/Log/lcd_log.c ****     {
+ 360:Utilities/Log/lcd_log.c ****       
+ 361:Utilities/Log/lcd_log.c ****       if ((LCD_CacheBuffer_yptr_bottom - LCD_CacheBuffer_yptr_top) <=  YWINDOW_SIZE)
+ 836              		.loc 1 361 7 is_stmt 1 view .LVU213
+ 837              		.loc 1 361 40 is_stmt 0 view .LVU214
+ 838 001c 991A     		subs	r1, r3, r2
+ 839              		.loc 1 361 10 view .LVU215
+ 840 001e 1129     		cmp	r1, #17
+ 841 0020 12DD     		ble	.L53
+ 842              	.L44:
+ 362:Utilities/Log/lcd_log.c ****       {
+ 363:Utilities/Log/lcd_log.c ****         LCD_Lock = DISABLE;
+ 364:Utilities/Log/lcd_log.c ****         return ERROR;
+ 365:Utilities/Log/lcd_log.c ****       }
+ 366:Utilities/Log/lcd_log.c ****     }
+ 367:Utilities/Log/lcd_log.c ****     LCD_ScrollActive = ENABLE;
+ 843              		.loc 1 367 5 is_stmt 1 view .LVU216
+ 844              		.loc 1 367 22 is_stmt 0 view .LVU217
+ 845 0022 2549     		ldr	r1, .L57
+ 846 0024 0120     		movs	r0, #1
+ 847 0026 0870     		strb	r0, [r1]
+ 368:Utilities/Log/lcd_log.c ****     
+ 369:Utilities/Log/lcd_log.c ****     if((LCD_CacheBuffer_yptr_bottom  > LCD_CacheBuffer_yptr_top)&&
+ 848              		.loc 1 369 5 is_stmt 1 view .LVU218
+ 849              		.loc 1 369 7 is_stmt 0 view .LVU219
+ 850 0028 9342     		cmp	r3, r2
+ 851 002a 07D9     		bls	.L43
+ 370:Utilities/Log/lcd_log.c ****        (LCD_Scrolled == DISABLE ))
+ 852              		.loc 1 370 22 view .LVU220
+ 853 002c 274A     		ldr	r2, .L57+20
+ 854 002e 1278     		ldrb	r2, [r2]	@ zero_extendqisi2
+ 369:Utilities/Log/lcd_log.c ****        (LCD_Scrolled == DISABLE ))
+ARM GAS  /tmp/ccPeTMlS.s 			page 24
+
+
+ 855              		.loc 1 369 65 discriminator 1 view .LVU221
+ 856 0030 22B9     		cbnz	r2, .L43
+ 371:Utilities/Log/lcd_log.c ****     {
+ 372:Utilities/Log/lcd_log.c ****       LCD_CacheBuffer_yptr_bottom--;
+ 857              		.loc 1 372 7 is_stmt 1 view .LVU222
+ 858              		.loc 1 372 34 is_stmt 0 view .LVU223
+ 859 0032 013B     		subs	r3, r3, #1
+ 860 0034 214A     		ldr	r2, .L57+4
+ 861 0036 1380     		strh	r3, [r2]	@ movhi
+ 373:Utilities/Log/lcd_log.c ****       LCD_Scrolled = ENABLE;
+ 862              		.loc 1 373 7 is_stmt 1 view .LVU224
+ 863              		.loc 1 373 20 is_stmt 0 view .LVU225
+ 864 0038 244B     		ldr	r3, .L57+20
+ 865 003a 1870     		strb	r0, [r3]
+ 866              	.L43:
+ 374:Utilities/Log/lcd_log.c ****     }
+ 375:Utilities/Log/lcd_log.c ****     
+ 376:Utilities/Log/lcd_log.c ****   }
+ 377:Utilities/Log/lcd_log.c ****   
+ 378:Utilities/Log/lcd_log.c ****   if(LCD_ScrollActive == ENABLE)
+ 867              		.loc 1 378 3 is_stmt 1 view .LVU226
+ 868              		.loc 1 378 23 is_stmt 0 view .LVU227
+ 869 003c 1E4B     		ldr	r3, .L57
+ 870 003e 1878     		ldrb	r0, [r3]	@ zero_extendqisi2
+ 871              		.loc 1 378 5 view .LVU228
+ 872 0040 0128     		cmp	r0, #1
+ 873 0042 06D0     		beq	.L54
+ 874              	.L46:
+ 379:Utilities/Log/lcd_log.c ****   {
+ 380:Utilities/Log/lcd_log.c ****     LCD_Lock = ENABLE;
+ 381:Utilities/Log/lcd_log.c ****     
+ 382:Utilities/Log/lcd_log.c ****     if(LCD_CacheBuffer_yptr_bottom > LCD_CacheBuffer_yptr_top) 
+ 383:Utilities/Log/lcd_log.c ****     {
+ 384:Utilities/Log/lcd_log.c ****       
+ 385:Utilities/Log/lcd_log.c ****       if((LCD_CacheBuffer_yptr_bottom  - LCD_CacheBuffer_yptr_top) <  YWINDOW_SIZE )
+ 386:Utilities/Log/lcd_log.c ****       {
+ 387:Utilities/Log/lcd_log.c ****         LCD_Lock = DISABLE;
+ 388:Utilities/Log/lcd_log.c ****         return ERROR;
+ 389:Utilities/Log/lcd_log.c ****       }
+ 390:Utilities/Log/lcd_log.c ****       
+ 391:Utilities/Log/lcd_log.c ****       LCD_CacheBuffer_yptr_bottom --;
+ 392:Utilities/Log/lcd_log.c ****     }
+ 393:Utilities/Log/lcd_log.c ****     else if(LCD_CacheBuffer_yptr_bottom <= LCD_CacheBuffer_yptr_top)
+ 394:Utilities/Log/lcd_log.c ****     {
+ 395:Utilities/Log/lcd_log.c ****       
+ 396:Utilities/Log/lcd_log.c ****       if((LCD_CACHE_DEPTH  - LCD_CacheBuffer_yptr_top + LCD_CacheBuffer_yptr_bottom) < YWINDOW_SIZE
+ 397:Utilities/Log/lcd_log.c ****       {
+ 398:Utilities/Log/lcd_log.c ****         LCD_Lock = DISABLE;
+ 399:Utilities/Log/lcd_log.c ****         return ERROR;
+ 400:Utilities/Log/lcd_log.c ****       }
+ 401:Utilities/Log/lcd_log.c ****       LCD_CacheBuffer_yptr_bottom --;
+ 402:Utilities/Log/lcd_log.c ****       
+ 403:Utilities/Log/lcd_log.c ****       if(LCD_CacheBuffer_yptr_bottom == 0xFFFF)
+ 404:Utilities/Log/lcd_log.c ****       {
+ 405:Utilities/Log/lcd_log.c ****         LCD_CacheBuffer_yptr_bottom = LCD_CACHE_DEPTH - 2;
+ 406:Utilities/Log/lcd_log.c ****       }
+ 407:Utilities/Log/lcd_log.c ****     }
+ARM GAS  /tmp/ccPeTMlS.s 			page 25
+
+
+ 408:Utilities/Log/lcd_log.c ****     LCD_ScrollBackStep++;
+ 409:Utilities/Log/lcd_log.c ****     LCD_LOG_UpdateDisplay();
+ 410:Utilities/Log/lcd_log.c ****     LCD_Lock = DISABLE;
+ 411:Utilities/Log/lcd_log.c ****   }
+ 412:Utilities/Log/lcd_log.c ****   return SUCCESS;
+ 875              		.loc 1 412 10 view .LVU229
+ 876 0044 0020     		movs	r0, #0
+ 877              	.L45:
+ 413:Utilities/Log/lcd_log.c **** }
+ 878              		.loc 1 413 1 view .LVU230
+ 879 0046 08BD     		pop	{r3, pc}
+ 880              	.L53:
+ 363:Utilities/Log/lcd_log.c ****         return ERROR;
+ 881              		.loc 1 363 9 is_stmt 1 view .LVU231
+ 363:Utilities/Log/lcd_log.c ****         return ERROR;
+ 882              		.loc 1 363 18 is_stmt 0 view .LVU232
+ 883 0048 214B     		ldr	r3, .L57+24
+ 884 004a 0022     		movs	r2, #0
+ 885 004c 1A70     		strb	r2, [r3]
+ 364:Utilities/Log/lcd_log.c ****       }
+ 886              		.loc 1 364 9 is_stmt 1 view .LVU233
+ 364:Utilities/Log/lcd_log.c ****       }
+ 887              		.loc 1 364 16 is_stmt 0 view .LVU234
+ 888 004e 0120     		movs	r0, #1
+ 889 0050 F9E7     		b	.L45
+ 890              	.L54:
+ 380:Utilities/Log/lcd_log.c ****     
+ 891              		.loc 1 380 5 is_stmt 1 view .LVU235
+ 380:Utilities/Log/lcd_log.c ****     
+ 892              		.loc 1 380 14 is_stmt 0 view .LVU236
+ 893 0052 1F4B     		ldr	r3, .L57+24
+ 894 0054 0122     		movs	r2, #1
+ 895 0056 1A70     		strb	r2, [r3]
+ 382:Utilities/Log/lcd_log.c ****     {
+ 896              		.loc 1 382 5 is_stmt 1 view .LVU237
+ 382:Utilities/Log/lcd_log.c ****     {
+ 897              		.loc 1 382 36 is_stmt 0 view .LVU238
+ 898 0058 184B     		ldr	r3, .L57+4
+ 899 005a 1A88     		ldrh	r2, [r3]
+ 900 005c 194B     		ldr	r3, .L57+12
+ 901 005e 1B88     		ldrh	r3, [r3]
+ 382:Utilities/Log/lcd_log.c ****     {
+ 902              		.loc 1 382 7 view .LVU239
+ 903 0060 9A42     		cmp	r2, r3
+ 904 0062 13D9     		bls	.L47
+ 385:Utilities/Log/lcd_log.c ****       {
+ 905              		.loc 1 385 7 is_stmt 1 view .LVU240
+ 385:Utilities/Log/lcd_log.c ****       {
+ 906              		.loc 1 385 40 is_stmt 0 view .LVU241
+ 907 0064 D31A     		subs	r3, r2, r3
+ 385:Utilities/Log/lcd_log.c ****       {
+ 908              		.loc 1 385 9 view .LVU242
+ 909 0066 102B     		cmp	r3, #16
+ 910 0068 0CDD     		ble	.L55
+ 391:Utilities/Log/lcd_log.c ****     }
+ 911              		.loc 1 391 7 is_stmt 1 view .LVU243
+ 391:Utilities/Log/lcd_log.c ****     }
+ARM GAS  /tmp/ccPeTMlS.s 			page 26
+
+
+ 912              		.loc 1 391 35 is_stmt 0 view .LVU244
+ 913 006a 013A     		subs	r2, r2, #1
+ 914 006c 134B     		ldr	r3, .L57+4
+ 915 006e 1A80     		strh	r2, [r3]	@ movhi
+ 916              	.L49:
+ 408:Utilities/Log/lcd_log.c ****     LCD_LOG_UpdateDisplay();
+ 917              		.loc 1 408 5 is_stmt 1 view .LVU245
+ 408:Utilities/Log/lcd_log.c ****     LCD_LOG_UpdateDisplay();
+ 918              		.loc 1 408 23 is_stmt 0 view .LVU246
+ 919 0070 184A     		ldr	r2, .L57+28
+ 920 0072 1388     		ldrh	r3, [r2]
+ 921 0074 0133     		adds	r3, r3, #1
+ 922 0076 1380     		strh	r3, [r2]	@ movhi
+ 409:Utilities/Log/lcd_log.c ****     LCD_Lock = DISABLE;
+ 923              		.loc 1 409 5 is_stmt 1 view .LVU247
+ 924 0078 FFF7FEFF 		bl	LCD_LOG_UpdateDisplay
+ 925              	.LVL62:
+ 410:Utilities/Log/lcd_log.c ****   }
+ 926              		.loc 1 410 5 view .LVU248
+ 410:Utilities/Log/lcd_log.c ****   }
+ 927              		.loc 1 410 14 is_stmt 0 view .LVU249
+ 928 007c 144B     		ldr	r3, .L57+24
+ 929 007e 0022     		movs	r2, #0
+ 930 0080 1A70     		strb	r2, [r3]
+ 931 0082 DFE7     		b	.L46
+ 932              	.L55:
+ 387:Utilities/Log/lcd_log.c ****         return ERROR;
+ 933              		.loc 1 387 9 is_stmt 1 view .LVU250
+ 387:Utilities/Log/lcd_log.c ****         return ERROR;
+ 934              		.loc 1 387 18 is_stmt 0 view .LVU251
+ 935 0084 124B     		ldr	r3, .L57+24
+ 936 0086 0022     		movs	r2, #0
+ 937 0088 1A70     		strb	r2, [r3]
+ 388:Utilities/Log/lcd_log.c ****       }
+ 938              		.loc 1 388 9 is_stmt 1 view .LVU252
+ 388:Utilities/Log/lcd_log.c ****       }
+ 939              		.loc 1 388 16 is_stmt 0 view .LVU253
+ 940 008a DCE7     		b	.L45
+ 941              	.L47:
+ 393:Utilities/Log/lcd_log.c ****     {
+ 942              		.loc 1 393 10 is_stmt 1 view .LVU254
+ 396:Utilities/Log/lcd_log.c ****       {
+ 943              		.loc 1 396 7 view .LVU255
+ 396:Utilities/Log/lcd_log.c ****       {
+ 944              		.loc 1 396 28 is_stmt 0 view .LVU256
+ 945 008c C3F17503 		rsb	r3, r3, #117
+ 396:Utilities/Log/lcd_log.c ****       {
+ 946              		.loc 1 396 55 view .LVU257
+ 947 0090 1344     		add	r3, r3, r2
+ 396:Utilities/Log/lcd_log.c ****       {
+ 948              		.loc 1 396 9 view .LVU258
+ 949 0092 102B     		cmp	r3, #16
+ 950 0094 0BDD     		ble	.L56
+ 401:Utilities/Log/lcd_log.c ****       
+ 951              		.loc 1 401 7 is_stmt 1 view .LVU259
+ 401:Utilities/Log/lcd_log.c ****       
+ 952              		.loc 1 401 35 is_stmt 0 view .LVU260
+ARM GAS  /tmp/ccPeTMlS.s 			page 27
+
+
+ 953 0096 013A     		subs	r2, r2, #1
+ 954 0098 92B2     		uxth	r2, r2
+ 955 009a 084B     		ldr	r3, .L57+4
+ 956 009c 1A80     		strh	r2, [r3]	@ movhi
+ 403:Utilities/Log/lcd_log.c ****       {
+ 957              		.loc 1 403 7 is_stmt 1 view .LVU261
+ 403:Utilities/Log/lcd_log.c ****       {
+ 958              		.loc 1 403 9 is_stmt 0 view .LVU262
+ 959 009e 4FF6FF73 		movw	r3, #65535
+ 960 00a2 9A42     		cmp	r2, r3
+ 961 00a4 E4D1     		bne	.L49
+ 405:Utilities/Log/lcd_log.c ****       }
+ 962              		.loc 1 405 9 is_stmt 1 view .LVU263
+ 405:Utilities/Log/lcd_log.c ****       }
+ 963              		.loc 1 405 37 is_stmt 0 view .LVU264
+ 964 00a6 054B     		ldr	r3, .L57+4
+ 965 00a8 7322     		movs	r2, #115
+ 966 00aa 1A80     		strh	r2, [r3]	@ movhi
+ 967 00ac E0E7     		b	.L49
+ 968              	.L56:
+ 398:Utilities/Log/lcd_log.c ****         return ERROR;
+ 969              		.loc 1 398 9 is_stmt 1 view .LVU265
+ 398:Utilities/Log/lcd_log.c ****         return ERROR;
+ 970              		.loc 1 398 18 is_stmt 0 view .LVU266
+ 971 00ae 084B     		ldr	r3, .L57+24
+ 972 00b0 0022     		movs	r2, #0
+ 973 00b2 1A70     		strb	r2, [r3]
+ 399:Utilities/Log/lcd_log.c ****       }
+ 974              		.loc 1 399 9 is_stmt 1 view .LVU267
+ 399:Utilities/Log/lcd_log.c ****       }
+ 975              		.loc 1 399 16 is_stmt 0 view .LVU268
+ 976 00b4 C7E7     		b	.L45
+ 977              	.L58:
+ 978 00b6 00BF     		.align	2
+ 979              	.L57:
+ 980 00b8 00000000 		.word	LCD_ScrollActive
+ 981 00bc 00000000 		.word	LCD_CacheBuffer_yptr_bottom
+ 982 00c0 00000000 		.word	LCD_CacheBuffer_yptr_bottom_bak
+ 983 00c4 00000000 		.word	LCD_CacheBuffer_yptr_top
+ 984 00c8 00000000 		.word	LCD_CacheBuffer_yptr_top_bak
+ 985 00cc 00000000 		.word	LCD_Scrolled
+ 986 00d0 00000000 		.word	LCD_Lock
+ 987 00d4 00000000 		.word	LCD_ScrollBackStep
+ 988              		.cfi_endproc
+ 989              	.LFE144:
+ 991              		.section	.text.LCD_LOG_ScrollForward,"ax",%progbits
+ 992              		.align	1
+ 993              		.global	LCD_LOG_ScrollForward
+ 994              		.syntax unified
+ 995              		.thumb
+ 996              		.thumb_func
+ 998              	LCD_LOG_ScrollForward:
+ 999              	.LFB145:
+ 414:Utilities/Log/lcd_log.c **** 
+ 415:Utilities/Log/lcd_log.c **** /**
+ 416:Utilities/Log/lcd_log.c ****   * @brief  Display next text frame
+ 417:Utilities/Log/lcd_log.c ****   * @param  None
+ARM GAS  /tmp/ccPeTMlS.s 			page 28
+
+
+ 418:Utilities/Log/lcd_log.c ****   * @retval Status
+ 419:Utilities/Log/lcd_log.c ****   */
+ 420:Utilities/Log/lcd_log.c **** ErrorStatus LCD_LOG_ScrollForward(void)
+ 421:Utilities/Log/lcd_log.c **** {
+ 1000              		.loc 1 421 1 is_stmt 1 view -0
+ 1001              		.cfi_startproc
+ 1002              		@ args = 0, pretend = 0, frame = 0
+ 1003              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1004 0000 08B5     		push	{r3, lr}
+ 1005              	.LCFI7:
+ 1006              		.cfi_def_cfa_offset 8
+ 1007              		.cfi_offset 3, -8
+ 1008              		.cfi_offset 14, -4
+ 422:Utilities/Log/lcd_log.c ****   
+ 423:Utilities/Log/lcd_log.c ****   if(LCD_ScrollBackStep != 0)
+ 1009              		.loc 1 423 3 view .LVU270
+ 1010              		.loc 1 423 25 is_stmt 0 view .LVU271
+ 1011 0002 254B     		ldr	r3, .L70
+ 1012 0004 1B88     		ldrh	r3, [r3]
+ 1013              		.loc 1 423 5 view .LVU272
+ 1014 0006 002B     		cmp	r3, #0
+ 1015 0008 40D0     		beq	.L60
+ 424:Utilities/Log/lcd_log.c ****   {
+ 425:Utilities/Log/lcd_log.c ****     if(LCD_ScrollActive == DISABLE)
+ 1016              		.loc 1 425 5 is_stmt 1 view .LVU273
+ 1017              		.loc 1 425 25 is_stmt 0 view .LVU274
+ 1018 000a 244A     		ldr	r2, .L70+4
+ 1019 000c 1278     		ldrb	r2, [r2]	@ zero_extendqisi2
+ 1020              		.loc 1 425 7 view .LVU275
+ 1021 000e 02BB     		cbnz	r2, .L61
+ 426:Utilities/Log/lcd_log.c ****     {
+ 427:Utilities/Log/lcd_log.c ****       
+ 428:Utilities/Log/lcd_log.c ****       LCD_CacheBuffer_yptr_bottom_bak = LCD_CacheBuffer_yptr_bottom;
+ 1022              		.loc 1 428 7 is_stmt 1 view .LVU276
+ 1023              		.loc 1 428 39 is_stmt 0 view .LVU277
+ 1024 0010 234A     		ldr	r2, .L70+8
+ 1025 0012 1288     		ldrh	r2, [r2]
+ 1026 0014 2349     		ldr	r1, .L70+12
+ 1027 0016 0A80     		strh	r2, [r1]	@ movhi
+ 429:Utilities/Log/lcd_log.c ****       LCD_CacheBuffer_yptr_top_bak    = LCD_CacheBuffer_yptr_top;
+ 1028              		.loc 1 429 7 is_stmt 1 view .LVU278
+ 1029              		.loc 1 429 39 is_stmt 0 view .LVU279
+ 1030 0018 2349     		ldr	r1, .L70+16
+ 1031 001a 0988     		ldrh	r1, [r1]
+ 1032 001c 2348     		ldr	r0, .L70+20
+ 1033 001e 0180     		strh	r1, [r0]	@ movhi
+ 430:Utilities/Log/lcd_log.c ****       
+ 431:Utilities/Log/lcd_log.c ****       if(LCD_CacheBuffer_yptr_bottom > LCD_CacheBuffer_yptr_top) 
+ 1034              		.loc 1 431 7 is_stmt 1 view .LVU280
+ 1035              		.loc 1 431 9 is_stmt 0 view .LVU281
+ 1036 0020 8A42     		cmp	r2, r1
+ 1037 0022 06D9     		bls	.L62
+ 432:Utilities/Log/lcd_log.c ****       {
+ 433:Utilities/Log/lcd_log.c ****         
+ 434:Utilities/Log/lcd_log.c ****         if ((LCD_CacheBuffer_yptr_bottom - LCD_CacheBuffer_yptr_top) <=  YWINDOW_SIZE)
+ 1038              		.loc 1 434 9 is_stmt 1 view .LVU282
+ 1039              		.loc 1 434 42 is_stmt 0 view .LVU283
+ARM GAS  /tmp/ccPeTMlS.s 			page 29
+
+
+ 1040 0024 501A     		subs	r0, r2, r1
+ 1041              		.loc 1 434 12 view .LVU284
+ 1042 0026 1128     		cmp	r0, #17
+ 1043 0028 03DC     		bgt	.L62
+ 435:Utilities/Log/lcd_log.c ****         {
+ 436:Utilities/Log/lcd_log.c ****           LCD_Lock = DISABLE;
+ 1044              		.loc 1 436 11 is_stmt 1 view .LVU285
+ 1045              		.loc 1 436 20 is_stmt 0 view .LVU286
+ 1046 002a 214B     		ldr	r3, .L70+24
+ 1047 002c 0022     		movs	r2, #0
+ 1048 002e 1A70     		strb	r2, [r3]
+ 437:Utilities/Log/lcd_log.c ****           return ERROR;
+ 1049              		.loc 1 437 11 is_stmt 1 view .LVU287
+ 1050              		.loc 1 437 18 is_stmt 0 view .LVU288
+ 1051 0030 2FE0     		b	.L66
+ 1052              	.L62:
+ 438:Utilities/Log/lcd_log.c ****         }
+ 439:Utilities/Log/lcd_log.c ****       }
+ 440:Utilities/Log/lcd_log.c ****       LCD_ScrollActive = ENABLE;
+ 1053              		.loc 1 440 7 is_stmt 1 view .LVU289
+ 1054              		.loc 1 440 24 is_stmt 0 view .LVU290
+ 1055 0032 1A48     		ldr	r0, .L70+4
+ 1056 0034 4FF0010C 		mov	ip, #1
+ 1057 0038 80F800C0 		strb	ip, [r0]
+ 441:Utilities/Log/lcd_log.c ****       
+ 442:Utilities/Log/lcd_log.c ****       if((LCD_CacheBuffer_yptr_bottom  > LCD_CacheBuffer_yptr_top)&&
+ 1058              		.loc 1 442 7 is_stmt 1 view .LVU291
+ 1059              		.loc 1 442 9 is_stmt 0 view .LVU292
+ 1060 003c 8A42     		cmp	r2, r1
+ 1061 003e 08D9     		bls	.L61
+ 443:Utilities/Log/lcd_log.c ****          (LCD_Scrolled == DISABLE ))
+ 1062              		.loc 1 443 24 view .LVU293
+ 1063 0040 1C49     		ldr	r1, .L70+28
+ 1064 0042 0978     		ldrb	r1, [r1]	@ zero_extendqisi2
+ 442:Utilities/Log/lcd_log.c ****          (LCD_Scrolled == DISABLE ))
+ 1065              		.loc 1 442 67 discriminator 1 view .LVU294
+ 1066 0044 29B9     		cbnz	r1, .L61
+ 444:Utilities/Log/lcd_log.c ****       {
+ 445:Utilities/Log/lcd_log.c ****         LCD_CacheBuffer_yptr_bottom--;
+ 1067              		.loc 1 445 9 is_stmt 1 view .LVU295
+ 1068              		.loc 1 445 36 is_stmt 0 view .LVU296
+ 1069 0046 013A     		subs	r2, r2, #1
+ 1070 0048 1549     		ldr	r1, .L70+8
+ 1071 004a 0A80     		strh	r2, [r1]	@ movhi
+ 446:Utilities/Log/lcd_log.c ****         LCD_Scrolled = ENABLE;
+ 1072              		.loc 1 446 9 is_stmt 1 view .LVU297
+ 1073              		.loc 1 446 22 is_stmt 0 view .LVU298
+ 1074 004c 194A     		ldr	r2, .L70+28
+ 1075 004e 82F800C0 		strb	ip, [r2]
+ 1076              	.L61:
+ 447:Utilities/Log/lcd_log.c ****       }
+ 448:Utilities/Log/lcd_log.c ****       
+ 449:Utilities/Log/lcd_log.c ****     }
+ 450:Utilities/Log/lcd_log.c ****     
+ 451:Utilities/Log/lcd_log.c ****     if(LCD_ScrollActive == ENABLE)
+ 1077              		.loc 1 451 5 is_stmt 1 view .LVU299
+ 1078              		.loc 1 451 25 is_stmt 0 view .LVU300
+ARM GAS  /tmp/ccPeTMlS.s 			page 30
+
+
+ 1079 0052 124A     		ldr	r2, .L70+4
+ 1080 0054 1278     		ldrb	r2, [r2]	@ zero_extendqisi2
+ 1081              		.loc 1 451 7 view .LVU301
+ 1082 0056 012A     		cmp	r2, #1
+ 1083 0058 01D0     		beq	.L68
+ 1084              	.L64:
+ 452:Utilities/Log/lcd_log.c ****     {
+ 453:Utilities/Log/lcd_log.c ****       LCD_Lock = ENABLE;
+ 454:Utilities/Log/lcd_log.c ****       LCD_ScrollBackStep--;
+ 455:Utilities/Log/lcd_log.c ****       
+ 456:Utilities/Log/lcd_log.c ****       if(++LCD_CacheBuffer_yptr_bottom == LCD_CACHE_DEPTH)
+ 457:Utilities/Log/lcd_log.c ****       {
+ 458:Utilities/Log/lcd_log.c ****         LCD_CacheBuffer_yptr_bottom = 0;
+ 459:Utilities/Log/lcd_log.c ****       }
+ 460:Utilities/Log/lcd_log.c ****       
+ 461:Utilities/Log/lcd_log.c ****       LCD_LOG_UpdateDisplay();
+ 462:Utilities/Log/lcd_log.c ****       LCD_Lock = DISABLE;
+ 463:Utilities/Log/lcd_log.c ****       
+ 464:Utilities/Log/lcd_log.c ****     } 
+ 465:Utilities/Log/lcd_log.c ****     return SUCCESS;
+ 1085              		.loc 1 465 12 view .LVU302
+ 1086 005a 0020     		movs	r0, #0
+ 1087              	.L63:
+ 466:Utilities/Log/lcd_log.c ****   }
+ 467:Utilities/Log/lcd_log.c ****   else // LCD_ScrollBackStep == 0 
+ 468:Utilities/Log/lcd_log.c ****   {
+ 469:Utilities/Log/lcd_log.c ****     LCD_Lock = DISABLE;
+ 470:Utilities/Log/lcd_log.c ****     return ERROR;
+ 471:Utilities/Log/lcd_log.c ****   }  
+ 472:Utilities/Log/lcd_log.c **** }
+ 1088              		.loc 1 472 1 view .LVU303
+ 1089 005c 08BD     		pop	{r3, pc}
+ 1090              	.L68:
+ 453:Utilities/Log/lcd_log.c ****       LCD_ScrollBackStep--;
+ 1091              		.loc 1 453 7 is_stmt 1 view .LVU304
+ 453:Utilities/Log/lcd_log.c ****       LCD_ScrollBackStep--;
+ 1092              		.loc 1 453 16 is_stmt 0 view .LVU305
+ 1093 005e 144A     		ldr	r2, .L70+24
+ 1094 0060 0121     		movs	r1, #1
+ 1095 0062 1170     		strb	r1, [r2]
+ 454:Utilities/Log/lcd_log.c ****       
+ 1096              		.loc 1 454 7 is_stmt 1 view .LVU306
+ 454:Utilities/Log/lcd_log.c ****       
+ 1097              		.loc 1 454 25 is_stmt 0 view .LVU307
+ 1098 0064 013B     		subs	r3, r3, #1
+ 1099 0066 0C4A     		ldr	r2, .L70
+ 1100 0068 1380     		strh	r3, [r2]	@ movhi
+ 456:Utilities/Log/lcd_log.c ****       {
+ 1101              		.loc 1 456 7 is_stmt 1 view .LVU308
+ 456:Utilities/Log/lcd_log.c ****       {
+ 1102              		.loc 1 456 10 is_stmt 0 view .LVU309
+ 1103 006a 0D4A     		ldr	r2, .L70+8
+ 1104 006c 1388     		ldrh	r3, [r2]
+ 1105 006e 0B44     		add	r3, r3, r1
+ 1106 0070 9BB2     		uxth	r3, r3
+ 456:Utilities/Log/lcd_log.c ****       {
+ 1107              		.loc 1 456 9 view .LVU310
+ARM GAS  /tmp/ccPeTMlS.s 			page 31
+
+
+ 1108 0072 1380     		strh	r3, [r2]	@ movhi
+ 1109 0074 752B     		cmp	r3, #117
+ 1110 0076 05D0     		beq	.L69
+ 1111              	.L65:
+ 461:Utilities/Log/lcd_log.c ****       LCD_Lock = DISABLE;
+ 1112              		.loc 1 461 7 is_stmt 1 view .LVU311
+ 1113 0078 FFF7FEFF 		bl	LCD_LOG_UpdateDisplay
+ 1114              	.LVL63:
+ 462:Utilities/Log/lcd_log.c ****       
+ 1115              		.loc 1 462 7 view .LVU312
+ 462:Utilities/Log/lcd_log.c ****       
+ 1116              		.loc 1 462 16 is_stmt 0 view .LVU313
+ 1117 007c 0C4B     		ldr	r3, .L70+24
+ 1118 007e 0022     		movs	r2, #0
+ 1119 0080 1A70     		strb	r2, [r3]
+ 1120 0082 EAE7     		b	.L64
+ 1121              	.L69:
+ 458:Utilities/Log/lcd_log.c ****       }
+ 1122              		.loc 1 458 9 is_stmt 1 view .LVU314
+ 458:Utilities/Log/lcd_log.c ****       }
+ 1123              		.loc 1 458 37 is_stmt 0 view .LVU315
+ 1124 0084 1346     		mov	r3, r2
+ 1125 0086 0022     		movs	r2, #0
+ 1126 0088 1A80     		strh	r2, [r3]	@ movhi
+ 1127 008a F5E7     		b	.L65
+ 1128              	.L60:
+ 469:Utilities/Log/lcd_log.c ****     return ERROR;
+ 1129              		.loc 1 469 5 is_stmt 1 view .LVU316
+ 469:Utilities/Log/lcd_log.c ****     return ERROR;
+ 1130              		.loc 1 469 14 is_stmt 0 view .LVU317
+ 1131 008c 084B     		ldr	r3, .L70+24
+ 1132 008e 0022     		movs	r2, #0
+ 1133 0090 1A70     		strb	r2, [r3]
+ 470:Utilities/Log/lcd_log.c ****   }  
+ 1134              		.loc 1 470 5 is_stmt 1 view .LVU318
+ 1135              	.L66:
+ 437:Utilities/Log/lcd_log.c ****         }
+ 1136              		.loc 1 437 18 is_stmt 0 view .LVU319
+ 1137 0092 0120     		movs	r0, #1
+ 1138 0094 E2E7     		b	.L63
+ 1139              	.L71:
+ 1140 0096 00BF     		.align	2
+ 1141              	.L70:
+ 1142 0098 00000000 		.word	LCD_ScrollBackStep
+ 1143 009c 00000000 		.word	LCD_ScrollActive
+ 1144 00a0 00000000 		.word	LCD_CacheBuffer_yptr_bottom
+ 1145 00a4 00000000 		.word	LCD_CacheBuffer_yptr_bottom_bak
+ 1146 00a8 00000000 		.word	LCD_CacheBuffer_yptr_top
+ 1147 00ac 00000000 		.word	LCD_CacheBuffer_yptr_top_bak
+ 1148 00b0 00000000 		.word	LCD_Lock
+ 1149 00b4 00000000 		.word	LCD_Scrolled
+ 1150              		.cfi_endproc
+ 1151              	.LFE145:
+ 1153              		.global	LCD_ScrollBackStep
+ 1154              		.section	.bss.LCD_ScrollBackStep,"aw",%nobits
+ 1155              		.align	1
+ 1158              	LCD_ScrollBackStep:
+ARM GAS  /tmp/ccPeTMlS.s 			page 32
+
+
+ 1159 0000 0000     		.space	2
+ 1160              		.global	LCD_Scrolled
+ 1161              		.section	.bss.LCD_Scrolled,"aw",%nobits
+ 1164              	LCD_Scrolled:
+ 1165 0000 00       		.space	1
+ 1166              		.global	LCD_Lock
+ 1167              		.section	.bss.LCD_Lock,"aw",%nobits
+ 1170              	LCD_Lock:
+ 1171 0000 00       		.space	1
+ 1172              		.global	LCD_ScrollActive
+ 1173              		.section	.bss.LCD_ScrollActive,"aw",%nobits
+ 1176              	LCD_ScrollActive:
+ 1177 0000 00       		.space	1
+ 1178              		.global	LCD_CacheBuffer_yptr_invert
+ 1179              		.section	.bss.LCD_CacheBuffer_yptr_invert,"aw",%nobits
+ 1182              	LCD_CacheBuffer_yptr_invert:
+ 1183 0000 00       		.space	1
+ 1184              		.global	LCD_CacheBuffer_yptr_bottom_bak
+ 1185              		.section	.bss.LCD_CacheBuffer_yptr_bottom_bak,"aw",%nobits
+ 1186              		.align	1
+ 1189              	LCD_CacheBuffer_yptr_bottom_bak:
+ 1190 0000 0000     		.space	2
+ 1191              		.global	LCD_CacheBuffer_yptr_top_bak
+ 1192              		.section	.bss.LCD_CacheBuffer_yptr_top_bak,"aw",%nobits
+ 1193              		.align	1
+ 1196              	LCD_CacheBuffer_yptr_top_bak:
+ 1197 0000 0000     		.space	2
+ 1198              		.global	LCD_CacheBuffer_yptr_bottom
+ 1199              		.section	.bss.LCD_CacheBuffer_yptr_bottom,"aw",%nobits
+ 1200              		.align	1
+ 1203              	LCD_CacheBuffer_yptr_bottom:
+ 1204 0000 0000     		.space	2
+ 1205              		.global	LCD_CacheBuffer_yptr_top
+ 1206              		.section	.bss.LCD_CacheBuffer_yptr_top,"aw",%nobits
+ 1207              		.align	1
+ 1210              	LCD_CacheBuffer_yptr_top:
+ 1211 0000 0000     		.space	2
+ 1212              		.global	LCD_CacheBuffer_xptr
+ 1213              		.section	.bss.LCD_CacheBuffer_xptr,"aw",%nobits
+ 1214              		.align	1
+ 1217              	LCD_CacheBuffer_xptr:
+ 1218 0000 0000     		.space	2
+ 1219              		.global	LCD_LineColor
+ 1220              		.section	.bss.LCD_LineColor,"aw",%nobits
+ 1221              		.align	2
+ 1224              	LCD_LineColor:
+ 1225 0000 00000000 		.space	4
+ 1226              		.global	LCD_CacheBuffer
+ 1227              		.section	.bss.LCD_CacheBuffer,"aw",%nobits
+ 1228              		.align	2
+ 1231              	LCD_CacheBuffer:
+ 1232 0000 00000000 		.space	15444
+ 1232      00000000 
+ 1232      00000000 
+ 1232      00000000 
+ 1232      00000000 
+ 1233              		.text
+ARM GAS  /tmp/ccPeTMlS.s 			page 33
+
+
+ 1234              	.Letext0:
+ 1235              		.file 2 "/usr/arm-none-eabi/include/machine/_default_types.h"
+ 1236              		.file 3 "/usr/arm-none-eabi/include/sys/_stdint.h"
+ 1237              		.file 4 "Drivers/CMSIS/Device/ST/STM32F4xx/Include/stm32f4xx.h"
+ 1238              		.file 5 "Drivers/BSP/STM32F429I-Discovery/../../../Utilities/Fonts/fonts.h"
+ 1239              		.file 6 "Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_lcd.h"
+ 1240              		.file 7 "Utilities/Log/lcd_log.h"
+ARM GAS  /tmp/ccPeTMlS.s 			page 34
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 lcd_log.c
+     /tmp/ccPeTMlS.s:21     .text.LCD_LOG_DeInit:00000000 $t
+     /tmp/ccPeTMlS.s:27     .text.LCD_LOG_DeInit:00000000 LCD_LOG_DeInit
+     /tmp/ccPeTMlS.s:87     .text.LCD_LOG_DeInit:00000038 $d
+     /tmp/ccPeTMlS.s:1224   .bss.LCD_LineColor:00000000 LCD_LineColor
+     /tmp/ccPeTMlS.s:1217   .bss.LCD_CacheBuffer_xptr:00000000 LCD_CacheBuffer_xptr
+     /tmp/ccPeTMlS.s:1210   .bss.LCD_CacheBuffer_yptr_top:00000000 LCD_CacheBuffer_yptr_top
+     /tmp/ccPeTMlS.s:1203   .bss.LCD_CacheBuffer_yptr_bottom:00000000 LCD_CacheBuffer_yptr_bottom
+     /tmp/ccPeTMlS.s:1196   .bss.LCD_CacheBuffer_yptr_top_bak:00000000 LCD_CacheBuffer_yptr_top_bak
+     /tmp/ccPeTMlS.s:1189   .bss.LCD_CacheBuffer_yptr_bottom_bak:00000000 LCD_CacheBuffer_yptr_bottom_bak
+     /tmp/ccPeTMlS.s:1182   .bss.LCD_CacheBuffer_yptr_invert:00000000 LCD_CacheBuffer_yptr_invert
+     /tmp/ccPeTMlS.s:1176   .bss.LCD_ScrollActive:00000000 LCD_ScrollActive
+     /tmp/ccPeTMlS.s:1170   .bss.LCD_Lock:00000000 LCD_Lock
+     /tmp/ccPeTMlS.s:1164   .bss.LCD_Scrolled:00000000 LCD_Scrolled
+     /tmp/ccPeTMlS.s:1158   .bss.LCD_ScrollBackStep:00000000 LCD_ScrollBackStep
+     /tmp/ccPeTMlS.s:103    .text.LCD_LOG_Init:00000000 $t
+     /tmp/ccPeTMlS.s:109    .text.LCD_LOG_Init:00000000 LCD_LOG_Init
+     /tmp/ccPeTMlS.s:133    .text.LCD_LOG_SetHeader:00000000 $t
+     /tmp/ccPeTMlS.s:139    .text.LCD_LOG_SetHeader:00000000 LCD_LOG_SetHeader
+     /tmp/ccPeTMlS.s:215    .text.LCD_LOG_SetHeader:0000005c $d
+     /tmp/ccPeTMlS.s:223    .text.LCD_LOG_SetFooter:00000000 $t
+     /tmp/ccPeTMlS.s:229    .text.LCD_LOG_SetFooter:00000000 LCD_LOG_SetFooter
+     /tmp/ccPeTMlS.s:325    .text.LCD_LOG_SetFooter:0000006c $d
+     /tmp/ccPeTMlS.s:332    .text.LCD_LOG_ClearTextZone:00000000 $t
+     /tmp/ccPeTMlS.s:338    .text.LCD_LOG_ClearTextZone:00000000 LCD_LOG_ClearTextZone
+     /tmp/ccPeTMlS.s:382    .text.LCD_LOG_UpdateDisplay:00000000 $t
+     /tmp/ccPeTMlS.s:388    .text.LCD_LOG_UpdateDisplay:00000000 LCD_LOG_UpdateDisplay
+     /tmp/ccPeTMlS.s:517    .text.LCD_LOG_UpdateDisplay:00000098 $d
+     /tmp/ccPeTMlS.s:1231   .bss.LCD_CacheBuffer:00000000 LCD_CacheBuffer
+     /tmp/ccPeTMlS.s:525    .text.__io_putchar:00000000 $t
+     /tmp/ccPeTMlS.s:531    .text.__io_putchar:00000000 __io_putchar
+     /tmp/ccPeTMlS.s:781    .text.__io_putchar:00000124 $d
+     /tmp/ccPeTMlS.s:797    .text.LCD_LOG_ScrollBack:00000000 $t
+     /tmp/ccPeTMlS.s:803    .text.LCD_LOG_ScrollBack:00000000 LCD_LOG_ScrollBack
+     /tmp/ccPeTMlS.s:980    .text.LCD_LOG_ScrollBack:000000b8 $d
+     /tmp/ccPeTMlS.s:992    .text.LCD_LOG_ScrollForward:00000000 $t
+     /tmp/ccPeTMlS.s:998    .text.LCD_LOG_ScrollForward:00000000 LCD_LOG_ScrollForward
+     /tmp/ccPeTMlS.s:1142   .text.LCD_LOG_ScrollForward:00000098 $d
+     /tmp/ccPeTMlS.s:1155   .bss.LCD_ScrollBackStep:00000000 $d
+     /tmp/ccPeTMlS.s:1165   .bss.LCD_Scrolled:00000000 $d
+     /tmp/ccPeTMlS.s:1171   .bss.LCD_Lock:00000000 $d
+     /tmp/ccPeTMlS.s:1177   .bss.LCD_ScrollActive:00000000 $d
+     /tmp/ccPeTMlS.s:1183   .bss.LCD_CacheBuffer_yptr_invert:00000000 $d
+     /tmp/ccPeTMlS.s:1186   .bss.LCD_CacheBuffer_yptr_bottom_bak:00000000 $d
+     /tmp/ccPeTMlS.s:1193   .bss.LCD_CacheBuffer_yptr_top_bak:00000000 $d
+     /tmp/ccPeTMlS.s:1200   .bss.LCD_CacheBuffer_yptr_bottom:00000000 $d
+     /tmp/ccPeTMlS.s:1207   .bss.LCD_CacheBuffer_yptr_top:00000000 $d
+     /tmp/ccPeTMlS.s:1214   .bss.LCD_CacheBuffer_xptr:00000000 $d
+     /tmp/ccPeTMlS.s:1221   .bss.LCD_LineColor:00000000 $d
+     /tmp/ccPeTMlS.s:1228   .bss.LCD_CacheBuffer:00000000 $d
+
+UNDEFINED SYMBOLS
+BSP_LCD_Clear
+BSP_LCD_SetFont
+BSP_LCD_SetTextColor
+BSP_LCD_GetXSize
+ARM GAS  /tmp/ccPeTMlS.s 			page 35
+
+
+BSP_LCD_FillRect
+BSP_LCD_SetBackColor
+BSP_LCD_DisplayStringAt
+Font16
+Font12
+BSP_LCD_GetYSize
+BSP_LCD_ClearStringLine
+BSP_LCD_DisplayStringAtLine
+BSP_LCD_GetFont
