@@ -126,6 +126,124 @@ static bool route_add_segment(RouteResult *route, const RouteSegment *seg) {
     return true;
 }
 
+static int16_t pf_atan2_deg(int64_t y, int64_t x) {
+    if (x == 0 && y == 0) return 0;
+    int64_t ax = (x < 0) ? -x : x;
+    int64_t ay = (y < 0) ? -y : y;
+    int64_t u = (ax < ay) ? ax : ay;
+    int64_t v = (ax < ay) ? ay : ax;
+    while (v > 32768LL) { u >>= 1; v >>= 1; }
+    if (v == 0) return 0;
+    int32_t deg = (int32_t)((45LL * u) / v + (16LL * u * (v - u)) / (v * v));
+    if (ax < ay) deg = 90 - deg;
+    if (x < 0)   deg = 180 - deg;
+    if (y < 0)   deg = -deg;
+    return (int16_t)deg;
+}
+
+static int16_t pf_turn_angle_deg(int32_t u_lat, int32_t u_lon,
+                                 int32_t v_lat, int32_t v_lon,
+                                 int32_t w_lat, int32_t w_lon) {
+    int64_t in_dx  = ((int64_t)(v_lon - u_lon) * 70500LL)  / 10000LL;
+    int64_t in_dy  = ((int64_t)(v_lat - u_lat) * 111320LL) / 10000LL;
+    int64_t out_dx = ((int64_t)(w_lon - v_lon) * 70500LL)  / 10000LL;
+    int64_t out_dy = ((int64_t)(w_lat - v_lat) * 111320LL) / 10000LL;
+
+    while (in_dx > 1000000LL || in_dx < -1000000LL || in_dy > 1000000LL || in_dy < -1000000LL) {
+        in_dx >>= 2; in_dy >>= 2;
+    }
+    while (out_dx > 1000000LL || out_dx < -1000000LL || out_dy > 1000000LL || out_dy < -1000000LL) {
+        out_dx >>= 2; out_dy >>= 2;
+    }
+
+    int64_t dot   = in_dx * out_dx + in_dy * out_dy;
+    int64_t cross = in_dx * out_dy - in_dy * out_dx;
+    return pf_atan2_deg(cross, dot);
+}
+
+/**
+ * @brief Detect if node_idx is a fork where the road splits into >= 2 forward-ish branches,
+ *        and return +1 (Keep Left) or -1 (Keep Right) relative to the alternative branch.
+ */
+static int8_t detect_fork_direction(const TileGraph *g, uint32_t from_idx, uint32_t node_idx,
+                                    int32_t next_end_lat, int32_t next_end_lon,
+                                    RoutingProfile profile) {
+    if (!g || from_idx >= g->node_count || node_idx >= g->node_count) return 0;
+    const NodeRecord *u_node = &g->nodes[from_idx];
+    const NodeRecord *v_node = &g->nodes[node_idx];
+    if ((v_node->flags & FLAG_ROUNDABOUT) != 0) return 0;
+
+    int16_t chosen_ang = pf_turn_angle_deg(u_node->lat_scaled, u_node->lon_scaled,
+                                           v_node->lat_scaled, v_node->lon_scaled,
+                                           next_end_lat, next_end_lon);
+    int16_t abs_chosen = (chosen_ang < 0) ? -chosen_ang : chosen_ang;
+    if (abs_chosen >= 45) return 0; /* Hard/standard turn, not a shallow fork continuation */
+
+    for (uint16_t e = 0; e < v_node->edge_count; ++e) {
+        uint32_t ei = v_node->first_edge + e;
+        if (ei >= g->edge_count) break;
+        const EdgeRecord *ed = &g->edges[ei];
+        if (!edge_allowed_for_profile(ed, profile)) continue;
+        if (ed->target_idx == from_idx || ed->target_idx >= g->node_count) continue;
+
+        const NodeRecord *alt_node = &g->nodes[ed->target_idx];
+        if (alt_node->lat_scaled == next_end_lat && alt_node->lon_scaled == next_end_lon) {
+            continue; /* This is the chosen outgoing edge */
+        }
+
+        int16_t alt_ang = pf_turn_angle_deg(u_node->lat_scaled, u_node->lon_scaled,
+                                            v_node->lat_scaled, v_node->lon_scaled,
+                                            alt_node->lat_scaled, alt_node->lon_scaled);
+        int16_t abs_alt = (alt_ang < 0) ? -alt_ang : alt_ang;
+
+        /* Alternative branch must also be a forward-splitting fork (< 55 deg), not a 90-deg cross street */
+        if (abs_alt < 55) {
+            int16_t diff = chosen_ang - alt_ang;
+            if (diff >= 12) {
+                return 1;  /* Chosen branch is to the LEFT of the alternative branch -> Keep Left */
+            } else if (diff <= -12) {
+                return -1; /* Chosen branch is to the RIGHT of the alternative branch -> Keep Right */
+            }
+        }
+    }
+    return 0;
+}
+
+static uint8_t count_forward_branches(const TileGraph *g, uint32_t from_idx, uint32_t node_idx, RoutingProfile profile) {
+    if (!g || node_idx >= g->node_count) return 0;
+    const NodeRecord *node = &g->nodes[node_idx];
+
+    /* On a roundabout node, only count a branch if it is a true vehicle exit leaving the ring
+     * (ignores one-way incoming entry flares and pedestrian crosswalks). */
+    if ((node->flags & FLAG_ROUNDABOUT) != 0) {
+        bool has_exit_arm = false;
+        for (uint16_t e = 0; e < node->edge_count; ++e) {
+            uint32_t ei = node->first_edge + e;
+            if (ei >= g->edge_count) break;
+            const EdgeRecord *ed = &g->edges[ei];
+            if (ed->target_idx == from_idx || ed->target_idx >= g->node_count) continue;
+            if ((ed->edge_flags & EDGE_CAR_ALLOWED) == 0) continue;
+            const NodeRecord *target_node = &g->nodes[ed->target_idx];
+            if ((target_node->flags & FLAG_ROUNDABOUT) == 0) {
+                has_exit_arm = true;
+                break;
+            }
+        }
+        return has_exit_arm ? 2 : 1;
+    }
+
+    uint8_t fwd = 0;
+    for (uint16_t e = 0; e < node->edge_count; ++e) {
+        uint32_t ei = node->first_edge + e;
+        if (ei >= g->edge_count) break;
+        const EdgeRecord *ed = &g->edges[ei];
+        if (!edge_allowed_for_profile(ed, profile)) continue;
+        if (ed->target_idx == from_idx) continue; /* Exclude U-turn back to incoming node */
+        if (fwd < 255) fwd++;
+    }
+    return fwd;
+}
+
 /* ========================================================================= */
 /* Mode A: Local Multi-Tile A*                                               */
 /* ========================================================================= */
@@ -317,6 +435,17 @@ static bool run_local_astar(Pathfinder *pf, GeoCoord start, GeoCoord goal,
         seg->street_id = edge->street_id;
         seg->geom_offset = edge->geom_offset;
         seg->geom_count = edge->geom_count;
+        seg->start_node_flags = p_node->flags;
+        seg->end_node_flags = end_node->flags;
+        seg->geom_start_idx = 0;
+        seg->geom_end_idx = 0;
+        seg->out_degree = count_forward_branches(p_graph, p_idx, edge->target_idx, pf->profile);
+        seg->fork_dir = (seg_count >= 2)
+                        ? detect_fork_direction(p_graph, p_idx, edge->target_idx,
+                                                s_temp_segs[seg_count - 2].end_lat_e7,
+                                                s_temp_segs[seg_count - 2].end_lon_e7,
+                                                pf->profile)
+                        : 0;
         seg->geom_path = p_graph->geom_path;
 
         curr_key = p_key;
@@ -421,6 +550,17 @@ static bool run_backbone_astar(Pathfinder *pf, int32_t start_bb_node, int32_t go
         seg->street_id = edge->street_id;
         seg->geom_offset = edge->geom_offset;
         seg->geom_count = edge->geom_count;
+        seg->start_node_flags = p_node->flags;
+        seg->end_node_flags = end_node->flags;
+        seg->geom_start_idx = 0;
+        seg->geom_end_idx = 0;
+        seg->out_degree = count_forward_branches(bb, p, edge->target_idx, pf->profile);
+        seg->fork_dir = (seg_count >= 2)
+                        ? detect_fork_direction(bb, p, edge->target_idx,
+                                                s_temp_segs[seg_count - 2].end_lat_e7,
+                                                s_temp_segs[seg_count - 2].end_lon_e7,
+                                                pf->profile)
+                        : 0;
         seg->geom_path = bb->geom_path;
 
         curr = p;
@@ -606,7 +746,8 @@ bool pathfinder_load_geometry(Pathfinder *pf, RouteResult *out_route) {
     FILE *f_geom = NULL;
 
     for (int32_t i = 0; i < out_route->segment_count; ++i) {
-        const RouteSegment *seg = &out_route->segments[i];
+        RouteSegment *seg = &out_route->segments[i];
+        seg->geom_start_idx = (uint16_t)out_route->geom_point_count;
 
         /* Append start point */
         if (out_route->geom_point_count < ROUTE_MAX_GEOM_POINTS) {
@@ -645,6 +786,9 @@ bool pathfinder_load_geometry(Pathfinder *pf, RouteResult *out_route) {
             pt_end.lon_scaled = seg->end_lon_e7;
             out_route->geom_points[out_route->geom_point_count++] = pt_end;
         }
+        seg->geom_end_idx = (out_route->geom_point_count > 0)
+                            ? (uint16_t)(out_route->geom_point_count - 1)
+                            : seg->geom_start_idx;
     }
 
     if (f_geom) {

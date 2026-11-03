@@ -47,8 +47,9 @@ else
     endif
 endif
 
-SRC = src/main.c src/geo_math.c src/map_camera.c src/tile_cache.c src/ui.c src/astar_heap.c src/tile_graph_cache.c src/pathfinder.c
+SRC = src/main.c src/geo_math.c src/map_camera.c src/tile_cache.c src/ui.c src/astar_heap.c src/tile_graph_cache.c src/pathfinder.c src/geocoder.c src/navigation.c
 OBJ = $(SRC:.c=.o)
+TEST_GEO = test_geocoder
 
 all: $(TARGET)
 
@@ -58,10 +59,11 @@ $(TARGET): $(OBJ)
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-test: $(TEST_RUNNER) $(TEST_PF)
+test: $(TEST_RUNNER) $(TEST_PF) $(TEST_GEO)
 	./$(TEST_RUNNER)
 	./$(TEST_PF)
-	$(RM) $(TEST_RUNNER) $(TEST_PF)
+	./$(TEST_GEO)
+	$(RM) $(TEST_RUNNER) $(TEST_PF) $(TEST_GEO)
 
 $(TEST_RUNNER): tests/test_universal_algo.c src/geo_math.c src/map_camera.c
 	$(CC) -std=c99 -Wall -Wextra -O2 -Iinclude -Isrc tests/test_universal_algo.c src/geo_math.c src/map_camera.c -o $@ -lm
@@ -69,7 +71,10 @@ $(TEST_RUNNER): tests/test_universal_algo.c src/geo_math.c src/map_camera.c
 $(TEST_PF): tests/test_pathfinder.c src/geo_math.c src/tile_graph_cache.c src/astar_heap.c src/pathfinder.c
 	$(CC) -std=c99 -Wall -Wextra -O2 -Iinclude -Isrc tests/test_pathfinder.c src/geo_math.c src/tile_graph_cache.c src/astar_heap.c src/pathfinder.c -o $@ -lm
 
+$(TEST_GEO): tests/test_geocoder.c src/geo_math.c src/tile_graph_cache.c src/astar_heap.c src/pathfinder.c src/geocoder.c src/navigation.c
+	$(CC) -std=c99 -Wall -Wextra -O2 -Iinclude -Isrc tests/test_geocoder.c src/geo_math.c src/tile_graph_cache.c src/astar_heap.c src/pathfinder.c src/geocoder.c src/navigation.c -o $@ -lm
+
 clean:
-	$(RM) $(OBJ) $(TARGET) gps_simulation gps_simulation.exe $(TEST_RUNNER) $(TEST_PF)
+	$(RM) $(OBJ) $(TARGET) gps_simulation gps_simulation.exe $(TEST_RUNNER) $(TEST_PF) $(TEST_GEO)
 
 .PHONY: all clean test

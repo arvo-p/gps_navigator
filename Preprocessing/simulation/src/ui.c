@@ -6,6 +6,120 @@
 #include "ui.h"
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
+
+static float calc_geom_dist_m(GeoCoord a, GeoCoord b) {
+    float dy = (float)(b.lat_e7 - a.lat_e7) * (111320.0f / 10000000.0f);
+    float dx = (float)(b.lon_e7 - a.lon_e7) * (70500.0f  / 10000000.0f);
+    return sqrtf(dx * dx + dy * dy);
+}
+
+static void start_route_simulation(UIState *ui, MapCamera *cam, const RouteResult *route) {
+    if (!ui || !route || !route->found || route->segment_count <= 0) return;
+
+    nav_init(&ui->nav_state);
+    ui->sim_geom_idx   = 0;
+    ui->sim_seg_frac   = 0.0f;
+    ui->sim_active     = true;
+    ui->sim_paused     = false;
+    ui->sim_follow_cam = true;
+    if (ui->sim_speed_mps <= 1.0f) {
+        ui->sim_speed_mps = (ui->routing_profile == PROFILE_STROLLER) ? 25.0f : 55.0f;
+    }
+
+    if (route->geom_point_count > 0) {
+        ui->sim_pos = geo_coord_make(route->geom_points[0].lat_scaled,
+                                     route->geom_points[0].lon_scaled);
+    } else {
+        ui->sim_pos = geo_coord_make(route->segments[0].start_lat_e7,
+                                     route->segments[0].start_lon_e7);
+    }
+
+    if (cam) {
+        map_camera_set_center(cam, ui->sim_pos);
+    }
+
+    nav_update(&ui->nav_state, route, ui->geocoder, ui->sim_pos);
+    nav_format_instruction(&ui->nav_state.next_step, ui->nav_state.cached_street_name,
+                           ui->nav_instruction, sizeof(ui->nav_instruction));
+
+    ui->current_street_name[0] = '\0';
+    if (ui->geocoder && route->segments[0].street_id != 0) {
+        geocoder_get_street_name(ui->geocoder, route->segments[0].street_id,
+                                 ui->current_street_name, sizeof(ui->current_street_name));
+    }
+}
+
+static void step_route_simulation(UIState *ui, MapCamera *cam, const RouteResult *route, float dt) {
+    if (!ui || !ui->sim_active || !route || !route->found || route->geom_point_count < 2) {
+        return;
+    }
+
+    if (!ui->sim_paused) {
+        float rem_move_m = ui->sim_speed_mps * dt;
+
+        while (rem_move_m > 0.0f && ui->sim_geom_idx < route->geom_point_count - 1) {
+            GeoCoord p1 = geo_coord_make(route->geom_points[ui->sim_geom_idx].lat_scaled,
+                                         route->geom_points[ui->sim_geom_idx].lon_scaled);
+            GeoCoord p2 = geo_coord_make(route->geom_points[ui->sim_geom_idx + 1].lat_scaled,
+                                         route->geom_points[ui->sim_geom_idx + 1].lon_scaled);
+            float seg_len_m = calc_geom_dist_m(p1, p2);
+
+            if (seg_len_m < 0.05f) {
+                ui->sim_geom_idx++;
+                ui->sim_seg_frac = 0.0f;
+                continue;
+            }
+
+            float dist_left_on_seg = seg_len_m * (1.0f - ui->sim_seg_frac);
+            if (rem_move_m < dist_left_on_seg) {
+                ui->sim_seg_frac += rem_move_m / seg_len_m;
+                rem_move_m = 0.0f;
+            } else {
+                rem_move_m -= dist_left_on_seg;
+                ui->sim_geom_idx++;
+                ui->sim_seg_frac = 0.0f;
+            }
+        }
+
+        if (ui->sim_geom_idx >= route->geom_point_count - 1) {
+            ui->sim_geom_idx = route->geom_point_count - 1;
+            ui->sim_seg_frac = 0.0f;
+            ui->sim_pos = geo_coord_make(route->geom_points[ui->sim_geom_idx].lat_scaled,
+                                         route->geom_points[ui->sim_geom_idx].lon_scaled);
+            ui->sim_paused = true;
+        } else {
+            GeoCoord p1 = geo_coord_make(route->geom_points[ui->sim_geom_idx].lat_scaled,
+                                         route->geom_points[ui->sim_geom_idx].lon_scaled);
+            GeoCoord p2 = geo_coord_make(route->geom_points[ui->sim_geom_idx + 1].lat_scaled,
+                                         route->geom_points[ui->sim_geom_idx + 1].lon_scaled);
+            int32_t lat = p1.lat_e7 + (int32_t)((float)(p2.lat_e7 - p1.lat_e7) * ui->sim_seg_frac);
+            int32_t lon = p1.lon_e7 + (int32_t)((float)(p2.lon_e7 - p1.lon_e7) * ui->sim_seg_frac);
+            ui->sim_pos = geo_coord_make(lat, lon);
+        }
+
+        if (ui->sim_follow_cam && cam) {
+            map_camera_set_center(cam, ui->sim_pos);
+        }
+    }
+
+    int32_t prev_seg = ui->nav_state.current_seg_idx;
+    if (nav_update(&ui->nav_state, route, ui->geocoder, ui->sim_pos)) {
+        nav_format_instruction(&ui->nav_state.next_step, ui->nav_state.cached_street_name,
+                               ui->nav_instruction, sizeof(ui->nav_instruction));
+
+        int32_t cur_s = ui->nav_state.current_seg_idx;
+        if (cur_s != prev_seg && cur_s >= 0 && cur_s < route->segment_count) {
+            uint32_t sid = route->segments[cur_s].street_id;
+            if (sid != 0 && ui->geocoder) {
+                geocoder_get_street_name(ui->geocoder, sid,
+                                         ui->current_street_name, sizeof(ui->current_street_name));
+            } else if (sid == 0) {
+                ui->current_street_name[0] = '\0';
+            }
+        }
+    }
+}
 
 /* UI Theme Colors */
 #define UI_COLOR_BG            CLITERAL(Color){ 20, 24, 30, 235 }
@@ -281,6 +395,30 @@ void ui_update(UIState *ui, MapCamera *cam, TileCache *cache, Pathfinder *pf, Ro
                               : "Switched to CAR mode",
                           UI_COLOR_ACCENT);
         }
+
+        if (IsKeyPressed(KEY_SPACE) && ui->sim_active) {
+            ui->sim_paused = !ui->sim_paused;
+            ui_set_status(ui, ui->sim_paused ? "Simulation PAUSED" : "Simulation RESUMED", UI_COLOR_ACCENT);
+        }
+
+        if (IsKeyPressed(KEY_R) && route && route->found) {
+            start_route_simulation(ui, cam, route);
+            ui_set_status(ui, "Restarted person at route origin.", UI_COLOR_SUCCESS);
+        }
+
+        if (IsKeyPressed(KEY_F) && ui->sim_active) {
+            ui->sim_follow_cam = !ui->sim_follow_cam;
+            ui_set_status(ui, ui->sim_follow_cam ? "Camera Follow: ON" : "Camera Follow: OFF", UI_COLOR_ACCENT);
+        }
+
+        if (IsKeyPressed(KEY_RIGHT_BRACKET)) {
+            ui->sim_speed_mps *= 1.5f;
+            if (ui->sim_speed_mps > 500.0f) ui->sim_speed_mps = 500.0f;
+        }
+        if (IsKeyPressed(KEY_LEFT_BRACKET)) {
+            ui->sim_speed_mps /= 1.5f;
+            if (ui->sim_speed_mps < 5.0f) ui->sim_speed_mps = 5.0f;
+        }
     }
 
     if (pf) {
@@ -288,6 +426,7 @@ void ui_update(UIState *ui, MapCamera *cam, TileCache *cache, Pathfinder *pf, Ro
     }
 
     if (dir_x != 0 || dir_y != 0) {
+        ui->sim_follow_cam = false;
         int32_t speed_mult = 1;
         if (IsKeyDown(KEY_LEFT_SHIFT) || IsKeyDown(KEY_RIGHT_SHIFT)) {
             speed_mult = 3;
@@ -337,6 +476,9 @@ void ui_update(UIState *ui, MapCamera *cam, TileCache *cache, Pathfinder *pf, Ro
         if (ui->has_route_start && ui->has_route_goal && pf && route) {
             pathfinder_set_profile(pf, ui->routing_profile);
             if (pathfinder_find_route(pf, ui->route_start, ui->route_goal, route)) {
+                ui->sim_speed_mps = (ui->routing_profile == PROFILE_STROLLER) ? 25.0f : 55.0f;
+                start_route_simulation(ui, cam, route);
+
                 char msg[UI_STATUS_BUFFER_SIZE];
                 const char *prof_label = (ui->routing_profile == PROFILE_STROLLER) ? "PEDESTRIAN" : "CAR";
                 snprintf(msg, sizeof(msg), "[%s] Route: %.2f km, %d min (Mode %d)",
@@ -345,6 +487,7 @@ void ui_update(UIState *ui, MapCamera *cam, TileCache *cache, Pathfinder *pf, Ro
                          route->total_time_sec / 60, route->routing_mode);
                 ui_set_status(ui, msg, UI_COLOR_SUCCESS);
             } else {
+                ui->sim_active = false;
                 const char *prof_label = (ui->routing_profile == PROFILE_STROLLER) ? "PEDESTRIAN" : "CAR";
                 char msg[UI_STATUS_BUFFER_SIZE];
                 snprintf(msg, sizeof(msg), "[%s] No path found between selected pins.", prof_label);
@@ -353,11 +496,17 @@ void ui_update(UIState *ui, MapCamera *cam, TileCache *cache, Pathfinder *pf, Ro
         }
     }
 
+    /* Advance person along route and update live turn-by-turn directions */
+    step_route_simulation(ui, cam, route, dt);
+
     if (ui->mouse_dragging) {
         if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
             Vector2 curr = GetMousePosition();
             float dx = ui->mouse_drag_start.x - curr.x;
             float dy = ui->mouse_drag_start.y - curr.y;
+            if (dx != 0.0f || dy != 0.0f) {
+                ui->sim_follow_cam = false;
+            }
             map_camera_pan_pixels(cam, (int32_t)dx, (int32_t)dy);
             ui->mouse_drag_start = curr;
         } else {
@@ -582,6 +731,7 @@ void ui_draw(UIState *ui, const MapCamera *cam, const TileCache *cache, const Ro
     if (draw_button(clear_btn, "Clear Active Route", false, UI_COLOR_INPUT_BG, UI_COLOR_ERROR)) {
         ui->has_route_start = false;
         ui->has_route_goal = false;
+        ui->sim_active = false;
         if (route) {
             pathfinder_free_route((RouteResult *)route);
         }
@@ -707,6 +857,73 @@ void ui_draw(UIState *ui, const MapCamera *cam, const TileCache *cache, const Ro
         char geom_buf[64];
         snprintf(geom_buf, sizeof(geom_buf), "Curve Geometry: %d points (*_geom.bin)", route->geom_point_count);
         DrawText(geom_buf, (int)route_card.x + 12, (int)route_card.y + 114, 12, CLITERAL(Color){ 100, 220, 255, 255 });
+
+        /* ============================================================== */
+        /* 3b. Top-Center Turn-by-Turn Navigation Banner                  */
+        /* ============================================================== */
+        if (ui->sim_active) {
+            float nav_w = 560.0f;
+            float nav_x = ((float)screen_w - nav_w) * 0.5f;
+            if (nav_x < 340.0f) nav_x = 340.0f;
+            Rectangle nav_box = { nav_x, 12.0f, nav_w, 96.0f };
+
+            DrawRectangleRounded(nav_box, 0.08f, 4, CLITERAL(Color){ 15, 23, 38, 242 });
+            DrawRectangleRoundedLines(nav_box, 0.08f, 4, UI_COLOR_ACCENT);
+
+            /* Action Badge */
+            const char *badge = nav_action_label(ui->nav_state.next_step.action);
+            Rectangle badge_rec = { nav_x + 12.0f, 20.0f, 150.0f, 24.0f };
+            DrawRectangleRounded(badge_rec, 0.25f, 4, UI_COLOR_ACCENT);
+            DrawText(badge, (int)badge_rec.x + 10, (int)badge_rec.y + 5, 13, CLITERAL(Color){ 12, 14, 18, 255 });
+
+            /* Current Street & Angle Info */
+            char cur_info[160];
+            if (ui->current_street_name[0] != '\0') {
+                snprintf(cur_info, sizeof(cur_info), "On: %s  |  Turn Angle: %+d°",
+                         ui->current_street_name, (int)ui->nav_state.next_step.angle_deg);
+            } else {
+                snprintf(cur_info, sizeof(cur_info), "Seg %d/%d  |  Turn Angle: %+d°",
+                         ui->nav_state.current_seg_idx + 1, route->segment_count,
+                         (int)ui->nav_state.next_step.angle_deg);
+            }
+            DrawText(cur_info, (int)nav_x + 174, 25, 12, UI_COLOR_TEXT_MUTED);
+
+            /* Main "Lego" Direction Instruction String */
+            DrawText(ui->nav_instruction, (int)nav_x + 14, 52, 16, UI_COLOR_TEXT_MAIN);
+
+            /* Playback Controls Row */
+            Rectangle pause_btn = { nav_x + 14.0f, 78.0f, 90.0f, 22.0f };
+            if (draw_button(pause_btn, ui->sim_paused ? "Resume [Spc]" : "Pause [Spc]",
+                            ui->sim_paused, UI_COLOR_INPUT_ACTIVE, UI_COLOR_PRIMARY)) {
+                ui->sim_paused = !ui->sim_paused;
+            }
+
+            Rectangle restart_btn = { nav_x + 112.0f, 78.0f, 86.0f, 22.0f };
+            if (draw_button(restart_btn, "Restart [R]", false, UI_COLOR_INPUT_ACTIVE, UI_COLOR_SUCCESS)) {
+                start_route_simulation(ui, (MapCamera *)cam, route);
+            }
+
+            Rectangle follow_btn = { nav_x + 206.0f, 78.0f, 94.0f, 22.0f };
+            if (draw_button(follow_btn, "Follow [F]", ui->sim_follow_cam, UI_COLOR_INPUT_ACTIVE, UI_COLOR_PRIMARY)) {
+                ui->sim_follow_cam = !ui->sim_follow_cam;
+            }
+
+            Rectangle slower_btn = { nav_x + 310.0f, 78.0f, 32.0f, 22.0f };
+            if (draw_button(slower_btn, "-", false, UI_COLOR_INPUT_ACTIVE, UI_COLOR_PRIMARY)) {
+                ui->sim_speed_mps /= 1.5f;
+                if (ui->sim_speed_mps < 5.0f) ui->sim_speed_mps = 5.0f;
+            }
+
+            Rectangle faster_btn = { nav_x + 346.0f, 78.0f, 32.0f, 22.0f };
+            if (draw_button(faster_btn, "+", false, UI_COLOR_INPUT_ACTIVE, UI_COLOR_PRIMARY)) {
+                ui->sim_speed_mps *= 1.5f;
+                if (ui->sim_speed_mps > 500.0f) ui->sim_speed_mps = 500.0f;
+            }
+
+            char spd_str[48];
+            snprintf(spd_str, sizeof(spd_str), "Sim Speed: %.0f m/s", (double)ui->sim_speed_mps);
+            DrawText(spd_str, (int)nav_x + 388, 83, 12, UI_COLOR_ACCENT);
+        }
     }
 
     /* ============================================================== */
@@ -714,7 +931,7 @@ void ui_draw(UIState *ui, const MapCamera *cam, const TileCache *cache, const Ro
     /* ============================================================== */
     Rectangle bar = { 10, (float)screen_h - 30, (float)screen_w - 20, 22 };
     DrawRectangleRounded(bar, 0.2f, 4, CLITERAL(Color){ 15, 20, 25, 210 });
-    DrawText("[M] Car/Pedestrian Mode  |  [Shift+Click] Start  |  [Ctrl/Right-Click] Goal  |  [Arrows/WASD] Pan",
+    DrawText("[M] Car/Ped  |  [Shift+Click] Start  |  [Ctrl/R-Click] Goal  |  [Space] Pause  |  [R] Restart  |  [F] Follow",
              20, screen_h - 25, 12, UI_COLOR_TEXT_MUTED);
 
     /* ============================================================== */
@@ -727,7 +944,7 @@ void ui_draw(UIState *ui, const MapCamera *cam, const TileCache *cache, const Ro
 
         int msg_w = MeasureText(ui->status_message, 14);
         int toast_x = (screen_w - msg_w) / 2 - 16;
-        int toast_y = 20;
+        int toast_y = ui->sim_active ? 116 : 20;
 
         DrawRectangleRounded((Rectangle){ (float)toast_x, (float)toast_y, (float)msg_w + 32, 32 }, 0.3f, 4, bg);
         DrawRectangleRoundedLines((Rectangle){ (float)toast_x, (float)toast_y, (float)msg_w + 32, 32 }, 0.3f, 4, txt);
@@ -793,6 +1010,18 @@ void ui_draw_pins(const UIState *ui, const MapCamera *cam) {
         DrawCircleLines(sx, sy, 12.0f, WHITE);
         DrawCircle(sx, sy, 4.0f, WHITE);
         DrawText("GOAL", sx - 16, sy - 24, 11, CLITERAL(Color){ 248, 113, 113, 255 });
+    }
+
+    /* Draw moving Person / Vehicle marker along the route */
+    if (ui->sim_active) {
+        int32_t px, py;
+        map_camera_latlon_to_screen(cam, ui->sim_pos, &px, &py);
+        DrawCircle(px, py, 16.0f, CLITERAL(Color){ 14, 165, 233, 90 });
+        DrawCircle(px, py, 9.0f,  CLITERAL(Color){ 56, 189, 248, 255 });
+        DrawCircleLines(px, py, 11.0f, WHITE);
+        DrawCircle(px, py, 3.5f, WHITE);
+        const char *tag = (ui->routing_profile == PROFILE_STROLLER) ? "PERSON" : "VEHICLE";
+        DrawText(tag, px - 22, py + 14, 11, CLITERAL(Color){ 56, 189, 248, 255 });
     }
 }
 

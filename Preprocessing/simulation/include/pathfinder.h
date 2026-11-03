@@ -25,6 +25,12 @@ typedef struct {
     uint32_t street_id;
     uint32_t geom_offset;
     uint16_t geom_count;
+    uint16_t start_node_flags;
+    uint16_t end_node_flags;
+    uint16_t geom_start_idx;
+    uint16_t geom_end_idx;
+    uint8_t  out_degree;
+    int8_t   fork_dir;       /* +1 = Keep Left at fork, -1 = Keep Right at fork, 0 = not a fork */
     const char *geom_path;
 } RouteSegment;
 

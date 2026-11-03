@@ -64,6 +64,10 @@ int main(void) {
     Pathfinder pathfinder;
     pathfinder_init(&pathfinder, &graph_cache);
 
+    /* Initialize forward/reverse geocoder for street names */
+    Geocoder geocoder;
+    geocoder_init(&geocoder, &graph_cache, bin_dir);
+
     /* Clear static route */
     memset(&s_current_route, 0, sizeof(RouteResult));
 
@@ -78,6 +82,7 @@ int main(void) {
     /* Initialize user interface */
     UIState ui;
     ui_init(&ui, initial_center);
+    ui.geocoder = &geocoder;
 
     VisibleTileList visible_tiles;
 

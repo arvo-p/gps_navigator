@@ -12,9 +12,12 @@
 #include <stdbool.h>
 
 #include "pathfinder.h"
+#include "geocoder.h"
+#include "navigation.h"
 
 #define UI_TEXT_BUFFER_SIZE 32
 #define UI_STATUS_BUFFER_SIZE 128
+#define UI_NAV_BUFFER_SIZE 192
 
 typedef struct {
     char text[UI_TEXT_BUFFER_SIZE];
@@ -47,6 +50,19 @@ typedef struct {
     /* Active routing profile (PROFILE_CAR or PROFILE_STROLLER) */
     RoutingProfile routing_profile;
     bool recompute_route;
+
+    /* Simulated Person / Vehicle moving along the active route */
+    Geocoder *geocoder;
+    NavState nav_state;
+    GeoCoord sim_pos;
+    bool     sim_active;
+    bool     sim_paused;
+    bool     sim_follow_cam;
+    int32_t  sim_geom_idx;
+    float    sim_seg_frac;
+    float    sim_speed_mps;
+    char     nav_instruction[UI_NAV_BUFFER_SIZE];
+    char     current_street_name[GEOCODER_NAME_MAX];
 } UIState;
 
 /**
