@@ -1,0 +1,322 @@
+ARM GAS  /tmp/ccDfO4WR.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.arch armv7e-m
+   3              		.fpu fpv4-sp-d16
+   4              		.eabi_attribute 27, 1
+   5              		.eabi_attribute 28, 1
+   6              		.eabi_attribute 20, 1
+   7              		.eabi_attribute 21, 1
+   8              		.eabi_attribute 23, 3
+   9              		.eabi_attribute 24, 1
+  10              		.eabi_attribute 25, 1
+  11              		.eabi_attribute 26, 1
+  12              		.eabi_attribute 30, 1
+  13              		.eabi_attribute 34, 1
+  14              		.eabi_attribute 18, 4
+  15              		.file	"sensor_input_task.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.file 1 "Core/Src/sensor_input_task.c"
+  20              		.section	.text.Sensor_Input_Task,"ax",%progbits
+  21              		.align	1
+  22              		.global	Sensor_Input_Task
+  23              		.syntax unified
+  24              		.thumb
+  25              		.thumb_func
+  27              	Sensor_Input_Task:
+  28              	.LVL0:
+  29              	.LFB161:
+   1:Core/Src/sensor_input_task.c **** /**
+   2:Core/Src/sensor_input_task.c ****   ******************************************************************************
+   3:Core/Src/sensor_input_task.c ****   * @file    Core/Src/sensor_input_task.c
+   4:Core/Src/sensor_input_task.c ****   * @brief   TASK 1: Sensor_Input_Task (Priority: AboveNormal)
+   5:Core/Src/sensor_input_task.c ****   *          Polls Touchscreen (and future Accelerometer) at ~66 Hz and sends
+   6:Core/Src/sensor_input_task.c ****   *          drag deltas to UI_LVGL_Task.
+   7:Core/Src/sensor_input_task.c ****   ******************************************************************************
+   8:Core/Src/sensor_input_task.c ****   */
+   9:Core/Src/sensor_input_task.c **** 
+  10:Core/Src/sensor_input_task.c **** #include "app.h"
+  11:Core/Src/sensor_input_task.c **** #include "stm32f429i_discovery_ts.h"
+  12:Core/Src/sensor_input_task.c **** 
+  13:Core/Src/sensor_input_task.c **** void Sensor_Input_Task(void *argument)
+  14:Core/Src/sensor_input_task.c **** {
+  30              		.loc 1 14 1 view -0
+  31              		.cfi_startproc
+  32              		@ args = 0, pretend = 0, frame = 24
+  33              		@ frame_needed = 0, uses_anonymous_args = 0
+  34              		.loc 1 14 1 is_stmt 0 view .LVU1
+  35 0000 2DE9F041 		push	{r4, r5, r6, r7, r8, lr}
+  36              	.LCFI0:
+  37              		.cfi_def_cfa_offset 24
+  38              		.cfi_offset 4, -24
+  39              		.cfi_offset 5, -20
+  40              		.cfi_offset 6, -16
+  41              		.cfi_offset 7, -12
+  42              		.cfi_offset 8, -8
+  43              		.cfi_offset 14, -4
+  44 0004 86B0     		sub	sp, sp, #24
+ARM GAS  /tmp/ccDfO4WR.s 			page 2
+
+
+  45              	.LCFI1:
+  46              		.cfi_def_cfa_offset 48
+  15:Core/Src/sensor_input_task.c ****   (void)argument;
+  47              		.loc 1 15 3 is_stmt 1 view .LVU2
+  16:Core/Src/sensor_input_task.c ****   bool    dragging     = false;
+  48              		.loc 1 16 3 view .LVU3
+  49              	.LVL1:
+  17:Core/Src/sensor_input_task.c ****   int32_t last_touch_x = 0;
+  50              		.loc 1 17 3 view .LVU4
+  18:Core/Src/sensor_input_task.c ****   int32_t last_touch_y = 0;
+  51              		.loc 1 18 3 view .LVU5
+  52              		.loc 1 18 11 is_stmt 0 view .LVU6
+  53 0006 4FF00008 		mov	r8, #0
+  17:Core/Src/sensor_input_task.c ****   int32_t last_touch_x = 0;
+  54              		.loc 1 17 11 view .LVU7
+  55 000a 4746     		mov	r7, r8
+  16:Core/Src/sensor_input_task.c ****   bool    dragging     = false;
+  56              		.loc 1 16 11 view .LVU8
+  57 000c 4646     		mov	r6, r8
+  58 000e 07E0     		b	.L4
+  59              	.LVL2:
+  60              	.L5:
+  61              	.LBB2:
+  19:Core/Src/sensor_input_task.c **** 
+  20:Core/Src/sensor_input_task.c ****   for (;;)
+  21:Core/Src/sensor_input_task.c ****   {
+  22:Core/Src/sensor_input_task.c ****     TS_StateTypeDef ts;
+  23:Core/Src/sensor_input_task.c ****     BSP_TS_GetState(&ts);
+  24:Core/Src/sensor_input_task.c **** 
+  25:Core/Src/sensor_input_task.c ****     /* Future Accelerometer Hook:
+  26:Core/Src/sensor_input_task.c ****      * Read I2C/SPI IMU here -> populate accel_mg[0..2] & stationary flag.
+  27:Core/Src/sensor_input_task.c ****      */
+  28:Core/Src/sensor_input_task.c ****     if (ts.TouchDetected)
+  29:Core/Src/sensor_input_task.c ****     {
+  30:Core/Src/sensor_input_task.c ****       int32_t cur_x = (int32_t)ts.X;
+  31:Core/Src/sensor_input_task.c ****       int32_t cur_y = (MY_DISP_VER_RES - 1) - (int32_t)ts.Y;
+  32:Core/Src/sensor_input_task.c **** 
+  33:Core/Src/sensor_input_task.c ****       if (!dragging)
+  34:Core/Src/sensor_input_task.c ****       {
+  35:Core/Src/sensor_input_task.c ****         dragging     = true;
+  36:Core/Src/sensor_input_task.c ****         last_touch_x = cur_x;
+  37:Core/Src/sensor_input_task.c ****         last_touch_y = cur_y;
+  38:Core/Src/sensor_input_task.c ****       }
+  39:Core/Src/sensor_input_task.c ****       else
+  40:Core/Src/sensor_input_task.c ****       {
+  41:Core/Src/sensor_input_task.c ****         int32_t dx = cur_x - last_touch_x;
+  42:Core/Src/sensor_input_task.c ****         int32_t dy = cur_y - last_touch_y;
+  43:Core/Src/sensor_input_task.c **** 
+  44:Core/Src/sensor_input_task.c ****         if (dx != 0 || dy != 0)
+  45:Core/Src/sensor_input_task.c ****         {
+  46:Core/Src/sensor_input_task.c ****           last_touch_x = cur_x;
+  47:Core/Src/sensor_input_task.c ****           last_touch_y = cur_y;
+  48:Core/Src/sensor_input_task.c **** 
+  49:Core/Src/sensor_input_task.c ****           InputEvent_t evt = {
+  50:Core/Src/sensor_input_task.c ****             .dx         = (int16_t)dx,
+  51:Core/Src/sensor_input_task.c ****             .dy         = (int16_t)dy,
+  52:Core/Src/sensor_input_task.c ****             .touch_down = true,
+ARM GAS  /tmp/ccDfO4WR.s 			page 3
+
+
+  53:Core/Src/sensor_input_task.c ****             .accel_mg   = {0, 0, 1000},
+  54:Core/Src/sensor_input_task.c ****             .stationary = false,
+  55:Core/Src/sensor_input_task.c ****           };
+  56:Core/Src/sensor_input_task.c ****           xQueueSend(g_q_input_evt, &evt, 0);
+  57:Core/Src/sensor_input_task.c ****         }
+  58:Core/Src/sensor_input_task.c ****       }
+  59:Core/Src/sensor_input_task.c ****     }
+  60:Core/Src/sensor_input_task.c ****     else
+  61:Core/Src/sensor_input_task.c ****     {
+  62:Core/Src/sensor_input_task.c ****       dragging = false;
+  62              		.loc 1 62 16 view .LVU9
+  63 0010 1E46     		mov	r6, r3
+  64              	.LVL3:
+  65              		.loc 1 62 16 view .LVU10
+  66 0012 02E0     		b	.L2
+  67              	.LVL4:
+  68              	.L6:
+  69              	.LBB3:
+  37:Core/Src/sensor_input_task.c ****       }
+  70              		.loc 1 37 22 view .LVU11
+  71 0014 A046     		mov	r8, r4
+  72              	.LVL5:
+  36:Core/Src/sensor_input_task.c ****         last_touch_y = cur_y;
+  73              		.loc 1 36 22 view .LVU12
+  74 0016 2F46     		mov	r7, r5
+  75              	.LVL6:
+  35:Core/Src/sensor_input_task.c ****         last_touch_x = cur_x;
+  76              		.loc 1 35 22 view .LVU13
+  77 0018 0126     		movs	r6, #1
+  78              	.LVL7:
+  79              	.L2:
+  35:Core/Src/sensor_input_task.c ****         last_touch_x = cur_x;
+  80              		.loc 1 35 22 view .LVU14
+  81              	.LBE3:
+  63:Core/Src/sensor_input_task.c ****     }
+  64:Core/Src/sensor_input_task.c **** 
+  65:Core/Src/sensor_input_task.c ****     vTaskDelay(pdMS_TO_TICKS(15));
+  82              		.loc 1 65 5 is_stmt 1 view .LVU15
+  83 001a 0F20     		movs	r0, #15
+  84 001c FFF7FEFF 		bl	vTaskDelay
+  85              	.LVL8:
+  86              	.LBE2:
+  20:Core/Src/sensor_input_task.c ****   {
+  87              		.loc 1 20 3 discriminator 1 view .LVU16
+  88              	.L4:
+  20:Core/Src/sensor_input_task.c ****   {
+  89              		.loc 1 20 3 view .LVU17
+  90              	.LBB7:
+  22:Core/Src/sensor_input_task.c ****     BSP_TS_GetState(&ts);
+  91              		.loc 1 22 5 view .LVU18
+  23:Core/Src/sensor_input_task.c **** 
+  92              		.loc 1 23 5 view .LVU19
+  93 0020 6846     		mov	r0, sp
+  94 0022 FFF7FEFF 		bl	BSP_TS_GetState
+  95              	.LVL9:
+  28:Core/Src/sensor_input_task.c ****     {
+  96              		.loc 1 28 5 view .LVU20
+ARM GAS  /tmp/ccDfO4WR.s 			page 4
+
+
+  28:Core/Src/sensor_input_task.c ****     {
+  97              		.loc 1 28 11 is_stmt 0 view .LVU21
+  98 0026 BDF80030 		ldrh	r3, [sp]
+  28:Core/Src/sensor_input_task.c ****     {
+  99              		.loc 1 28 8 view .LVU22
+ 100 002a 002B     		cmp	r3, #0
+ 101 002c F0D0     		beq	.L5
+ 102              	.LBB6:
+  30:Core/Src/sensor_input_task.c ****       int32_t cur_y = (MY_DISP_VER_RES - 1) - (int32_t)ts.Y;
+ 103              		.loc 1 30 7 is_stmt 1 view .LVU23
+  30:Core/Src/sensor_input_task.c ****       int32_t cur_y = (MY_DISP_VER_RES - 1) - (int32_t)ts.Y;
+ 104              		.loc 1 30 34 is_stmt 0 view .LVU24
+ 105 002e BDF80250 		ldrh	r5, [sp, #2]
+ 106              	.LVL10:
+  31:Core/Src/sensor_input_task.c **** 
+ 107              		.loc 1 31 7 is_stmt 1 view .LVU25
+  31:Core/Src/sensor_input_task.c **** 
+ 108              		.loc 1 31 58 is_stmt 0 view .LVU26
+ 109 0032 BDF80440 		ldrh	r4, [sp, #4]
+  31:Core/Src/sensor_input_task.c **** 
+ 110              		.loc 1 31 15 view .LVU27
+ 111 0036 C4F59F74 		rsb	r4, r4, #318
+ 112 003a 0134     		adds	r4, r4, #1
+ 113              	.LVL11:
+  33:Core/Src/sensor_input_task.c ****       {
+ 114              		.loc 1 33 7 is_stmt 1 view .LVU28
+  33:Core/Src/sensor_input_task.c ****       {
+ 115              		.loc 1 33 10 is_stmt 0 view .LVU29
+ 116 003c 002E     		cmp	r6, #0
+ 117 003e E9D0     		beq	.L6
+ 118              	.LBB4:
+  41:Core/Src/sensor_input_task.c ****         int32_t dy = cur_y - last_touch_y;
+ 119              		.loc 1 41 9 is_stmt 1 view .LVU30
+ 120              	.LVL12:
+  42:Core/Src/sensor_input_task.c **** 
+ 121              		.loc 1 42 9 view .LVU31
+  42:Core/Src/sensor_input_task.c **** 
+ 122              		.loc 1 42 17 is_stmt 0 view .LVU32
+ 123 0040 A4EB0803 		sub	r3, r4, r8
+ 124              	.LVL13:
+  44:Core/Src/sensor_input_task.c ****         {
+ 125              		.loc 1 44 9 is_stmt 1 view .LVU33
+  44:Core/Src/sensor_input_task.c ****         {
+ 126              		.loc 1 44 12 is_stmt 0 view .LVU34
+ 127 0044 EA1B     		subs	r2, r5, r7
+ 128              	.LVL14:
+  44:Core/Src/sensor_input_task.c ****         {
+ 129              		.loc 1 44 12 view .LVU35
+ 130 0046 01D1     		bne	.L3
+  44:Core/Src/sensor_input_task.c ****         {
+ 131              		.loc 1 44 21 discriminator 1 view .LVU36
+ 132 0048 002B     		cmp	r3, #0
+ 133 004a E6D0     		beq	.L2
+ 134              	.L3:
+ 135              	.LBB5:
+  46:Core/Src/sensor_input_task.c ****           last_touch_y = cur_y;
+ 136              		.loc 1 46 11 is_stmt 1 view .LVU37
+ARM GAS  /tmp/ccDfO4WR.s 			page 5
+
+
+ 137              	.LVL15:
+  47:Core/Src/sensor_input_task.c **** 
+ 138              		.loc 1 47 11 view .LVU38
+  49:Core/Src/sensor_input_task.c ****             .dx         = (int16_t)dx,
+ 139              		.loc 1 49 11 view .LVU39
+  49:Core/Src/sensor_input_task.c ****             .dx         = (int16_t)dx,
+ 140              		.loc 1 49 24 is_stmt 0 view .LVU40
+ 141 004c ADF80820 		strh	r2, [sp, #8]	@ movhi
+ 142 0050 ADF80A30 		strh	r3, [sp, #10]	@ movhi
+ 143 0054 0123     		movs	r3, #1
+ 144              	.LVL16:
+  49:Core/Src/sensor_input_task.c ****             .dx         = (int16_t)dx,
+ 145              		.loc 1 49 24 view .LVU41
+ 146 0056 8DF80C30 		strb	r3, [sp, #12]
+ 147 005a 0022     		movs	r2, #0
+ 148              	.LVL17:
+  49:Core/Src/sensor_input_task.c ****             .dx         = (int16_t)dx,
+ 149              		.loc 1 49 24 view .LVU42
+ 150 005c ADF80E20 		strh	r2, [sp, #14]	@ movhi
+ 151 0060 ADF81020 		strh	r2, [sp, #16]	@ movhi
+ 152 0064 4FF47A73 		mov	r3, #1000
+ 153 0068 ADF81230 		strh	r3, [sp, #18]	@ movhi
+ 154 006c 4FF00003 		mov	r3, #0	@ movhi
+ 155 0070 8DF81430 		strb	r3, [sp, #20]
+  56:Core/Src/sensor_input_task.c ****         }
+ 156              		.loc 1 56 11 is_stmt 1 view .LVU43
+ 157 0074 1346     		mov	r3, r2
+ 158 0076 02A9     		add	r1, sp, #8
+ 159 0078 0348     		ldr	r0, .L8
+ 160 007a 0068     		ldr	r0, [r0]
+ 161 007c FFF7FEFF 		bl	xQueueGenericSend
+ 162              	.LVL18:
+  47:Core/Src/sensor_input_task.c **** 
+ 163              		.loc 1 47 24 is_stmt 0 view .LVU44
+ 164 0080 A046     		mov	r8, r4
+ 165              	.LVL19:
+  46:Core/Src/sensor_input_task.c ****           last_touch_y = cur_y;
+ 166              		.loc 1 46 24 view .LVU45
+ 167 0082 2F46     		mov	r7, r5
+ 168              	.LVL20:
+  46:Core/Src/sensor_input_task.c ****           last_touch_y = cur_y;
+ 169              		.loc 1 46 24 view .LVU46
+ 170 0084 C9E7     		b	.L2
+ 171              	.L9:
+ 172 0086 00BF     		.align	2
+ 173              	.L8:
+ 174 0088 00000000 		.word	g_q_input_evt
+ 175              	.LBE5:
+ 176              	.LBE4:
+ 177              	.LBE6:
+ 178              	.LBE7:
+ 179              		.cfi_endproc
+ 180              	.LFE161:
+ 182              		.text
+ 183              	.Letext0:
+ 184              		.file 2 "/usr/arm-none-eabi/include/machine/_default_types.h"
+ 185              		.file 3 "/usr/arm-none-eabi/include/sys/_stdint.h"
+ARM GAS  /tmp/ccDfO4WR.s 			page 6
+
+
+ 186              		.file 4 "Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F/portmacro.h"
+ 187              		.file 5 "Middlewares/Third_Party/FreeRTOS/Source/include/queue.h"
+ 188              		.file 6 "Core/Inc/app.h"
+ 189              		.file 7 "Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.h"
+ 190              		.file 8 "Middlewares/Third_Party/FreeRTOS/Source/include/task.h"
+ARM GAS  /tmp/ccDfO4WR.s 			page 7
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 sensor_input_task.c
+     /tmp/ccDfO4WR.s:21     .text.Sensor_Input_Task:00000000 $t
+     /tmp/ccDfO4WR.s:27     .text.Sensor_Input_Task:00000000 Sensor_Input_Task
+     /tmp/ccDfO4WR.s:174    .text.Sensor_Input_Task:00000088 $d
+
+UNDEFINED SYMBOLS
+vTaskDelay
+BSP_TS_GetState
+xQueueGenericSend
+g_q_input_evt

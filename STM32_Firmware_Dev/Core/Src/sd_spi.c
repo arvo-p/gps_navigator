@@ -34,38 +34,38 @@ static uint8_t CardType = 0;
 static inline void SD_CS_Low(void)
 {
   /* Keep LCD D/CX (PD13) HIGH so ILI9341 never treats SD SPI bytes as commands */
-  LCD_WRX_HIGH();
+  HAL_GPIO_WritePin(SD_LCD_DCX_GPIO_PORT, SD_LCD_DCX_PIN, GPIO_PIN_SET);
   HAL_GPIO_WritePin(SD_CS_GPIO_PORT, SD_CS_PIN, GPIO_PIN_RESET);
 }
 
 static inline void SD_CS_High(void)
 {
   HAL_GPIO_WritePin(SD_CS_GPIO_PORT, SD_CS_PIN, GPIO_PIN_SET);
-  LCD_WRX_HIGH();
+  HAL_GPIO_WritePin(SD_LCD_DCX_GPIO_PORT, SD_LCD_DCX_PIN, GPIO_PIN_SET);
 }
 
 static void SD_SPI_SetSlowClock(void)
 {
   /* PCLK2 = 90 MHz -> /256 = 351.5 kHz (< 400 kHz required for SD init) */
-  CLEAR_BIT(SPI5->CR1, SPI_CR1_SPE);
-  MODIFY_REG(SPI5->CR1, SPI_CR1_BR, SPI_BAUDRATEPRESCALER_256);
-  SET_BIT(SPI5->CR1, SPI_CR1_SPE);
+  CLEAR_BIT(SD_SPI_INSTANCE->CR1, SPI_CR1_SPE);
+  MODIFY_REG(SD_SPI_INSTANCE->CR1, SPI_CR1_BR, SD_SPI_SLOW_PRESCALER);
+  SET_BIT(SD_SPI_INSTANCE->CR1, SPI_CR1_SPE);
 }
 
 static void SD_SPI_SetFastClock(void)
 {
   /* PCLK2 = 90 MHz -> /8 = 11.25 MHz */
-  CLEAR_BIT(SPI5->CR1, SPI_CR1_SPE);
-  MODIFY_REG(SPI5->CR1, SPI_CR1_BR, SPI_BAUDRATEPRESCALER_8);
-  SET_BIT(SPI5->CR1, SPI_CR1_SPE);
+  CLEAR_BIT(SD_SPI_INSTANCE->CR1, SPI_CR1_SPE);
+  MODIFY_REG(SD_SPI_INSTANCE->CR1, SPI_CR1_BR, SD_SPI_FAST_PRESCALER);
+  SET_BIT(SD_SPI_INSTANCE->CR1, SPI_CR1_SPE);
 }
 
 static uint8_t SD_SPI_TxRxByte(uint8_t data)
 {
-  while (!(SPI5->SR & SPI_SR_TXE)) {}
-  *(__IO uint8_t *)&SPI5->DR = data;
-  while (!(SPI5->SR & SPI_SR_RXNE)) {}
-  return *(__IO uint8_t *)&SPI5->DR;
+  while (!(SD_SPI_INSTANCE->SR & SPI_SR_TXE)) {}
+  *(__IO uint8_t *)&SD_SPI_INSTANCE->DR = data;
+  while (!(SD_SPI_INSTANCE->SR & SPI_SR_RXNE)) {}
+  return *(__IO uint8_t *)&SD_SPI_INSTANCE->DR;
 }
 
 static void SD_SPI_InitBus(void)
@@ -73,17 +73,17 @@ static void SD_SPI_InitBus(void)
   GPIO_InitTypeDef gpio = {0};
 
   /* 1. Deselect onboard L3GD20 Gyroscope (PC1) so it never drives MISO (PF8) */
-  GYRO_CS_GPIO_CLK_ENABLE();
-  gpio.Pin   = GYRO_CS_PIN;
+  SD_GYRO_CS_GPIO_CLK_ENABLE();
+  gpio.Pin   = SD_GYRO_CS_PIN;
   gpio.Mode  = GPIO_MODE_OUTPUT_PP;
   gpio.Pull  = GPIO_PULLUP;
   gpio.Speed = GPIO_SPEED_FAST;
-  HAL_GPIO_Init(GYRO_CS_GPIO_PORT, &gpio);
-  GYRO_CS_HIGH();
+  HAL_GPIO_Init(SD_GYRO_CS_GPIO_PORT, &gpio);
+  HAL_GPIO_WritePin(SD_GYRO_CS_GPIO_PORT, SD_GYRO_CS_PIN, GPIO_PIN_SET);
 
   /* 2. Force LCD_WRX (PD13) HIGH so ILI9341 ignores MOSI when PC2 goes LOW */
-  LCD_WRX_GPIO_CLK_ENABLE();
-  LCD_WRX_HIGH();
+  SD_LCD_DCX_GPIO_CLK_ENABLE();
+  HAL_GPIO_WritePin(SD_LCD_DCX_GPIO_PORT, SD_LCD_DCX_PIN, GPIO_PIN_SET);
 
   /* 3. Ensure SD_CS (PC2) is configured as push-pull output and starts HIGH */
   SD_CS_GPIO_CLK_ENABLE();
@@ -94,18 +94,18 @@ static void SD_SPI_InitBus(void)
   HAL_GPIO_Init(SD_CS_GPIO_PORT, &gpio);
   SD_CS_High();
 
-  /* 4. Enable internal pull-up on SPI5 SCK/MISO/MOSI (PF7, PF8, PF9) */
-  DISCOVERY_SPIx_GPIO_CLK_ENABLE();
-  gpio.Pin       = DISCOVERY_SPIx_SCK_PIN | DISCOVERY_SPIx_MISO_PIN | DISCOVERY_SPIx_MOSI_PIN;
+  /* 4. Enable internal pull-up on SD SPI SCK/MISO/MOSI */
+  SD_SPI_GPIO_CLK_ENABLE();
+  gpio.Pin       = SD_SPI_SCK_PIN | SD_SPI_MISO_PIN | SD_SPI_MOSI_PIN;
   gpio.Mode      = GPIO_MODE_AF_PP;
   gpio.Pull      = GPIO_PULLUP;
   gpio.Speed     = GPIO_SPEED_FAST;
-  gpio.Alternate = DISCOVERY_SPIx_AF;
-  HAL_GPIO_Init(DISCOVERY_SPIx_GPIO_PORT, &gpio);
+  gpio.Alternate = SD_SPI_AF;
+  HAL_GPIO_Init(SD_SPI_GPIO_PORT, &gpio);
 
-  /* Ensure SPI5 peripheral is enabled */
-  DISCOVERY_SPIx_CLK_ENABLE();
-  SET_BIT(SPI5->CR1, SPI_CR1_SPE);
+  /* Ensure SD SPI peripheral is enabled */
+  SD_SPI_CLK_ENABLE();
+  SET_BIT(SD_SPI_INSTANCE->CR1, SPI_CR1_SPE);
 }
 
 /*----------------------------------------------------------------------------

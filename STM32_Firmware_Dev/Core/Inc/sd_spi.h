@@ -12,18 +12,8 @@
 extern "C" {
 #endif
 
-#include "stm32f4xx_hal.h"
+#include "main.h"
 #include "diskio.h"
-
-/*----------------------------------------------------------------------------
- * Pin Configuration:
- *   SPI5 Bus : PF7 (SCK), PF8 (MISO), PF9 (MOSI)
- *   SD CS    : PC2 (shared with LCD_NCS; LCD_WRX/PD13 is held HIGH so the
- *              ILI9341 ignores SPI traffic while LTDC drives the display)
- *----------------------------------------------------------------------------*/
-#define SD_CS_GPIO_PORT            GPIOC
-#define SD_CS_PIN                  GPIO_PIN_2
-#define SD_CS_GPIO_CLK_ENABLE()    __HAL_RCC_GPIOC_CLK_ENABLE()
 
 /* Card type flags */
 #define CT_MMC      0x01

@@ -1,0 +1,1114 @@
+ARM GAS  /tmp/ccObBvVn.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.arch armv7e-m
+   3              		.fpu fpv4-sp-d16
+   4              		.eabi_attribute 27, 1
+   5              		.eabi_attribute 28, 1
+   6              		.eabi_attribute 20, 1
+   7              		.eabi_attribute 21, 1
+   8              		.eabi_attribute 23, 3
+   9              		.eabi_attribute 24, 1
+  10              		.eabi_attribute 25, 1
+  11              		.eabi_attribute 26, 1
+  12              		.eabi_attribute 30, 1
+  13              		.eabi_attribute 34, 1
+  14              		.eabi_attribute 18, 4
+  15              		.file	"app.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.file 1 "Core/Src/app.c"
+  20              		.section	.text.LVGL_BSP_Init,"ax",%progbits
+  21              		.align	1
+  22              		.syntax unified
+  23              		.thumb
+  24              		.thumb_func
+  26              	LVGL_BSP_Init:
+  27              	.LFB162:
+   1:Core/Src/app.c **** /**
+   2:Core/Src/app.c ****   ******************************************************************************
+   3:Core/Src/app.c ****   * @file    Core/Src/app.c
+   4:Core/Src/app.c ****   * @brief   FreeRTOS 5-Task GPS Map & Navigation Application Orchestrator:
+   5:Core/Src/app.c ****   *            1. Sensor_Input_Task (Core/Src/sensor_input_task.c, Prio 3)
+   6:Core/Src/app.c ****   *            2. GPS_UART_Task     (Core/Src/gps_uart_task.c,     Prio 3)
+   7:Core/Src/app.c ****   *            3. UI_LVGL_Task      (Core/Src/ui_lvgl_task.c,      Prio 2)
+   8:Core/Src/app.c ****   *            4. Tile_Loader_Task  (Core/Src/tile_loader_task.c,  Prio 1)
+   9:Core/Src/app.c ****   *            5. Pathfinder_Task   (Core/Src/pathfinder_task.c,   Prio 0)
+  10:Core/Src/app.c ****   ******************************************************************************
+  11:Core/Src/app.c ****   */
+  12:Core/Src/app.c **** 
+  13:Core/Src/app.c **** #include <string.h>
+  14:Core/Src/app.c **** #include "app.h"
+  15:Core/Src/app.c **** #include "stm32f429i_discovery_ts.h"
+  16:Core/Src/app.c **** 
+  17:Core/Src/app.c **** /*----------------------------------------------------------------------------
+  18:Core/Src/app.c ****  * FreeRTOS Heap in 64 KB Zero-Wait-State CCMRAM (0x10000000)
+  19:Core/Src/app.c ****  *----------------------------------------------------------------------------*/
+  20:Core/Src/app.c **** uint8_t ucHeap[configTOTAL_HEAP_SIZE] __attribute__((section(".ccmram"), aligned(8)));
+  21:Core/Src/app.c **** 
+  22:Core/Src/app.c **** /*----------------------------------------------------------------------------
+  23:Core/Src/app.c ****  * Inter-Task Communication (Queues, Mutexes, Handles)
+  24:Core/Src/app.c ****  *----------------------------------------------------------------------------*/
+  25:Core/Src/app.c **** QueueHandle_t     g_q_input_evt   = NULL;
+  26:Core/Src/app.c **** QueueHandle_t     g_q_gps_fix     = NULL;
+  27:Core/Src/app.c **** QueueHandle_t     g_q_tile_req    = NULL;
+  28:Core/Src/app.c **** QueueHandle_t     g_q_route_req   = NULL;
+  29:Core/Src/app.c **** SemaphoreHandle_t g_mutex_sd      = NULL;
+  30:Core/Src/app.c **** TaskHandle_t      g_ui_task_hdl   = NULL;
+  31:Core/Src/app.c **** TaskHandle_t      g_gps_task_hdl  = NULL;
+ARM GAS  /tmp/ccObBvVn.s 			page 2
+
+
+  32:Core/Src/app.c **** 
+  33:Core/Src/app.c **** /*----------------------------------------------------------------------------
+  34:Core/Src/app.c ****  * Shared Buffers & Map State (Internal SRAM + External SDRAM)
+  35:Core/Src/app.c ****  *----------------------------------------------------------------------------*/
+  36:Core/Src/app.c **** static uint8_t    s_draw_buf_1[MY_DISP_HOR_RES * 32 * 2] __attribute__((aligned(4)));
+  37:Core/Src/app.c **** 
+  38:Core/Src/app.c **** GeoCoord          g_gps_pos;
+  39:Core/Src/app.c **** GpsFix_t          g_gps_fix;
+  40:Core/Src/app.c **** MapCamera         g_camera;
+  41:Core/Src/app.c **** VisibleTileList   g_visible_tiles;
+  42:Core/Src/app.c **** TileGraphCache    g_graph_cache;
+  43:Core/Src/app.c **** Pathfinder        g_pathfinder;
+  44:Core/Src/app.c **** RouteResult       g_current_route __attribute__((section(".sdram")));
+  45:Core/Src/app.c **** 
+  46:Core/Src/app.c **** uint16_t          g_palette_rgb565[256];
+  47:Core/Src/app.c **** volatile bool     g_pak_ready       = false;
+  48:Core/Src/app.c **** TileCacheSlot     g_tile_cache[TILE_CACHE_SLOTS] __attribute__((section(".sdram"), aligned(4)));
+  49:Core/Src/app.c **** uint32_t          g_cache_clock     = 0;
+  50:Core/Src/app.c **** volatile uint32_t g_sd_tiles_loaded = 0;
+  51:Core/Src/app.c **** 
+  52:Core/Src/app.c **** /*----------------------------------------------------------------------------
+  53:Core/Src/app.c ****  * 1. Display Flush Callback (DMA2D RGB565 -> ARGB8888 in SDRAM)
+  54:Core/Src/app.c ****  *----------------------------------------------------------------------------*/
+  55:Core/Src/app.c **** static void my_disp_flush_cb(lv_display_t * disp, const lv_area_t * area, uint8_t * px_map)
+  56:Core/Src/app.c **** {
+  57:Core/Src/app.c ****   int32_t width  = lv_area_get_width(area);
+  58:Core/Src/app.c ****   int32_t height = lv_area_get_height(area);
+  59:Core/Src/app.c **** 
+  60:Core/Src/app.c ****   uint32_t dst_addr = DISP_FRAME_BUFFER_ADDR + 4U * (area->y1 * MY_DISP_HOR_RES + area->x1);
+  61:Core/Src/app.c **** 
+  62:Core/Src/app.c ****   DISP_DMA2D_INSTANCE->CR      = 0x00010000UL; /* Memory-to-Memory with PFC */
+  63:Core/Src/app.c ****   DISP_DMA2D_INSTANCE->FGMAR   = (uint32_t)px_map;
+  64:Core/Src/app.c ****   DISP_DMA2D_INSTANCE->OMAR    = dst_addr;
+  65:Core/Src/app.c ****   DISP_DMA2D_INSTANCE->FGOR    = 0;
+  66:Core/Src/app.c ****   DISP_DMA2D_INSTANCE->OOR     = MY_DISP_HOR_RES - width;
+  67:Core/Src/app.c ****   DISP_DMA2D_INSTANCE->FGPFCCR = LTDC_PIXEL_FORMAT_RGB565;
+  68:Core/Src/app.c ****   DISP_DMA2D_INSTANCE->OPFCCR  = LTDC_PIXEL_FORMAT_ARGB8888;
+  69:Core/Src/app.c ****   DISP_DMA2D_INSTANCE->NLR     = (uint32_t)((width << 16) | (uint16_t)height);
+  70:Core/Src/app.c ****   DISP_DMA2D_INSTANCE->CR     |= DMA2D_CR_START;
+  71:Core/Src/app.c **** 
+  72:Core/Src/app.c ****   while (DISP_DMA2D_INSTANCE->CR & DMA2D_CR_START) {}
+  73:Core/Src/app.c **** 
+  74:Core/Src/app.c ****   lv_display_flush_ready(disp);
+  75:Core/Src/app.c **** }
+  76:Core/Src/app.c **** 
+  77:Core/Src/app.c **** /*----------------------------------------------------------------------------
+  78:Core/Src/app.c ****  * 2. Initialize BSP LCD + Touchscreen + LVGL Display Driver
+  79:Core/Src/app.c ****  *----------------------------------------------------------------------------*/
+  80:Core/Src/app.c **** static void LVGL_BSP_Init(void)
+  81:Core/Src/app.c **** {
+  28              		.loc 1 81 1 view -0
+  29              		.cfi_startproc
+  30              		@ args = 0, pretend = 0, frame = 0
+  31              		@ frame_needed = 0, uses_anonymous_args = 0
+  32 0000 10B5     		push	{r4, lr}
+  33              	.LCFI0:
+  34              		.cfi_def_cfa_offset 8
+ARM GAS  /tmp/ccObBvVn.s 			page 3
+
+
+  35              		.cfi_offset 4, -8
+  36              		.cfi_offset 14, -4
+  37 0002 82B0     		sub	sp, sp, #8
+  38              	.LCFI1:
+  39              		.cfi_def_cfa_offset 16
+  82:Core/Src/app.c ****   BSP_LCD_Init();
+  40              		.loc 1 82 3 view .LVU1
+  41 0004 FFF7FEFF 		bl	BSP_LCD_Init
+  42              	.LVL0:
+  83:Core/Src/app.c ****   BSP_LCD_LayerDefaultInit(LCD_FOREGROUND_LAYER, DISP_FRAME_BUFFER_ADDR);
+  43              		.loc 1 83 3 view .LVU2
+  44 0008 4FF05041 		mov	r1, #-805306368
+  45 000c 0120     		movs	r0, #1
+  46 000e FFF7FEFF 		bl	BSP_LCD_LayerDefaultInit
+  47              	.LVL1:
+  84:Core/Src/app.c ****   BSP_LCD_SelectLayer(LCD_FOREGROUND_LAYER);
+  48              		.loc 1 84 3 view .LVU3
+  49 0012 0120     		movs	r0, #1
+  50 0014 FFF7FEFF 		bl	BSP_LCD_SelectLayer
+  51              	.LVL2:
+  85:Core/Src/app.c ****   BSP_LCD_Clear(LCD_COLOR_BLACK);
+  52              		.loc 1 85 3 view .LVU4
+  53 0018 4FF07F40 		mov	r0, #-16777216
+  54 001c FFF7FEFF 		bl	BSP_LCD_Clear
+  55              	.LVL3:
+  86:Core/Src/app.c **** 
+  87:Core/Src/app.c ****   BSP_TS_Init(MY_DISP_HOR_RES, MY_DISP_VER_RES);
+  56              		.loc 1 87 3 view .LVU5
+  57 0020 4FF4A071 		mov	r1, #320
+  58 0024 F020     		movs	r0, #240
+  59 0026 FFF7FEFF 		bl	BSP_TS_Init
+  60              	.LVL4:
+  88:Core/Src/app.c **** 
+  89:Core/Src/app.c ****   lv_init();
+  61              		.loc 1 89 3 view .LVU6
+  62 002a FFF7FEFF 		bl	lv_init
+  63              	.LVL5:
+  90:Core/Src/app.c ****   lv_tick_set_cb(HAL_GetTick);
+  64              		.loc 1 90 3 view .LVU7
+  65 002e 0B48     		ldr	r0, .L3
+  66 0030 FFF7FEFF 		bl	lv_tick_set_cb
+  67              	.LVL6:
+  91:Core/Src/app.c **** 
+  92:Core/Src/app.c ****   lv_display_t * disp = lv_display_create(MY_DISP_HOR_RES, MY_DISP_VER_RES);
+  68              		.loc 1 92 3 view .LVU8
+  69              		.loc 1 92 25 is_stmt 0 view .LVU9
+  70 0034 4FF4A071 		mov	r1, #320
+  71 0038 F020     		movs	r0, #240
+  72 003a FFF7FEFF 		bl	lv_display_create
+  73              	.LVL7:
+  74 003e 0446     		mov	r4, r0
+  75              	.LVL8:
+  93:Core/Src/app.c ****   lv_display_set_flush_cb(disp, my_disp_flush_cb);
+  76              		.loc 1 93 3 is_stmt 1 view .LVU10
+  77 0040 0749     		ldr	r1, .L3+4
+  78 0042 FFF7FEFF 		bl	lv_display_set_flush_cb
+  79              	.LVL9:
+ARM GAS  /tmp/ccObBvVn.s 			page 4
+
+
+  94:Core/Src/app.c ****   lv_display_set_buffers(disp, s_draw_buf_1, NULL, sizeof(s_draw_buf_1), LV_DISPLAY_RENDER_MODE_PAR
+  80              		.loc 1 94 3 view .LVU11
+  81 0046 0022     		movs	r2, #0
+  82 0048 0092     		str	r2, [sp]
+  83 004a 4FF47053 		mov	r3, #15360
+  84 004e 0549     		ldr	r1, .L3+8
+  85 0050 2046     		mov	r0, r4
+  86 0052 FFF7FEFF 		bl	lv_display_set_buffers
+  87              	.LVL10:
+  95:Core/Src/app.c **** }
+  88              		.loc 1 95 1 is_stmt 0 view .LVU12
+  89 0056 02B0     		add	sp, sp, #8
+  90              	.LCFI2:
+  91              		.cfi_def_cfa_offset 8
+  92              		@ sp needed
+  93 0058 10BD     		pop	{r4, pc}
+  94              	.LVL11:
+  95              	.L4:
+  96              		.loc 1 95 1 view .LVU13
+  97 005a 00BF     		.align	2
+  98              	.L3:
+  99 005c 00000000 		.word	HAL_GetTick
+ 100 0060 00000000 		.word	my_disp_flush_cb
+ 101 0064 00000000 		.word	s_draw_buf_1
+ 102              		.cfi_endproc
+ 103              	.LFE162:
+ 105              		.section	.text.my_disp_flush_cb,"ax",%progbits
+ 106              		.align	1
+ 107              		.syntax unified
+ 108              		.thumb
+ 109              		.thumb_func
+ 111              	my_disp_flush_cb:
+ 112              	.LVL12:
+ 113              	.LFB161:
+  56:Core/Src/app.c ****   int32_t width  = lv_area_get_width(area);
+ 114              		.loc 1 56 1 is_stmt 1 view -0
+ 115              		.cfi_startproc
+ 116              		@ args = 0, pretend = 0, frame = 0
+ 117              		@ frame_needed = 0, uses_anonymous_args = 0
+  56:Core/Src/app.c ****   int32_t width  = lv_area_get_width(area);
+ 118              		.loc 1 56 1 is_stmt 0 view .LVU15
+ 119 0000 F8B5     		push	{r3, r4, r5, r6, r7, lr}
+ 120              	.LCFI3:
+ 121              		.cfi_def_cfa_offset 24
+ 122              		.cfi_offset 3, -24
+ 123              		.cfi_offset 4, -20
+ 124              		.cfi_offset 5, -16
+ 125              		.cfi_offset 6, -12
+ 126              		.cfi_offset 7, -8
+ 127              		.cfi_offset 14, -4
+ 128 0002 0746     		mov	r7, r0
+ 129 0004 0D46     		mov	r5, r1
+ 130 0006 1646     		mov	r6, r2
+  57:Core/Src/app.c ****   int32_t height = lv_area_get_height(area);
+ 131              		.loc 1 57 3 is_stmt 1 view .LVU16
+  57:Core/Src/app.c ****   int32_t height = lv_area_get_height(area);
+ 132              		.loc 1 57 20 is_stmt 0 view .LVU17
+ARM GAS  /tmp/ccObBvVn.s 			page 5
+
+
+ 133 0008 0846     		mov	r0, r1
+ 134              	.LVL13:
+  57:Core/Src/app.c ****   int32_t height = lv_area_get_height(area);
+ 135              		.loc 1 57 20 view .LVU18
+ 136 000a FFF7FEFF 		bl	lv_area_get_width
+ 137              	.LVL14:
+  57:Core/Src/app.c ****   int32_t height = lv_area_get_height(area);
+ 138              		.loc 1 57 20 view .LVU19
+ 139 000e 0446     		mov	r4, r0
+ 140              	.LVL15:
+  58:Core/Src/app.c **** 
+ 141              		.loc 1 58 3 is_stmt 1 view .LVU20
+  58:Core/Src/app.c **** 
+ 142              		.loc 1 58 20 is_stmt 0 view .LVU21
+ 143 0010 2846     		mov	r0, r5
+ 144              	.LVL16:
+  58:Core/Src/app.c **** 
+ 145              		.loc 1 58 20 view .LVU22
+ 146 0012 FFF7FEFF 		bl	lv_area_get_height
+ 147              	.LVL17:
+  60:Core/Src/app.c **** 
+ 148              		.loc 1 60 3 is_stmt 1 view .LVU23
+  60:Core/Src/app.c **** 
+ 149              		.loc 1 60 58 is_stmt 0 view .LVU24
+ 150 0016 6B68     		ldr	r3, [r5, #4]
+  60:Core/Src/app.c **** 
+ 151              		.loc 1 60 63 view .LVU25
+ 152 0018 C3EB0313 		rsb	r3, r3, r3, lsl #4
+  60:Core/Src/app.c **** 
+ 153              		.loc 1 60 87 view .LVU26
+ 154 001c 2968     		ldr	r1, [r5]
+  60:Core/Src/app.c **** 
+ 155              		.loc 1 60 81 view .LVU27
+ 156 001e 01EB0311 		add	r1, r1, r3, lsl #4
+  60:Core/Src/app.c **** 
+ 157              		.loc 1 60 46 view .LVU28
+ 158 0022 01F17441 		add	r1, r1, #-201326592
+  60:Core/Src/app.c **** 
+ 159              		.loc 1 60 12 view .LVU29
+ 160 0026 8900     		lsls	r1, r1, #2
+ 161              	.LVL18:
+  62:Core/Src/app.c ****   DISP_DMA2D_INSTANCE->FGMAR   = (uint32_t)px_map;
+ 162              		.loc 1 62 3 is_stmt 1 view .LVU30
+  62:Core/Src/app.c ****   DISP_DMA2D_INSTANCE->FGMAR   = (uint32_t)px_map;
+ 163              		.loc 1 62 32 is_stmt 0 view .LVU31
+ 164 0028 0F4B     		ldr	r3, .L8
+ 165 002a 4FF48032 		mov	r2, #65536
+ 166 002e 1A60     		str	r2, [r3]
+  63:Core/Src/app.c ****   DISP_DMA2D_INSTANCE->OMAR    = dst_addr;
+ 167              		.loc 1 63 3 is_stmt 1 view .LVU32
+  63:Core/Src/app.c ****   DISP_DMA2D_INSTANCE->OMAR    = dst_addr;
+ 168              		.loc 1 63 32 is_stmt 0 view .LVU33
+ 169 0030 DE60     		str	r6, [r3, #12]
+  64:Core/Src/app.c ****   DISP_DMA2D_INSTANCE->FGOR    = 0;
+ 170              		.loc 1 64 3 is_stmt 1 view .LVU34
+  64:Core/Src/app.c ****   DISP_DMA2D_INSTANCE->FGOR    = 0;
+ 171              		.loc 1 64 32 is_stmt 0 view .LVU35
+ARM GAS  /tmp/ccObBvVn.s 			page 6
+
+
+ 172 0032 D963     		str	r1, [r3, #60]
+  65:Core/Src/app.c ****   DISP_DMA2D_INSTANCE->OOR     = MY_DISP_HOR_RES - width;
+ 173              		.loc 1 65 3 is_stmt 1 view .LVU36
+  65:Core/Src/app.c ****   DISP_DMA2D_INSTANCE->OOR     = MY_DISP_HOR_RES - width;
+ 174              		.loc 1 65 32 is_stmt 0 view .LVU37
+ 175 0034 0022     		movs	r2, #0
+ 176 0036 1A61     		str	r2, [r3, #16]
+  66:Core/Src/app.c ****   DISP_DMA2D_INSTANCE->FGPFCCR = LTDC_PIXEL_FORMAT_RGB565;
+ 177              		.loc 1 66 3 is_stmt 1 view .LVU38
+  66:Core/Src/app.c ****   DISP_DMA2D_INSTANCE->FGPFCCR = LTDC_PIXEL_FORMAT_RGB565;
+ 178              		.loc 1 66 50 is_stmt 0 view .LVU39
+ 179 0038 C4F1F001 		rsb	r1, r4, #240
+ 180              	.LVL19:
+  66:Core/Src/app.c ****   DISP_DMA2D_INSTANCE->FGPFCCR = LTDC_PIXEL_FORMAT_RGB565;
+ 181              		.loc 1 66 32 view .LVU40
+ 182 003c 1964     		str	r1, [r3, #64]
+  67:Core/Src/app.c ****   DISP_DMA2D_INSTANCE->OPFCCR  = LTDC_PIXEL_FORMAT_ARGB8888;
+ 183              		.loc 1 67 3 is_stmt 1 view .LVU41
+  67:Core/Src/app.c ****   DISP_DMA2D_INSTANCE->OPFCCR  = LTDC_PIXEL_FORMAT_ARGB8888;
+ 184              		.loc 1 67 32 is_stmt 0 view .LVU42
+ 185 003e 0221     		movs	r1, #2
+ 186 0040 D961     		str	r1, [r3, #28]
+  68:Core/Src/app.c ****   DISP_DMA2D_INSTANCE->NLR     = (uint32_t)((width << 16) | (uint16_t)height);
+ 187              		.loc 1 68 3 is_stmt 1 view .LVU43
+  68:Core/Src/app.c ****   DISP_DMA2D_INSTANCE->NLR     = (uint32_t)((width << 16) | (uint16_t)height);
+ 188              		.loc 1 68 32 is_stmt 0 view .LVU44
+ 189 0042 5A63     		str	r2, [r3, #52]
+  69:Core/Src/app.c ****   DISP_DMA2D_INSTANCE->CR     |= DMA2D_CR_START;
+ 190              		.loc 1 69 3 is_stmt 1 view .LVU45
+  69:Core/Src/app.c ****   DISP_DMA2D_INSTANCE->CR     |= DMA2D_CR_START;
+ 191              		.loc 1 69 61 is_stmt 0 view .LVU46
+ 192 0044 80B2     		uxth	r0, r0
+ 193              	.LVL20:
+  69:Core/Src/app.c ****   DISP_DMA2D_INSTANCE->CR     |= DMA2D_CR_START;
+ 194              		.loc 1 69 59 view .LVU47
+ 195 0046 40EA0440 		orr	r0, r0, r4, lsl #16
+  69:Core/Src/app.c ****   DISP_DMA2D_INSTANCE->CR     |= DMA2D_CR_START;
+ 196              		.loc 1 69 32 view .LVU48
+ 197 004a 5864     		str	r0, [r3, #68]
+  70:Core/Src/app.c **** 
+ 198              		.loc 1 70 3 is_stmt 1 view .LVU49
+  70:Core/Src/app.c **** 
+ 199              		.loc 1 70 22 is_stmt 0 view .LVU50
+ 200 004c 1A68     		ldr	r2, [r3]
+  70:Core/Src/app.c **** 
+ 201              		.loc 1 70 31 view .LVU51
+ 202 004e 42F00102 		orr	r2, r2, #1
+ 203 0052 1A60     		str	r2, [r3]
+  72:Core/Src/app.c **** 
+ 204              		.loc 1 72 3 is_stmt 1 view .LVU52
+ 205              	.L6:
+  72:Core/Src/app.c **** 
+ 206              		.loc 1 72 53 discriminator 1 view .LVU53
+  72:Core/Src/app.c **** 
+ 207              		.loc 1 72 10 discriminator 1 view .LVU54
+  72:Core/Src/app.c **** 
+ 208              		.loc 1 72 29 is_stmt 0 discriminator 1 view .LVU55
+ARM GAS  /tmp/ccObBvVn.s 			page 7
+
+
+ 209 0054 044B     		ldr	r3, .L8
+ 210 0056 1B68     		ldr	r3, [r3]
+  72:Core/Src/app.c **** 
+ 211              		.loc 1 72 10 discriminator 1 view .LVU56
+ 212 0058 13F0010F 		tst	r3, #1
+ 213 005c FAD1     		bne	.L6
+  74:Core/Src/app.c **** }
+ 214              		.loc 1 74 3 is_stmt 1 view .LVU57
+ 215 005e 3846     		mov	r0, r7
+ 216 0060 FFF7FEFF 		bl	lv_display_flush_ready
+ 217              	.LVL21:
+  75:Core/Src/app.c **** 
+ 218              		.loc 1 75 1 is_stmt 0 view .LVU58
+ 219 0064 F8BD     		pop	{r3, r4, r5, r6, r7, pc}
+ 220              	.LVL22:
+ 221              	.L9:
+  75:Core/Src/app.c **** 
+ 222              		.loc 1 75 1 view .LVU59
+ 223 0066 00BF     		.align	2
+ 224              	.L8:
+ 225 0068 00B00240 		.word	1073917952
+ 226              		.cfi_endproc
+ 227              	.LFE161:
+ 229              		.section	.text.Tile_Cache_Reset,"ax",%progbits
+ 230              		.align	1
+ 231              		.global	Tile_Cache_Reset
+ 232              		.syntax unified
+ 233              		.thumb
+ 234              		.thumb_func
+ 236              	Tile_Cache_Reset:
+ 237              	.LFB163:
+  96:Core/Src/app.c **** 
+  97:Core/Src/app.c **** /*----------------------------------------------------------------------------
+  98:Core/Src/app.c ****  * 3. Initialize GPS Library & Tile Cache
+  99:Core/Src/app.c ****  *----------------------------------------------------------------------------*/
+ 100:Core/Src/app.c **** void Tile_Cache_Reset(void)
+ 101:Core/Src/app.c **** {
+ 238              		.loc 1 101 1 is_stmt 1 view -0
+ 239              		.cfi_startproc
+ 240              		@ args = 0, pretend = 0, frame = 0
+ 241              		@ frame_needed = 0, uses_anonymous_args = 0
+ 242              		@ link register save eliminated.
+ 102:Core/Src/app.c ****   g_cache_clock     = 0;
+ 243              		.loc 1 102 3 view .LVU61
+ 244              		.loc 1 102 21 is_stmt 0 view .LVU62
+ 245 0000 0022     		movs	r2, #0
+ 246 0002 094B     		ldr	r3, .L13
+ 247 0004 1A60     		str	r2, [r3]
+ 103:Core/Src/app.c ****   g_sd_tiles_loaded = 0;
+ 248              		.loc 1 103 3 is_stmt 1 view .LVU63
+ 249              		.loc 1 103 21 is_stmt 0 view .LVU64
+ 250 0006 094B     		ldr	r3, .L13+4
+ 251 0008 1A60     		str	r2, [r3]
+ 104:Core/Src/app.c ****   for (int i = 0; i < TILE_CACHE_SLOTS; i++)
+ 252              		.loc 1 104 3 is_stmt 1 view .LVU65
+ 253              	.LBB2:
+ 254              		.loc 1 104 8 view .LVU66
+ARM GAS  /tmp/ccObBvVn.s 			page 8
+
+
+ 255              	.LVL23:
+ 256              		.loc 1 104 3 is_stmt 0 view .LVU67
+ 257 000a 09E0     		b	.L11
+ 258              	.LVL24:
+ 259              	.L12:
+ 105:Core/Src/app.c ****   {
+ 106:Core/Src/app.c ****     g_tile_cache[i].state    = TILE_SLOT_EMPTY;
+ 260              		.loc 1 106 5 is_stmt 1 view .LVU68
+ 261              		.loc 1 106 30 is_stmt 0 view .LVU69
+ 262 000c 02EB0231 		add	r1, r2, r2, lsl #12
+ 263 0010 074B     		ldr	r3, .L13+8
+ 264 0012 03EB0113 		add	r3, r3, r1, lsl #4
+ 265 0016 0021     		movs	r1, #0
+ 266 0018 1973     		strb	r1, [r3, #12]
+ 107:Core/Src/app.c ****     g_tile_cache[i].has_data = false;
+ 267              		.loc 1 107 5 is_stmt 1 view .LVU70
+ 268              		.loc 1 107 30 is_stmt 0 view .LVU71
+ 269 001a 5973     		strb	r1, [r3, #13]
+ 108:Core/Src/app.c ****     g_tile_cache[i].lru_tick = 0;
+ 270              		.loc 1 108 5 is_stmt 1 view .LVU72
+ 271              		.loc 1 108 30 is_stmt 0 view .LVU73
+ 272 001c 9960     		str	r1, [r3, #8]
+ 104:Core/Src/app.c ****   {
+ 273              		.loc 1 104 42 is_stmt 1 discriminator 1 view .LVU74
+ 274 001e 0132     		adds	r2, r2, #1
+ 275              	.LVL25:
+ 276              	.L11:
+ 104:Core/Src/app.c ****   {
+ 277              		.loc 1 104 21 discriminator 2 view .LVU75
+ 278 0020 082A     		cmp	r2, #8
+ 279 0022 F3DD     		ble	.L12
+ 280              	.LBE2:
+ 109:Core/Src/app.c ****   }
+ 110:Core/Src/app.c **** }
+ 281              		.loc 1 110 1 is_stmt 0 view .LVU76
+ 282 0024 7047     		bx	lr
+ 283              	.L14:
+ 284 0026 00BF     		.align	2
+ 285              	.L13:
+ 286 0028 00000000 		.word	g_cache_clock
+ 287 002c 00000000 		.word	g_sd_tiles_loaded
+ 288 0030 00000000 		.word	g_tile_cache
+ 289              		.cfi_endproc
+ 290              	.LFE163:
+ 292              		.section	.rodata.GPS_Library_Init.str1.4,"aMS",%progbits,1
+ 293              		.align	2
+ 294              	.LC0:
+ 295 0000 62696E61 		.ascii	"binary_map_data\000"
+ 295      72795F6D 
+ 295      61705F64 
+ 295      61746100 
+ 296              		.section	.text.GPS_Library_Init,"ax",%progbits
+ 297              		.align	1
+ 298              		.syntax unified
+ 299              		.thumb
+ 300              		.thumb_func
+ 302              	GPS_Library_Init:
+ARM GAS  /tmp/ccObBvVn.s 			page 9
+
+
+ 303              	.LFB164:
+ 111:Core/Src/app.c **** 
+ 112:Core/Src/app.c **** static void GPS_Library_Init(void)
+ 113:Core/Src/app.c **** {
+ 304              		.loc 1 113 1 is_stmt 1 view -0
+ 305              		.cfi_startproc
+ 306              		@ args = 0, pretend = 0, frame = 8
+ 307              		@ frame_needed = 0, uses_anonymous_args = 0
+ 308 0000 30B5     		push	{r4, r5, lr}
+ 309              	.LCFI4:
+ 310              		.cfi_def_cfa_offset 12
+ 311              		.cfi_offset 4, -12
+ 312              		.cfi_offset 5, -8
+ 313              		.cfi_offset 14, -4
+ 314 0002 85B0     		sub	sp, sp, #20
+ 315              	.LCFI5:
+ 316              		.cfi_def_cfa_offset 32
+ 114:Core/Src/app.c ****   /* Step A: Starting Coordinate (Liège center: 50.6242000° N, 5.5666000° E) */
+ 115:Core/Src/app.c ****   g_gps_pos            = geo_coord_make(506242000L, 55666000L);
+ 317              		.loc 1 115 3 view .LVU78
+ 318              		.loc 1 115 26 is_stmt 0 view .LVU79
+ 319 0004 164C     		ldr	r4, .L17
+ 320 0006 02AD     		add	r5, sp, #8
+ 321 0008 164A     		ldr	r2, .L17+4
+ 322 000a 1749     		ldr	r1, .L17+8
+ 323 000c 2846     		mov	r0, r5
+ 324 000e FFF7FEFF 		bl	geo_coord_make
+ 325              	.LVL26:
+ 326 0012 95E80300 		ldm	r5, {r0, r1}
+ 327 0016 84E80300 		stm	r4, {r0, r1}
+ 116:Core/Src/app.c ****   int32_t initial_zoom = 14;
+ 328              		.loc 1 116 3 is_stmt 1 view .LVU80
+ 329              	.LVL27:
+ 117:Core/Src/app.c **** 
+ 118:Core/Src/app.c ****   /* Step B: Initialize MapCamera & compute initial VisibleTileList */
+ 119:Core/Src/app.c ****   map_camera_init(&g_camera, g_gps_pos, initial_zoom, MY_DISP_HOR_RES, MY_DISP_VER_RES);
+ 330              		.loc 1 119 3 view .LVU81
+ 331 001a 144D     		ldr	r5, .L17+12
+ 332 001c 4FF4A073 		mov	r3, #320
+ 333 0020 0193     		str	r3, [sp, #4]
+ 334 0022 F023     		movs	r3, #240
+ 335 0024 0093     		str	r3, [sp]
+ 336 0026 0E23     		movs	r3, #14
+ 337 0028 94E80600 		ldm	r4, {r1, r2}
+ 338 002c 2846     		mov	r0, r5
+ 339 002e FFF7FEFF 		bl	map_camera_init
+ 340              	.LVL28:
+ 120:Core/Src/app.c ****   map_camera_get_visible_tiles(&g_camera, &g_visible_tiles);
+ 341              		.loc 1 120 3 view .LVU82
+ 342 0032 0F49     		ldr	r1, .L17+16
+ 343 0034 2846     		mov	r0, r5
+ 344 0036 FFF7FEFF 		bl	map_camera_get_visible_tiles
+ 345              	.LVL29:
+ 121:Core/Src/app.c **** 
+ 122:Core/Src/app.c ****   /* Step C: Initialize Road Graph Cache & Hybrid A* Pathfinder */
+ 123:Core/Src/app.c ****   tile_graph_cache_init(&g_graph_cache, "binary_map_data", TILE_GRAPH_CACHE_MAX_LOCAL);
+ 346              		.loc 1 123 3 view .LVU83
+ARM GAS  /tmp/ccObBvVn.s 			page 10
+
+
+ 347 003a 0E4C     		ldr	r4, .L17+20
+ 348 003c 0222     		movs	r2, #2
+ 349 003e 0E49     		ldr	r1, .L17+24
+ 350 0040 2046     		mov	r0, r4
+ 351 0042 FFF7FEFF 		bl	tile_graph_cache_init
+ 352              	.LVL30:
+ 124:Core/Src/app.c ****   pathfinder_init(&g_pathfinder, &g_graph_cache);
+ 353              		.loc 1 124 3 view .LVU84
+ 354 0046 2146     		mov	r1, r4
+ 355 0048 0C48     		ldr	r0, .L17+28
+ 356 004a FFF7FEFF 		bl	pathfinder_init
+ 357              	.LVL31:
+ 125:Core/Src/app.c ****   memset(&g_current_route, 0, sizeof(RouteResult));
+ 358              		.loc 1 125 3 view .LVU85
+ 359 004e 0C4A     		ldr	r2, .L17+32
+ 360 0050 0021     		movs	r1, #0
+ 361 0052 0C48     		ldr	r0, .L17+36
+ 362 0054 FFF7FEFF 		bl	memset
+ 363              	.LVL32:
+ 126:Core/Src/app.c **** 
+ 127:Core/Src/app.c ****   Tile_Cache_Reset();
+ 364              		.loc 1 127 3 view .LVU86
+ 365 0058 FFF7FEFF 		bl	Tile_Cache_Reset
+ 366              	.LVL33:
+ 128:Core/Src/app.c **** }
+ 367              		.loc 1 128 1 is_stmt 0 view .LVU87
+ 368 005c 05B0     		add	sp, sp, #20
+ 369              	.LCFI6:
+ 370              		.cfi_def_cfa_offset 12
+ 371              		@ sp needed
+ 372 005e 30BD     		pop	{r4, r5, pc}
+ 373              	.L18:
+ 374              		.align	2
+ 375              	.L17:
+ 376 0060 00000000 		.word	g_gps_pos
+ 377 0064 50655103 		.word	55666000
+ 378 0068 D0A32C1E 		.word	506242000
+ 379 006c 00000000 		.word	g_camera
+ 380 0070 00000000 		.word	g_visible_tiles
+ 381 0074 00000000 		.word	g_graph_cache
+ 382 0078 00000000 		.word	.LC0
+ 383 007c 00000000 		.word	g_pathfinder
+ 384 0080 1C900100 		.word	102428
+ 385 0084 00000000 		.word	g_current_route
+ 386              		.cfi_endproc
+ 387              	.LFE164:
+ 389              		.section	.rodata.App_Run.str1.4,"aMS",%progbits,1
+ 390              		.align	2
+ 391              	.LC1:
+ 392 0000 55495F4C 		.ascii	"UI_LVGL\000"
+ 392      56474C00 
+ 393              		.align	2
+ 394              	.LC2:
+ 395 0008 53656E73 		.ascii	"SensorInput\000"
+ 395      6F72496E 
+ 395      70757400 
+ 396              		.align	2
+ARM GAS  /tmp/ccObBvVn.s 			page 11
+
+
+ 397              	.LC3:
+ 398 0014 4750535F 		.ascii	"GPS_UART\000"
+ 398      55415254 
+ 398      00
+ 399 001d 000000   		.align	2
+ 400              	.LC4:
+ 401 0020 54696C65 		.ascii	"TileLoader\000"
+ 401      4C6F6164 
+ 401      657200
+ 402 002b 00       		.align	2
+ 403              	.LC5:
+ 404 002c 50617468 		.ascii	"Pathfinder\000"
+ 404      66696E64 
+ 404      657200
+ 405              		.section	.text.App_Run,"ax",%progbits
+ 406              		.align	1
+ 407              		.global	App_Run
+ 408              		.syntax unified
+ 409              		.thumb
+ 410              		.thumb_func
+ 412              	App_Run:
+ 413              	.LFB165:
+ 129:Core/Src/app.c **** 
+ 130:Core/Src/app.c **** /*============================================================================
+ 131:Core/Src/app.c ****  * Application Entry Point Called from main()
+ 132:Core/Src/app.c ****  *============================================================================*/
+ 133:Core/Src/app.c **** void App_Run(void)
+ 134:Core/Src/app.c **** {
+ 414              		.loc 1 134 1 is_stmt 1 view -0
+ 415              		.cfi_startproc
+ 416              		@ Volatile: function does not return.
+ 417              		@ args = 0, pretend = 0, frame = 0
+ 418              		@ frame_needed = 0, uses_anonymous_args = 0
+ 419 0000 00B5     		push	{lr}
+ 420              	.LCFI7:
+ 421              		.cfi_def_cfa_offset 4
+ 422              		.cfi_offset 14, -4
+ 423 0002 83B0     		sub	sp, sp, #12
+ 424              	.LCFI8:
+ 425              		.cfi_def_cfa_offset 16
+ 135:Core/Src/app.c ****   LVGL_BSP_Init();
+ 426              		.loc 1 135 3 view .LVU89
+ 427 0004 FFF7FEFF 		bl	LVGL_BSP_Init
+ 428              	.LVL34:
+ 136:Core/Src/app.c ****   GPS_Library_Init();
+ 429              		.loc 1 136 3 view .LVU90
+ 430 0008 FFF7FEFF 		bl	GPS_Library_Init
+ 431              	.LVL35:
+ 137:Core/Src/app.c **** 
+ 138:Core/Src/app.c ****   /* Create RTOS Queues & SD SPI Mutex */
+ 139:Core/Src/app.c ****   g_q_input_evt = xQueueCreate(16, sizeof(InputEvent_t));
+ 432              		.loc 1 139 3 view .LVU91
+ 433              		.loc 1 139 19 is_stmt 0 view .LVU92
+ 434 000c 0022     		movs	r2, #0
+ 435 000e 0E21     		movs	r1, #14
+ 436 0010 1020     		movs	r0, #16
+ 437 0012 FFF7FEFF 		bl	xQueueGenericCreate
+ARM GAS  /tmp/ccObBvVn.s 			page 12
+
+
+ 438              	.LVL36:
+ 439              		.loc 1 139 17 discriminator 1 view .LVU93
+ 440 0016 294B     		ldr	r3, .L22
+ 441 0018 1860     		str	r0, [r3]
+ 140:Core/Src/app.c ****   g_q_gps_fix   = xQueueCreate(1,  sizeof(GpsFix_t));
+ 442              		.loc 1 140 3 is_stmt 1 view .LVU94
+ 443              		.loc 1 140 19 is_stmt 0 view .LVU95
+ 444 001a 0022     		movs	r2, #0
+ 445 001c 1C21     		movs	r1, #28
+ 446 001e 0120     		movs	r0, #1
+ 447 0020 FFF7FEFF 		bl	xQueueGenericCreate
+ 448              	.LVL37:
+ 449              		.loc 1 140 17 discriminator 1 view .LVU96
+ 450 0024 264B     		ldr	r3, .L22+4
+ 451 0026 1860     		str	r0, [r3]
+ 141:Core/Src/app.c ****   g_q_tile_req  = xQueueCreate(TILE_CACHE_SLOTS, sizeof(TileRequest_t));
+ 452              		.loc 1 141 3 is_stmt 1 view .LVU97
+ 453              		.loc 1 141 19 is_stmt 0 view .LVU98
+ 454 0028 0022     		movs	r2, #0
+ 455 002a 0C21     		movs	r1, #12
+ 456 002c 0920     		movs	r0, #9
+ 457 002e FFF7FEFF 		bl	xQueueGenericCreate
+ 458              	.LVL38:
+ 459              		.loc 1 141 17 discriminator 1 view .LVU99
+ 460 0032 244B     		ldr	r3, .L22+8
+ 461 0034 1860     		str	r0, [r3]
+ 142:Core/Src/app.c ****   g_q_route_req = xQueueCreate(1,  sizeof(RouteRequest_t));
+ 462              		.loc 1 142 3 is_stmt 1 view .LVU100
+ 463              		.loc 1 142 19 is_stmt 0 view .LVU101
+ 464 0036 0022     		movs	r2, #0
+ 465 0038 1021     		movs	r1, #16
+ 466 003a 0120     		movs	r0, #1
+ 467 003c FFF7FEFF 		bl	xQueueGenericCreate
+ 468              	.LVL39:
+ 469              		.loc 1 142 17 discriminator 1 view .LVU102
+ 470 0040 214B     		ldr	r3, .L22+12
+ 471 0042 1860     		str	r0, [r3]
+ 143:Core/Src/app.c ****   g_mutex_sd    = xSemaphoreCreateMutex();
+ 472              		.loc 1 143 3 is_stmt 1 view .LVU103
+ 473              		.loc 1 143 19 is_stmt 0 view .LVU104
+ 474 0044 0120     		movs	r0, #1
+ 475 0046 FFF7FEFF 		bl	xQueueCreateMutex
+ 476              	.LVL40:
+ 477              		.loc 1 143 17 discriminator 1 view .LVU105
+ 478 004a 204B     		ldr	r3, .L22+16
+ 479 004c 1860     		str	r0, [r3]
+ 144:Core/Src/app.c **** 
+ 145:Core/Src/app.c ****   /* Create the 5 RTOS Tasks */
+ 146:Core/Src/app.c ****   xTaskCreate(UI_LVGL_Task,      "UI_LVGL",     1536, NULL, PRIO_UI_LVGL,     &g_ui_task_hdl);
+ 480              		.loc 1 146 3 is_stmt 1 view .LVU106
+ 481 004e 204B     		ldr	r3, .L22+20
+ 482 0050 0193     		str	r3, [sp, #4]
+ 483 0052 0223     		movs	r3, #2
+ 484 0054 0093     		str	r3, [sp]
+ 485 0056 0023     		movs	r3, #0
+ 486 0058 4FF4C062 		mov	r2, #1536
+ 487 005c 1D49     		ldr	r1, .L22+24
+ARM GAS  /tmp/ccObBvVn.s 			page 13
+
+
+ 488 005e 1E48     		ldr	r0, .L22+28
+ 489 0060 FFF7FEFF 		bl	xTaskCreate
+ 490              	.LVL41:
+ 147:Core/Src/app.c ****   xTaskCreate(Sensor_Input_Task, "SensorInput",  512, NULL, PRIO_SENSOR_GPS,  NULL);
+ 491              		.loc 1 147 3 view .LVU107
+ 492 0064 0024     		movs	r4, #0
+ 493 0066 0194     		str	r4, [sp, #4]
+ 494 0068 0325     		movs	r5, #3
+ 495 006a 0095     		str	r5, [sp]
+ 496 006c 2346     		mov	r3, r4
+ 497 006e 4FF40072 		mov	r2, #512
+ 498 0072 1A49     		ldr	r1, .L22+32
+ 499 0074 1A48     		ldr	r0, .L22+36
+ 500 0076 FFF7FEFF 		bl	xTaskCreate
+ 501              	.LVL42:
+ 148:Core/Src/app.c ****   xTaskCreate(GPS_UART_Task,     "GPS_UART",     512, NULL, PRIO_SENSOR_GPS,  &g_gps_task_hdl);
+ 502              		.loc 1 148 3 view .LVU108
+ 503 007a 1A4B     		ldr	r3, .L22+40
+ 504 007c 0193     		str	r3, [sp, #4]
+ 505 007e 0095     		str	r5, [sp]
+ 506 0080 2346     		mov	r3, r4
+ 507 0082 4FF40072 		mov	r2, #512
+ 508 0086 1849     		ldr	r1, .L22+44
+ 509 0088 1848     		ldr	r0, .L22+48
+ 510 008a FFF7FEFF 		bl	xTaskCreate
+ 511              	.LVL43:
+ 149:Core/Src/app.c ****   xTaskCreate(Tile_Loader_Task,  "TileLoader",  1024, NULL, PRIO_TILE_LOADER, NULL);
+ 512              		.loc 1 149 3 view .LVU109
+ 513 008e 0194     		str	r4, [sp, #4]
+ 514 0090 0123     		movs	r3, #1
+ 515 0092 0093     		str	r3, [sp]
+ 516 0094 2346     		mov	r3, r4
+ 517 0096 4FF48062 		mov	r2, #1024
+ 518 009a 1549     		ldr	r1, .L22+52
+ 519 009c 1548     		ldr	r0, .L22+56
+ 520 009e FFF7FEFF 		bl	xTaskCreate
+ 521              	.LVL44:
+ 150:Core/Src/app.c ****   xTaskCreate(Pathfinder_Task,   "Pathfinder",  1024, NULL, PRIO_PATHFINDER,  NULL);
+ 522              		.loc 1 150 3 view .LVU110
+ 523 00a2 0194     		str	r4, [sp, #4]
+ 524 00a4 0094     		str	r4, [sp]
+ 525 00a6 2346     		mov	r3, r4
+ 526 00a8 4FF48062 		mov	r2, #1024
+ 527 00ac 1249     		ldr	r1, .L22+60
+ 528 00ae 1348     		ldr	r0, .L22+64
+ 529 00b0 FFF7FEFF 		bl	xTaskCreate
+ 530              	.LVL45:
+ 151:Core/Src/app.c **** 
+ 152:Core/Src/app.c ****   /* Start FreeRTOS Scheduler */
+ 153:Core/Src/app.c ****   vTaskStartScheduler();
+ 531              		.loc 1 153 3 view .LVU111
+ 532 00b4 FFF7FEFF 		bl	vTaskStartScheduler
+ 533              	.LVL46:
+ 534              	.L20:
+ 154:Core/Src/app.c **** 
+ 155:Core/Src/app.c ****   while (1) {}
+ 535              		.loc 1 155 3 view .LVU112
+ARM GAS  /tmp/ccObBvVn.s 			page 14
+
+
+ 536              		.loc 1 155 14 view .LVU113
+ 537              		.loc 1 155 9 view .LVU114
+ 538 00b8 FEE7     		b	.L20
+ 539              	.L23:
+ 540 00ba 00BF     		.align	2
+ 541              	.L22:
+ 542 00bc 00000000 		.word	g_q_input_evt
+ 543 00c0 00000000 		.word	g_q_gps_fix
+ 544 00c4 00000000 		.word	g_q_tile_req
+ 545 00c8 00000000 		.word	g_q_route_req
+ 546 00cc 00000000 		.word	g_mutex_sd
+ 547 00d0 00000000 		.word	g_ui_task_hdl
+ 548 00d4 00000000 		.word	.LC1
+ 549 00d8 00000000 		.word	UI_LVGL_Task
+ 550 00dc 08000000 		.word	.LC2
+ 551 00e0 00000000 		.word	Sensor_Input_Task
+ 552 00e4 00000000 		.word	g_gps_task_hdl
+ 553 00e8 14000000 		.word	.LC3
+ 554 00ec 00000000 		.word	GPS_UART_Task
+ 555 00f0 20000000 		.word	.LC4
+ 556 00f4 00000000 		.word	Tile_Loader_Task
+ 557 00f8 2C000000 		.word	.LC5
+ 558 00fc 00000000 		.word	Pathfinder_Task
+ 559              		.cfi_endproc
+ 560              	.LFE165:
+ 562              		.section	.text.LVGL_Example_Run,"ax",%progbits
+ 563              		.align	1
+ 564              		.global	LVGL_Example_Run
+ 565              		.syntax unified
+ 566              		.thumb
+ 567              		.thumb_func
+ 569              	LVGL_Example_Run:
+ 570              	.LFB166:
+ 156:Core/Src/app.c **** }
+ 157:Core/Src/app.c **** 
+ 158:Core/Src/app.c **** void LVGL_Example_Run(void)
+ 159:Core/Src/app.c **** {
+ 571              		.loc 1 159 1 view -0
+ 572              		.cfi_startproc
+ 573              		@ Volatile: function does not return.
+ 574              		@ args = 0, pretend = 0, frame = 0
+ 575              		@ frame_needed = 0, uses_anonymous_args = 0
+ 576 0000 08B5     		push	{r3, lr}
+ 577              	.LCFI9:
+ 578              		.cfi_def_cfa_offset 8
+ 579              		.cfi_offset 3, -8
+ 580              		.cfi_offset 14, -4
+ 160:Core/Src/app.c ****   App_Run();
+ 581              		.loc 1 160 3 view .LVU116
+ 582 0002 FFF7FEFF 		bl	App_Run
+ 583              	.LVL47:
+ 584              		.cfi_endproc
+ 585              	.LFE166:
+ 587              		.global	g_sd_tiles_loaded
+ 588              		.section	.bss.g_sd_tiles_loaded,"aw",%nobits
+ 589              		.align	2
+ 592              	g_sd_tiles_loaded:
+ARM GAS  /tmp/ccObBvVn.s 			page 15
+
+
+ 593 0000 00000000 		.space	4
+ 594              		.global	g_cache_clock
+ 595              		.section	.bss.g_cache_clock,"aw",%nobits
+ 596              		.align	2
+ 599              	g_cache_clock:
+ 600 0000 00000000 		.space	4
+ 601              		.global	g_tile_cache
+ 602              		.section	.sdram,"aw"
+ 603              		.align	2
+ 606              	g_tile_cache:
+ 607 0000 00000000 		.space	589968
+ 607      00000000 
+ 607      00000000 
+ 607      00000000 
+ 607      00000000 
+ 608              		.global	g_pak_ready
+ 609              		.section	.bss.g_pak_ready,"aw",%nobits
+ 612              	g_pak_ready:
+ 613 0000 00       		.space	1
+ 614              		.global	g_palette_rgb565
+ 615              		.section	.bss.g_palette_rgb565,"aw",%nobits
+ 616              		.align	2
+ 619              	g_palette_rgb565:
+ 620 0000 00000000 		.space	512
+ 620      00000000 
+ 620      00000000 
+ 620      00000000 
+ 620      00000000 
+ 621              		.global	g_current_route
+ 622              		.section	.sdram
+ 623              		.align	2
+ 626              	g_current_route:
+ 627 90090 00000000 		.space	102428
+ 627      00000000 
+ 627      00000000 
+ 627      00000000 
+ 627      00000000 
+ 628              		.global	g_pathfinder
+ 629              		.section	.bss.g_pathfinder,"aw",%nobits
+ 630              		.align	2
+ 633              	g_pathfinder:
+ 634 0000 00000000 		.space	8
+ 634      00000000 
+ 635              		.global	g_graph_cache
+ 636              		.section	.bss.g_graph_cache,"aw",%nobits
+ 637              		.align	2
+ 640              	g_graph_cache:
+ 641 0000 00000000 		.space	608
+ 641      00000000 
+ 641      00000000 
+ 641      00000000 
+ 641      00000000 
+ 642              		.global	g_visible_tiles
+ 643              		.section	.bss.g_visible_tiles,"aw",%nobits
+ 644              		.align	2
+ 647              	g_visible_tiles:
+ 648 0000 00000000 		.space	7172
+ARM GAS  /tmp/ccObBvVn.s 			page 16
+
+
+ 648      00000000 
+ 648      00000000 
+ 648      00000000 
+ 648      00000000 
+ 649              		.global	g_camera
+ 650              		.section	.bss.g_camera,"aw",%nobits
+ 651              		.align	2
+ 654              	g_camera:
+ 655 0000 00000000 		.space	32
+ 655      00000000 
+ 655      00000000 
+ 655      00000000 
+ 655      00000000 
+ 656              		.global	g_gps_fix
+ 657              		.section	.bss.g_gps_fix,"aw",%nobits
+ 658              		.align	2
+ 661              	g_gps_fix:
+ 662 0000 00000000 		.space	28
+ 662      00000000 
+ 662      00000000 
+ 662      00000000 
+ 662      00000000 
+ 663              		.global	g_gps_pos
+ 664              		.section	.bss.g_gps_pos,"aw",%nobits
+ 665              		.align	2
+ 668              	g_gps_pos:
+ 669 0000 00000000 		.space	8
+ 669      00000000 
+ 670              		.section	.bss.s_draw_buf_1,"aw",%nobits
+ 671              		.align	2
+ 674              	s_draw_buf_1:
+ 675 0000 00000000 		.space	15360
+ 675      00000000 
+ 675      00000000 
+ 675      00000000 
+ 675      00000000 
+ 676              		.global	g_gps_task_hdl
+ 677              		.section	.bss.g_gps_task_hdl,"aw",%nobits
+ 678              		.align	2
+ 681              	g_gps_task_hdl:
+ 682 0000 00000000 		.space	4
+ 683              		.global	g_ui_task_hdl
+ 684              		.section	.bss.g_ui_task_hdl,"aw",%nobits
+ 685              		.align	2
+ 688              	g_ui_task_hdl:
+ 689 0000 00000000 		.space	4
+ 690              		.global	g_mutex_sd
+ 691              		.section	.bss.g_mutex_sd,"aw",%nobits
+ 692              		.align	2
+ 695              	g_mutex_sd:
+ 696 0000 00000000 		.space	4
+ 697              		.global	g_q_route_req
+ 698              		.section	.bss.g_q_route_req,"aw",%nobits
+ 699              		.align	2
+ 702              	g_q_route_req:
+ 703 0000 00000000 		.space	4
+ 704              		.global	g_q_tile_req
+ARM GAS  /tmp/ccObBvVn.s 			page 17
+
+
+ 705              		.section	.bss.g_q_tile_req,"aw",%nobits
+ 706              		.align	2
+ 709              	g_q_tile_req:
+ 710 0000 00000000 		.space	4
+ 711              		.global	g_q_gps_fix
+ 712              		.section	.bss.g_q_gps_fix,"aw",%nobits
+ 713              		.align	2
+ 716              	g_q_gps_fix:
+ 717 0000 00000000 		.space	4
+ 718              		.global	g_q_input_evt
+ 719              		.section	.bss.g_q_input_evt,"aw",%nobits
+ 720              		.align	2
+ 723              	g_q_input_evt:
+ 724 0000 00000000 		.space	4
+ 725              		.global	ucHeap
+ 726              		.section	.ccmram,"aw"
+ 727              		.align	3
+ 730              	ucHeap:
+ 731 0000 00000000 		.space	32768
+ 731      00000000 
+ 731      00000000 
+ 731      00000000 
+ 731      00000000 
+ 732              		.text
+ 733              	.Letext0:
+ 734              		.file 2 "/usr/lib/gcc/arm-none-eabi/16.2.0/include/stddef.h"
+ 735              		.file 3 "/usr/arm-none-eabi/include/machine/_default_types.h"
+ 736              		.file 4 "/usr/arm-none-eabi/include/sys/_stdint.h"
+ 737              		.file 5 "Drivers/CMSIS/Device/ST/STM32F4xx/Include/stm32f429xx.h"
+ 738              		.file 6 "Middlewares/Third_Party/FreeRTOS/Source/include/projdefs.h"
+ 739              		.file 7 "Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F/portmacro.h"
+ 740              		.file 8 "Middlewares/Third_Party/FreeRTOS/Source/include/task.h"
+ 741              		.file 9 "Middlewares/Third_Party/FreeRTOS/Source/include/queue.h"
+ 742              		.file 10 "Middlewares/Third_Party/FreeRTOS/Source/include/semphr.h"
+ 743              		.file 11 "Drivers/lvgl/include/lvgl/core/../lv_types.h"
+ 744              		.file 12 "Drivers/lvgl/include/lvgl/core/lv_area.h"
+ 745              		.file 13 "Drivers/lvgl/include/lvgl/core/../display/lv_display.h"
+ 746              		.file 14 "Drivers/lvgl/include/lvgl/core/../indev/lv_indev.h"
+ 747              		.file 15 "Drivers/lvgl/include/lvgl/tick/lv_tick.h"
+ 748              		.file 16 "Drivers/lvgl/include/lvgl/widgets/lv_bar.h"
+ 749              		.file 17 "Core/Inc/geo_math.h"
+ 750              		.file 18 "Core/Inc/map_camera.h"
+ 751              		.file 19 "Core/Inc/map_binary_formats.h"
+ 752              		.file 20 "Core/Inc/tile_graph_cache.h"
+ 753              		.file 21 "Core/Inc/pathfinder.h"
+ 754              		.file 22 "Core/Inc/app.h"
+ 755              		.file 23 "/usr/arm-none-eabi/include/string.h"
+ 756              		.file 24 "Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.h"
+ 757              		.file 25 "Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_lcd.h"
+ 758              		.file 26 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h"
+ 759              		.file 27 "Drivers/lvgl/include/lvgl/core/lv_init.h"
+ 760              		.file 28 "<built-in>"
+ARM GAS  /tmp/ccObBvVn.s 			page 18
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 app.c
+     /tmp/ccObBvVn.s:21     .text.LVGL_BSP_Init:00000000 $t
+     /tmp/ccObBvVn.s:26     .text.LVGL_BSP_Init:00000000 LVGL_BSP_Init
+     /tmp/ccObBvVn.s:99     .text.LVGL_BSP_Init:0000005c $d
+     /tmp/ccObBvVn.s:111    .text.my_disp_flush_cb:00000000 my_disp_flush_cb
+     /tmp/ccObBvVn.s:674    .bss.s_draw_buf_1:00000000 s_draw_buf_1
+     /tmp/ccObBvVn.s:106    .text.my_disp_flush_cb:00000000 $t
+     /tmp/ccObBvVn.s:225    .text.my_disp_flush_cb:00000068 $d
+     /tmp/ccObBvVn.s:230    .text.Tile_Cache_Reset:00000000 $t
+     /tmp/ccObBvVn.s:236    .text.Tile_Cache_Reset:00000000 Tile_Cache_Reset
+     /tmp/ccObBvVn.s:286    .text.Tile_Cache_Reset:00000028 $d
+     /tmp/ccObBvVn.s:599    .bss.g_cache_clock:00000000 g_cache_clock
+     /tmp/ccObBvVn.s:592    .bss.g_sd_tiles_loaded:00000000 g_sd_tiles_loaded
+     /tmp/ccObBvVn.s:606    .sdram:00000000 g_tile_cache
+     /tmp/ccObBvVn.s:293    .rodata.GPS_Library_Init.str1.4:00000000 $d
+     /tmp/ccObBvVn.s:297    .text.GPS_Library_Init:00000000 $t
+     /tmp/ccObBvVn.s:302    .text.GPS_Library_Init:00000000 GPS_Library_Init
+     /tmp/ccObBvVn.s:376    .text.GPS_Library_Init:00000060 $d
+     /tmp/ccObBvVn.s:668    .bss.g_gps_pos:00000000 g_gps_pos
+     /tmp/ccObBvVn.s:654    .bss.g_camera:00000000 g_camera
+     /tmp/ccObBvVn.s:647    .bss.g_visible_tiles:00000000 g_visible_tiles
+     /tmp/ccObBvVn.s:640    .bss.g_graph_cache:00000000 g_graph_cache
+     /tmp/ccObBvVn.s:633    .bss.g_pathfinder:00000000 g_pathfinder
+     /tmp/ccObBvVn.s:626    .sdram:00090090 g_current_route
+     /tmp/ccObBvVn.s:390    .rodata.App_Run.str1.4:00000000 $d
+     /tmp/ccObBvVn.s:406    .text.App_Run:00000000 $t
+     /tmp/ccObBvVn.s:412    .text.App_Run:00000000 App_Run
+     /tmp/ccObBvVn.s:542    .text.App_Run:000000bc $d
+     /tmp/ccObBvVn.s:723    .bss.g_q_input_evt:00000000 g_q_input_evt
+     /tmp/ccObBvVn.s:716    .bss.g_q_gps_fix:00000000 g_q_gps_fix
+     /tmp/ccObBvVn.s:709    .bss.g_q_tile_req:00000000 g_q_tile_req
+     /tmp/ccObBvVn.s:702    .bss.g_q_route_req:00000000 g_q_route_req
+     /tmp/ccObBvVn.s:695    .bss.g_mutex_sd:00000000 g_mutex_sd
+     /tmp/ccObBvVn.s:688    .bss.g_ui_task_hdl:00000000 g_ui_task_hdl
+     /tmp/ccObBvVn.s:681    .bss.g_gps_task_hdl:00000000 g_gps_task_hdl
+     /tmp/ccObBvVn.s:563    .text.LVGL_Example_Run:00000000 $t
+     /tmp/ccObBvVn.s:569    .text.LVGL_Example_Run:00000000 LVGL_Example_Run
+     /tmp/ccObBvVn.s:589    .bss.g_sd_tiles_loaded:00000000 $d
+     /tmp/ccObBvVn.s:596    .bss.g_cache_clock:00000000 $d
+     /tmp/ccObBvVn.s:603    .sdram:00000000 $d
+     /tmp/ccObBvVn.s:612    .bss.g_pak_ready:00000000 g_pak_ready
+     /tmp/ccObBvVn.s:613    .bss.g_pak_ready:00000000 $d
+     /tmp/ccObBvVn.s:619    .bss.g_palette_rgb565:00000000 g_palette_rgb565
+     /tmp/ccObBvVn.s:616    .bss.g_palette_rgb565:00000000 $d
+     /tmp/ccObBvVn.s:630    .bss.g_pathfinder:00000000 $d
+     /tmp/ccObBvVn.s:637    .bss.g_graph_cache:00000000 $d
+     /tmp/ccObBvVn.s:644    .bss.g_visible_tiles:00000000 $d
+     /tmp/ccObBvVn.s:651    .bss.g_camera:00000000 $d
+     /tmp/ccObBvVn.s:661    .bss.g_gps_fix:00000000 g_gps_fix
+     /tmp/ccObBvVn.s:658    .bss.g_gps_fix:00000000 $d
+     /tmp/ccObBvVn.s:665    .bss.g_gps_pos:00000000 $d
+     /tmp/ccObBvVn.s:671    .bss.s_draw_buf_1:00000000 $d
+     /tmp/ccObBvVn.s:678    .bss.g_gps_task_hdl:00000000 $d
+     /tmp/ccObBvVn.s:685    .bss.g_ui_task_hdl:00000000 $d
+     /tmp/ccObBvVn.s:692    .bss.g_mutex_sd:00000000 $d
+     /tmp/ccObBvVn.s:699    .bss.g_q_route_req:00000000 $d
+ARM GAS  /tmp/ccObBvVn.s 			page 19
+
+
+     /tmp/ccObBvVn.s:706    .bss.g_q_tile_req:00000000 $d
+     /tmp/ccObBvVn.s:713    .bss.g_q_gps_fix:00000000 $d
+     /tmp/ccObBvVn.s:720    .bss.g_q_input_evt:00000000 $d
+     /tmp/ccObBvVn.s:730    .ccmram:00000000 ucHeap
+     /tmp/ccObBvVn.s:727    .ccmram:00000000 $d
+
+UNDEFINED SYMBOLS
+BSP_LCD_Init
+BSP_LCD_LayerDefaultInit
+BSP_LCD_SelectLayer
+BSP_LCD_Clear
+BSP_TS_Init
+lv_init
+lv_tick_set_cb
+lv_display_create
+lv_display_set_flush_cb
+lv_display_set_buffers
+HAL_GetTick
+lv_area_get_width
+lv_area_get_height
+lv_display_flush_ready
+geo_coord_make
+map_camera_init
+map_camera_get_visible_tiles
+tile_graph_cache_init
+pathfinder_init
+memset
+xQueueGenericCreate
+xQueueCreateMutex
+xTaskCreate
+vTaskStartScheduler
+UI_LVGL_Task
+Sensor_Input_Task
+GPS_UART_Task
+Tile_Loader_Task
+Pathfinder_Task

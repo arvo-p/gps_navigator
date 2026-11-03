@@ -13,14 +13,14 @@ int main(void)
 {
   HAL_Init();
 
-  BSP_LED_Init(LED3);
-  BSP_LED_Init(LED4);
+  BSP_LED_Init(BOARD_LED_GREEN);
+  BSP_LED_Init(BOARD_LED_RED);
 
   /* Configure the system clock to 180 MHz */
   SystemClock_Config();
 
-  /* Start LVGL + microSD application */
-  LVGL_Example_Run();
+  /* Start LVGL + microSD + GPS RTOS application */
+  App_Run();
 
   while (1)
   {
@@ -64,8 +64,8 @@ void Toggle_Leds(void)
   static uint8_t ticks = 0;
   if (ticks++ > 100)
   {
-    BSP_LED_Toggle(LED3);
-    BSP_LED_Toggle(LED4);
+    BSP_LED_Toggle(BOARD_LED_GREEN);
+    BSP_LED_Toggle(BOARD_LED_RED);
     ticks = 0;
   }
 }

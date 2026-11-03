@@ -1,0 +1,198 @@
+ARM GAS  /tmp/ccZ889bV.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.arch armv7e-m
+   3              		.fpu fpv4-sp-d16
+   4              		.eabi_attribute 27, 1
+   5              		.eabi_attribute 28, 1
+   6              		.eabi_attribute 20, 1
+   7              		.eabi_attribute 21, 1
+   8              		.eabi_attribute 23, 3
+   9              		.eabi_attribute 24, 1
+  10              		.eabi_attribute 25, 1
+  11              		.eabi_attribute 26, 1
+  12              		.eabi_attribute 30, 1
+  13              		.eabi_attribute 34, 1
+  14              		.eabi_attribute 18, 4
+  15              		.file	"pathfinder_task.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.file 1 "Core/Src/pathfinder_task.c"
+  20              		.section	.text.Pathfinder_Task,"ax",%progbits
+  21              		.align	1
+  22              		.global	Pathfinder_Task
+  23              		.syntax unified
+  24              		.thumb
+  25              		.thumb_func
+  27              	Pathfinder_Task:
+  28              	.LFB161:
+   1:Core/Src/pathfinder_task.c **** /**
+   2:Core/Src/pathfinder_task.c ****   ******************************************************************************
+   3:Core/Src/pathfinder_task.c ****   * @file    Core/Src/pathfinder_task.c
+   4:Core/Src/pathfinder_task.c ****   * @brief   TASK 4: Pathfinder_Task (Priority: Low)
+   5:Core/Src/pathfinder_task.c ****   *          Runs Hybrid A* route computation in the background on request.
+   6:Core/Src/pathfinder_task.c ****   ******************************************************************************
+   7:Core/Src/pathfinder_task.c ****   */
+   8:Core/Src/pathfinder_task.c **** 
+   9:Core/Src/pathfinder_task.c **** #include "app.h"
+  10:Core/Src/pathfinder_task.c **** 
+  11:Core/Src/pathfinder_task.c **** void Pathfinder_Task(void *argument)
+  12:Core/Src/pathfinder_task.c **** {
+  29              		.loc 1 12 1 view -0
+  30              		.cfi_startproc
+  31              		@ Volatile: function does not return.
+  32              		@ args = 0, pretend = 0, frame = 16
+  33              		@ frame_needed = 0, uses_anonymous_args = 0
+  34              	.LVL0:
+  35              		.loc 1 12 1 is_stmt 0 view .LVU1
+  36 0000 00B5     		push	{lr}
+  37              	.LCFI0:
+  38              		.cfi_def_cfa_offset 4
+  39              		.cfi_offset 14, -4
+  40 0002 87B0     		sub	sp, sp, #28
+  41              	.LCFI1:
+  42              		.cfi_def_cfa_offset 32
+  43 0004 0DE0     		b	.L2
+  44              	.LVL1:
+  45              	.L3:
+  13:Core/Src/pathfinder_task.c ****   (void)argument;
+ARM GAS  /tmp/ccZ889bV.s 			page 2
+
+
+  14:Core/Src/pathfinder_task.c ****   RouteRequest_t req;
+  15:Core/Src/pathfinder_task.c **** 
+  16:Core/Src/pathfinder_task.c ****   for (;;)
+  17:Core/Src/pathfinder_task.c ****   {
+  18:Core/Src/pathfinder_task.c ****     if (xQueueReceive(g_q_route_req, &req, portMAX_DELAY) == pdPASS)
+  19:Core/Src/pathfinder_task.c ****     {
+  20:Core/Src/pathfinder_task.c ****       xSemaphoreTake(g_mutex_sd, portMAX_DELAY);
+  21:Core/Src/pathfinder_task.c ****       pathfinder_find_route(&g_pathfinder, req.start, req.goal, &g_current_route);
+  22:Core/Src/pathfinder_task.c ****       if (g_current_route.found)
+  23:Core/Src/pathfinder_task.c ****       {
+  24:Core/Src/pathfinder_task.c ****         pathfinder_load_geometry(&g_pathfinder, &g_current_route);
+  25:Core/Src/pathfinder_task.c ****       }
+  26:Core/Src/pathfinder_task.c ****       xSemaphoreGive(g_mutex_sd);
+  46              		.loc 1 26 7 is_stmt 1 view .LVU2
+  47 0006 0023     		movs	r3, #0
+  48 0008 1A46     		mov	r2, r3
+  49 000a 1946     		mov	r1, r3
+  50 000c 1748     		ldr	r0, .L6
+  51 000e 0068     		ldr	r0, [r0]
+  52 0010 FFF7FEFF 		bl	xQueueGenericSend
+  53              	.LVL2:
+  27:Core/Src/pathfinder_task.c **** 
+  28:Core/Src/pathfinder_task.c ****       xTaskNotify(g_ui_task_hdl, NOTIFY_ROUTE_READY, eSetBits);
+  54              		.loc 1 28 7 view .LVU3
+  55 0014 0023     		movs	r3, #0
+  56 0016 0122     		movs	r2, #1
+  57 0018 0821     		movs	r1, #8
+  58 001a 1548     		ldr	r0, .L6+4
+  59 001c 0068     		ldr	r0, [r0]
+  60 001e FFF7FEFF 		bl	xTaskGenericNotify
+  61              	.LVL3:
+  62              	.L2:
+  13:Core/Src/pathfinder_task.c ****   (void)argument;
+  63              		.loc 1 13 3 view .LVU4
+  14:Core/Src/pathfinder_task.c **** 
+  64              		.loc 1 14 3 view .LVU5
+  16:Core/Src/pathfinder_task.c ****   {
+  65              		.loc 1 16 3 view .LVU6
+  18:Core/Src/pathfinder_task.c ****     {
+  66              		.loc 1 18 5 view .LVU7
+  18:Core/Src/pathfinder_task.c ****     {
+  67              		.loc 1 18 9 is_stmt 0 view .LVU8
+  68 0022 4FF0FF32 		mov	r2, #-1
+  69 0026 02A9     		add	r1, sp, #8
+  70 0028 124B     		ldr	r3, .L6+8
+  71 002a 1868     		ldr	r0, [r3]
+  72 002c FFF7FEFF 		bl	xQueueReceive
+  73              	.LVL4:
+  18:Core/Src/pathfinder_task.c ****     {
+  74              		.loc 1 18 8 discriminator 1 view .LVU9
+  75 0030 0128     		cmp	r0, #1
+  76 0032 F6D1     		bne	.L2
+  20:Core/Src/pathfinder_task.c ****       pathfinder_find_route(&g_pathfinder, req.start, req.goal, &g_current_route);
+  77              		.loc 1 20 7 is_stmt 1 view .LVU10
+  78 0034 4FF0FF31 		mov	r1, #-1
+  79 0038 0C4B     		ldr	r3, .L6
+  80 003a 1868     		ldr	r0, [r3]
+ARM GAS  /tmp/ccZ889bV.s 			page 3
+
+
+  81 003c FFF7FEFF 		bl	xQueueSemaphoreTake
+  82              	.LVL5:
+  21:Core/Src/pathfinder_task.c ****       if (g_current_route.found)
+  83              		.loc 1 21 7 view .LVU11
+  84 0040 0D4C     		ldr	r4, .L6+12
+  85 0042 0194     		str	r4, [sp, #4]
+  86 0044 059B     		ldr	r3, [sp, #20]
+  87 0046 0093     		str	r3, [sp]
+  88 0048 049B     		ldr	r3, [sp, #16]
+  89 004a 02AA     		add	r2, sp, #8
+  90 004c 06CA     		ldm	r2, {r1, r2}
+  91 004e 0B48     		ldr	r0, .L6+16
+  92 0050 FFF7FEFF 		bl	pathfinder_find_route
+  93              	.LVL6:
+  22:Core/Src/pathfinder_task.c ****       {
+  94              		.loc 1 22 7 view .LVU12
+  22:Core/Src/pathfinder_task.c ****       {
+  95              		.loc 1 22 26 is_stmt 0 view .LVU13
+  96 0054 04F5C834 		add	r4, r4, #102400
+  97 0058 237C     		ldrb	r3, [r4, #16]	@ zero_extendqisi2
+  22:Core/Src/pathfinder_task.c ****       {
+  98              		.loc 1 22 10 view .LVU14
+  99 005a 002B     		cmp	r3, #0
+ 100 005c D3D0     		beq	.L3
+  24:Core/Src/pathfinder_task.c ****       }
+ 101              		.loc 1 24 9 is_stmt 1 view .LVU15
+ 102 005e A4F5C831 		sub	r1, r4, #102400
+ 103 0062 0648     		ldr	r0, .L6+16
+ 104 0064 FFF7FEFF 		bl	pathfinder_load_geometry
+ 105              	.LVL7:
+ 106 0068 CDE7     		b	.L3
+ 107              	.L7:
+ 108 006a 00BF     		.align	2
+ 109              	.L6:
+ 110 006c 00000000 		.word	g_mutex_sd
+ 111 0070 00000000 		.word	g_ui_task_hdl
+ 112 0074 00000000 		.word	g_q_route_req
+ 113 0078 00000000 		.word	g_current_route
+ 114 007c 00000000 		.word	g_pathfinder
+ 115              		.cfi_endproc
+ 116              	.LFE161:
+ 118              		.text
+ 119              	.Letext0:
+ 120              		.file 2 "/usr/arm-none-eabi/include/machine/_default_types.h"
+ 121              		.file 3 "/usr/arm-none-eabi/include/sys/_stdint.h"
+ 122              		.file 4 "Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F/portmacro.h"
+ 123              		.file 5 "Middlewares/Third_Party/FreeRTOS/Source/include/task.h"
+ 124              		.file 6 "Middlewares/Third_Party/FreeRTOS/Source/include/queue.h"
+ 125              		.file 7 "Middlewares/Third_Party/FreeRTOS/Source/include/semphr.h"
+ 126              		.file 8 "Core/Inc/geo_math.h"
+ 127              		.file 9 "Core/Inc/map_binary_formats.h"
+ 128              		.file 10 "Core/Inc/tile_graph_cache.h"
+ 129              		.file 11 "Core/Inc/pathfinder.h"
+ 130              		.file 12 "Core/Inc/app.h"
+ARM GAS  /tmp/ccZ889bV.s 			page 4
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 pathfinder_task.c
+     /tmp/ccZ889bV.s:21     .text.Pathfinder_Task:00000000 $t
+     /tmp/ccZ889bV.s:27     .text.Pathfinder_Task:00000000 Pathfinder_Task
+     /tmp/ccZ889bV.s:110    .text.Pathfinder_Task:0000006c $d
+
+UNDEFINED SYMBOLS
+xQueueGenericSend
+xTaskGenericNotify
+xQueueReceive
+xQueueSemaphoreTake
+pathfinder_find_route
+pathfinder_load_geometry
+g_mutex_sd
+g_ui_task_hdl
+g_q_route_req
+g_current_route
+g_pathfinder

@@ -1,4 +1,4 @@
-ARM GAS  /tmp/ccX8ljiu.s 			page 1
+ARM GAS  /tmp/ccNDjfQl.s 			page 1
 
 
    1              		.cpu cortex-m4
@@ -26,7 +26,7 @@ ARM GAS  /tmp/ccX8ljiu.s 			page 1
   23              		.thumb
   24              		.thumb_func
   26              	SD_SPI_SetSlowClock:
-  27              	.LFB136:
+  27              	.LFB139:
    1:Core/Src/sd_spi.c **** /**
    2:Core/Src/sd_spi.c ****   ******************************************************************************
    3:Core/Src/sd_spi.c ****   * @file    Core/Src/sd_spi.c
@@ -58,7 +58,7 @@ ARM GAS  /tmp/ccX8ljiu.s 			page 1
   29:Core/Src/sd_spi.c **** static uint8_t CardType = 0;
   30:Core/Src/sd_spi.c **** 
   31:Core/Src/sd_spi.c **** /*----------------------------------------------------------------------------
-ARM GAS  /tmp/ccX8ljiu.s 			page 2
+ARM GAS  /tmp/ccNDjfQl.s 			page 2
 
 
   32:Core/Src/sd_spi.c ****  * Low-Level SPI5 Helpers
@@ -66,14 +66,14 @@ ARM GAS  /tmp/ccX8ljiu.s 			page 1
   34:Core/Src/sd_spi.c **** static inline void SD_CS_Low(void)
   35:Core/Src/sd_spi.c **** {
   36:Core/Src/sd_spi.c ****   /* Keep LCD D/CX (PD13) HIGH so ILI9341 never treats SD SPI bytes as commands */
-  37:Core/Src/sd_spi.c ****   LCD_WRX_HIGH();
+  37:Core/Src/sd_spi.c ****   HAL_GPIO_WritePin(SD_LCD_DCX_GPIO_PORT, SD_LCD_DCX_PIN, GPIO_PIN_SET);
   38:Core/Src/sd_spi.c ****   HAL_GPIO_WritePin(SD_CS_GPIO_PORT, SD_CS_PIN, GPIO_PIN_RESET);
   39:Core/Src/sd_spi.c **** }
   40:Core/Src/sd_spi.c **** 
   41:Core/Src/sd_spi.c **** static inline void SD_CS_High(void)
   42:Core/Src/sd_spi.c **** {
   43:Core/Src/sd_spi.c ****   HAL_GPIO_WritePin(SD_CS_GPIO_PORT, SD_CS_PIN, GPIO_PIN_SET);
-  44:Core/Src/sd_spi.c ****   LCD_WRX_HIGH();
+  44:Core/Src/sd_spi.c ****   HAL_GPIO_WritePin(SD_LCD_DCX_GPIO_PORT, SD_LCD_DCX_PIN, GPIO_PIN_SET);
   45:Core/Src/sd_spi.c **** }
   46:Core/Src/sd_spi.c **** 
   47:Core/Src/sd_spi.c **** static void SD_SPI_SetSlowClock(void)
@@ -84,18 +84,18 @@ ARM GAS  /tmp/ccX8ljiu.s 			page 1
   31              		@ frame_needed = 0, uses_anonymous_args = 0
   32              		@ link register save eliminated.
   49:Core/Src/sd_spi.c ****   /* PCLK2 = 90 MHz -> /256 = 351.5 kHz (< 400 kHz required for SD init) */
-  50:Core/Src/sd_spi.c ****   CLEAR_BIT(SPI5->CR1, SPI_CR1_SPE);
+  50:Core/Src/sd_spi.c ****   CLEAR_BIT(SD_SPI_INSTANCE->CR1, SPI_CR1_SPE);
   33              		.loc 1 50 3 view .LVU1
   34 0000 064B     		ldr	r3, .L2
   35 0002 1A68     		ldr	r2, [r3]
   36 0004 22F04002 		bic	r2, r2, #64
   37 0008 1A60     		str	r2, [r3]
-  51:Core/Src/sd_spi.c ****   MODIFY_REG(SPI5->CR1, SPI_CR1_BR, SPI_BAUDRATEPRESCALER_256);
+  51:Core/Src/sd_spi.c ****   MODIFY_REG(SD_SPI_INSTANCE->CR1, SPI_CR1_BR, SD_SPI_SLOW_PRESCALER);
   38              		.loc 1 51 3 view .LVU2
   39 000a 1A68     		ldr	r2, [r3]
   40 000c 42F03802 		orr	r2, r2, #56
   41 0010 1A60     		str	r2, [r3]
-  52:Core/Src/sd_spi.c ****   SET_BIT(SPI5->CR1, SPI_CR1_SPE);
+  52:Core/Src/sd_spi.c ****   SET_BIT(SD_SPI_INSTANCE->CR1, SPI_CR1_SPE);
   42              		.loc 1 52 3 view .LVU3
   43 0012 1A68     		ldr	r2, [r3]
   44 0014 42F04002 		orr	r2, r2, #64
@@ -108,17 +108,17 @@ ARM GAS  /tmp/ccX8ljiu.s 			page 1
   50              	.L2:
   51 001c 00500140 		.word	1073827840
   52              		.cfi_endproc
-  53              	.LFE136:
+  53              	.LFE139:
   55              		.section	.text.SD_SPI_SetFastClock,"ax",%progbits
   56              		.align	1
   57              		.syntax unified
   58              		.thumb
   59              		.thumb_func
   61              	SD_SPI_SetFastClock:
-  62              	.LFB137:
+  62              	.LFB140:
   54:Core/Src/sd_spi.c **** 
   55:Core/Src/sd_spi.c **** static void SD_SPI_SetFastClock(void)
-ARM GAS  /tmp/ccX8ljiu.s 			page 3
+ARM GAS  /tmp/ccNDjfQl.s 			page 3
 
 
   56:Core/Src/sd_spi.c **** {
@@ -128,19 +128,19 @@ ARM GAS  /tmp/ccX8ljiu.s 			page 1
   66              		@ frame_needed = 0, uses_anonymous_args = 0
   67              		@ link register save eliminated.
   57:Core/Src/sd_spi.c ****   /* PCLK2 = 90 MHz -> /8 = 11.25 MHz */
-  58:Core/Src/sd_spi.c ****   CLEAR_BIT(SPI5->CR1, SPI_CR1_SPE);
+  58:Core/Src/sd_spi.c ****   CLEAR_BIT(SD_SPI_INSTANCE->CR1, SPI_CR1_SPE);
   68              		.loc 1 58 3 view .LVU6
   69 0000 074B     		ldr	r3, .L5
   70 0002 1A68     		ldr	r2, [r3]
   71 0004 22F04002 		bic	r2, r2, #64
   72 0008 1A60     		str	r2, [r3]
-  59:Core/Src/sd_spi.c ****   MODIFY_REG(SPI5->CR1, SPI_CR1_BR, SPI_BAUDRATEPRESCALER_8);
+  59:Core/Src/sd_spi.c ****   MODIFY_REG(SD_SPI_INSTANCE->CR1, SPI_CR1_BR, SD_SPI_FAST_PRESCALER);
   73              		.loc 1 59 3 view .LVU7
   74 000a 1A68     		ldr	r2, [r3]
   75 000c 22F03802 		bic	r2, r2, #56
   76 0010 42F01002 		orr	r2, r2, #16
   77 0014 1A60     		str	r2, [r3]
-  60:Core/Src/sd_spi.c ****   SET_BIT(SPI5->CR1, SPI_CR1_SPE);
+  60:Core/Src/sd_spi.c ****   SET_BIT(SD_SPI_INSTANCE->CR1, SPI_CR1_SPE);
   78              		.loc 1 60 3 view .LVU8
   79 0016 1A68     		ldr	r2, [r3]
   80 0018 42F04002 		orr	r2, r2, #64
@@ -153,14 +153,14 @@ ARM GAS  /tmp/ccX8ljiu.s 			page 1
   86              	.L5:
   87 0020 00500140 		.word	1073827840
   88              		.cfi_endproc
-  89              	.LFE137:
+  89              	.LFE140:
   91              		.section	.text.SD_SPI_TxRxByte,"ax",%progbits
   92              		.align	1
   93              		.syntax unified
   94              		.thumb
   95              		.thumb_func
   97              	SD_SPI_TxRxByte:
-  98              	.LFB138:
+  98              	.LFB141:
   62:Core/Src/sd_spi.c **** 
   63:Core/Src/sd_spi.c **** static uint8_t SD_SPI_TxRxByte(uint8_t data)
   64:Core/Src/sd_spi.c **** {
@@ -171,35 +171,35 @@ ARM GAS  /tmp/ccX8ljiu.s 			page 1
  103              		@ link register save eliminated.
  104              	.LVL0:
  105              	.L8:
-  65:Core/Src/sd_spi.c ****   while (!(SPI5->SR & SPI_SR_TXE)) {}
- 106              		.loc 1 65 37 discriminator 1 view .LVU11
+  65:Core/Src/sd_spi.c ****   while (!(SD_SPI_INSTANCE->SR & SPI_SR_TXE)) {}
+ 106              		.loc 1 65 48 discriminator 1 view .LVU11
  107              		.loc 1 65 10 discriminator 1 view .LVU12
- 108              		.loc 1 65 16 is_stmt 0 discriminator 1 view .LVU13
+ 108              		.loc 1 65 27 is_stmt 0 discriminator 1 view .LVU13
  109 0000 074B     		ldr	r3, .L10
  110 0002 9B68     		ldr	r3, [r3, #8]
  111              		.loc 1 65 10 discriminator 1 view .LVU14
-ARM GAS  /tmp/ccX8ljiu.s 			page 4
+ARM GAS  /tmp/ccNDjfQl.s 			page 4
 
 
  112 0004 13F0020F 		tst	r3, #2
  113 0008 FAD0     		beq	.L8
-  66:Core/Src/sd_spi.c ****   *(__IO uint8_t *)&SPI5->DR = data;
+  66:Core/Src/sd_spi.c ****   *(__IO uint8_t *)&SD_SPI_INSTANCE->DR = data;
  114              		.loc 1 66 3 is_stmt 1 view .LVU15
- 115              		.loc 1 66 30 is_stmt 0 view .LVU16
+ 115              		.loc 1 66 41 is_stmt 0 view .LVU16
  116 000a 054B     		ldr	r3, .L10
  117 000c 1873     		strb	r0, [r3, #12]
-  67:Core/Src/sd_spi.c ****   while (!(SPI5->SR & SPI_SR_RXNE)) {}
+  67:Core/Src/sd_spi.c ****   while (!(SD_SPI_INSTANCE->SR & SPI_SR_RXNE)) {}
  118              		.loc 1 67 3 is_stmt 1 view .LVU17
  119              	.L9:
- 120              		.loc 1 67 38 discriminator 1 view .LVU18
+ 120              		.loc 1 67 49 discriminator 1 view .LVU18
  121              		.loc 1 67 10 discriminator 1 view .LVU19
- 122              		.loc 1 67 16 is_stmt 0 discriminator 1 view .LVU20
+ 122              		.loc 1 67 27 is_stmt 0 discriminator 1 view .LVU20
  123 000e 044B     		ldr	r3, .L10
  124 0010 9B68     		ldr	r3, [r3, #8]
  125              		.loc 1 67 10 discriminator 1 view .LVU21
  126 0012 13F0010F 		tst	r3, #1
  127 0016 FAD0     		beq	.L9
-  68:Core/Src/sd_spi.c ****   return *(__IO uint8_t *)&SPI5->DR;
+  68:Core/Src/sd_spi.c ****   return *(__IO uint8_t *)&SD_SPI_INSTANCE->DR;
  128              		.loc 1 68 3 is_stmt 1 view .LVU22
   69:Core/Src/sd_spi.c **** }
  129              		.loc 1 69 1 is_stmt 0 view .LVU23
@@ -213,7 +213,7 @@ ARM GAS  /tmp/ccX8ljiu.s 			page 1
  137              	.L10:
  138 0020 00500140 		.word	1073827840
  139              		.cfi_endproc
- 140              	.LFE138:
+ 140              	.LFE141:
  142              		.section	.text.SD_WaitReady,"ax",%progbits
  143              		.align	1
  144              		.syntax unified
@@ -221,27 +221,27 @@ ARM GAS  /tmp/ccX8ljiu.s 			page 1
  146              		.thumb_func
  148              	SD_WaitReady:
  149              	.LVL2:
- 150              	.LFB140:
+ 150              	.LFB143:
   70:Core/Src/sd_spi.c **** 
   71:Core/Src/sd_spi.c **** static void SD_SPI_InitBus(void)
   72:Core/Src/sd_spi.c **** {
   73:Core/Src/sd_spi.c ****   GPIO_InitTypeDef gpio = {0};
   74:Core/Src/sd_spi.c **** 
   75:Core/Src/sd_spi.c ****   /* 1. Deselect onboard L3GD20 Gyroscope (PC1) so it never drives MISO (PF8) */
-  76:Core/Src/sd_spi.c ****   GYRO_CS_GPIO_CLK_ENABLE();
-  77:Core/Src/sd_spi.c ****   gpio.Pin   = GYRO_CS_PIN;
+  76:Core/Src/sd_spi.c ****   SD_GYRO_CS_GPIO_CLK_ENABLE();
+  77:Core/Src/sd_spi.c ****   gpio.Pin   = SD_GYRO_CS_PIN;
   78:Core/Src/sd_spi.c ****   gpio.Mode  = GPIO_MODE_OUTPUT_PP;
   79:Core/Src/sd_spi.c ****   gpio.Pull  = GPIO_PULLUP;
   80:Core/Src/sd_spi.c ****   gpio.Speed = GPIO_SPEED_FAST;
-  81:Core/Src/sd_spi.c ****   HAL_GPIO_Init(GYRO_CS_GPIO_PORT, &gpio);
-  82:Core/Src/sd_spi.c ****   GYRO_CS_HIGH();
+  81:Core/Src/sd_spi.c ****   HAL_GPIO_Init(SD_GYRO_CS_GPIO_PORT, &gpio);
+  82:Core/Src/sd_spi.c ****   HAL_GPIO_WritePin(SD_GYRO_CS_GPIO_PORT, SD_GYRO_CS_PIN, GPIO_PIN_SET);
   83:Core/Src/sd_spi.c **** 
   84:Core/Src/sd_spi.c ****   /* 2. Force LCD_WRX (PD13) HIGH so ILI9341 ignores MOSI when PC2 goes LOW */
-  85:Core/Src/sd_spi.c ****   LCD_WRX_GPIO_CLK_ENABLE();
-ARM GAS  /tmp/ccX8ljiu.s 			page 5
+  85:Core/Src/sd_spi.c ****   SD_LCD_DCX_GPIO_CLK_ENABLE();
+ARM GAS  /tmp/ccNDjfQl.s 			page 5
 
 
-  86:Core/Src/sd_spi.c ****   LCD_WRX_HIGH();
+  86:Core/Src/sd_spi.c ****   HAL_GPIO_WritePin(SD_LCD_DCX_GPIO_PORT, SD_LCD_DCX_PIN, GPIO_PIN_SET);
   87:Core/Src/sd_spi.c **** 
   88:Core/Src/sd_spi.c ****   /* 3. Ensure SD_CS (PC2) is configured as push-pull output and starts HIGH */
   89:Core/Src/sd_spi.c ****   SD_CS_GPIO_CLK_ENABLE();
@@ -252,18 +252,18 @@ ARM GAS  /tmp/ccX8ljiu.s 			page 1
   94:Core/Src/sd_spi.c ****   HAL_GPIO_Init(SD_CS_GPIO_PORT, &gpio);
   95:Core/Src/sd_spi.c ****   SD_CS_High();
   96:Core/Src/sd_spi.c **** 
-  97:Core/Src/sd_spi.c ****   /* 4. Enable internal pull-up on SPI5 SCK/MISO/MOSI (PF7, PF8, PF9) */
-  98:Core/Src/sd_spi.c ****   DISCOVERY_SPIx_GPIO_CLK_ENABLE();
-  99:Core/Src/sd_spi.c ****   gpio.Pin       = DISCOVERY_SPIx_SCK_PIN | DISCOVERY_SPIx_MISO_PIN | DISCOVERY_SPIx_MOSI_PIN;
+  97:Core/Src/sd_spi.c ****   /* 4. Enable internal pull-up on SD SPI SCK/MISO/MOSI */
+  98:Core/Src/sd_spi.c ****   SD_SPI_GPIO_CLK_ENABLE();
+  99:Core/Src/sd_spi.c ****   gpio.Pin       = SD_SPI_SCK_PIN | SD_SPI_MISO_PIN | SD_SPI_MOSI_PIN;
  100:Core/Src/sd_spi.c ****   gpio.Mode      = GPIO_MODE_AF_PP;
  101:Core/Src/sd_spi.c ****   gpio.Pull      = GPIO_PULLUP;
  102:Core/Src/sd_spi.c ****   gpio.Speed     = GPIO_SPEED_FAST;
- 103:Core/Src/sd_spi.c ****   gpio.Alternate = DISCOVERY_SPIx_AF;
- 104:Core/Src/sd_spi.c ****   HAL_GPIO_Init(DISCOVERY_SPIx_GPIO_PORT, &gpio);
+ 103:Core/Src/sd_spi.c ****   gpio.Alternate = SD_SPI_AF;
+ 104:Core/Src/sd_spi.c ****   HAL_GPIO_Init(SD_SPI_GPIO_PORT, &gpio);
  105:Core/Src/sd_spi.c **** 
- 106:Core/Src/sd_spi.c ****   /* Ensure SPI5 peripheral is enabled */
- 107:Core/Src/sd_spi.c ****   DISCOVERY_SPIx_CLK_ENABLE();
- 108:Core/Src/sd_spi.c ****   SET_BIT(SPI5->CR1, SPI_CR1_SPE);
+ 106:Core/Src/sd_spi.c ****   /* Ensure SD SPI peripheral is enabled */
+ 107:Core/Src/sd_spi.c ****   SD_SPI_CLK_ENABLE();
+ 108:Core/Src/sd_spi.c ****   SET_BIT(SD_SPI_INSTANCE->CR1, SPI_CR1_SPE);
  109:Core/Src/sd_spi.c **** }
  110:Core/Src/sd_spi.c **** 
  111:Core/Src/sd_spi.c **** /*----------------------------------------------------------------------------
@@ -298,7 +298,7 @@ ARM GAS  /tmp/ccX8ljiu.s 			page 1
  118:Core/Src/sd_spi.c ****   do
  173              		.loc 1 118 3 view .LVU31
  119:Core/Src/sd_spi.c ****   {
-ARM GAS  /tmp/ccX8ljiu.s 			page 6
+ARM GAS  /tmp/ccNDjfQl.s 			page 6
 
 
  120:Core/Src/sd_spi.c ****     d = SD_SPI_TxRxByte(0xFF);
@@ -342,7 +342,7 @@ ARM GAS  /tmp/ccX8ljiu.s 			page 1
  202 0024 38BD     		pop	{r3, r4, r5, pc}
  203              		.loc 1 128 1 view .LVU43
  204              		.cfi_endproc
- 205              	.LFE140:
+ 205              	.LFE143:
  207              		.section	.text.SD_SendDataBlock,"ax",%progbits
  208              		.align	1
  209              		.syntax unified
@@ -350,7 +350,7 @@ ARM GAS  /tmp/ccX8ljiu.s 			page 1
  211              		.thumb_func
  213              	SD_SendDataBlock:
  214              	.LVL9:
- 215              	.LFB144:
+ 215              	.LFB147:
  129:Core/Src/sd_spi.c **** 
  130:Core/Src/sd_spi.c **** static void SD_Deselect(void)
  131:Core/Src/sd_spi.c **** {
@@ -358,7 +358,7 @@ ARM GAS  /tmp/ccX8ljiu.s 			page 1
  133:Core/Src/sd_spi.c ****   SD_SPI_TxRxByte(0xFF); /* Provide 8 extra clocks for card to release MISO */
  134:Core/Src/sd_spi.c **** }
  135:Core/Src/sd_spi.c **** 
-ARM GAS  /tmp/ccX8ljiu.s 			page 7
+ARM GAS  /tmp/ccNDjfQl.s 			page 7
 
 
  136:Core/Src/sd_spi.c **** static int SD_Select(void)
@@ -418,7 +418,7 @@ ARM GAS  /tmp/ccX8ljiu.s 			page 1
  226              		.cfi_offset 5, -8
  227              		.cfi_offset 14, -4
  228 0002 0546     		mov	r5, r0
-ARM GAS  /tmp/ccX8ljiu.s 			page 8
+ARM GAS  /tmp/ccNDjfQl.s 			page 8
 
 
  229 0004 0C46     		mov	r4, r1
@@ -478,7 +478,7 @@ ARM GAS  /tmp/ccX8ljiu.s 			page 1
  255              		.loc 1 188 15 view .LVU54
  256 001c 0024     		movs	r4, #0
  257 001e 05E0     		b	.L19
-ARM GAS  /tmp/ccX8ljiu.s 			page 9
+ARM GAS  /tmp/ccNDjfQl.s 			page 9
 
 
  258              	.L25:
@@ -538,7 +538,7 @@ ARM GAS  /tmp/ccX8ljiu.s 			page 1
  301              	.LVL21:
  202:Core/Src/sd_spi.c **** }
  302              		.loc 1 202 10 view .LVU66
-ARM GAS  /tmp/ccX8ljiu.s 			page 10
+ARM GAS  /tmp/ccNDjfQl.s 			page 10
 
 
  303 004e DFE7     		b	.L17
@@ -554,7 +554,7 @@ ARM GAS  /tmp/ccX8ljiu.s 			page 1
  311 0052 DDE7     		b	.L17
  312              	.LBE6:
  313              		.cfi_endproc
- 314              	.LFE144:
+ 314              	.LFE147:
  316              		.section	.text.SD_ReceiveDataBlock,"ax",%progbits
  317              		.align	1
  318              		.syntax unified
@@ -562,7 +562,7 @@ ARM GAS  /tmp/ccX8ljiu.s 			page 1
  320              		.thumb_func
  322              	SD_ReceiveDataBlock:
  323              	.LVL24:
- 324              	.LFB143:
+ 324              	.LFB146:
  149:Core/Src/sd_spi.c ****   uint8_t token;
  325              		.loc 1 149 1 is_stmt 1 view -0
  326              		.cfi_startproc
@@ -598,7 +598,7 @@ ARM GAS  /tmp/ccX8ljiu.s 			page 1
  350              		.loc 1 154 3 is_stmt 1 view .LVU75
  156:Core/Src/sd_spi.c ****   } while ((token == 0xFF) && ((HAL_GetTick() - start) < 200));
  351              		.loc 1 156 5 view .LVU76
-ARM GAS  /tmp/ccX8ljiu.s 			page 11
+ARM GAS  /tmp/ccNDjfQl.s 			page 11
 
 
  156:Core/Src/sd_spi.c ****   } while ((token == 0xFF) && ((HAL_GetTick() - start) < 200));
@@ -658,7 +658,7 @@ ARM GAS  /tmp/ccX8ljiu.s 			page 1
  393 0036 F8D3     		bcc	.L31
  394              	.LBE7:
  171:Core/Src/sd_spi.c ****   SD_SPI_TxRxByte(0xFF);
-ARM GAS  /tmp/ccX8ljiu.s 			page 12
+ARM GAS  /tmp/ccNDjfQl.s 			page 12
 
 
  395              		.loc 1 171 3 view .LVU90
@@ -687,14 +687,14 @@ ARM GAS  /tmp/ccX8ljiu.s 			page 1
  413 0048 0020     		movs	r0, #0
  414 004a FCE7     		b	.L26
  415              		.cfi_endproc
- 416              	.LFE143:
+ 416              	.LFE146:
  418              		.section	.text.SD_CS_High,"ax",%progbits
  419              		.align	1
  420              		.syntax unified
  421              		.thumb
  422              		.thumb_func
  424              	SD_CS_High:
- 425              	.LFB135:
+ 425              	.LFB138:
   42:Core/Src/sd_spi.c ****   HAL_GPIO_WritePin(SD_CS_GPIO_PORT, SD_CS_PIN, GPIO_PIN_SET);
  426              		.loc 1 42 1 is_stmt 1 view -0
  427              		.cfi_startproc
@@ -705,7 +705,7 @@ ARM GAS  /tmp/ccX8ljiu.s 			page 1
  432              		.cfi_def_cfa_offset 8
  433              		.cfi_offset 3, -8
  434              		.cfi_offset 14, -4
-  43:Core/Src/sd_spi.c ****   LCD_WRX_HIGH();
+  43:Core/Src/sd_spi.c ****   HAL_GPIO_WritePin(SD_LCD_DCX_GPIO_PORT, SD_LCD_DCX_PIN, GPIO_PIN_SET);
  435              		.loc 1 43 3 view .LVU97
  436 0002 0122     		movs	r2, #1
  437 0004 0421     		movs	r1, #4
@@ -718,7 +718,7 @@ ARM GAS  /tmp/ccX8ljiu.s 			page 1
  443 000e 4FF40051 		mov	r1, #8192
  444 0012 0348     		ldr	r0, .L36+4
  445 0014 FFF7FEFF 		bl	HAL_GPIO_WritePin
-ARM GAS  /tmp/ccX8ljiu.s 			page 13
+ARM GAS  /tmp/ccNDjfQl.s 			page 13
 
 
  446              	.LVL38:
@@ -731,14 +731,14 @@ ARM GAS  /tmp/ccX8ljiu.s 			page 1
  452 001c 00080240 		.word	1073874944
  453 0020 000C0240 		.word	1073875968
  454              		.cfi_endproc
- 455              	.LFE135:
+ 455              	.LFE138:
  457              		.section	.text.SD_Deselect,"ax",%progbits
  458              		.align	1
  459              		.syntax unified
  460              		.thumb
  461              		.thumb_func
  463              	SD_Deselect:
- 464              	.LFB141:
+ 464              	.LFB144:
  131:Core/Src/sd_spi.c ****   SD_CS_High();
  465              		.loc 1 131 1 is_stmt 1 view -0
  466              		.cfi_startproc
@@ -762,14 +762,14 @@ ARM GAS  /tmp/ccX8ljiu.s 			page 1
  481              		.loc 1 134 1 is_stmt 0 view .LVU103
  482 000c 08BD     		pop	{r3, pc}
  483              		.cfi_endproc
- 484              	.LFE141:
+ 484              	.LFE144:
  486              		.section	.text.SD_SPI_InitBus,"ax",%progbits
  487              		.align	1
  488              		.syntax unified
  489              		.thumb
  490              		.thumb_func
  492              	SD_SPI_InitBus:
- 493              	.LFB139:
+ 493              	.LFB142:
   72:Core/Src/sd_spi.c ****   GPIO_InitTypeDef gpio = {0};
  494              		.loc 1 72 1 is_stmt 1 view -0
  495              		.cfi_startproc
@@ -778,7 +778,7 @@ ARM GAS  /tmp/ccX8ljiu.s 			page 1
  498 0000 2DE9F043 		push	{r4, r5, r6, r7, r8, r9, lr}
  499              	.LCFI5:
  500              		.cfi_def_cfa_offset 28
-ARM GAS  /tmp/ccX8ljiu.s 			page 14
+ARM GAS  /tmp/ccNDjfQl.s 			page 14
 
 
  501              		.cfi_offset 4, -28
@@ -802,28 +802,28 @@ ARM GAS  /tmp/ccX8ljiu.s 			page 1
  517 000e 0795     		str	r5, [sp, #28]
  518 0010 0895     		str	r5, [sp, #32]
  519 0012 0995     		str	r5, [sp, #36]
-  76:Core/Src/sd_spi.c ****   gpio.Pin   = GYRO_CS_PIN;
+  76:Core/Src/sd_spi.c ****   gpio.Pin   = SD_GYRO_CS_PIN;
  520              		.loc 1 76 3 is_stmt 1 view .LVU107
  521              	.LBB8:
-  76:Core/Src/sd_spi.c ****   gpio.Pin   = GYRO_CS_PIN;
+  76:Core/Src/sd_spi.c ****   gpio.Pin   = SD_GYRO_CS_PIN;
  522              		.loc 1 76 3 view .LVU108
  523 0014 0095     		str	r5, [sp]
-  76:Core/Src/sd_spi.c ****   gpio.Pin   = GYRO_CS_PIN;
+  76:Core/Src/sd_spi.c ****   gpio.Pin   = SD_GYRO_CS_PIN;
  524              		.loc 1 76 3 view .LVU109
  525 0016 374C     		ldr	r4, .L42
  526 0018 236B     		ldr	r3, [r4, #48]
  527 001a 43F00403 		orr	r3, r3, #4
  528 001e 2363     		str	r3, [r4, #48]
-  76:Core/Src/sd_spi.c ****   gpio.Pin   = GYRO_CS_PIN;
+  76:Core/Src/sd_spi.c ****   gpio.Pin   = SD_GYRO_CS_PIN;
  529              		.loc 1 76 3 view .LVU110
  530 0020 236B     		ldr	r3, [r4, #48]
  531 0022 03F00403 		and	r3, r3, #4
  532 0026 0093     		str	r3, [sp]
-  76:Core/Src/sd_spi.c ****   gpio.Pin   = GYRO_CS_PIN;
+  76:Core/Src/sd_spi.c ****   gpio.Pin   = SD_GYRO_CS_PIN;
  533              		.loc 1 76 3 view .LVU111
  534 0028 009B     		ldr	r3, [sp]
  535              	.LBE8:
-  76:Core/Src/sd_spi.c ****   gpio.Pin   = GYRO_CS_PIN;
+  76:Core/Src/sd_spi.c ****   gpio.Pin   = SD_GYRO_CS_PIN;
  536              		.loc 1 76 3 view .LVU112
   77:Core/Src/sd_spi.c ****   gpio.Mode  = GPIO_MODE_OUTPUT_PP;
  537              		.loc 1 77 3 view .LVU113
@@ -838,19 +838,19 @@ ARM GAS  /tmp/ccX8ljiu.s 			page 1
  543 0032 0127     		movs	r7, #1
  544 0034 0697     		str	r7, [sp, #24]
   79:Core/Src/sd_spi.c ****   gpio.Speed = GPIO_SPEED_FAST;
-ARM GAS  /tmp/ccX8ljiu.s 			page 15
+ARM GAS  /tmp/ccNDjfQl.s 			page 15
 
 
  545              		.loc 1 79 3 is_stmt 1 view .LVU117
   79:Core/Src/sd_spi.c ****   gpio.Speed = GPIO_SPEED_FAST;
  546              		.loc 1 79 14 is_stmt 0 view .LVU118
  547 0036 0797     		str	r7, [sp, #28]
-  80:Core/Src/sd_spi.c ****   HAL_GPIO_Init(GYRO_CS_GPIO_PORT, &gpio);
+  80:Core/Src/sd_spi.c ****   HAL_GPIO_Init(SD_GYRO_CS_GPIO_PORT, &gpio);
  548              		.loc 1 80 3 is_stmt 1 view .LVU119
-  80:Core/Src/sd_spi.c ****   HAL_GPIO_Init(GYRO_CS_GPIO_PORT, &gpio);
+  80:Core/Src/sd_spi.c ****   HAL_GPIO_Init(SD_GYRO_CS_GPIO_PORT, &gpio);
  549              		.loc 1 80 14 is_stmt 0 view .LVU120
  550 0038 CDF82080 		str	r8, [sp, #32]
-  81:Core/Src/sd_spi.c ****   GYRO_CS_HIGH();
+  81:Core/Src/sd_spi.c ****   HAL_GPIO_WritePin(SD_GYRO_CS_GPIO_PORT, SD_GYRO_CS_PIN, GPIO_PIN_SET);
  551              		.loc 1 81 3 is_stmt 1 view .LVU121
  552 003c DFF8C490 		ldr	r9, .L42+16
  553 0040 3146     		mov	r1, r6
@@ -864,27 +864,27 @@ ARM GAS  /tmp/ccX8ljiu.s 			page 1
  560 004c 4846     		mov	r0, r9
  561 004e FFF7FEFF 		bl	HAL_GPIO_WritePin
  562              	.LVL42:
-  85:Core/Src/sd_spi.c ****   LCD_WRX_HIGH();
+  85:Core/Src/sd_spi.c ****   HAL_GPIO_WritePin(SD_LCD_DCX_GPIO_PORT, SD_LCD_DCX_PIN, GPIO_PIN_SET);
  563              		.loc 1 85 3 view .LVU123
  564              	.LBB9:
-  85:Core/Src/sd_spi.c ****   LCD_WRX_HIGH();
+  85:Core/Src/sd_spi.c ****   HAL_GPIO_WritePin(SD_LCD_DCX_GPIO_PORT, SD_LCD_DCX_PIN, GPIO_PIN_SET);
  565              		.loc 1 85 3 view .LVU124
  566 0052 0195     		str	r5, [sp, #4]
-  85:Core/Src/sd_spi.c ****   LCD_WRX_HIGH();
+  85:Core/Src/sd_spi.c ****   HAL_GPIO_WritePin(SD_LCD_DCX_GPIO_PORT, SD_LCD_DCX_PIN, GPIO_PIN_SET);
  567              		.loc 1 85 3 view .LVU125
  568 0054 236B     		ldr	r3, [r4, #48]
  569 0056 43F00803 		orr	r3, r3, #8
  570 005a 2363     		str	r3, [r4, #48]
-  85:Core/Src/sd_spi.c ****   LCD_WRX_HIGH();
+  85:Core/Src/sd_spi.c ****   HAL_GPIO_WritePin(SD_LCD_DCX_GPIO_PORT, SD_LCD_DCX_PIN, GPIO_PIN_SET);
  571              		.loc 1 85 3 view .LVU126
  572 005c 236B     		ldr	r3, [r4, #48]
  573 005e 03F00803 		and	r3, r3, #8
  574 0062 0193     		str	r3, [sp, #4]
-  85:Core/Src/sd_spi.c ****   LCD_WRX_HIGH();
+  85:Core/Src/sd_spi.c ****   HAL_GPIO_WritePin(SD_LCD_DCX_GPIO_PORT, SD_LCD_DCX_PIN, GPIO_PIN_SET);
  575              		.loc 1 85 3 view .LVU127
  576 0064 019B     		ldr	r3, [sp, #4]
  577              	.LBE9:
-  85:Core/Src/sd_spi.c ****   LCD_WRX_HIGH();
+  85:Core/Src/sd_spi.c ****   HAL_GPIO_WritePin(SD_LCD_DCX_GPIO_PORT, SD_LCD_DCX_PIN, GPIO_PIN_SET);
  578              		.loc 1 85 3 view .LVU128
   86:Core/Src/sd_spi.c **** 
  579              		.loc 1 86 3 view .LVU129
@@ -898,7 +898,7 @@ ARM GAS  /tmp/ccX8ljiu.s 			page 1
  586              	.LBB10:
   89:Core/Src/sd_spi.c ****   gpio.Pin   = SD_CS_PIN;
  587              		.loc 1 89 3 view .LVU131
-ARM GAS  /tmp/ccX8ljiu.s 			page 16
+ARM GAS  /tmp/ccNDjfQl.s 			page 16
 
 
  588 0072 0295     		str	r5, [sp, #8]
@@ -949,30 +949,30 @@ ARM GAS  /tmp/ccX8ljiu.s 			page 1
  619              		.loc 1 95 3 view .LVU145
  620 009a FFF7FEFF 		bl	SD_CS_High
  621              	.LVL45:
-  98:Core/Src/sd_spi.c ****   gpio.Pin       = DISCOVERY_SPIx_SCK_PIN | DISCOVERY_SPIx_MISO_PIN | DISCOVERY_SPIx_MOSI_PIN;
+  98:Core/Src/sd_spi.c ****   gpio.Pin       = SD_SPI_SCK_PIN | SD_SPI_MISO_PIN | SD_SPI_MOSI_PIN;
  622              		.loc 1 98 3 view .LVU146
  623              	.LBB11:
-  98:Core/Src/sd_spi.c ****   gpio.Pin       = DISCOVERY_SPIx_SCK_PIN | DISCOVERY_SPIx_MISO_PIN | DISCOVERY_SPIx_MOSI_PIN;
+  98:Core/Src/sd_spi.c ****   gpio.Pin       = SD_SPI_SCK_PIN | SD_SPI_MISO_PIN | SD_SPI_MOSI_PIN;
  624              		.loc 1 98 3 view .LVU147
  625 009e 0395     		str	r5, [sp, #12]
-  98:Core/Src/sd_spi.c ****   gpio.Pin       = DISCOVERY_SPIx_SCK_PIN | DISCOVERY_SPIx_MISO_PIN | DISCOVERY_SPIx_MOSI_PIN;
+  98:Core/Src/sd_spi.c ****   gpio.Pin       = SD_SPI_SCK_PIN | SD_SPI_MISO_PIN | SD_SPI_MOSI_PIN;
  626              		.loc 1 98 3 view .LVU148
  627 00a0 236B     		ldr	r3, [r4, #48]
-ARM GAS  /tmp/ccX8ljiu.s 			page 17
+ARM GAS  /tmp/ccNDjfQl.s 			page 17
 
 
  628 00a2 43F02003 		orr	r3, r3, #32
  629 00a6 2363     		str	r3, [r4, #48]
-  98:Core/Src/sd_spi.c ****   gpio.Pin       = DISCOVERY_SPIx_SCK_PIN | DISCOVERY_SPIx_MISO_PIN | DISCOVERY_SPIx_MOSI_PIN;
+  98:Core/Src/sd_spi.c ****   gpio.Pin       = SD_SPI_SCK_PIN | SD_SPI_MISO_PIN | SD_SPI_MOSI_PIN;
  630              		.loc 1 98 3 view .LVU149
  631 00a8 236B     		ldr	r3, [r4, #48]
  632 00aa 03F02003 		and	r3, r3, #32
  633 00ae 0393     		str	r3, [sp, #12]
-  98:Core/Src/sd_spi.c ****   gpio.Pin       = DISCOVERY_SPIx_SCK_PIN | DISCOVERY_SPIx_MISO_PIN | DISCOVERY_SPIx_MOSI_PIN;
+  98:Core/Src/sd_spi.c ****   gpio.Pin       = SD_SPI_SCK_PIN | SD_SPI_MISO_PIN | SD_SPI_MOSI_PIN;
  634              		.loc 1 98 3 view .LVU150
  635 00b0 039B     		ldr	r3, [sp, #12]
  636              	.LBE11:
-  98:Core/Src/sd_spi.c ****   gpio.Pin       = DISCOVERY_SPIx_SCK_PIN | DISCOVERY_SPIx_MISO_PIN | DISCOVERY_SPIx_MOSI_PIN;
+  98:Core/Src/sd_spi.c ****   gpio.Pin       = SD_SPI_SCK_PIN | SD_SPI_MISO_PIN | SD_SPI_MOSI_PIN;
  637              		.loc 1 98 3 view .LVU151
   99:Core/Src/sd_spi.c ****   gpio.Mode      = GPIO_MODE_AF_PP;
  638              		.loc 1 99 3 view .LVU152
@@ -990,14 +990,14 @@ ARM GAS  /tmp/ccX8ljiu.s 			page 1
  101:Core/Src/sd_spi.c ****   gpio.Speed     = GPIO_SPEED_FAST;
  646              		.loc 1 101 18 is_stmt 0 view .LVU157
  647 00bc 0797     		str	r7, [sp, #28]
- 102:Core/Src/sd_spi.c ****   gpio.Alternate = DISCOVERY_SPIx_AF;
+ 102:Core/Src/sd_spi.c ****   gpio.Alternate = SD_SPI_AF;
  648              		.loc 1 102 3 is_stmt 1 view .LVU158
- 102:Core/Src/sd_spi.c ****   gpio.Alternate = DISCOVERY_SPIx_AF;
+ 102:Core/Src/sd_spi.c ****   gpio.Alternate = SD_SPI_AF;
  649              		.loc 1 102 18 is_stmt 0 view .LVU159
  650 00be CDF82080 		str	r8, [sp, #32]
- 103:Core/Src/sd_spi.c ****   HAL_GPIO_Init(DISCOVERY_SPIx_GPIO_PORT, &gpio);
+ 103:Core/Src/sd_spi.c ****   HAL_GPIO_Init(SD_SPI_GPIO_PORT, &gpio);
  651              		.loc 1 103 3 is_stmt 1 view .LVU160
- 103:Core/Src/sd_spi.c ****   HAL_GPIO_Init(DISCOVERY_SPIx_GPIO_PORT, &gpio);
+ 103:Core/Src/sd_spi.c ****   HAL_GPIO_Init(SD_SPI_GPIO_PORT, &gpio);
  652              		.loc 1 103 18 is_stmt 0 view .LVU161
  653 00c2 0523     		movs	r3, #5
  654 00c4 0993     		str	r3, [sp, #36]
@@ -1007,30 +1007,30 @@ ARM GAS  /tmp/ccX8ljiu.s 			page 1
  657 00c8 0C48     		ldr	r0, .L42+8
  658 00ca FFF7FEFF 		bl	HAL_GPIO_Init
  659              	.LVL46:
- 107:Core/Src/sd_spi.c ****   SET_BIT(SPI5->CR1, SPI_CR1_SPE);
+ 107:Core/Src/sd_spi.c ****   SET_BIT(SD_SPI_INSTANCE->CR1, SPI_CR1_SPE);
  660              		.loc 1 107 3 view .LVU163
  661              	.LBB12:
- 107:Core/Src/sd_spi.c ****   SET_BIT(SPI5->CR1, SPI_CR1_SPE);
+ 107:Core/Src/sd_spi.c ****   SET_BIT(SD_SPI_INSTANCE->CR1, SPI_CR1_SPE);
  662              		.loc 1 107 3 view .LVU164
  663 00ce 0495     		str	r5, [sp, #16]
- 107:Core/Src/sd_spi.c ****   SET_BIT(SPI5->CR1, SPI_CR1_SPE);
+ 107:Core/Src/sd_spi.c ****   SET_BIT(SD_SPI_INSTANCE->CR1, SPI_CR1_SPE);
  664              		.loc 1 107 3 view .LVU165
  665 00d0 636C     		ldr	r3, [r4, #68]
  666 00d2 43F48013 		orr	r3, r3, #1048576
  667 00d6 6364     		str	r3, [r4, #68]
-ARM GAS  /tmp/ccX8ljiu.s 			page 18
+ARM GAS  /tmp/ccNDjfQl.s 			page 18
 
 
- 107:Core/Src/sd_spi.c ****   SET_BIT(SPI5->CR1, SPI_CR1_SPE);
+ 107:Core/Src/sd_spi.c ****   SET_BIT(SD_SPI_INSTANCE->CR1, SPI_CR1_SPE);
  668              		.loc 1 107 3 view .LVU166
  669 00d8 636C     		ldr	r3, [r4, #68]
  670 00da 03F48013 		and	r3, r3, #1048576
  671 00de 0493     		str	r3, [sp, #16]
- 107:Core/Src/sd_spi.c ****   SET_BIT(SPI5->CR1, SPI_CR1_SPE);
+ 107:Core/Src/sd_spi.c ****   SET_BIT(SD_SPI_INSTANCE->CR1, SPI_CR1_SPE);
  672              		.loc 1 107 3 view .LVU167
  673 00e0 049B     		ldr	r3, [sp, #16]
  674              	.LBE12:
- 107:Core/Src/sd_spi.c ****   SET_BIT(SPI5->CR1, SPI_CR1_SPE);
+ 107:Core/Src/sd_spi.c ****   SET_BIT(SD_SPI_INSTANCE->CR1, SPI_CR1_SPE);
  675              		.loc 1 107 3 view .LVU168
  108:Core/Src/sd_spi.c **** }
  676              		.loc 1 108 3 view .LVU169
@@ -1054,14 +1054,14 @@ ARM GAS  /tmp/ccX8ljiu.s 			page 1
  693 0100 00500140 		.word	1073827840
  694 0104 00080240 		.word	1073874944
  695              		.cfi_endproc
- 696              	.LFE139:
+ 696              	.LFE142:
  698              		.section	.text.SD_CS_Low,"ax",%progbits
  699              		.align	1
  700              		.syntax unified
  701              		.thumb
  702              		.thumb_func
  704              	SD_CS_Low:
- 705              	.LFB134:
+ 705              	.LFB137:
   35:Core/Src/sd_spi.c ****   /* Keep LCD D/CX (PD13) HIGH so ILI9341 never treats SD SPI bytes as commands */
  706              		.loc 1 35 1 is_stmt 1 view -0
  707              		.cfi_startproc
@@ -1078,7 +1078,7 @@ ARM GAS  /tmp/ccX8ljiu.s 			page 1
  717 0004 4FF40051 		mov	r1, #8192
  718 0008 0448     		ldr	r0, .L46
  719 000a FFF7FEFF 		bl	HAL_GPIO_WritePin
-ARM GAS  /tmp/ccX8ljiu.s 			page 19
+ARM GAS  /tmp/ccNDjfQl.s 			page 19
 
 
  720              	.LVL47:
@@ -1098,14 +1098,14 @@ ARM GAS  /tmp/ccX8ljiu.s 			page 1
  732 001c 000C0240 		.word	1073875968
  733 0020 00080240 		.word	1073874944
  734              		.cfi_endproc
- 735              	.LFE134:
+ 735              	.LFE137:
  737              		.section	.text.SD_Select,"ax",%progbits
  738              		.align	1
  739              		.syntax unified
  740              		.thumb
  741              		.thumb_func
  743              	SD_Select:
- 744              	.LFB142:
+ 744              	.LFB145:
  137:Core/Src/sd_spi.c ****   SD_CS_Low();
  745              		.loc 1 137 1 is_stmt 1 view -0
  746              		.cfi_startproc
@@ -1138,7 +1138,7 @@ ARM GAS  /tmp/ccX8ljiu.s 			page 1
  142:Core/Src/sd_spi.c ****   }
  768              		.loc 1 142 12 view .LVU181
  769 0016 0123     		movs	r3, #1
-ARM GAS  /tmp/ccX8ljiu.s 			page 20
+ARM GAS  /tmp/ccNDjfQl.s 			page 20
 
 
  770 0018 1C46     		mov	r4, r3
@@ -1159,7 +1159,7 @@ ARM GAS  /tmp/ccX8ljiu.s 			page 1
  781              		.loc 1 145 10 is_stmt 0 view .LVU185
  782 0024 F9E7     		b	.L48
  783              		.cfi_endproc
- 784              	.LFE142:
+ 784              	.LFE145:
  786              		.section	.text.SD_SendCmd,"ax",%progbits
  787              		.align	1
  788              		.syntax unified
@@ -1167,7 +1167,7 @@ ARM GAS  /tmp/ccX8ljiu.s 			page 1
  790              		.thumb_func
  792              	SD_SendCmd:
  793              	.LVL53:
- 794              	.LFB145:
+ 794              	.LFB148:
  204:Core/Src/sd_spi.c **** #endif
  205:Core/Src/sd_spi.c **** 
  206:Core/Src/sd_spi.c **** static uint8_t SD_SendCmd(uint8_t cmd, uint32_t arg)
@@ -1198,7 +1198,7 @@ ARM GAS  /tmp/ccX8ljiu.s 			page 1
  814              	.LVL54:
  815              	.L54:
  212:Core/Src/sd_spi.c ****   {
-ARM GAS  /tmp/ccX8ljiu.s 			page 21
+ARM GAS  /tmp/ccNDjfQl.s 			page 21
 
 
  213:Core/Src/sd_spi.c ****     cmd &= 0x7F;
@@ -1258,7 +1258,7 @@ ARM GAS  /tmp/ccX8ljiu.s 			page 1
  843 002e C5F30740 		ubfx	r0, r5, #16, #8
  844 0032 FFF7FEFF 		bl	SD_SPI_TxRxByte
  845              	.LVL60:
-ARM GAS  /tmp/ccX8ljiu.s 			page 22
+ARM GAS  /tmp/ccNDjfQl.s 			page 22
 
 
  240:Core/Src/sd_spi.c ****   SD_SPI_TxRxByte((uint8_t)(arg >> 8));
@@ -1318,7 +1318,7 @@ ARM GAS  /tmp/ccX8ljiu.s 			page 1
  230:Core/Src/sd_spi.c ****     {
  886              		.loc 1 230 15 is_stmt 0 view .LVU216
  887 0060 FFF7FEFF 		bl	SD_Select
-ARM GAS  /tmp/ccX8ljiu.s 			page 23
+ARM GAS  /tmp/ccNDjfQl.s 			page 23
 
 
  888              	.LVL68:
@@ -1378,7 +1378,7 @@ ARM GAS  /tmp/ccX8ljiu.s 			page 1
  925 0084 631E     		subs	r3, r4, #1
  926              	.LVL75:
  927              		.loc 1 259 25 discriminator 1 view .LVU230
-ARM GAS  /tmp/ccX8ljiu.s 			page 24
+ARM GAS  /tmp/ccNDjfQl.s 			page 24
 
 
  928 0086 13F0FF04 		ands	r4, r3, #255
@@ -1405,7 +1405,7 @@ ARM GAS  /tmp/ccX8ljiu.s 			page 1
  944              	.LVL79:
  945 0098 EDE7     		b	.L59
  946              		.cfi_endproc
- 947              	.LFE145:
+ 947              	.LFE148:
  949              		.section	.text.SD_SPI_GetCardType,"ax",%progbits
  950              		.align	1
  951              		.global	SD_SPI_GetCardType
@@ -1413,7 +1413,7 @@ ARM GAS  /tmp/ccX8ljiu.s 			page 1
  953              		.thumb
  954              		.thumb_func
  956              	SD_SPI_GetCardType:
- 957              	.LFB146:
+ 957              	.LFB149:
  263:Core/Src/sd_spi.c **** 
  264:Core/Src/sd_spi.c **** uint8_t SD_SPI_GetCardType(void)
  265:Core/Src/sd_spi.c **** {
@@ -1434,11 +1434,11 @@ ARM GAS  /tmp/ccX8ljiu.s 			page 1
  970              	.L69:
  971 0008 00000000 		.word	CardType
  972              		.cfi_endproc
- 973              	.LFE146:
+ 973              	.LFE149:
  975              		.section	.text.disk_status,"ax",%progbits
  976              		.align	1
  977              		.global	disk_status
-ARM GAS  /tmp/ccX8ljiu.s 			page 25
+ARM GAS  /tmp/ccNDjfQl.s 			page 25
 
 
  978              		.syntax unified
@@ -1446,7 +1446,7 @@ ARM GAS  /tmp/ccX8ljiu.s 			page 1
  980              		.thumb_func
  982              	disk_status:
  983              	.LVL80:
- 984              	.LFB147:
+ 984              	.LFB150:
  268:Core/Src/sd_spi.c **** 
  269:Core/Src/sd_spi.c **** /*----------------------------------------------------------------------------
  270:Core/Src/sd_spi.c ****  * FatFs DiskIO Interface Functions
@@ -1484,7 +1484,7 @@ ARM GAS  /tmp/ccX8ljiu.s 			page 1
  1009              	.L74:
  1010 000c 00000000 		.word	Stat
  1011              		.cfi_endproc
- 1012              	.LFE147:
+ 1012              	.LFE150:
  1014              		.section	.text.disk_initialize,"ax",%progbits
  1015              		.align	1
  1016              		.global	disk_initialize
@@ -1493,12 +1493,12 @@ ARM GAS  /tmp/ccX8ljiu.s 			page 1
  1019              		.thumb_func
  1021              	disk_initialize:
  1022              	.LVL84:
- 1023              	.LFB148:
+ 1023              	.LFB151:
  277:Core/Src/sd_spi.c **** 
  278:Core/Src/sd_spi.c **** DSTATUS disk_initialize(BYTE pdrv)
  279:Core/Src/sd_spi.c **** {
  1024              		.loc 1 279 1 is_stmt 1 view -0
-ARM GAS  /tmp/ccX8ljiu.s 			page 26
+ARM GAS  /tmp/ccNDjfQl.s 			page 26
 
 
  1025              		.cfi_startproc
@@ -1558,7 +1558,7 @@ ARM GAS  /tmp/ccX8ljiu.s 			page 1
  323:Core/Src/sd_spi.c ****     else
  324:Core/Src/sd_spi.c ****     {
  325:Core/Src/sd_spi.c ****       /* SDv1 or MMCv3 */
-ARM GAS  /tmp/ccX8ljiu.s 			page 27
+ARM GAS  /tmp/ccNDjfQl.s 			page 27
 
 
  326:Core/Src/sd_spi.c ****       if (SD_SendCmd(ACMD41, 0) <= 1)
@@ -1618,7 +1618,7 @@ ARM GAS  /tmp/ccX8ljiu.s 			page 1
  1055 000e FFF7FEFF 		bl	SD_SPI_InitBus
  1056              	.LVL87:
  286:Core/Src/sd_spi.c **** 
-ARM GAS  /tmp/ccX8ljiu.s 			page 28
+ARM GAS  /tmp/ccNDjfQl.s 			page 28
 
 
  1057              		.loc 1 286 3 view .LVU254
@@ -1678,7 +1678,7 @@ ARM GAS  /tmp/ccX8ljiu.s 			page 1
  1099              	.LVL97:
  301:Core/Src/sd_spi.c ****     HAL_Delay(10);
  1100              		.loc 1 301 5 is_stmt 1 view .LVU267
-ARM GAS  /tmp/ccX8ljiu.s 			page 29
+ARM GAS  /tmp/ccNDjfQl.s 			page 29
 
 
  301:Core/Src/sd_spi.c ****     HAL_Delay(10);
@@ -1738,7 +1738,7 @@ ARM GAS  /tmp/ccX8ljiu.s 			page 1
  1140 005e 0122     		movs	r2, #1
  1141 0060 1A70     		strb	r2, [r3]
  1142              	.L97:
-ARM GAS  /tmp/ccX8ljiu.s 			page 30
+ARM GAS  /tmp/ccNDjfQl.s 			page 30
 
 
  357:Core/Src/sd_spi.c **** }
@@ -1798,7 +1798,7 @@ ARM GAS  /tmp/ccX8ljiu.s 			page 1
  1185 0084 FFF7FEFF 		bl	SD_SPI_TxRxByte
  1186              	.LVL112:
  311:Core/Src/sd_spi.c ****       if (ocr[2] == 0x01 && ocr[3] == 0xAA)
-ARM GAS  /tmp/ccX8ljiu.s 			page 31
+ARM GAS  /tmp/ccNDjfQl.s 			page 31
 
 
  1187              		.loc 1 311 38 discriminator 2 view .LVU296
@@ -1858,7 +1858,7 @@ ARM GAS  /tmp/ccX8ljiu.s 			page 1
  1227              	.LVL116:
  315:Core/Src/sd_spi.c ****         if (((HAL_GetTick() - start) < 1000) && SD_SendCmd(CMD58, 0) == 0)
  1228              		.loc 1 315 49 discriminator 4 view .LVU311
-ARM GAS  /tmp/ccX8ljiu.s 			page 32
+ARM GAS  /tmp/ccNDjfQl.s 			page 32
 
 
  1229 00c0 0028     		cmp	r0, #0
@@ -1918,7 +1918,7 @@ ARM GAS  /tmp/ccX8ljiu.s 			page 1
  1270              		.loc 1 318 25 is_stmt 1 discriminator 3 view .LVU324
  1271 00f2 032C     		cmp	r4, #3
  1272 00f4 F3D9     		bls	.L92
-ARM GAS  /tmp/ccX8ljiu.s 			page 33
+ARM GAS  /tmp/ccNDjfQl.s 			page 33
 
 
  319:Core/Src/sd_spi.c ****         }
@@ -1978,7 +1978,7 @@ ARM GAS  /tmp/ccX8ljiu.s 			page 1
  1312              		.loc 1 336 47 discriminator 4 view .LVU339
  1313 0128 0028     		cmp	r0, #0
  1314 012a F3D1     		bne	.L95
-ARM GAS  /tmp/ccX8ljiu.s 			page 34
+ARM GAS  /tmp/ccNDjfQl.s 			page 34
 
 
  1315              	.L94:
@@ -2038,7 +2038,7 @@ ARM GAS  /tmp/ccX8ljiu.s 			page 1
  1357 015a 03F0FE03 		and	r3, r3, #254
  1358 015e 1370     		strb	r3, [r2]
  350:Core/Src/sd_spi.c ****   }
-ARM GAS  /tmp/ccX8ljiu.s 			page 35
+ARM GAS  /tmp/ccNDjfQl.s 			page 35
 
 
  1359              		.loc 1 350 5 is_stmt 1 view .LVU352
@@ -2051,7 +2051,7 @@ ARM GAS  /tmp/ccX8ljiu.s 			page 1
  1366 0168 00000000 		.word	CardType
  1367 016c 00000000 		.word	Stat
  1368              		.cfi_endproc
- 1369              	.LFE148:
+ 1369              	.LFE151:
  1371              		.section	.text.disk_read,"ax",%progbits
  1372              		.align	1
  1373              		.global	disk_read
@@ -2060,7 +2060,7 @@ ARM GAS  /tmp/ccX8ljiu.s 			page 1
  1376              		.thumb_func
  1378              	disk_read:
  1379              	.LVL136:
- 1380              	.LFB149:
+ 1380              	.LFB152:
  359:Core/Src/sd_spi.c **** 
  360:Core/Src/sd_spi.c **** DRESULT disk_read(BYTE pdrv, BYTE *buff, DWORD sector, UINT count)
  361:Core/Src/sd_spi.c **** {
@@ -2098,7 +2098,7 @@ ARM GAS  /tmp/ccX8ljiu.s 			page 1
  1409 0014 31D1     		bne	.L124
  364:Core/Src/sd_spi.c **** 
  365:Core/Src/sd_spi.c ****   /* Convert LBA to byte address for non-block-addressed (SDSC) cards */
-ARM GAS  /tmp/ccX8ljiu.s 			page 36
+ARM GAS  /tmp/ccNDjfQl.s 			page 36
 
 
  366:Core/Src/sd_spi.c ****   if (!(CardType & CT_BLOCK))
@@ -2158,7 +2158,7 @@ ARM GAS  /tmp/ccX8ljiu.s 			page 1
  1445              	.LVL142:
  1446              		.loc 1 384 12 discriminator 1 view .LVU377
  1447 003a 18B1     		cbz	r0, .L123
-ARM GAS  /tmp/ccX8ljiu.s 			page 37
+ARM GAS  /tmp/ccNDjfQl.s 			page 37
 
 
  385:Core/Src/sd_spi.c ****         buff += 512;
@@ -2218,7 +2218,7 @@ ARM GAS  /tmp/ccX8ljiu.s 			page 1
  1489              	.LVL151:
  373:Core/Src/sd_spi.c ****     {
  1490              		.loc 1 373 10 view .LVU392
-ARM GAS  /tmp/ccX8ljiu.s 			page 38
+ARM GAS  /tmp/ccNDjfQl.s 			page 38
 
 
  1491 005e 1120     		movs	r0, #17
@@ -2277,8 +2277,8 @@ ARM GAS  /tmp/ccX8ljiu.s 			page 1
  1535 0084 00000000 		.word	Stat
  1536 0088 00000000 		.word	CardType
  1537              		.cfi_endproc
- 1538              	.LFE149:
-ARM GAS  /tmp/ccX8ljiu.s 			page 39
+ 1538              	.LFE152:
+ARM GAS  /tmp/ccNDjfQl.s 			page 39
 
 
  1540              		.section	.text.disk_write,"ax",%progbits
@@ -2289,7 +2289,7 @@ ARM GAS  /tmp/ccX8ljiu.s 			page 1
  1545              		.thumb_func
  1547              	disk_write:
  1548              	.LVL160:
- 1549              	.LFB150:
+ 1549              	.LFB153:
  394:Core/Src/sd_spi.c **** 
  395:Core/Src/sd_spi.c **** #if _USE_WRITE == 1
  396:Core/Src/sd_spi.c **** DRESULT disk_write(BYTE pdrv, const BYTE *buff, DWORD sector, UINT count)
@@ -2338,7 +2338,7 @@ ARM GAS  /tmp/ccX8ljiu.s 			page 1
  1586 0020 01D1     		bne	.L138
  402:Core/Src/sd_spi.c ****   {
  403:Core/Src/sd_spi.c ****     sector *= 512;
-ARM GAS  /tmp/ccX8ljiu.s 			page 40
+ARM GAS  /tmp/ccNDjfQl.s 			page 40
 
 
  1587              		.loc 1 403 5 is_stmt 1 view .LVU415
@@ -2398,7 +2398,7 @@ ARM GAS  /tmp/ccX8ljiu.s 			page 1
  1623              		.loc 1 421 9 is_stmt 1 view .LVU429
  1624              		.loc 1 421 14 is_stmt 0 view .LVU430
  1625 0044 05F50075 		add	r5, r5, #512
-ARM GAS  /tmp/ccX8ljiu.s 			page 41
+ARM GAS  /tmp/ccNDjfQl.s 			page 41
 
 
  1626              	.LVL167:
@@ -2458,7 +2458,7 @@ ARM GAS  /tmp/ccX8ljiu.s 			page 1
  408:Core/Src/sd_spi.c ****     {
  1668              		.loc 1 408 10 view .LVU445
  1669 0068 1820     		movs	r0, #24
-ARM GAS  /tmp/ccX8ljiu.s 			page 42
+ARM GAS  /tmp/ccNDjfQl.s 			page 42
 
 
  1670              	.LVL176:
@@ -2518,7 +2518,7 @@ ARM GAS  /tmp/ccX8ljiu.s 			page 1
  1712              	.LVL186:
  399:Core/Src/sd_spi.c **** 
  1713              		.loc 1 399 33 discriminator 1 view .LVU458
-ARM GAS  /tmp/ccX8ljiu.s 			page 43
+ARM GAS  /tmp/ccNDjfQl.s 			page 43
 
 
  1714 0092 E5E7     		b	.L137
@@ -2542,7 +2542,7 @@ ARM GAS  /tmp/ccX8ljiu.s 			page 1
  1731 0098 00000000 		.word	Stat
  1732 009c 00000000 		.word	CardType
  1733              		.cfi_endproc
- 1734              	.LFE150:
+ 1734              	.LFE153:
  1736              		.section	.text.disk_ioctl,"ax",%progbits
  1737              		.align	1
  1738              		.global	disk_ioctl
@@ -2551,7 +2551,7 @@ ARM GAS  /tmp/ccX8ljiu.s 			page 1
  1741              		.thumb_func
  1743              	disk_ioctl:
  1744              	.LVL189:
- 1745              	.LFB151:
+ 1745              	.LFB154:
  430:Core/Src/sd_spi.c **** #endif
  431:Core/Src/sd_spi.c **** 
  432:Core/Src/sd_spi.c **** #if _USE_IOCTL == 1
@@ -2578,7 +2578,7 @@ ARM GAS  /tmp/ccX8ljiu.s 			page 1
  1761              		.loc 1 437 6 is_stmt 0 view .LVU465
  1762 0002 00BB     		cbnz	r0, .L163
  1763 0004 0D46     		mov	r5, r1
-ARM GAS  /tmp/ccX8ljiu.s 			page 44
+ARM GAS  /tmp/ccNDjfQl.s 			page 44
 
 
  438:Core/Src/sd_spi.c ****   if (Stat & STA_NOINIT) return RES_NOTRDY;
@@ -2638,7 +2638,7 @@ ARM GAS  /tmp/ccX8ljiu.s 			page 1
  455:Core/Src/sd_spi.c ****       break;
  456:Core/Src/sd_spi.c ****   }
  457:Core/Src/sd_spi.c **** 
-ARM GAS  /tmp/ccX8ljiu.s 			page 45
+ARM GAS  /tmp/ccNDjfQl.s 			page 45
 
 
  458:Core/Src/sd_spi.c ****   SD_Deselect();
@@ -2698,10 +2698,10 @@ ARM GAS  /tmp/ccX8ljiu.s 			page 1
  1843              	.L168:
  1844 0054 00000000 		.word	Stat
  1845              		.cfi_endproc
-ARM GAS  /tmp/ccX8ljiu.s 			page 46
+ARM GAS  /tmp/ccNDjfQl.s 			page 46
 
 
- 1846              	.LFE151:
+ 1846              	.LFE154:
  1848              		.section	.text.get_fattime,"ax",%progbits
  1849              		.align	1
  1850              		.global	get_fattime
@@ -2709,7 +2709,7 @@ ARM GAS  /tmp/ccX8ljiu.s 			page 1
  1852              		.thumb
  1853              		.thumb_func
  1855              	get_fattime:
- 1856              	.LFB152:
+ 1856              	.LFB155:
  461:Core/Src/sd_spi.c **** #endif
  462:Core/Src/sd_spi.c **** 
  463:Core/Src/sd_spi.c **** DWORD get_fattime(void)
@@ -2726,7 +2726,7 @@ ARM GAS  /tmp/ccX8ljiu.s 			page 1
  1864 0000 0020     		movs	r0, #0
  1865 0002 7047     		bx	lr
  1866              		.cfi_endproc
- 1867              	.LFE152:
+ 1867              	.LFE155:
  1869              		.section	.bss.CardType,"aw",%nobits
  1872              	CardType:
  1873 0000 00       		.space	1
@@ -2742,67 +2742,67 @@ ARM GAS  /tmp/ccX8ljiu.s 			page 1
  1885              		.file 6 "Middlewares/Third_Party/FatFs/src/integer.h"
  1886              		.file 7 "Middlewares/Third_Party/FatFs/src/diskio.h"
  1887              		.file 8 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h"
-ARM GAS  /tmp/ccX8ljiu.s 			page 47
+ARM GAS  /tmp/ccNDjfQl.s 			page 47
 
 
 DEFINED SYMBOLS
                             *ABS*:00000000 sd_spi.c
-     /tmp/ccX8ljiu.s:21     .text.SD_SPI_SetSlowClock:00000000 $t
-     /tmp/ccX8ljiu.s:26     .text.SD_SPI_SetSlowClock:00000000 SD_SPI_SetSlowClock
-     /tmp/ccX8ljiu.s:51     .text.SD_SPI_SetSlowClock:0000001c $d
-     /tmp/ccX8ljiu.s:56     .text.SD_SPI_SetFastClock:00000000 $t
-     /tmp/ccX8ljiu.s:61     .text.SD_SPI_SetFastClock:00000000 SD_SPI_SetFastClock
-     /tmp/ccX8ljiu.s:87     .text.SD_SPI_SetFastClock:00000020 $d
-     /tmp/ccX8ljiu.s:92     .text.SD_SPI_TxRxByte:00000000 $t
-     /tmp/ccX8ljiu.s:97     .text.SD_SPI_TxRxByte:00000000 SD_SPI_TxRxByte
-     /tmp/ccX8ljiu.s:138    .text.SD_SPI_TxRxByte:00000020 $d
-     /tmp/ccX8ljiu.s:143    .text.SD_WaitReady:00000000 $t
-     /tmp/ccX8ljiu.s:148    .text.SD_WaitReady:00000000 SD_WaitReady
-     /tmp/ccX8ljiu.s:208    .text.SD_SendDataBlock:00000000 $t
-     /tmp/ccX8ljiu.s:213    .text.SD_SendDataBlock:00000000 SD_SendDataBlock
-     /tmp/ccX8ljiu.s:317    .text.SD_ReceiveDataBlock:00000000 $t
-     /tmp/ccX8ljiu.s:322    .text.SD_ReceiveDataBlock:00000000 SD_ReceiveDataBlock
-     /tmp/ccX8ljiu.s:419    .text.SD_CS_High:00000000 $t
-     /tmp/ccX8ljiu.s:424    .text.SD_CS_High:00000000 SD_CS_High
-     /tmp/ccX8ljiu.s:452    .text.SD_CS_High:0000001c $d
-     /tmp/ccX8ljiu.s:458    .text.SD_Deselect:00000000 $t
-     /tmp/ccX8ljiu.s:463    .text.SD_Deselect:00000000 SD_Deselect
-     /tmp/ccX8ljiu.s:487    .text.SD_SPI_InitBus:00000000 $t
-     /tmp/ccX8ljiu.s:492    .text.SD_SPI_InitBus:00000000 SD_SPI_InitBus
-     /tmp/ccX8ljiu.s:690    .text.SD_SPI_InitBus:000000f4 $d
-     /tmp/ccX8ljiu.s:699    .text.SD_CS_Low:00000000 $t
-     /tmp/ccX8ljiu.s:704    .text.SD_CS_Low:00000000 SD_CS_Low
-     /tmp/ccX8ljiu.s:732    .text.SD_CS_Low:0000001c $d
-     /tmp/ccX8ljiu.s:738    .text.SD_Select:00000000 $t
-     /tmp/ccX8ljiu.s:743    .text.SD_Select:00000000 SD_Select
-     /tmp/ccX8ljiu.s:787    .text.SD_SendCmd:00000000 $t
-     /tmp/ccX8ljiu.s:792    .text.SD_SendCmd:00000000 SD_SendCmd
-     /tmp/ccX8ljiu.s:950    .text.SD_SPI_GetCardType:00000000 $t
-     /tmp/ccX8ljiu.s:956    .text.SD_SPI_GetCardType:00000000 SD_SPI_GetCardType
-     /tmp/ccX8ljiu.s:971    .text.SD_SPI_GetCardType:00000008 $d
-     /tmp/ccX8ljiu.s:1872   .bss.CardType:00000000 CardType
-     /tmp/ccX8ljiu.s:976    .text.disk_status:00000000 $t
-     /tmp/ccX8ljiu.s:982    .text.disk_status:00000000 disk_status
-     /tmp/ccX8ljiu.s:1010   .text.disk_status:0000000c $d
-     /tmp/ccX8ljiu.s:1877   .data.Stat:00000000 Stat
-     /tmp/ccX8ljiu.s:1015   .text.disk_initialize:00000000 $t
-     /tmp/ccX8ljiu.s:1021   .text.disk_initialize:00000000 disk_initialize
-     /tmp/ccX8ljiu.s:1366   .text.disk_initialize:00000168 $d
-     /tmp/ccX8ljiu.s:1372   .text.disk_read:00000000 $t
-     /tmp/ccX8ljiu.s:1378   .text.disk_read:00000000 disk_read
-     /tmp/ccX8ljiu.s:1535   .text.disk_read:00000084 $d
-     /tmp/ccX8ljiu.s:1541   .text.disk_write:00000000 $t
-     /tmp/ccX8ljiu.s:1547   .text.disk_write:00000000 disk_write
-     /tmp/ccX8ljiu.s:1731   .text.disk_write:00000098 $d
-     /tmp/ccX8ljiu.s:1737   .text.disk_ioctl:00000000 $t
-     /tmp/ccX8ljiu.s:1743   .text.disk_ioctl:00000000 disk_ioctl
-     /tmp/ccX8ljiu.s:1844   .text.disk_ioctl:00000054 $d
-     /tmp/ccX8ljiu.s:1849   .text.get_fattime:00000000 $t
-     /tmp/ccX8ljiu.s:1855   .text.get_fattime:00000000 get_fattime
-     /tmp/ccX8ljiu.s:1873   .bss.CardType:00000000 $d
+     /tmp/ccNDjfQl.s:21     .text.SD_SPI_SetSlowClock:00000000 $t
+     /tmp/ccNDjfQl.s:26     .text.SD_SPI_SetSlowClock:00000000 SD_SPI_SetSlowClock
+     /tmp/ccNDjfQl.s:51     .text.SD_SPI_SetSlowClock:0000001c $d
+     /tmp/ccNDjfQl.s:56     .text.SD_SPI_SetFastClock:00000000 $t
+     /tmp/ccNDjfQl.s:61     .text.SD_SPI_SetFastClock:00000000 SD_SPI_SetFastClock
+     /tmp/ccNDjfQl.s:87     .text.SD_SPI_SetFastClock:00000020 $d
+     /tmp/ccNDjfQl.s:92     .text.SD_SPI_TxRxByte:00000000 $t
+     /tmp/ccNDjfQl.s:97     .text.SD_SPI_TxRxByte:00000000 SD_SPI_TxRxByte
+     /tmp/ccNDjfQl.s:138    .text.SD_SPI_TxRxByte:00000020 $d
+     /tmp/ccNDjfQl.s:143    .text.SD_WaitReady:00000000 $t
+     /tmp/ccNDjfQl.s:148    .text.SD_WaitReady:00000000 SD_WaitReady
+     /tmp/ccNDjfQl.s:208    .text.SD_SendDataBlock:00000000 $t
+     /tmp/ccNDjfQl.s:213    .text.SD_SendDataBlock:00000000 SD_SendDataBlock
+     /tmp/ccNDjfQl.s:317    .text.SD_ReceiveDataBlock:00000000 $t
+     /tmp/ccNDjfQl.s:322    .text.SD_ReceiveDataBlock:00000000 SD_ReceiveDataBlock
+     /tmp/ccNDjfQl.s:419    .text.SD_CS_High:00000000 $t
+     /tmp/ccNDjfQl.s:424    .text.SD_CS_High:00000000 SD_CS_High
+     /tmp/ccNDjfQl.s:452    .text.SD_CS_High:0000001c $d
+     /tmp/ccNDjfQl.s:458    .text.SD_Deselect:00000000 $t
+     /tmp/ccNDjfQl.s:463    .text.SD_Deselect:00000000 SD_Deselect
+     /tmp/ccNDjfQl.s:487    .text.SD_SPI_InitBus:00000000 $t
+     /tmp/ccNDjfQl.s:492    .text.SD_SPI_InitBus:00000000 SD_SPI_InitBus
+     /tmp/ccNDjfQl.s:690    .text.SD_SPI_InitBus:000000f4 $d
+     /tmp/ccNDjfQl.s:699    .text.SD_CS_Low:00000000 $t
+     /tmp/ccNDjfQl.s:704    .text.SD_CS_Low:00000000 SD_CS_Low
+     /tmp/ccNDjfQl.s:732    .text.SD_CS_Low:0000001c $d
+     /tmp/ccNDjfQl.s:738    .text.SD_Select:00000000 $t
+     /tmp/ccNDjfQl.s:743    .text.SD_Select:00000000 SD_Select
+     /tmp/ccNDjfQl.s:787    .text.SD_SendCmd:00000000 $t
+     /tmp/ccNDjfQl.s:792    .text.SD_SendCmd:00000000 SD_SendCmd
+     /tmp/ccNDjfQl.s:950    .text.SD_SPI_GetCardType:00000000 $t
+     /tmp/ccNDjfQl.s:956    .text.SD_SPI_GetCardType:00000000 SD_SPI_GetCardType
+     /tmp/ccNDjfQl.s:971    .text.SD_SPI_GetCardType:00000008 $d
+     /tmp/ccNDjfQl.s:1872   .bss.CardType:00000000 CardType
+     /tmp/ccNDjfQl.s:976    .text.disk_status:00000000 $t
+     /tmp/ccNDjfQl.s:982    .text.disk_status:00000000 disk_status
+     /tmp/ccNDjfQl.s:1010   .text.disk_status:0000000c $d
+     /tmp/ccNDjfQl.s:1877   .data.Stat:00000000 Stat
+     /tmp/ccNDjfQl.s:1015   .text.disk_initialize:00000000 $t
+     /tmp/ccNDjfQl.s:1021   .text.disk_initialize:00000000 disk_initialize
+     /tmp/ccNDjfQl.s:1366   .text.disk_initialize:00000168 $d
+     /tmp/ccNDjfQl.s:1372   .text.disk_read:00000000 $t
+     /tmp/ccNDjfQl.s:1378   .text.disk_read:00000000 disk_read
+     /tmp/ccNDjfQl.s:1535   .text.disk_read:00000084 $d
+     /tmp/ccNDjfQl.s:1541   .text.disk_write:00000000 $t
+     /tmp/ccNDjfQl.s:1547   .text.disk_write:00000000 disk_write
+     /tmp/ccNDjfQl.s:1731   .text.disk_write:00000098 $d
+     /tmp/ccNDjfQl.s:1737   .text.disk_ioctl:00000000 $t
+     /tmp/ccNDjfQl.s:1743   .text.disk_ioctl:00000000 disk_ioctl
+     /tmp/ccNDjfQl.s:1844   .text.disk_ioctl:00000054 $d
+     /tmp/ccNDjfQl.s:1849   .text.get_fattime:00000000 $t
+     /tmp/ccNDjfQl.s:1855   .text.get_fattime:00000000 get_fattime
+     /tmp/ccNDjfQl.s:1873   .bss.CardType:00000000 $d
 
 UNDEFINED SYMBOLS
-ARM GAS  /tmp/ccX8ljiu.s 			page 48
+ARM GAS  /tmp/ccNDjfQl.s 			page 48
 
 
 HAL_GetTick

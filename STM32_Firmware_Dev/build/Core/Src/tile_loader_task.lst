@@ -1,0 +1,1036 @@
+ARM GAS  /tmp/ccoY06Uk.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.arch armv7e-m
+   3              		.fpu fpv4-sp-d16
+   4              		.eabi_attribute 27, 1
+   5              		.eabi_attribute 28, 1
+   6              		.eabi_attribute 20, 1
+   7              		.eabi_attribute 21, 1
+   8              		.eabi_attribute 23, 3
+   9              		.eabi_attribute 24, 1
+  10              		.eabi_attribute 25, 1
+  11              		.eabi_attribute 26, 1
+  12              		.eabi_attribute 30, 1
+  13              		.eabi_attribute 34, 1
+  14              		.eabi_attribute 18, 4
+  15              		.file	"tile_loader_task.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.file 1 "Core/Src/tile_loader_task.c"
+  20              		.section	.text.Init_Tile_Pak_Locked,"ax",%progbits
+  21              		.align	1
+  22              		.syntax unified
+  23              		.thumb
+  24              		.thumb_func
+  26              	Init_Tile_Pak_Locked:
+  27              	.LVL0:
+  28              	.LFB161:
+   1:Core/Src/tile_loader_task.c **** /**
+   2:Core/Src/tile_loader_task.c ****   ******************************************************************************
+   3:Core/Src/tile_loader_task.c ****   * @file    Core/Src/tile_loader_task.c
+   4:Core/Src/tile_loader_task.c ****   * @brief   TASK 3: Tile_Loader_Task (Priority: BelowNormal)
+   5:Core/Src/tile_loader_task.c ****   *          Owns microSD .pak streaming under g_mutex_sd so UI never blocks
+   6:Core/Src/tile_loader_task.c ****   *          on SD card I/O.
+   7:Core/Src/tile_loader_task.c ****   ******************************************************************************
+   8:Core/Src/tile_loader_task.c ****   */
+   9:Core/Src/tile_loader_task.c **** 
+  10:Core/Src/tile_loader_task.c **** #include <string.h>
+  11:Core/Src/tile_loader_task.c **** #include "app.h"
+  12:Core/Src/tile_loader_task.c **** 
+  13:Core/Src/tile_loader_task.c **** /* Tile Archive (.pak) State */
+  14:Core/Src/tile_loader_task.c **** static FATFS         s_fatfs;
+  15:Core/Src/tile_loader_task.c **** static FIL           s_pak_z14;
+  16:Core/Src/tile_loader_task.c **** static DWORD         s_clmt_z14[64];
+  17:Core/Src/tile_loader_task.c **** static TilePakHeader s_hdr_z14;
+  18:Core/Src/tile_loader_task.c **** 
+  19:Core/Src/tile_loader_task.c **** static bool Init_Tile_Pak_Locked(const char *path, FIL *fil, TilePakHeader *hdr,
+  20:Core/Src/tile_loader_task.c ****                                  uint16_t *palette_out, DWORD *clmt_buf, UINT clmt_len)
+  21:Core/Src/tile_loader_task.c **** {
+  29              		.loc 1 21 1 view -0
+  30              		.cfi_startproc
+  31              		@ args = 8, pretend = 0, frame = 8
+  32              		@ frame_needed = 0, uses_anonymous_args = 0
+  33              		.loc 1 21 1 is_stmt 0 view .LVU1
+  34 0000 70B5     		push	{r4, r5, r6, lr}
+  35              	.LCFI0:
+  36              		.cfi_def_cfa_offset 16
+  37              		.cfi_offset 4, -16
+ARM GAS  /tmp/ccoY06Uk.s 			page 2
+
+
+  38              		.cfi_offset 5, -12
+  39              		.cfi_offset 6, -8
+  40              		.cfi_offset 14, -4
+  41 0002 82B0     		sub	sp, sp, #8
+  42              	.LCFI1:
+  43              		.cfi_def_cfa_offset 24
+  44 0004 0C46     		mov	r4, r1
+  45 0006 1546     		mov	r5, r2
+  46 0008 1E46     		mov	r6, r3
+  22:Core/Src/tile_loader_task.c ****   UINT br = 0;
+  47              		.loc 1 22 3 is_stmt 1 view .LVU2
+  48              		.loc 1 22 8 is_stmt 0 view .LVU3
+  49 000a 0021     		movs	r1, #0
+  50              	.LVL1:
+  51              		.loc 1 22 8 view .LVU4
+  52 000c 0191     		str	r1, [sp, #4]
+  23:Core/Src/tile_loader_task.c **** 
+  24:Core/Src/tile_loader_task.c ****   if (f_open(fil, path, FA_READ) != FR_OK)
+  53              		.loc 1 24 3 is_stmt 1 view .LVU5
+  54              		.loc 1 24 7 is_stmt 0 view .LVU6
+  55 000e 0122     		movs	r2, #1
+  56              	.LVL2:
+  57              		.loc 1 24 7 view .LVU7
+  58 0010 0146     		mov	r1, r0
+  59 0012 2046     		mov	r0, r4
+  60              	.LVL3:
+  61              		.loc 1 24 7 view .LVU8
+  62 0014 FFF7FEFF 		bl	f_open
+  63              	.LVL4:
+  64              		.loc 1 24 6 discriminator 1 view .LVU9
+  65 0018 10B1     		cbz	r0, .L2
+  66              	.L6:
+  25:Core/Src/tile_loader_task.c ****   {
+  26:Core/Src/tile_loader_task.c ****     return false;
+  67              		.loc 1 26 12 view .LVU10
+  68 001a 0020     		movs	r0, #0
+  69              	.L3:
+  27:Core/Src/tile_loader_task.c ****   }
+  28:Core/Src/tile_loader_task.c **** 
+  29:Core/Src/tile_loader_task.c ****   fil->cltbl  = clmt_buf;
+  30:Core/Src/tile_loader_task.c ****   clmt_buf[0] = clmt_len;
+  31:Core/Src/tile_loader_task.c ****   f_lseek(fil, CREATE_LINKMAP);
+  32:Core/Src/tile_loader_task.c **** 
+  33:Core/Src/tile_loader_task.c ****   if (f_lseek(fil, 0) != FR_OK ||
+  34:Core/Src/tile_loader_task.c ****       f_read(fil, hdr, sizeof(TilePakHeader), &br) != FR_OK ||
+  35:Core/Src/tile_loader_task.c ****       br != sizeof(TilePakHeader) ||
+  36:Core/Src/tile_loader_task.c ****       hdr->magic != TILE_PAK_MAGIC)
+  37:Core/Src/tile_loader_task.c ****   {
+  38:Core/Src/tile_loader_task.c ****     f_close(fil);
+  39:Core/Src/tile_loader_task.c ****     return false;
+  40:Core/Src/tile_loader_task.c ****   }
+  41:Core/Src/tile_loader_task.c **** 
+  42:Core/Src/tile_loader_task.c ****   uint32_t num_x          = hdr->x_max - hdr->x_min + 1U;
+  43:Core/Src/tile_loader_task.c ****   uint32_t num_y          = hdr->y_max - hdr->y_min + 1U;
+  44:Core/Src/tile_loader_task.c ****   uint32_t table_end      = sizeof(TilePakHeader) + (num_x * num_y * 4U);
+  45:Core/Src/tile_loader_task.c ****   uint32_t palette_sector = (table_end + 511U) / 512U;
+  46:Core/Src/tile_loader_task.c **** 
+ARM GAS  /tmp/ccoY06Uk.s 			page 3
+
+
+  47:Core/Src/tile_loader_task.c ****   if (f_lseek(fil, (FSIZE_t)palette_sector * 512U) != FR_OK ||
+  48:Core/Src/tile_loader_task.c ****       f_read(fil, palette_out, 512U, &br) != FR_OK ||
+  49:Core/Src/tile_loader_task.c ****       br != 512U)
+  50:Core/Src/tile_loader_task.c ****   {
+  51:Core/Src/tile_loader_task.c ****     f_close(fil);
+  52:Core/Src/tile_loader_task.c ****     return false;
+  53:Core/Src/tile_loader_task.c ****   }
+  54:Core/Src/tile_loader_task.c **** 
+  55:Core/Src/tile_loader_task.c ****   return true;
+  56:Core/Src/tile_loader_task.c **** }
+  70              		.loc 1 56 1 view .LVU11
+  71 001c 02B0     		add	sp, sp, #8
+  72              	.LCFI2:
+  73              		.cfi_remember_state
+  74              		.cfi_def_cfa_offset 16
+  75              		@ sp needed
+  76 001e 70BD     		pop	{r4, r5, r6, pc}
+  77              	.LVL5:
+  78              	.L2:
+  79              	.LCFI3:
+  80              		.cfi_restore_state
+  29:Core/Src/tile_loader_task.c ****   clmt_buf[0] = clmt_len;
+  81              		.loc 1 29 3 is_stmt 1 view .LVU12
+  29:Core/Src/tile_loader_task.c ****   clmt_buf[0] = clmt_len;
+  82              		.loc 1 29 15 is_stmt 0 view .LVU13
+  83 0020 069B     		ldr	r3, [sp, #24]
+  84 0022 2365     		str	r3, [r4, #80]
+  30:Core/Src/tile_loader_task.c ****   f_lseek(fil, CREATE_LINKMAP);
+  85              		.loc 1 30 3 is_stmt 1 view .LVU14
+  30:Core/Src/tile_loader_task.c ****   f_lseek(fil, CREATE_LINKMAP);
+  86              		.loc 1 30 15 is_stmt 0 view .LVU15
+  87 0024 079B     		ldr	r3, [sp, #28]
+  88 0026 069A     		ldr	r2, [sp, #24]
+  89 0028 1360     		str	r3, [r2]
+  31:Core/Src/tile_loader_task.c **** 
+  90              		.loc 1 31 3 is_stmt 1 view .LVU16
+  91 002a 4FF0FF32 		mov	r2, #-1
+  92 002e 4FF0FF33 		mov	r3, #-1
+  93 0032 2046     		mov	r0, r4
+  94 0034 FFF7FEFF 		bl	f_lseek
+  95              	.LVL6:
+  33:Core/Src/tile_loader_task.c ****       f_read(fil, hdr, sizeof(TilePakHeader), &br) != FR_OK ||
+  96              		.loc 1 33 3 view .LVU17
+  33:Core/Src/tile_loader_task.c ****       f_read(fil, hdr, sizeof(TilePakHeader), &br) != FR_OK ||
+  97              		.loc 1 33 7 is_stmt 0 view .LVU18
+  98 0038 0022     		movs	r2, #0
+  99 003a 0023     		movs	r3, #0
+ 100 003c 2046     		mov	r0, r4
+ 101 003e FFF7FEFF 		bl	f_lseek
+ 102              	.LVL7:
+  33:Core/Src/tile_loader_task.c ****       f_read(fil, hdr, sizeof(TilePakHeader), &br) != FR_OK ||
+ 103              		.loc 1 33 6 discriminator 1 view .LVU19
+ 104 0042 68B9     		cbnz	r0, .L4
+  34:Core/Src/tile_loader_task.c ****       br != sizeof(TilePakHeader) ||
+ 105              		.loc 1 34 7 view .LVU20
+ 106 0044 01AB     		add	r3, sp, #4
+ 107 0046 1822     		movs	r2, #24
+ARM GAS  /tmp/ccoY06Uk.s 			page 4
+
+
+ 108 0048 2946     		mov	r1, r5
+ 109 004a 2046     		mov	r0, r4
+ 110 004c FFF7FEFF 		bl	f_read
+ 111              	.LVL8:
+  33:Core/Src/tile_loader_task.c ****       f_read(fil, hdr, sizeof(TilePakHeader), &br) != FR_OK ||
+ 112              		.loc 1 33 32 discriminator 2 view .LVU21
+ 113 0050 30B9     		cbnz	r0, .L4
+  35:Core/Src/tile_loader_task.c ****       hdr->magic != TILE_PAK_MAGIC)
+ 114              		.loc 1 35 10 view .LVU22
+ 115 0052 019B     		ldr	r3, [sp, #4]
+  34:Core/Src/tile_loader_task.c ****       br != sizeof(TilePakHeader) ||
+ 116              		.loc 1 34 61 discriminator 1 view .LVU23
+ 117 0054 182B     		cmp	r3, #24
+ 118 0056 03D1     		bne	.L4
+  36:Core/Src/tile_loader_task.c ****   {
+ 119              		.loc 1 36 10 view .LVU24
+ 120 0058 2A68     		ldr	r2, [r5]	@ unaligned
+  35:Core/Src/tile_loader_task.c ****       hdr->magic != TILE_PAK_MAGIC)
+ 121              		.loc 1 35 35 discriminator 1 view .LVU25
+ 122 005a 164B     		ldr	r3, .L10
+ 123 005c 9A42     		cmp	r2, r3
+ 124 005e 03D0     		beq	.L5
+ 125              	.L4:
+  38:Core/Src/tile_loader_task.c ****     return false;
+ 126              		.loc 1 38 5 is_stmt 1 view .LVU26
+ 127 0060 2046     		mov	r0, r4
+ 128 0062 FFF7FEFF 		bl	f_close
+ 129              	.LVL9:
+  39:Core/Src/tile_loader_task.c ****   }
+ 130              		.loc 1 39 5 view .LVU27
+  39:Core/Src/tile_loader_task.c ****   }
+ 131              		.loc 1 39 12 is_stmt 0 view .LVU28
+ 132 0066 D8E7     		b	.L6
+ 133              	.L5:
+  42:Core/Src/tile_loader_task.c ****   uint32_t num_y          = hdr->y_max - hdr->y_min + 1U;
+ 134              		.loc 1 42 3 is_stmt 1 view .LVU29
+  42:Core/Src/tile_loader_task.c ****   uint32_t num_y          = hdr->y_max - hdr->y_min + 1U;
+ 135              		.loc 1 42 32 is_stmt 0 view .LVU30
+ 136 0068 EA68     		ldr	r2, [r5, #12]	@ unaligned
+  42:Core/Src/tile_loader_task.c ****   uint32_t num_y          = hdr->y_max - hdr->y_min + 1U;
+ 137              		.loc 1 42 45 view .LVU31
+ 138 006a AB68     		ldr	r3, [r5, #8]	@ unaligned
+  42:Core/Src/tile_loader_task.c ****   uint32_t num_y          = hdr->y_max - hdr->y_min + 1U;
+ 139              		.loc 1 42 40 view .LVU32
+ 140 006c D21A     		subs	r2, r2, r3
+ 141              	.LVL10:
+  43:Core/Src/tile_loader_task.c ****   uint32_t table_end      = sizeof(TilePakHeader) + (num_x * num_y * 4U);
+ 142              		.loc 1 43 3 is_stmt 1 view .LVU33
+  43:Core/Src/tile_loader_task.c ****   uint32_t table_end      = sizeof(TilePakHeader) + (num_x * num_y * 4U);
+ 143              		.loc 1 43 32 is_stmt 0 view .LVU34
+ 144 006e 6B69     		ldr	r3, [r5, #20]	@ unaligned
+  43:Core/Src/tile_loader_task.c ****   uint32_t table_end      = sizeof(TilePakHeader) + (num_x * num_y * 4U);
+ 145              		.loc 1 43 45 view .LVU35
+ 146 0070 2969     		ldr	r1, [r5, #16]	@ unaligned
+  43:Core/Src/tile_loader_task.c ****   uint32_t table_end      = sizeof(TilePakHeader) + (num_x * num_y * 4U);
+ 147              		.loc 1 43 40 view .LVU36
+ 148 0072 5B1A     		subs	r3, r3, r1
+ARM GAS  /tmp/ccoY06Uk.s 			page 5
+
+
+  43:Core/Src/tile_loader_task.c ****   uint32_t table_end      = sizeof(TilePakHeader) + (num_x * num_y * 4U);
+ 149              		.loc 1 43 12 view .LVU37
+ 150 0074 0133     		adds	r3, r3, #1
+ 151              	.LVL11:
+  44:Core/Src/tile_loader_task.c ****   uint32_t palette_sector = (table_end + 511U) / 512U;
+ 152              		.loc 1 44 3 is_stmt 1 view .LVU38
+  44:Core/Src/tile_loader_task.c ****   uint32_t palette_sector = (table_end + 511U) / 512U;
+ 153              		.loc 1 44 60 is_stmt 0 view .LVU39
+ 154 0076 02FB0332 		mla	r2, r2, r3, r3
+ 155              	.LVL12:
+  45:Core/Src/tile_loader_task.c **** 
+ 156              		.loc 1 45 3 is_stmt 1 view .LVU40
+  45:Core/Src/tile_loader_task.c **** 
+ 157              		.loc 1 45 40 is_stmt 0 view .LVU41
+ 158 007a 9200     		lsls	r2, r2, #2
+ 159              	.LVL13:
+  45:Core/Src/tile_loader_task.c **** 
+ 160              		.loc 1 45 40 view .LVU42
+ 161 007c 02F21722 		addw	r2, r2, #535
+ 162              	.LVL14:
+  47:Core/Src/tile_loader_task.c ****       f_read(fil, palette_out, 512U, &br) != FR_OK ||
+ 163              		.loc 1 47 3 is_stmt 1 view .LVU43
+  47:Core/Src/tile_loader_task.c ****       f_read(fil, palette_out, 512U, &br) != FR_OK ||
+ 164              		.loc 1 47 7 is_stmt 0 view .LVU44
+ 165 0080 6FF30802 		bfc	r2, #0, #9
+ 166              	.LVL15:
+  47:Core/Src/tile_loader_task.c ****       f_read(fil, palette_out, 512U, &br) != FR_OK ||
+ 167              		.loc 1 47 7 view .LVU45
+ 168 0084 0023     		movs	r3, #0
+ 169              	.LVL16:
+  47:Core/Src/tile_loader_task.c ****       f_read(fil, palette_out, 512U, &br) != FR_OK ||
+ 170              		.loc 1 47 7 view .LVU46
+ 171 0086 2046     		mov	r0, r4
+ 172 0088 FFF7FEFF 		bl	f_lseek
+ 173              	.LVL17:
+  47:Core/Src/tile_loader_task.c ****       f_read(fil, palette_out, 512U, &br) != FR_OK ||
+ 174              		.loc 1 47 6 discriminator 1 view .LVU47
+ 175 008c 58B9     		cbnz	r0, .L7
+  48:Core/Src/tile_loader_task.c ****       br != 512U)
+ 176              		.loc 1 48 7 view .LVU48
+ 177 008e 01AB     		add	r3, sp, #4
+ 178 0090 4FF40072 		mov	r2, #512
+ 179 0094 3146     		mov	r1, r6
+ 180 0096 2046     		mov	r0, r4
+ 181 0098 FFF7FEFF 		bl	f_read
+ 182              	.LVL18:
+  47:Core/Src/tile_loader_task.c ****       f_read(fil, palette_out, 512U, &br) != FR_OK ||
+ 183              		.loc 1 47 61 discriminator 2 view .LVU49
+ 184 009c 18B9     		cbnz	r0, .L7
+  49:Core/Src/tile_loader_task.c ****   {
+ 185              		.loc 1 49 10 view .LVU50
+ 186 009e 019B     		ldr	r3, [sp, #4]
+  48:Core/Src/tile_loader_task.c ****       br != 512U)
+ 187              		.loc 1 48 52 discriminator 1 view .LVU51
+ 188 00a0 B3F5007F 		cmp	r3, #512
+ 189 00a4 03D0     		beq	.L8
+ 190              	.L7:
+ARM GAS  /tmp/ccoY06Uk.s 			page 6
+
+
+  51:Core/Src/tile_loader_task.c ****     return false;
+ 191              		.loc 1 51 5 is_stmt 1 view .LVU52
+ 192 00a6 2046     		mov	r0, r4
+ 193 00a8 FFF7FEFF 		bl	f_close
+ 194              	.LVL19:
+  52:Core/Src/tile_loader_task.c ****   }
+ 195              		.loc 1 52 5 view .LVU53
+  52:Core/Src/tile_loader_task.c ****   }
+ 196              		.loc 1 52 12 is_stmt 0 view .LVU54
+ 197 00ac B5E7     		b	.L6
+ 198              	.L8:
+  55:Core/Src/tile_loader_task.c **** }
+ 199              		.loc 1 55 10 view .LVU55
+ 200 00ae 0120     		movs	r0, #1
+ 201 00b0 B4E7     		b	.L3
+ 202              	.L11:
+ 203 00b2 00BF     		.align	2
+ 204              	.L10:
+ 205 00b4 5450414B 		.word	1262571604
+ 206              		.cfi_endproc
+ 207              	.LFE161:
+ 209              		.section	.text.Load_Tile_From_Pak_Locked,"ax",%progbits
+ 210              		.align	1
+ 211              		.syntax unified
+ 212              		.thumb
+ 213              		.thumb_func
+ 215              	Load_Tile_From_Pak_Locked:
+ 216              	.LVL20:
+ 217              	.LFB162:
+  57:Core/Src/tile_loader_task.c **** 
+  58:Core/Src/tile_loader_task.c **** static bool Load_Tile_From_Pak_Locked(FIL *pak_file, const TilePakHeader *hdr,
+  59:Core/Src/tile_loader_task.c ****                                       int32_t tx, int32_t ty, uint8_t *tile_buf)
+  60:Core/Src/tile_loader_task.c **** {
+ 218              		.loc 1 60 1 is_stmt 1 view -0
+ 219              		.cfi_startproc
+ 220              		@ args = 4, pretend = 0, frame = 8
+ 221              		@ frame_needed = 0, uses_anonymous_args = 0
+ 222              		.loc 1 60 1 is_stmt 0 view .LVU57
+ 223 0000 10B5     		push	{r4, lr}
+ 224              	.LCFI4:
+ 225              		.cfi_def_cfa_offset 8
+ 226              		.cfi_offset 4, -8
+ 227              		.cfi_offset 14, -4
+ 228 0002 82B0     		sub	sp, sp, #8
+ 229              	.LCFI5:
+ 230              		.cfi_def_cfa_offset 16
+ 231 0004 0446     		mov	r4, r0
+  61:Core/Src/tile_loader_task.c ****   if (tx < (int32_t)hdr->x_min || tx > (int32_t)hdr->x_max ||
+ 232              		.loc 1 61 3 is_stmt 1 view .LVU58
+ 233              		.loc 1 61 24 is_stmt 0 view .LVU59
+ 234 0006 8868     		ldr	r0, [r1, #8]	@ unaligned
+ 235              	.LVL21:
+ 236              		.loc 1 61 6 view .LVU60
+ 237 0008 9042     		cmp	r0, r2
+ 238 000a 0ADC     		bgt	.L13
+ 239              		.loc 1 61 52 discriminator 1 view .LVU61
+ 240 000c D1F80CC0 		ldr	ip, [r1, #12]	@ unaligned
+ARM GAS  /tmp/ccoY06Uk.s 			page 7
+
+
+ 241              		.loc 1 61 32 discriminator 1 view .LVU62
+ 242 0010 9445     		cmp	ip, r2
+ 243 0012 06DB     		blt	.L13
+  62:Core/Src/tile_loader_task.c ****       ty < (int32_t)hdr->y_min || ty > (int32_t)hdr->y_max)
+ 244              		.loc 1 62 24 view .LVU63
+ 245 0014 D1F810C0 		ldr	ip, [r1, #16]	@ unaligned
+  61:Core/Src/tile_loader_task.c ****   if (tx < (int32_t)hdr->x_min || tx > (int32_t)hdr->x_max ||
+ 246              		.loc 1 61 60 discriminator 2 view .LVU64
+ 247 0018 9C45     		cmp	ip, r3
+ 248 001a 02DC     		bgt	.L13
+ 249              		.loc 1 62 52 discriminator 1 view .LVU65
+ 250 001c 4969     		ldr	r1, [r1, #20]	@ unaligned
+ 251              	.LVL22:
+ 252              		.loc 1 62 32 discriminator 1 view .LVU66
+ 253 001e 9942     		cmp	r1, r3
+ 254 0020 08DA     		bge	.L14
+ 255              	.L13:
+  63:Core/Src/tile_loader_task.c ****   {
+  64:Core/Src/tile_loader_task.c ****     memset(tile_buf, 0, TILE_BYTES);
+ 256              		.loc 1 64 5 is_stmt 1 view .LVU67
+ 257 0022 4FF48032 		mov	r2, #65536
+ 258              	.LVL23:
+ 259              		.loc 1 64 5 is_stmt 0 view .LVU68
+ 260 0026 0021     		movs	r1, #0
+ 261 0028 0498     		ldr	r0, [sp, #16]
+ 262 002a FFF7FEFF 		bl	memset
+ 263              	.LVL24:
+  65:Core/Src/tile_loader_task.c ****     return false;
+ 264              		.loc 1 65 5 is_stmt 1 view .LVU69
+ 265              	.L18:
+ 266              		.loc 1 65 12 is_stmt 0 view .LVU70
+ 267 002e 0020     		movs	r0, #0
+ 268              	.L15:
+  66:Core/Src/tile_loader_task.c ****   }
+  67:Core/Src/tile_loader_task.c **** 
+  68:Core/Src/tile_loader_task.c ****   uint32_t num_y    = hdr->y_max - hdr->y_min + 1U;
+  69:Core/Src/tile_loader_task.c ****   uint32_t col      = (uint32_t)tx - hdr->x_min;
+  70:Core/Src/tile_loader_task.c ****   uint32_t row      = (uint32_t)ty - hdr->y_min;
+  71:Core/Src/tile_loader_task.c ****   uint32_t grid_idx = col * num_y + row;
+  72:Core/Src/tile_loader_task.c **** 
+  73:Core/Src/tile_loader_task.c ****   uint32_t sector_idx = 0;
+  74:Core/Src/tile_loader_task.c ****   UINT br = 0;
+  75:Core/Src/tile_loader_task.c ****   FSIZE_t idx_offset = (FSIZE_t)sizeof(TilePakHeader) + (FSIZE_t)grid_idx * sizeof(uint32_t);
+  76:Core/Src/tile_loader_task.c **** 
+  77:Core/Src/tile_loader_task.c ****   if (f_lseek(pak_file, idx_offset) != FR_OK ||
+  78:Core/Src/tile_loader_task.c ****       f_read(pak_file, &sector_idx, sizeof(uint32_t), &br) != FR_OK ||
+  79:Core/Src/tile_loader_task.c ****       br != sizeof(uint32_t) ||
+  80:Core/Src/tile_loader_task.c ****       sector_idx == 0U)
+  81:Core/Src/tile_loader_task.c ****   {
+  82:Core/Src/tile_loader_task.c ****     memset(tile_buf, 0, TILE_BYTES);
+  83:Core/Src/tile_loader_task.c ****     return false;
+  84:Core/Src/tile_loader_task.c ****   }
+  85:Core/Src/tile_loader_task.c **** 
+  86:Core/Src/tile_loader_task.c ****   FSIZE_t tile_offset = (FSIZE_t)sector_idx * 512U;
+  87:Core/Src/tile_loader_task.c ****   if (f_lseek(pak_file, tile_offset) != FR_OK ||
+  88:Core/Src/tile_loader_task.c ****       f_read(pak_file, tile_buf, TILE_BYTES, &br) != FR_OK ||
+  89:Core/Src/tile_loader_task.c ****       br != TILE_BYTES)
+ARM GAS  /tmp/ccoY06Uk.s 			page 8
+
+
+  90:Core/Src/tile_loader_task.c ****   {
+  91:Core/Src/tile_loader_task.c ****     memset(tile_buf, 0, TILE_BYTES);
+  92:Core/Src/tile_loader_task.c ****     return false;
+  93:Core/Src/tile_loader_task.c ****   }
+  94:Core/Src/tile_loader_task.c **** 
+  95:Core/Src/tile_loader_task.c ****   g_sd_tiles_loaded++;
+  96:Core/Src/tile_loader_task.c ****   return true;
+  97:Core/Src/tile_loader_task.c **** }
+ 269              		.loc 1 97 1 view .LVU71
+ 270 0030 02B0     		add	sp, sp, #8
+ 271              	.LCFI6:
+ 272              		.cfi_remember_state
+ 273              		.cfi_def_cfa_offset 8
+ 274              		@ sp needed
+ 275 0032 10BD     		pop	{r4, pc}
+ 276              	.LVL25:
+ 277              	.L14:
+ 278              	.LCFI7:
+ 279              		.cfi_restore_state
+  68:Core/Src/tile_loader_task.c ****   uint32_t col      = (uint32_t)tx - hdr->x_min;
+ 280              		.loc 1 68 3 is_stmt 1 view .LVU72
+  68:Core/Src/tile_loader_task.c ****   uint32_t col      = (uint32_t)tx - hdr->x_min;
+ 281              		.loc 1 68 34 is_stmt 0 view .LVU73
+ 282 0034 A1EB0C01 		sub	r1, r1, ip
+ 283              	.LVL26:
+  69:Core/Src/tile_loader_task.c ****   uint32_t row      = (uint32_t)ty - hdr->y_min;
+ 284              		.loc 1 69 3 is_stmt 1 view .LVU74
+  69:Core/Src/tile_loader_task.c ****   uint32_t row      = (uint32_t)ty - hdr->y_min;
+ 285              		.loc 1 69 12 is_stmt 0 view .LVU75
+ 286 0038 121A     		subs	r2, r2, r0
+ 287              	.LVL27:
+  70:Core/Src/tile_loader_task.c ****   uint32_t grid_idx = col * num_y + row;
+ 288              		.loc 1 70 3 is_stmt 1 view .LVU76
+  70:Core/Src/tile_loader_task.c ****   uint32_t grid_idx = col * num_y + row;
+ 289              		.loc 1 70 12 is_stmt 0 view .LVU77
+ 290 003a A3EB0C03 		sub	r3, r3, ip
+ 291              	.LVL28:
+  71:Core/Src/tile_loader_task.c **** 
+ 292              		.loc 1 71 3 is_stmt 1 view .LVU78
+  71:Core/Src/tile_loader_task.c **** 
+ 293              		.loc 1 71 27 is_stmt 0 view .LVU79
+ 294 003e 01FB0222 		mla	r2, r1, r2, r2
+ 295              	.LVL29:
+  71:Core/Src/tile_loader_task.c **** 
+ 296              		.loc 1 71 12 view .LVU80
+ 297 0042 1344     		add	r3, r3, r2
+ 298              	.LVL30:
+  73:Core/Src/tile_loader_task.c ****   UINT br = 0;
+ 299              		.loc 1 73 3 is_stmt 1 view .LVU81
+  73:Core/Src/tile_loader_task.c ****   UINT br = 0;
+ 300              		.loc 1 73 12 is_stmt 0 view .LVU82
+ 301 0044 0022     		movs	r2, #0
+ 302 0046 0192     		str	r2, [sp, #4]
+  74:Core/Src/tile_loader_task.c ****   FSIZE_t idx_offset = (FSIZE_t)sizeof(TilePakHeader) + (FSIZE_t)grid_idx * sizeof(uint32_t);
+ 303              		.loc 1 74 3 is_stmt 1 view .LVU83
+  74:Core/Src/tile_loader_task.c ****   FSIZE_t idx_offset = (FSIZE_t)sizeof(TilePakHeader) + (FSIZE_t)grid_idx * sizeof(uint32_t);
+ 304              		.loc 1 74 8 is_stmt 0 view .LVU84
+ARM GAS  /tmp/ccoY06Uk.s 			page 9
+
+
+ 305 0048 0092     		str	r2, [sp]
+  75:Core/Src/tile_loader_task.c **** 
+ 306              		.loc 1 75 3 is_stmt 1 view .LVU85
+  75:Core/Src/tile_loader_task.c **** 
+ 307              		.loc 1 75 55 is_stmt 0 view .LVU86
+ 308 004a 0633     		adds	r3, r3, #6
+ 309              	.LVL31:
+  75:Core/Src/tile_loader_task.c **** 
+ 310              		.loc 1 75 55 view .LVU87
+ 311 004c 42F10002 		adc	r2, r2, #0
+  75:Core/Src/tile_loader_task.c **** 
+ 312              		.loc 1 75 11 view .LVU88
+ 313 0050 9100     		lsls	r1, r2, #2
+ 314              	.LVL32:
+  77:Core/Src/tile_loader_task.c ****       f_read(pak_file, &sector_idx, sizeof(uint32_t), &br) != FR_OK ||
+ 315              		.loc 1 77 3 is_stmt 1 view .LVU89
+  77:Core/Src/tile_loader_task.c ****       f_read(pak_file, &sector_idx, sizeof(uint32_t), &br) != FR_OK ||
+ 316              		.loc 1 77 7 is_stmt 0 view .LVU90
+ 317 0052 9A00     		lsls	r2, r3, #2
+ 318 0054 41EA9373 		orr	r3, r1, r3, lsr #30
+ 319              	.LVL33:
+  77:Core/Src/tile_loader_task.c ****       f_read(pak_file, &sector_idx, sizeof(uint32_t), &br) != FR_OK ||
+ 320              		.loc 1 77 7 view .LVU91
+ 321 0058 2046     		mov	r0, r4
+ 322              	.LVL34:
+  77:Core/Src/tile_loader_task.c ****       f_read(pak_file, &sector_idx, sizeof(uint32_t), &br) != FR_OK ||
+ 323              		.loc 1 77 7 view .LVU92
+ 324 005a FFF7FEFF 		bl	f_lseek
+ 325              	.LVL35:
+  77:Core/Src/tile_loader_task.c ****       f_read(pak_file, &sector_idx, sizeof(uint32_t), &br) != FR_OK ||
+ 326              		.loc 1 77 6 discriminator 1 view .LVU93
+ 327 005e 60B9     		cbnz	r0, .L16
+  78:Core/Src/tile_loader_task.c ****       br != sizeof(uint32_t) ||
+ 328              		.loc 1 78 7 view .LVU94
+ 329 0060 6B46     		mov	r3, sp
+ 330 0062 0422     		movs	r2, #4
+ 331 0064 0DEB0201 		add	r1, sp, r2
+ 332 0068 2046     		mov	r0, r4
+ 333 006a FFF7FEFF 		bl	f_read
+ 334              	.LVL36:
+  77:Core/Src/tile_loader_task.c ****       f_read(pak_file, &sector_idx, sizeof(uint32_t), &br) != FR_OK ||
+ 335              		.loc 1 77 46 discriminator 2 view .LVU95
+ 336 006e 20B9     		cbnz	r0, .L16
+  79:Core/Src/tile_loader_task.c ****       sector_idx == 0U)
+ 337              		.loc 1 79 10 view .LVU96
+ 338 0070 009B     		ldr	r3, [sp]
+  78:Core/Src/tile_loader_task.c ****       br != sizeof(uint32_t) ||
+ 339              		.loc 1 78 69 discriminator 1 view .LVU97
+ 340 0072 042B     		cmp	r3, #4
+ 341 0074 01D1     		bne	.L16
+  80:Core/Src/tile_loader_task.c ****   {
+ 342              		.loc 1 80 18 view .LVU98
+ 343 0076 019B     		ldr	r3, [sp, #4]
+  79:Core/Src/tile_loader_task.c ****       sector_idx == 0U)
+ 344              		.loc 1 79 30 discriminator 1 view .LVU99
+ 345 0078 33B9     		cbnz	r3, .L17
+ 346              	.L16:
+ARM GAS  /tmp/ccoY06Uk.s 			page 10
+
+
+  82:Core/Src/tile_loader_task.c ****     return false;
+ 347              		.loc 1 82 5 is_stmt 1 view .LVU100
+ 348 007a 4FF48032 		mov	r2, #65536
+ 349 007e 0021     		movs	r1, #0
+ 350 0080 0498     		ldr	r0, [sp, #16]
+ 351 0082 FFF7FEFF 		bl	memset
+ 352              	.LVL37:
+  83:Core/Src/tile_loader_task.c ****   }
+ 353              		.loc 1 83 5 view .LVU101
+  83:Core/Src/tile_loader_task.c ****   }
+ 354              		.loc 1 83 12 is_stmt 0 view .LVU102
+ 355 0086 D2E7     		b	.L18
+ 356              	.L17:
+  86:Core/Src/tile_loader_task.c ****   if (f_lseek(pak_file, tile_offset) != FR_OK ||
+ 357              		.loc 1 86 3 is_stmt 1 view .LVU103
+ 358              	.LVL38:
+  87:Core/Src/tile_loader_task.c ****       f_read(pak_file, tile_buf, TILE_BYTES, &br) != FR_OK ||
+ 359              		.loc 1 87 3 view .LVU104
+  87:Core/Src/tile_loader_task.c ****       f_read(pak_file, tile_buf, TILE_BYTES, &br) != FR_OK ||
+ 360              		.loc 1 87 7 is_stmt 0 view .LVU105
+ 361 0088 5A02     		lsls	r2, r3, #9
+ 362 008a DB0D     		lsrs	r3, r3, #23
+ 363              	.LVL39:
+  87:Core/Src/tile_loader_task.c ****       f_read(pak_file, tile_buf, TILE_BYTES, &br) != FR_OK ||
+ 364              		.loc 1 87 7 view .LVU106
+ 365 008c 2046     		mov	r0, r4
+ 366 008e FFF7FEFF 		bl	f_lseek
+ 367              	.LVL40:
+  87:Core/Src/tile_loader_task.c ****       f_read(pak_file, tile_buf, TILE_BYTES, &br) != FR_OK ||
+ 368              		.loc 1 87 6 discriminator 1 view .LVU107
+ 369 0092 58B9     		cbnz	r0, .L19
+  88:Core/Src/tile_loader_task.c ****       br != TILE_BYTES)
+ 370              		.loc 1 88 7 view .LVU108
+ 371 0094 6B46     		mov	r3, sp
+ 372 0096 4FF48032 		mov	r2, #65536
+ 373 009a 0499     		ldr	r1, [sp, #16]
+ 374 009c 2046     		mov	r0, r4
+ 375 009e FFF7FEFF 		bl	f_read
+ 376              	.LVL41:
+  87:Core/Src/tile_loader_task.c ****       f_read(pak_file, tile_buf, TILE_BYTES, &br) != FR_OK ||
+ 377              		.loc 1 87 47 discriminator 2 view .LVU109
+ 378 00a2 18B9     		cbnz	r0, .L19
+  89:Core/Src/tile_loader_task.c ****   {
+ 379              		.loc 1 89 10 view .LVU110
+ 380 00a4 009B     		ldr	r3, [sp]
+  88:Core/Src/tile_loader_task.c ****       br != TILE_BYTES)
+ 381              		.loc 1 88 60 discriminator 1 view .LVU111
+ 382 00a6 B3F5803F 		cmp	r3, #65536
+ 383 00aa 06D0     		beq	.L20
+ 384              	.L19:
+  91:Core/Src/tile_loader_task.c ****     return false;
+ 385              		.loc 1 91 5 is_stmt 1 view .LVU112
+ 386 00ac 4FF48032 		mov	r2, #65536
+ 387 00b0 0021     		movs	r1, #0
+ 388 00b2 0498     		ldr	r0, [sp, #16]
+ 389 00b4 FFF7FEFF 		bl	memset
+ 390              	.LVL42:
+ARM GAS  /tmp/ccoY06Uk.s 			page 11
+
+
+  92:Core/Src/tile_loader_task.c ****   }
+ 391              		.loc 1 92 5 view .LVU113
+  92:Core/Src/tile_loader_task.c ****   }
+ 392              		.loc 1 92 12 is_stmt 0 view .LVU114
+ 393 00b8 B9E7     		b	.L18
+ 394              	.L20:
+  95:Core/Src/tile_loader_task.c ****   return true;
+ 395              		.loc 1 95 3 is_stmt 1 view .LVU115
+  95:Core/Src/tile_loader_task.c ****   return true;
+ 396              		.loc 1 95 20 is_stmt 0 view .LVU116
+ 397 00ba 034A     		ldr	r2, .L22
+ 398 00bc 1368     		ldr	r3, [r2]
+ 399 00be 0133     		adds	r3, r3, #1
+ 400 00c0 1360     		str	r3, [r2]
+  96:Core/Src/tile_loader_task.c **** }
+ 401              		.loc 1 96 3 is_stmt 1 view .LVU117
+  96:Core/Src/tile_loader_task.c **** }
+ 402              		.loc 1 96 10 is_stmt 0 view .LVU118
+ 403 00c2 0120     		movs	r0, #1
+ 404 00c4 B4E7     		b	.L15
+ 405              	.L23:
+ 406 00c6 00BF     		.align	2
+ 407              	.L22:
+ 408 00c8 00000000 		.word	g_sd_tiles_loaded
+ 409              		.cfi_endproc
+ 410              	.LFE162:
+ 412              		.section	.rodata.Tile_Loader_Task.str1.4,"aMS",%progbits,1
+ 413              		.align	2
+ 414              	.LC0:
+ 415 0000 00       		.ascii	"\000"
+ 416 0001 000000   		.align	2
+ 417              	.LC1:
+ 418 0004 74696C65 		.ascii	"tiles/tiles_z14.pak\000"
+ 418      732F7469 
+ 418      6C65735F 
+ 418      7A31342E 
+ 418      70616B00 
+ 419              		.section	.text.Tile_Loader_Task,"ax",%progbits
+ 420              		.align	1
+ 421              		.global	Tile_Loader_Task
+ 422              		.syntax unified
+ 423              		.thumb
+ 424              		.thumb_func
+ 426              	Tile_Loader_Task:
+ 427              	.LVL43:
+ 428              	.LFB163:
+  98:Core/Src/tile_loader_task.c **** 
+  99:Core/Src/tile_loader_task.c **** void Tile_Loader_Task(void *argument)
+ 100:Core/Src/tile_loader_task.c **** {
+ 429              		.loc 1 100 1 is_stmt 1 view -0
+ 430              		.cfi_startproc
+ 431              		@ args = 0, pretend = 0, frame = 16
+ 432              		@ frame_needed = 0, uses_anonymous_args = 0
+ 433              		.loc 1 100 1 is_stmt 0 view .LVU120
+ 434 0000 2DE9F041 		push	{r4, r5, r6, r7, r8, lr}
+ 435              	.LCFI8:
+ 436              		.cfi_def_cfa_offset 24
+ARM GAS  /tmp/ccoY06Uk.s 			page 12
+
+
+ 437              		.cfi_offset 4, -24
+ 438              		.cfi_offset 5, -20
+ 439              		.cfi_offset 6, -16
+ 440              		.cfi_offset 7, -12
+ 441              		.cfi_offset 8, -8
+ 442              		.cfi_offset 14, -4
+ 443 0004 86B0     		sub	sp, sp, #24
+ 444              	.LCFI9:
+ 445              		.cfi_def_cfa_offset 48
+ 101:Core/Src/tile_loader_task.c ****   (void)argument;
+ 446              		.loc 1 101 3 is_stmt 1 view .LVU121
+ 102:Core/Src/tile_loader_task.c **** 
+ 103:Core/Src/tile_loader_task.c ****   /* 1. Mount SD & open tiles_z14.pak once (retrying every 1s if card not inserted) */
+ 104:Core/Src/tile_loader_task.c ****   while (!g_pak_ready)
+ 447              		.loc 1 104 3 view .LVU122
+ 448              		.loc 1 104 9 is_stmt 0 view .LVU123
+ 449 0006 18E0     		b	.L25
+ 450              	.LVL44:
+ 451              	.L34:
+ 452              	.LBB2:
+ 105:Core/Src/tile_loader_task.c ****   {
+ 106:Core/Src/tile_loader_task.c ****     xSemaphoreTake(g_mutex_sd, portMAX_DELAY);
+ 107:Core/Src/tile_loader_task.c ****     FRESULT res = f_mount(&s_fatfs, "", 1);
+ 108:Core/Src/tile_loader_task.c ****     if (res == FR_OK)
+ 109:Core/Src/tile_loader_task.c ****     {
+ 110:Core/Src/tile_loader_task.c ****       if (Init_Tile_Pak_Locked(PATH_TILES_Z14, &s_pak_z14, &s_hdr_z14,
+ 453              		.loc 1 110 7 is_stmt 1 view .LVU124
+ 454              		.loc 1 110 11 is_stmt 0 view .LVU125
+ 455 0008 4023     		movs	r3, #64
+ 456 000a 0193     		str	r3, [sp, #4]
+ 457 000c 394B     		ldr	r3, .L36
+ 458 000e 0093     		str	r3, [sp]
+ 459 0010 394B     		ldr	r3, .L36+4
+ 460 0012 3A4A     		ldr	r2, .L36+8
+ 461 0014 3A49     		ldr	r1, .L36+12
+ 462 0016 3B48     		ldr	r0, .L36+16
+ 463              	.LVL45:
+ 464              		.loc 1 110 11 view .LVU126
+ 465 0018 FFF7FEFF 		bl	Init_Tile_Pak_Locked
+ 466              	.LVL46:
+ 467              		.loc 1 110 10 discriminator 1 view .LVU127
+ 468 001c F0B1     		cbz	r0, .L26
+ 111:Core/Src/tile_loader_task.c ****                                g_palette_rgb565, s_clmt_z14, 64U))
+ 112:Core/Src/tile_loader_task.c ****       {
+ 113:Core/Src/tile_loader_task.c ****         g_pak_ready = true;
+ 469              		.loc 1 113 9 is_stmt 1 view .LVU128
+ 470              		.loc 1 113 21 is_stmt 0 view .LVU129
+ 471 001e 3A4B     		ldr	r3, .L36+20
+ 472 0020 0122     		movs	r2, #1
+ 473 0022 1A70     		strb	r2, [r3]
+ 474 0024 1AE0     		b	.L26
+ 475              	.L27:
+ 114:Core/Src/tile_loader_task.c ****       }
+ 115:Core/Src/tile_loader_task.c ****     }
+ 116:Core/Src/tile_loader_task.c ****     xSemaphoreGive(g_mutex_sd);
+ 117:Core/Src/tile_loader_task.c **** 
+ 118:Core/Src/tile_loader_task.c ****     if (g_pak_ready)
+ARM GAS  /tmp/ccoY06Uk.s 			page 13
+
+
+ 119:Core/Src/tile_loader_task.c ****     {
+ 120:Core/Src/tile_loader_task.c ****       xTaskNotify(g_ui_task_hdl, NOTIFY_SD_MOUNTED, eSetBits);
+ 121:Core/Src/tile_loader_task.c ****     }
+ 122:Core/Src/tile_loader_task.c ****     else
+ 123:Core/Src/tile_loader_task.c ****     {
+ 124:Core/Src/tile_loader_task.c ****       xTaskNotify(g_ui_task_hdl, NOTIFY_SD_ERROR, eSetBits);
+ 476              		.loc 1 124 7 is_stmt 1 view .LVU130
+ 477 0026 0122     		movs	r2, #1
+ 478 0028 0221     		movs	r1, #2
+ 479 002a 3848     		ldr	r0, .L36+24
+ 480 002c 0068     		ldr	r0, [r0]
+ 481 002e FFF7FEFF 		bl	xTaskGenericNotify
+ 482              	.LVL47:
+ 125:Core/Src/tile_loader_task.c ****       vTaskDelay(pdMS_TO_TICKS(1000));
+ 483              		.loc 1 125 7 view .LVU131
+ 484 0032 4FF47A70 		mov	r0, #1000
+ 485 0036 FFF7FEFF 		bl	vTaskDelay
+ 486              	.LVL48:
+ 487              	.L25:
+ 488              		.loc 1 125 7 is_stmt 0 view .LVU132
+ 489              	.LBE2:
+ 104:Core/Src/tile_loader_task.c ****   {
+ 490              		.loc 1 104 10 is_stmt 1 discriminator 1 view .LVU133
+ 491 003a 334B     		ldr	r3, .L36+20
+ 492 003c 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 493 003e 002B     		cmp	r3, #0
+ 494 0040 4AD1     		bne	.L29
+ 495              	.LBB3:
+ 106:Core/Src/tile_loader_task.c ****     FRESULT res = f_mount(&s_fatfs, "", 1);
+ 496              		.loc 1 106 5 view .LVU134
+ 497 0042 4FF0FF31 		mov	r1, #-1
+ 498 0046 324B     		ldr	r3, .L36+28
+ 499 0048 1868     		ldr	r0, [r3]
+ 500 004a FFF7FEFF 		bl	xQueueSemaphoreTake
+ 501              	.LVL49:
+ 107:Core/Src/tile_loader_task.c ****     if (res == FR_OK)
+ 502              		.loc 1 107 5 view .LVU135
+ 107:Core/Src/tile_loader_task.c ****     if (res == FR_OK)
+ 503              		.loc 1 107 19 is_stmt 0 view .LVU136
+ 504 004e 0122     		movs	r2, #1
+ 505 0050 3049     		ldr	r1, .L36+32
+ 506 0052 3148     		ldr	r0, .L36+36
+ 507 0054 FFF7FEFF 		bl	f_mount
+ 508              	.LVL50:
+ 108:Core/Src/tile_loader_task.c ****     {
+ 509              		.loc 1 108 5 is_stmt 1 view .LVU137
+ 108:Core/Src/tile_loader_task.c ****     {
+ 510              		.loc 1 108 8 is_stmt 0 view .LVU138
+ 511 0058 0028     		cmp	r0, #0
+ 512 005a D5D0     		beq	.L34
+ 513              	.LVL51:
+ 514              	.L26:
+ 116:Core/Src/tile_loader_task.c **** 
+ 515              		.loc 1 116 5 is_stmt 1 view .LVU139
+ 516 005c 0023     		movs	r3, #0
+ 517 005e 1A46     		mov	r2, r3
+ 518 0060 1946     		mov	r1, r3
+ARM GAS  /tmp/ccoY06Uk.s 			page 14
+
+
+ 519 0062 2B48     		ldr	r0, .L36+28
+ 520 0064 0068     		ldr	r0, [r0]
+ 521 0066 FFF7FEFF 		bl	xQueueGenericSend
+ 522              	.LVL52:
+ 118:Core/Src/tile_loader_task.c ****     {
+ 523              		.loc 1 118 5 view .LVU140
+ 118:Core/Src/tile_loader_task.c ****     {
+ 524              		.loc 1 118 9 is_stmt 0 view .LVU141
+ 525 006a 274B     		ldr	r3, .L36+20
+ 526 006c 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 118:Core/Src/tile_loader_task.c ****     {
+ 527              		.loc 1 118 8 view .LVU142
+ 528 006e 002B     		cmp	r3, #0
+ 529 0070 D9D0     		beq	.L27
+ 120:Core/Src/tile_loader_task.c ****     }
+ 530              		.loc 1 120 7 is_stmt 1 view .LVU143
+ 531 0072 0023     		movs	r3, #0
+ 532 0074 0122     		movs	r2, #1
+ 533 0076 1146     		mov	r1, r2
+ 534 0078 2448     		ldr	r0, .L36+24
+ 535 007a 0068     		ldr	r0, [r0]
+ 536 007c FFF7FEFF 		bl	xTaskGenericNotify
+ 537              	.LVL53:
+ 538 0080 DBE7     		b	.L25
+ 539              	.LVL54:
+ 540              	.L35:
+ 120:Core/Src/tile_loader_task.c ****     }
+ 541              		.loc 1 120 7 is_stmt 0 view .LVU144
+ 542              	.LBE3:
+ 543              	.LBB4:
+ 126:Core/Src/tile_loader_task.c ****     }
+ 127:Core/Src/tile_loader_task.c ****   }
+ 128:Core/Src/tile_loader_task.c **** 
+ 129:Core/Src/tile_loader_task.c ****   /* 2. Stream requested 64 KB tiles on demand from g_q_tile_req */
+ 130:Core/Src/tile_loader_task.c ****   TileRequest_t req;
+ 131:Core/Src/tile_loader_task.c ****   for (;;)
+ 132:Core/Src/tile_loader_task.c ****   {
+ 133:Core/Src/tile_loader_task.c ****     if (xQueueReceive(g_q_tile_req, &req, portMAX_DELAY) == pdPASS)
+ 134:Core/Src/tile_loader_task.c ****     {
+ 135:Core/Src/tile_loader_task.c ****       if (req.slot_idx < TILE_CACHE_SLOTS)
+ 136:Core/Src/tile_loader_task.c ****       {
+ 137:Core/Src/tile_loader_task.c ****         TileCacheSlot *slot = &g_tile_cache[req.slot_idx];
+ 544              		.loc 1 137 9 is_stmt 1 view .LVU145
+ 138:Core/Src/tile_loader_task.c **** 
+ 139:Core/Src/tile_loader_task.c ****         xSemaphoreTake(g_mutex_sd, portMAX_DELAY);
+ 545              		.loc 1 139 9 view .LVU146
+ 546 0082 234E     		ldr	r6, .L36+28
+ 547 0084 4FF0FF31 		mov	r1, #-1
+ 548 0088 3068     		ldr	r0, [r6]
+ 549 008a FFF7FEFF 		bl	xQueueSemaphoreTake
+ 550              	.LVL55:
+ 140:Core/Src/tile_loader_task.c ****         bool ok = Load_Tile_From_Pak_Locked(&s_pak_z14, &s_hdr_z14,
+ 551              		.loc 1 140 9 view .LVU147
+ 141:Core/Src/tile_loader_task.c ****                                             req.tx, req.ty, slot->pixels);
+ 552              		.loc 1 141 65 is_stmt 0 view .LVU148
+ 553 008e 2503     		lsls	r5, r4, #12
+ 554 0090 04EB0433 		add	r3, r4, r4, lsl #12
+ARM GAS  /tmp/ccoY06Uk.s 			page 15
+
+
+ 555 0094 1B01     		lsls	r3, r3, #4
+ 556 0096 0833     		adds	r3, r3, #8
+ 557 0098 204F     		ldr	r7, .L36+40
+ 558 009a 3B44     		add	r3, r3, r7
+ 559 009c 0633     		adds	r3, r3, #6
+ 140:Core/Src/tile_loader_task.c ****         bool ok = Load_Tile_From_Pak_Locked(&s_pak_z14, &s_hdr_z14,
+ 560              		.loc 1 140 19 view .LVU149
+ 561 009e 0093     		str	r3, [sp]
+ 562 00a0 059B     		ldr	r3, [sp, #20]
+ 563 00a2 049A     		ldr	r2, [sp, #16]
+ 564 00a4 1549     		ldr	r1, .L36+8
+ 565 00a6 1648     		ldr	r0, .L36+12
+ 566 00a8 FFF7FEFF 		bl	Load_Tile_From_Pak_Locked
+ 567              	.LVL56:
+ 568 00ac 8046     		mov	r8, r0
+ 569              	.LVL57:
+ 142:Core/Src/tile_loader_task.c ****         xSemaphoreGive(g_mutex_sd);
+ 570              		.loc 1 142 9 is_stmt 1 view .LVU150
+ 571 00ae 0023     		movs	r3, #0
+ 572 00b0 1A46     		mov	r2, r3
+ 573 00b2 1946     		mov	r1, r3
+ 574 00b4 3068     		ldr	r0, [r6]
+ 575 00b6 FFF7FEFF 		bl	xQueueGenericSend
+ 576              	.LVL58:
+ 143:Core/Src/tile_loader_task.c **** 
+ 144:Core/Src/tile_loader_task.c ****         slot->has_data = ok;
+ 577              		.loc 1 144 9 view .LVU151
+ 578              		.loc 1 144 24 is_stmt 0 view .LVU152
+ 579 00ba 2B19     		adds	r3, r5, r4
+ 580 00bc 07EB0313 		add	r3, r7, r3, lsl #4
+ 581 00c0 83F80D80 		strb	r8, [r3, #13]
+ 145:Core/Src/tile_loader_task.c ****         slot->state    = TILE_SLOT_READY;
+ 582              		.loc 1 145 9 is_stmt 1 view .LVU153
+ 583              		.loc 1 145 24 is_stmt 0 view .LVU154
+ 584 00c4 1F46     		mov	r7, r3
+ 585 00c6 0223     		movs	r3, #2
+ 586 00c8 3B73     		strb	r3, [r7, #12]
+ 146:Core/Src/tile_loader_task.c **** 
+ 147:Core/Src/tile_loader_task.c ****         /* Notify UI_LVGL_Task that a new tile is ready in SDRAM */
+ 148:Core/Src/tile_loader_task.c ****         xTaskNotify(g_ui_task_hdl, NOTIFY_TILE_LOADED, eSetBits);
+ 587              		.loc 1 148 9 is_stmt 1 view .LVU155
+ 588 00ca 0023     		movs	r3, #0
+ 589 00cc 0122     		movs	r2, #1
+ 590 00ce 0421     		movs	r1, #4
+ 591 00d0 0E48     		ldr	r0, .L36+24
+ 592 00d2 0068     		ldr	r0, [r0]
+ 593 00d4 FFF7FEFF 		bl	xTaskGenericNotify
+ 594              	.LVL59:
+ 595              	.L29:
+ 596              		.loc 1 148 9 is_stmt 0 view .LVU156
+ 597              	.LBE4:
+ 130:Core/Src/tile_loader_task.c ****   for (;;)
+ 598              		.loc 1 130 3 is_stmt 1 view .LVU157
+ 131:Core/Src/tile_loader_task.c ****   {
+ 599              		.loc 1 131 3 view .LVU158
+ 133:Core/Src/tile_loader_task.c ****     {
+ 600              		.loc 1 133 5 view .LVU159
+ARM GAS  /tmp/ccoY06Uk.s 			page 16
+
+
+ 133:Core/Src/tile_loader_task.c ****     {
+ 601              		.loc 1 133 9 is_stmt 0 view .LVU160
+ 602 00d8 4FF0FF32 		mov	r2, #-1
+ 603 00dc 03A9     		add	r1, sp, #12
+ 604 00de 104B     		ldr	r3, .L36+44
+ 605 00e0 1868     		ldr	r0, [r3]
+ 606 00e2 FFF7FEFF 		bl	xQueueReceive
+ 607              	.LVL60:
+ 133:Core/Src/tile_loader_task.c ****     {
+ 608              		.loc 1 133 8 discriminator 1 view .LVU161
+ 609 00e6 0128     		cmp	r0, #1
+ 610 00e8 F6D1     		bne	.L29
+ 135:Core/Src/tile_loader_task.c ****       {
+ 611              		.loc 1 135 7 is_stmt 1 view .LVU162
+ 135:Core/Src/tile_loader_task.c ****       {
+ 612              		.loc 1 135 14 is_stmt 0 view .LVU163
+ 613 00ea 9DF80C40 		ldrb	r4, [sp, #12]	@ zero_extendqisi2
+ 135:Core/Src/tile_loader_task.c ****       {
+ 614              		.loc 1 135 10 view .LVU164
+ 615 00ee 082C     		cmp	r4, #8
+ 616 00f0 F2D8     		bhi	.L29
+ 617 00f2 C6E7     		b	.L35
+ 618              	.L37:
+ 619              		.align	2
+ 620              	.L36:
+ 621 00f4 00000000 		.word	s_clmt_z14
+ 622 00f8 00000000 		.word	g_palette_rgb565
+ 623 00fc 00000000 		.word	s_hdr_z14
+ 624 0100 00000000 		.word	s_pak_z14
+ 625 0104 04000000 		.word	.LC1
+ 626 0108 00000000 		.word	g_pak_ready
+ 627 010c 00000000 		.word	g_ui_task_hdl
+ 628 0110 00000000 		.word	g_mutex_sd
+ 629 0114 00000000 		.word	.LC0
+ 630 0118 00000000 		.word	s_fatfs
+ 631 011c 00000000 		.word	g_tile_cache
+ 632 0120 00000000 		.word	g_q_tile_req
+ 633              		.cfi_endproc
+ 634              	.LFE163:
+ 636              		.section	.bss.s_hdr_z14,"aw",%nobits
+ 637              		.align	2
+ 640              	s_hdr_z14:
+ 641 0000 00000000 		.space	24
+ 641      00000000 
+ 641      00000000 
+ 641      00000000 
+ 641      00000000 
+ 642              		.section	.bss.s_clmt_z14,"aw",%nobits
+ 643              		.align	2
+ 646              	s_clmt_z14:
+ 647 0000 00000000 		.space	256
+ 647      00000000 
+ 647      00000000 
+ 647      00000000 
+ 647      00000000 
+ 648              		.section	.bss.s_pak_z14,"aw",%nobits
+ 649              		.align	3
+ARM GAS  /tmp/ccoY06Uk.s 			page 17
+
+
+ 652              	s_pak_z14:
+ 653 0000 00000000 		.space	600
+ 653      00000000 
+ 653      00000000 
+ 653      00000000 
+ 653      00000000 
+ 654              		.section	.bss.s_fatfs,"aw",%nobits
+ 655              		.align	2
+ 658              	s_fatfs:
+ 659 0000 00000000 		.space	568
+ 659      00000000 
+ 659      00000000 
+ 659      00000000 
+ 659      00000000 
+ 660              		.text
+ 661              	.Letext0:
+ 662              		.file 2 "/usr/arm-none-eabi/include/machine/_default_types.h"
+ 663              		.file 3 "/usr/arm-none-eabi/include/sys/_stdint.h"
+ 664              		.file 4 "Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F/portmacro.h"
+ 665              		.file 5 "Middlewares/Third_Party/FreeRTOS/Source/include/task.h"
+ 666              		.file 6 "Middlewares/Third_Party/FreeRTOS/Source/include/queue.h"
+ 667              		.file 7 "Middlewares/Third_Party/FreeRTOS/Source/include/semphr.h"
+ 668              		.file 8 "Drivers/lvgl/include/lvgl/core/../indev/lv_indev.h"
+ 669              		.file 9 "Drivers/lvgl/include/lvgl/widgets/lv_bar.h"
+ 670              		.file 10 "Middlewares/Third_Party/FatFs/src/integer.h"
+ 671              		.file 11 "Middlewares/Third_Party/FatFs/src/ff.h"
+ 672              		.file 12 "Core/Inc/map_binary_formats.h"
+ 673              		.file 13 "Core/Inc/app.h"
+ 674              		.file 14 "/usr/arm-none-eabi/include/string.h"
+ 675              		.file 15 "<built-in>"
+ARM GAS  /tmp/ccoY06Uk.s 			page 18
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 tile_loader_task.c
+     /tmp/ccoY06Uk.s:21     .text.Init_Tile_Pak_Locked:00000000 $t
+     /tmp/ccoY06Uk.s:26     .text.Init_Tile_Pak_Locked:00000000 Init_Tile_Pak_Locked
+     /tmp/ccoY06Uk.s:205    .text.Init_Tile_Pak_Locked:000000b4 $d
+     /tmp/ccoY06Uk.s:210    .text.Load_Tile_From_Pak_Locked:00000000 $t
+     /tmp/ccoY06Uk.s:215    .text.Load_Tile_From_Pak_Locked:00000000 Load_Tile_From_Pak_Locked
+     /tmp/ccoY06Uk.s:408    .text.Load_Tile_From_Pak_Locked:000000c8 $d
+     /tmp/ccoY06Uk.s:413    .rodata.Tile_Loader_Task.str1.4:00000000 $d
+     /tmp/ccoY06Uk.s:420    .text.Tile_Loader_Task:00000000 $t
+     /tmp/ccoY06Uk.s:426    .text.Tile_Loader_Task:00000000 Tile_Loader_Task
+     /tmp/ccoY06Uk.s:621    .text.Tile_Loader_Task:000000f4 $d
+     /tmp/ccoY06Uk.s:646    .bss.s_clmt_z14:00000000 s_clmt_z14
+     /tmp/ccoY06Uk.s:640    .bss.s_hdr_z14:00000000 s_hdr_z14
+     /tmp/ccoY06Uk.s:652    .bss.s_pak_z14:00000000 s_pak_z14
+     /tmp/ccoY06Uk.s:658    .bss.s_fatfs:00000000 s_fatfs
+     /tmp/ccoY06Uk.s:637    .bss.s_hdr_z14:00000000 $d
+     /tmp/ccoY06Uk.s:643    .bss.s_clmt_z14:00000000 $d
+     /tmp/ccoY06Uk.s:649    .bss.s_pak_z14:00000000 $d
+     /tmp/ccoY06Uk.s:655    .bss.s_fatfs:00000000 $d
+
+UNDEFINED SYMBOLS
+f_open
+f_lseek
+f_read
+f_close
+memset
+g_sd_tiles_loaded
+xTaskGenericNotify
+vTaskDelay
+xQueueSemaphoreTake
+f_mount
+xQueueGenericSend
+xQueueReceive
+g_palette_rgb565
+g_pak_ready
+g_ui_task_hdl
+g_mutex_sd
+g_tile_cache
+g_q_tile_req

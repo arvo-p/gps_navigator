@@ -1,0 +1,4061 @@
+ARM GAS  /tmp/ccmp3BBc.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.arch armv7e-m
+   3              		.fpu fpv4-sp-d16
+   4              		.eabi_attribute 27, 1
+   5              		.eabi_attribute 28, 1
+   6              		.eabi_attribute 20, 1
+   7              		.eabi_attribute 21, 1
+   8              		.eabi_attribute 23, 3
+   9              		.eabi_attribute 24, 1
+  10              		.eabi_attribute 25, 1
+  11              		.eabi_attribute 26, 1
+  12              		.eabi_attribute 30, 1
+  13              		.eabi_attribute 34, 1
+  14              		.eabi_attribute 18, 4
+  15              		.file	"gps_uart_task.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.file 1 "Core/Src/gps_uart_task.c"
+  20              		.section	.text.GPS_UART_SendBytes,"ax",%progbits
+  21              		.align	1
+  22              		.syntax unified
+  23              		.thumb
+  24              		.thumb_func
+  26              	GPS_UART_SendBytes:
+  27              	.LVL0:
+  28              	.LFB164:
+   1:Core/Src/gps_uart_task.c **** /**
+   2:Core/Src/gps_uart_task.c ****   ******************************************************************************
+   3:Core/Src/gps_uart_task.c ****   * @file    Core/Src/gps_uart_task.c
+   4:Core/Src/gps_uart_task.c ****   * @brief   TASK 2: GPS_UART_Task (Priority: AboveNormal)
+   5:Core/Src/gps_uart_task.c ****   *          Receives UART NMEA frames via GPS_UART_INSTANCE (configured in main.h)
+   6:Core/Src/gps_uart_task.c ****   *          using GPS_DMA_RX_STREAM circular buffer + IDLE IRQ, sends ATGM336H-5N
+   7:Core/Src/gps_uart_task.c ****   *          CASIC commands, parses UTC time & WGS84 coordinates, and publishes
+   8:Core/Src/gps_uart_task.c ****   *          the latest GpsFix_t to UI_LVGL_Task.
+   9:Core/Src/gps_uart_task.c ****   ******************************************************************************
+  10:Core/Src/gps_uart_task.c ****   */
+  11:Core/Src/gps_uart_task.c **** 
+  12:Core/Src/gps_uart_task.c **** #include <stdio.h>
+  13:Core/Src/gps_uart_task.c **** #include <string.h>
+  14:Core/Src/gps_uart_task.c **** #include "app.h"
+  15:Core/Src/gps_uart_task.c **** 
+  16:Core/Src/gps_uart_task.c **** #define GPS_DMA_RX_BUF_SIZE   512U
+  17:Core/Src/gps_uart_task.c **** #define GPS_NMEA_MAX_LEN      128U
+  18:Core/Src/gps_uart_task.c **** 
+  19:Core/Src/gps_uart_task.c **** /* Must reside in internal SRAM1 (not CCMRAM) so GPS_DMA_RX_STREAM can access it */
+  20:Core/Src/gps_uart_task.c **** static uint8_t s_gps_dma_rx_buf[GPS_DMA_RX_BUF_SIZE] __attribute__((aligned(4)));
+  21:Core/Src/gps_uart_task.c **** 
+  22:Core/Src/gps_uart_task.c **** /*----------------------------------------------------------------------------
+  23:Core/Src/gps_uart_task.c ****  * 1. Interrupt Service Routines (Mapped via main.h #defines)
+  24:Core/Src/gps_uart_task.c ****  *----------------------------------------------------------------------------*/
+  25:Core/Src/gps_uart_task.c **** void GPS_UART_IRQHandler(void)
+  26:Core/Src/gps_uart_task.c **** {
+  27:Core/Src/gps_uart_task.c ****   uint32_t sr = GPS_UART_INSTANCE->SR;
+  28:Core/Src/gps_uart_task.c ****   if (sr & (USART_SR_IDLE | USART_SR_ORE | USART_SR_FE | USART_SR_NE))
+  29:Core/Src/gps_uart_task.c ****   {
+  30:Core/Src/gps_uart_task.c ****     /* Reading SR followed by DR clears IDLE, ORE, FE, and NE flags */
+ARM GAS  /tmp/ccmp3BBc.s 			page 2
+
+
+  31:Core/Src/gps_uart_task.c ****     (void)GPS_UART_INSTANCE->DR;
+  32:Core/Src/gps_uart_task.c **** 
+  33:Core/Src/gps_uart_task.c ****     if ((sr & USART_SR_IDLE) && (g_gps_task_hdl != NULL))
+  34:Core/Src/gps_uart_task.c ****     {
+  35:Core/Src/gps_uart_task.c ****       BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+  36:Core/Src/gps_uart_task.c ****       vTaskNotifyGiveFromISR(g_gps_task_hdl, &xHigherPriorityTaskWoken);
+  37:Core/Src/gps_uart_task.c ****       portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+  38:Core/Src/gps_uart_task.c ****     }
+  39:Core/Src/gps_uart_task.c ****   }
+  40:Core/Src/gps_uart_task.c **** }
+  41:Core/Src/gps_uart_task.c **** 
+  42:Core/Src/gps_uart_task.c **** void GPS_DMA_RX_IRQHandler(void)
+  43:Core/Src/gps_uart_task.c **** {
+  44:Core/Src/gps_uart_task.c ****   uint32_t isr = GPS_DMA_RX_ISR_REG;
+  45:Core/Src/gps_uart_task.c ****   if (isr & GPS_DMA_RX_ISR_FLAGS)
+  46:Core/Src/gps_uart_task.c ****   {
+  47:Core/Src/gps_uart_task.c ****     GPS_DMA_RX_IFCR_REG = GPS_DMA_RX_CLEAR_FLAGS;
+  48:Core/Src/gps_uart_task.c **** 
+  49:Core/Src/gps_uart_task.c ****     if (g_gps_task_hdl != NULL)
+  50:Core/Src/gps_uart_task.c ****     {
+  51:Core/Src/gps_uart_task.c ****       BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+  52:Core/Src/gps_uart_task.c ****       vTaskNotifyGiveFromISR(g_gps_task_hdl, &xHigherPriorityTaskWoken);
+  53:Core/Src/gps_uart_task.c ****       portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+  54:Core/Src/gps_uart_task.c ****     }
+  55:Core/Src/gps_uart_task.c ****   }
+  56:Core/Src/gps_uart_task.c **** }
+  57:Core/Src/gps_uart_task.c **** 
+  58:Core/Src/gps_uart_task.c **** /*----------------------------------------------------------------------------
+  59:Core/Src/gps_uart_task.c ****  * 2. UART + Circular DMA Hardware Initialization
+  60:Core/Src/gps_uart_task.c ****  *----------------------------------------------------------------------------*/
+  61:Core/Src/gps_uart_task.c **** static void GPS_UART_DMA_Init(void)
+  62:Core/Src/gps_uart_task.c **** {
+  63:Core/Src/gps_uart_task.c ****   /* 1. Enable peripheral clocks for GPIO TX/RX, UART, and DMA */
+  64:Core/Src/gps_uart_task.c ****   GPS_UART_TX_GPIO_CLK_ENABLE();
+  65:Core/Src/gps_uart_task.c ****   GPS_UART_RX_GPIO_CLK_ENABLE();
+  66:Core/Src/gps_uart_task.c ****   GPS_UART_CLK_ENABLE();
+  67:Core/Src/gps_uart_task.c ****   GPS_DMA_CLK_ENABLE();
+  68:Core/Src/gps_uart_task.c **** 
+  69:Core/Src/gps_uart_task.c ****   /* 2. Configure TX pin (MCU TX -> GPS RX) and RX pin (MCU RX <- GPS TX) */
+  70:Core/Src/gps_uart_task.c ****   GPIO_InitTypeDef gpio = {0};
+  71:Core/Src/gps_uart_task.c ****   gpio.Mode      = GPIO_MODE_AF_PP;
+  72:Core/Src/gps_uart_task.c ****   gpio.Pull      = GPIO_PULLUP;
+  73:Core/Src/gps_uart_task.c ****   gpio.Speed     = GPIO_SPEED_FAST;
+  74:Core/Src/gps_uart_task.c ****   gpio.Alternate = GPS_UART_AF;
+  75:Core/Src/gps_uart_task.c **** 
+  76:Core/Src/gps_uart_task.c ****   gpio.Pin = GPS_UART_TX_PIN;
+  77:Core/Src/gps_uart_task.c ****   HAL_GPIO_Init(GPS_UART_TX_GPIO_PORT, &gpio);
+  78:Core/Src/gps_uart_task.c **** 
+  79:Core/Src/gps_uart_task.c ****   gpio.Pin = GPS_UART_RX_PIN;
+  80:Core/Src/gps_uart_task.c ****   HAL_GPIO_Init(GPS_UART_RX_GPIO_PORT, &gpio);
+  81:Core/Src/gps_uart_task.c **** 
+  82:Core/Src/gps_uart_task.c ****   /* 3. Configure GPS_DMA_RX_STREAM in Circular Mode */
+  83:Core/Src/gps_uart_task.c ****   GPS_DMA_RX_STREAM->CR &= ~DMA_SxCR_EN;
+  84:Core/Src/gps_uart_task.c ****   while (GPS_DMA_RX_STREAM->CR & DMA_SxCR_EN) {}
+  85:Core/Src/gps_uart_task.c **** 
+  86:Core/Src/gps_uart_task.c ****   GPS_DMA_RX_IFCR_REG = GPS_DMA_RX_CLEAR_FLAGS;
+  87:Core/Src/gps_uart_task.c **** 
+ARM GAS  /tmp/ccmp3BBc.s 			page 3
+
+
+  88:Core/Src/gps_uart_task.c ****   GPS_DMA_RX_STREAM->PAR  = (uint32_t)&GPS_UART_INSTANCE->DR;
+  89:Core/Src/gps_uart_task.c ****   GPS_DMA_RX_STREAM->M0AR = (uint32_t)s_gps_dma_rx_buf;
+  90:Core/Src/gps_uart_task.c ****   GPS_DMA_RX_STREAM->NDTR = GPS_DMA_RX_BUF_SIZE;
+  91:Core/Src/gps_uart_task.c ****   GPS_DMA_RX_STREAM->FCR  = 0U;
+  92:Core/Src/gps_uart_task.c ****   GPS_DMA_RX_STREAM->CR   = (GPS_DMA_RX_CHANNEL << DMA_SxCR_CHSEL_Pos) |
+  93:Core/Src/gps_uart_task.c ****                             DMA_SxCR_PL_1                              | /* High priority */
+  94:Core/Src/gps_uart_task.c ****                             DMA_SxCR_MINC                              | /* Increment memory addres
+  95:Core/Src/gps_uart_task.c ****                             DMA_SxCR_CIRC                              | /* Circular buffer mode */
+  96:Core/Src/gps_uart_task.c ****                             DMA_SxCR_HTIE                              | /* Half-transfer interrupt
+  97:Core/Src/gps_uart_task.c ****                             DMA_SxCR_TCIE;                               /* Transfer-complete inter
+  98:Core/Src/gps_uart_task.c ****   GPS_DMA_RX_STREAM->CR  |= DMA_SxCR_EN;
+  99:Core/Src/gps_uart_task.c **** 
+ 100:Core/Src/gps_uart_task.c ****   /* 4. Configure GPS_UART_INSTANCE: 8N1, DMA Receiver + IDLE Line Interrupt */
+ 101:Core/Src/gps_uart_task.c ****   GPS_UART_INSTANCE->CR1 = 0U;
+ 102:Core/Src/gps_uart_task.c ****   GPS_UART_INSTANCE->CR2 = 0U;
+ 103:Core/Src/gps_uart_task.c ****   GPS_UART_INSTANCE->CR3 = USART_CR3_DMAR;
+ 104:Core/Src/gps_uart_task.c **** 
+ 105:Core/Src/gps_uart_task.c ****   uint32_t pclk = GPS_UART_GET_PCLK_FREQ();
+ 106:Core/Src/gps_uart_task.c ****   GPS_UART_INSTANCE->BRR = (pclk + (GPS_UART_BAUDRATE / 2U)) / GPS_UART_BAUDRATE;
+ 107:Core/Src/gps_uart_task.c **** 
+ 108:Core/Src/gps_uart_task.c ****   (void)GPS_UART_INSTANCE->SR;
+ 109:Core/Src/gps_uart_task.c ****   (void)GPS_UART_INSTANCE->DR;
+ 110:Core/Src/gps_uart_task.c **** 
+ 111:Core/Src/gps_uart_task.c ****   GPS_UART_INSTANCE->CR1 = USART_CR1_TE | USART_CR1_RE | USART_CR1_IDLEIE | USART_CR1_UE;
+ 112:Core/Src/gps_uart_task.c **** 
+ 113:Core/Src/gps_uart_task.c ****   /* 5. Enable NVIC IRQs at FreeRTOS-safe priority (>= configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY
+ 114:Core/Src/gps_uart_task.c ****   HAL_NVIC_SetPriority(GPS_DMA_RX_IRQn, 6, 0);
+ 115:Core/Src/gps_uart_task.c ****   HAL_NVIC_EnableIRQ(GPS_DMA_RX_IRQn);
+ 116:Core/Src/gps_uart_task.c ****   HAL_NVIC_SetPriority(GPS_UART_IRQn, 6, 0);
+ 117:Core/Src/gps_uart_task.c ****   HAL_NVIC_EnableIRQ(GPS_UART_IRQn);
+ 118:Core/Src/gps_uart_task.c **** }
+ 119:Core/Src/gps_uart_task.c **** 
+ 120:Core/Src/gps_uart_task.c **** /*----------------------------------------------------------------------------
+ 121:Core/Src/gps_uart_task.c ****  * 3. ATGM336H-5N (CASIC Protocol) Command Helpers via GPS_UART_INSTANCE TX
+ 122:Core/Src/gps_uart_task.c ****  *----------------------------------------------------------------------------*/
+ 123:Core/Src/gps_uart_task.c **** static void GPS_UART_SendBytes(const uint8_t *data, uint32_t len)
+ 124:Core/Src/gps_uart_task.c **** {
+  29              		.loc 1 124 1 view -0
+  30              		.cfi_startproc
+  31              		@ args = 0, pretend = 0, frame = 0
+  32              		@ frame_needed = 0, uses_anonymous_args = 0
+  33              		@ link register save eliminated.
+  34              		.loc 1 124 1 is_stmt 0 view .LVU1
+  35 0000 8C46     		mov	ip, r1
+ 125:Core/Src/gps_uart_task.c ****   for (uint32_t i = 0U; i < len; i++)
+  36              		.loc 1 125 3 is_stmt 1 view .LVU2
+  37              	.LBB2:
+  38              		.loc 1 125 8 view .LVU3
+  39              	.LVL1:
+  40              		.loc 1 125 17 is_stmt 0 view .LVU4
+  41 0002 0022     		movs	r2, #0
+  42              		.loc 1 125 3 view .LVU5
+  43 0004 08E0     		b	.L2
+  44              	.LVL2:
+  45              	.L3:
+ 126:Core/Src/gps_uart_task.c ****   {
+ 127:Core/Src/gps_uart_task.c ****     while (!(GPS_UART_INSTANCE->SR & USART_SR_TXE)) {}
+ARM GAS  /tmp/ccmp3BBc.s 			page 4
+
+
+  46              		.loc 1 127 54 is_stmt 1 discriminator 1 view .LVU6
+  47              		.loc 1 127 12 discriminator 1 view .LVU7
+  48              		.loc 1 127 31 is_stmt 0 discriminator 1 view .LVU8
+  49 0006 084B     		ldr	r3, .L5
+  50 0008 1B68     		ldr	r3, [r3]
+  51              		.loc 1 127 12 discriminator 1 view .LVU9
+  52 000a 13F0800F 		tst	r3, #128
+  53 000e FAD0     		beq	.L3
+ 128:Core/Src/gps_uart_task.c ****     GPS_UART_INSTANCE->DR = data[i];
+  54              		.loc 1 128 5 is_stmt 1 view .LVU10
+  55              		.loc 1 128 33 is_stmt 0 view .LVU11
+  56 0010 815C     		ldrb	r1, [r0, r2]	@ zero_extendqisi2
+  57              		.loc 1 128 27 view .LVU12
+  58 0012 054B     		ldr	r3, .L5
+  59 0014 5960     		str	r1, [r3, #4]
+ 125:Core/Src/gps_uart_task.c ****   for (uint32_t i = 0U; i < len; i++)
+  60              		.loc 1 125 35 is_stmt 1 discriminator 1 view .LVU13
+  61 0016 0132     		adds	r2, r2, #1
+  62              	.LVL3:
+  63              	.L2:
+ 125:Core/Src/gps_uart_task.c ****   for (uint32_t i = 0U; i < len; i++)
+  64              		.loc 1 125 27 discriminator 2 view .LVU14
+  65 0018 6245     		cmp	r2, ip
+  66 001a F4D3     		bcc	.L3
+  67              	.L4:
+  68              	.LBE2:
+ 129:Core/Src/gps_uart_task.c ****   }
+ 130:Core/Src/gps_uart_task.c ****   while (!(GPS_UART_INSTANCE->SR & USART_SR_TC)) {}
+  69              		.loc 1 130 51 discriminator 1 view .LVU15
+  70              		.loc 1 130 10 discriminator 1 view .LVU16
+  71              		.loc 1 130 29 is_stmt 0 discriminator 1 view .LVU17
+  72 001c 024B     		ldr	r3, .L5
+  73 001e 1B68     		ldr	r3, [r3]
+  74              		.loc 1 130 10 discriminator 1 view .LVU18
+  75 0020 13F0400F 		tst	r3, #64
+  76 0024 FAD0     		beq	.L4
+ 131:Core/Src/gps_uart_task.c **** }
+  77              		.loc 1 131 1 view .LVU19
+  78 0026 7047     		bx	lr
+  79              	.L6:
+  80              		.align	2
+  81              	.L5:
+  82 0028 00100140 		.word	1073811456
+  83              		.cfi_endproc
+  84              	.LFE164:
+  86              		.section	.text.GPS_SendCasicCmd,"ax",%progbits
+  87              		.align	1
+  88              		.syntax unified
+  89              		.thumb
+  90              		.thumb_func
+  92              	GPS_SendCasicCmd:
+  93              	.LVL4:
+  94              	.LFB165:
+ 132:Core/Src/gps_uart_task.c **** 
+ 133:Core/Src/gps_uart_task.c **** /* Formats "$<payload>*<XOR_HEX>\r\n" and sends over GPS_UART_INSTANCE TX */
+ 134:Core/Src/gps_uart_task.c **** static void GPS_SendCasicCmd(const char *payload)
+ 135:Core/Src/gps_uart_task.c **** {
+ARM GAS  /tmp/ccmp3BBc.s 			page 5
+
+
+  95              		.loc 1 135 1 is_stmt 1 view -0
+  96              		.cfi_startproc
+  97              		@ args = 0, pretend = 0, frame = 64
+  98              		@ frame_needed = 0, uses_anonymous_args = 0
+  99              		.loc 1 135 1 is_stmt 0 view .LVU21
+ 100 0000 00B5     		push	{lr}
+ 101              	.LCFI0:
+ 102              		.cfi_def_cfa_offset 4
+ 103              		.cfi_offset 14, -4
+ 104 0002 91B0     		sub	sp, sp, #68
+ 105              	.LCFI1:
+ 106              		.cfi_def_cfa_offset 72
+ 136:Core/Src/gps_uart_task.c ****   static const char hex_lut[16] = "0123456789ABCDEF";
+ 107              		.loc 1 136 3 is_stmt 1 view .LVU22
+ 137:Core/Src/gps_uart_task.c ****   char frame[64];
+ 108              		.loc 1 137 3 view .LVU23
+ 138:Core/Src/gps_uart_task.c ****   uint8_t crc = 0U;
+ 109              		.loc 1 138 3 view .LVU24
+ 110              	.LVL5:
+ 139:Core/Src/gps_uart_task.c ****   uint32_t idx = 0U;
+ 111              		.loc 1 139 3 view .LVU25
+ 140:Core/Src/gps_uart_task.c **** 
+ 141:Core/Src/gps_uart_task.c ****   frame[idx++] = '$';
+ 112              		.loc 1 141 3 view .LVU26
+ 113              		.loc 1 141 16 is_stmt 0 view .LVU27
+ 114 0004 2423     		movs	r3, #36
+ 115 0006 8DF80030 		strb	r3, [sp]
+ 142:Core/Src/gps_uart_task.c ****   while (*payload != '\0' && idx < (sizeof(frame) - 6U))
+ 116              		.loc 1 142 3 is_stmt 1 view .LVU28
+ 141:Core/Src/gps_uart_task.c ****   while (*payload != '\0' && idx < (sizeof(frame) - 6U))
+ 117              		.loc 1 141 12 is_stmt 0 view .LVU29
+ 118 000a 0121     		movs	r1, #1
+ 138:Core/Src/gps_uart_task.c ****   uint32_t idx = 0U;
+ 119              		.loc 1 138 11 view .LVU30
+ 120 000c 0022     		movs	r2, #0
+ 121              	.LVL6:
+ 122              	.L8:
+ 123              		.loc 1 142 27 is_stmt 1 discriminator 1 view .LVU31
+ 124              		.loc 1 142 10 is_stmt 0 discriminator 1 view .LVU32
+ 125 000e 0378     		ldrb	r3, [r0]	@ zero_extendqisi2
+ 126              		.loc 1 142 27 discriminator 1 view .LVU33
+ 127 0010 53B1     		cbz	r3, .L9
+ 128              		.loc 1 142 27 discriminator 2 view .LVU34
+ 129 0012 3929     		cmp	r1, #57
+ 130 0014 08D8     		bhi	.L9
+ 131              	.LBB3:
+ 143:Core/Src/gps_uart_task.c ****   {
+ 144:Core/Src/gps_uart_task.c ****     uint8_t ch = (uint8_t)(*payload++);
+ 132              		.loc 1 144 5 is_stmt 1 view .LVU35
+ 133              		.loc 1 144 36 is_stmt 0 view .LVU36
+ 134 0016 0130     		adds	r0, r0, #1
+ 135              	.LVL7:
+ 145:Core/Src/gps_uart_task.c ****     crc ^= ch;
+ 136              		.loc 1 145 5 is_stmt 1 view .LVU37
+ 137              		.loc 1 145 9 is_stmt 0 view .LVU38
+ 138 0018 5A40     		eors	r2, r2, r3
+ 139              	.LVL8:
+ARM GAS  /tmp/ccmp3BBc.s 			page 6
+
+
+ 146:Core/Src/gps_uart_task.c ****     frame[idx++] = (char)ch;
+ 140              		.loc 1 146 5 is_stmt 1 view .LVU39
+ 141              		.loc 1 146 18 is_stmt 0 view .LVU40
+ 142 001a 01F1400C 		add	ip, r1, #64
+ 143 001e EC44     		add	ip, sp, ip
+ 144 0020 0CF8403C 		strb	r3, [ip, #-64]
+ 145              		.loc 1 146 14 view .LVU41
+ 146 0024 0131     		adds	r1, r1, #1
+ 147              	.LVL9:
+ 148              		.loc 1 146 14 view .LVU42
+ 149 0026 F2E7     		b	.L8
+ 150              	.LVL10:
+ 151              	.L9:
+ 152              		.loc 1 146 14 view .LVU43
+ 153              	.LBE3:
+ 147:Core/Src/gps_uart_task.c ****   }
+ 148:Core/Src/gps_uart_task.c **** 
+ 149:Core/Src/gps_uart_task.c ****   frame[idx++] = '*';
+ 154              		.loc 1 149 3 is_stmt 1 view .LVU44
+ 155              		.loc 1 149 16 is_stmt 0 view .LVU45
+ 156 0028 01F14003 		add	r3, r1, #64
+ 157 002c 6B44     		add	r3, sp, r3
+ 158 002e 4FF02A0C 		mov	ip, #42
+ 159 0032 03F840CC 		strb	ip, [r3, #-64]
+ 150:Core/Src/gps_uart_task.c ****   frame[idx++] = hex_lut[(crc >> 4) & 0x0FU];
+ 160              		.loc 1 150 3 is_stmt 1 view .LVU46
+ 161              		.loc 1 150 37 is_stmt 0 view .LVU47
+ 162 0036 4FEA121E 		lsr	lr, r2, #4
+ 163              	.LVL11:
+ 164              		.loc 1 150 25 view .LVU48
+ 165 003a DFF848C0 		ldr	ip, .L12
+ 166 003e 1CF80EE0 		ldrb	lr, [ip, lr]	@ zero_extendqisi2
+ 167              		.loc 1 150 16 view .LVU49
+ 168 0042 01F14100 		add	r0, r1, #65
+ 169              	.LVL12:
+ 170              		.loc 1 150 16 view .LVU50
+ 171 0046 6844     		add	r0, sp, r0
+ 172 0048 00F840EC 		strb	lr, [r0, #-64]
+ 151:Core/Src/gps_uart_task.c ****   frame[idx++] = hex_lut[crc & 0x0FU];
+ 173              		.loc 1 151 3 is_stmt 1 view .LVU51
+ 174              		.loc 1 151 30 is_stmt 0 view .LVU52
+ 175 004c 02F00F02 		and	r2, r2, #15
+ 176              	.LVL13:
+ 177              		.loc 1 151 25 view .LVU53
+ 178 0050 1CF80220 		ldrb	r2, [ip, r2]	@ zero_extendqisi2
+ 179              		.loc 1 151 16 view .LVU54
+ 180 0054 01F14203 		add	r3, r1, #66
+ 181 0058 6B44     		add	r3, sp, r3
+ 182 005a 03F8402C 		strb	r2, [r3, #-64]
+ 152:Core/Src/gps_uart_task.c ****   frame[idx++] = '\r';
+ 183              		.loc 1 152 3 is_stmt 1 view .LVU55
+ 184              	.LVL14:
+ 185              		.loc 1 152 16 is_stmt 0 view .LVU56
+ 186 005e 01F14302 		add	r2, r1, #67
+ 187 0062 6A44     		add	r2, sp, r2
+ 188 0064 0D20     		movs	r0, #13
+ 189 0066 02F8400C 		strb	r0, [r2, #-64]
+ARM GAS  /tmp/ccmp3BBc.s 			page 7
+
+
+ 153:Core/Src/gps_uart_task.c ****   frame[idx++] = '\n';
+ 190              		.loc 1 153 3 is_stmt 1 view .LVU57
+ 191              	.LVL15:
+ 192              		.loc 1 153 16 is_stmt 0 view .LVU58
+ 193 006a 01F14403 		add	r3, r1, #68
+ 194 006e 6B44     		add	r3, sp, r3
+ 195 0070 0A22     		movs	r2, #10
+ 196 0072 03F8402C 		strb	r2, [r3, #-64]
+ 154:Core/Src/gps_uart_task.c **** 
+ 155:Core/Src/gps_uart_task.c ****   GPS_UART_SendBytes((const uint8_t *)frame, idx);
+ 197              		.loc 1 155 3 is_stmt 1 view .LVU59
+ 198 0076 0531     		adds	r1, r1, #5
+ 199              	.LVL16:
+ 200              		.loc 1 155 3 is_stmt 0 view .LVU60
+ 201 0078 6846     		mov	r0, sp
+ 202 007a FFF7FEFF 		bl	GPS_UART_SendBytes
+ 203              	.LVL17:
+ 156:Core/Src/gps_uart_task.c **** }
+ 204              		.loc 1 156 1 view .LVU61
+ 205 007e 11B0     		add	sp, sp, #68
+ 206              	.LCFI2:
+ 207              		.cfi_def_cfa_offset 4
+ 208              		@ sp needed
+ 209 0080 00BD     		pop	{pc}
+ 210              	.L13:
+ 211 0082 00BF     		.align	2
+ 212              	.L12:
+ 213 0084 00000000 		.word	hex_lut.2
+ 214              		.cfi_endproc
+ 215              	.LFE165:
+ 217              		.section	.text.GPS_HexCharToNibble,"ax",%progbits
+ 218              		.align	1
+ 219              		.syntax unified
+ 220              		.thumb
+ 221              		.thumb_func
+ 223              	GPS_HexCharToNibble:
+ 224              	.LVL18:
+ 225              	.LFB169:
+ 157:Core/Src/gps_uart_task.c **** 
+ 158:Core/Src/gps_uart_task.c **** /**
+ 159:Core/Src/gps_uart_task.c ****   * @brief  Select active GNSS constellations on ATGM336H-5N ($PCAS04).
+ 160:Core/Src/gps_uart_task.c ****   * @param  mode: ATGM336H_MODE_GPS_GLONASS (5 -> "$PCAS04,5*1C\r\n"), etc.
+ 161:Core/Src/gps_uart_task.c ****   */
+ 162:Core/Src/gps_uart_task.c **** void GPS_ATGM336H_SetConstellation(uint8_t mode)
+ 163:Core/Src/gps_uart_task.c **** {
+ 164:Core/Src/gps_uart_task.c ****   char cmd[16];
+ 165:Core/Src/gps_uart_task.c ****   (void)snprintf(cmd, sizeof(cmd), "PCAS04,%u", (unsigned)mode);
+ 166:Core/Src/gps_uart_task.c ****   GPS_SendCasicCmd(cmd);
+ 167:Core/Src/gps_uart_task.c **** }
+ 168:Core/Src/gps_uart_task.c **** 
+ 169:Core/Src/gps_uart_task.c **** /**
+ 170:Core/Src/gps_uart_task.c ****   * @brief  Put ATGM336H-5N into low-power standby/sleep mode ($PCAS12).
+ 171:Core/Src/gps_uart_task.c ****   * @param  standby_sec: Standby duration in seconds (1..65535).
+ 172:Core/Src/gps_uart_task.c ****   *                      Pass 0 to use maximum duration (65535 s).
+ 173:Core/Src/gps_uart_task.c ****   */
+ 174:Core/Src/gps_uart_task.c **** void GPS_ATGM336H_EnterSleep(uint16_t standby_sec)
+ 175:Core/Src/gps_uart_task.c **** {
+ARM GAS  /tmp/ccmp3BBc.s 			page 8
+
+
+ 176:Core/Src/gps_uart_task.c ****   uint16_t sec = (standby_sec == 0U) ? 65535U : standby_sec;
+ 177:Core/Src/gps_uart_task.c ****   char cmd[24];
+ 178:Core/Src/gps_uart_task.c ****   (void)snprintf(cmd, sizeof(cmd), "PCAS12,%u", (unsigned)sec);
+ 179:Core/Src/gps_uart_task.c ****   GPS_SendCasicCmd(cmd);
+ 180:Core/Src/gps_uart_task.c **** }
+ 181:Core/Src/gps_uart_task.c **** 
+ 182:Core/Src/gps_uart_task.c **** /**
+ 183:Core/Src/gps_uart_task.c ****   * @brief  Wake ATGM336H-5N from standby/sleep mode ($PCAS10,0 hot start)
+ 184:Core/Src/gps_uart_task.c ****   *         and restore GPS + GLONASS constellation mode ($PCAS04,5).
+ 185:Core/Src/gps_uart_task.c ****   */
+ 186:Core/Src/gps_uart_task.c **** void GPS_ATGM336H_Wakeup(void)
+ 187:Core/Src/gps_uart_task.c **** {
+ 188:Core/Src/gps_uart_task.c ****   const uint8_t wake_pulse = 0xFFU;
+ 189:Core/Src/gps_uart_task.c ****   GPS_UART_SendBytes(&wake_pulse, 1U);
+ 190:Core/Src/gps_uart_task.c ****   vTaskDelay(pdMS_TO_TICKS(20));
+ 191:Core/Src/gps_uart_task.c **** 
+ 192:Core/Src/gps_uart_task.c ****   /* Hot start ($PCAS10,0*1C) and re-select GPS + GLONASS ($PCAS04,5*1C) */
+ 193:Core/Src/gps_uart_task.c ****   GPS_SendCasicCmd("PCAS10,0");
+ 194:Core/Src/gps_uart_task.c ****   vTaskDelay(pdMS_TO_TICKS(50));
+ 195:Core/Src/gps_uart_task.c ****   GPS_ATGM336H_SetConstellation(ATGM336H_MODE_GPS_GLONASS);
+ 196:Core/Src/gps_uart_task.c **** }
+ 197:Core/Src/gps_uart_task.c **** 
+ 198:Core/Src/gps_uart_task.c **** /*----------------------------------------------------------------------------
+ 199:Core/Src/gps_uart_task.c ****  * 4. Pure Fixed-Point NMEA 0183 Parser ($xxRMC, $xxGGA, $xxGSV)
+ 200:Core/Src/gps_uart_task.c ****  *----------------------------------------------------------------------------*/
+ 201:Core/Src/gps_uart_task.c **** static int32_t GPS_HexCharToNibble(char c)
+ 202:Core/Src/gps_uart_task.c **** {
+ 226              		.loc 1 202 1 is_stmt 1 view -0
+ 227              		.cfi_startproc
+ 228              		@ args = 0, pretend = 0, frame = 0
+ 229              		@ frame_needed = 0, uses_anonymous_args = 0
+ 230              		@ link register save eliminated.
+ 203:Core/Src/gps_uart_task.c ****   if (c >= '0' && c <= '9') return (int32_t)(c - '0');
+ 231              		.loc 1 203 3 view .LVU63
+ 232              		.loc 1 203 16 is_stmt 0 view .LVU64
+ 233 0000 A0F13003 		sub	r3, r0, #48
+ 234 0004 DBB2     		uxtb	r3, r3
+ 235              		.loc 1 203 6 view .LVU65
+ 236 0006 092B     		cmp	r3, #9
+ 237 0008 0BD9     		bls	.L19
+ 204:Core/Src/gps_uart_task.c ****   if (c >= 'A' && c <= 'F') return (int32_t)(c - 'A' + 10);
+ 238              		.loc 1 204 3 is_stmt 1 view .LVU66
+ 239              		.loc 1 204 16 is_stmt 0 view .LVU67
+ 240 000a A0F14103 		sub	r3, r0, #65
+ 241 000e DBB2     		uxtb	r3, r3
+ 242              		.loc 1 204 6 view .LVU68
+ 243 0010 052B     		cmp	r3, #5
+ 244 0012 08D9     		bls	.L20
+ 205:Core/Src/gps_uart_task.c ****   if (c >= 'a' && c <= 'f') return (int32_t)(c - 'a' + 10);
+ 245              		.loc 1 205 3 is_stmt 1 view .LVU69
+ 246              		.loc 1 205 16 is_stmt 0 view .LVU70
+ 247 0014 A0F16103 		sub	r3, r0, #97
+ 248 0018 DBB2     		uxtb	r3, r3
+ 249              		.loc 1 205 6 view .LVU71
+ 250 001a 052B     		cmp	r3, #5
+ 251 001c 05D8     		bhi	.L18
+ 252              		.loc 1 205 29 is_stmt 1 discriminator 1 view .LVU72
+ARM GAS  /tmp/ccmp3BBc.s 			page 9
+
+
+ 253              		.loc 1 205 36 is_stmt 0 discriminator 1 view .LVU73
+ 254 001e 5738     		subs	r0, r0, #87
+ 255              	.LVL19:
+ 256              		.loc 1 205 36 discriminator 1 view .LVU74
+ 257 0020 7047     		bx	lr
+ 258              	.LVL20:
+ 259              	.L19:
+ 203:Core/Src/gps_uart_task.c ****   if (c >= '0' && c <= '9') return (int32_t)(c - '0');
+ 260              		.loc 1 203 29 is_stmt 1 discriminator 1 view .LVU75
+ 203:Core/Src/gps_uart_task.c ****   if (c >= '0' && c <= '9') return (int32_t)(c - '0');
+ 261              		.loc 1 203 36 is_stmt 0 discriminator 1 view .LVU76
+ 262 0022 3038     		subs	r0, r0, #48
+ 263              	.LVL21:
+ 203:Core/Src/gps_uart_task.c ****   if (c >= '0' && c <= '9') return (int32_t)(c - '0');
+ 264              		.loc 1 203 36 discriminator 1 view .LVU77
+ 265 0024 7047     		bx	lr
+ 266              	.LVL22:
+ 267              	.L20:
+ 204:Core/Src/gps_uart_task.c ****   if (c >= 'A' && c <= 'F') return (int32_t)(c - 'A' + 10);
+ 268              		.loc 1 204 29 is_stmt 1 discriminator 1 view .LVU78
+ 204:Core/Src/gps_uart_task.c ****   if (c >= 'A' && c <= 'F') return (int32_t)(c - 'A' + 10);
+ 269              		.loc 1 204 36 is_stmt 0 discriminator 1 view .LVU79
+ 270 0026 3738     		subs	r0, r0, #55
+ 271              	.LVL23:
+ 204:Core/Src/gps_uart_task.c ****   if (c >= 'A' && c <= 'F') return (int32_t)(c - 'A' + 10);
+ 272              		.loc 1 204 36 discriminator 1 view .LVU80
+ 273 0028 7047     		bx	lr
+ 274              	.LVL24:
+ 275              	.L18:
+ 206:Core/Src/gps_uart_task.c ****   return -1;
+ 276              		.loc 1 206 10 view .LVU81
+ 277 002a 4FF0FF30 		mov	r0, #-1
+ 278              	.LVL25:
+ 207:Core/Src/gps_uart_task.c **** }
+ 279              		.loc 1 207 1 view .LVU82
+ 280 002e 7047     		bx	lr
+ 281              		.cfi_endproc
+ 282              	.LFE169:
+ 284              		.section	.text.GPS_VerifyNmeaChecksum,"ax",%progbits
+ 285              		.align	1
+ 286              		.syntax unified
+ 287              		.thumb
+ 288              		.thumb_func
+ 290              	GPS_VerifyNmeaChecksum:
+ 291              	.LVL26:
+ 292              	.LFB170:
+ 208:Core/Src/gps_uart_task.c **** 
+ 209:Core/Src/gps_uart_task.c **** static bool GPS_VerifyNmeaChecksum(const char *line)
+ 210:Core/Src/gps_uart_task.c **** {
+ 293              		.loc 1 210 1 is_stmt 1 view -0
+ 294              		.cfi_startproc
+ 295              		@ args = 0, pretend = 0, frame = 0
+ 296              		@ frame_needed = 0, uses_anonymous_args = 0
+ 211:Core/Src/gps_uart_task.c ****   if (line[0] != '$') return false;
+ 297              		.loc 1 211 3 view .LVU84
+ 298              		.loc 1 211 11 is_stmt 0 view .LVU85
+ 299 0000 0378     		ldrb	r3, [r0]	@ zero_extendqisi2
+ARM GAS  /tmp/ccmp3BBc.s 			page 10
+
+
+ 300              		.loc 1 211 6 view .LVU86
+ 301 0002 242B     		cmp	r3, #36
+ 302 0004 03D0     		beq	.L22
+ 303              		.loc 1 211 30 discriminator 1 view .LVU87
+ 304 0006 0020     		movs	r0, #0
+ 305              	.LVL27:
+ 212:Core/Src/gps_uart_task.c **** 
+ 213:Core/Src/gps_uart_task.c ****   uint8_t calc = 0U;
+ 214:Core/Src/gps_uart_task.c ****   const char *p = line + 1;
+ 215:Core/Src/gps_uart_task.c ****   while (*p != '\0' && *p != '*' && *p != '\r' && *p != '\n')
+ 216:Core/Src/gps_uart_task.c ****   {
+ 217:Core/Src/gps_uart_task.c ****     calc ^= (uint8_t)(*p);
+ 218:Core/Src/gps_uart_task.c ****     p++;
+ 219:Core/Src/gps_uart_task.c ****   }
+ 220:Core/Src/gps_uart_task.c **** 
+ 221:Core/Src/gps_uart_task.c ****   if (*p != '*') return false;
+ 222:Core/Src/gps_uart_task.c ****   int32_t hi = GPS_HexCharToNibble(p[1]);
+ 223:Core/Src/gps_uart_task.c ****   int32_t lo = GPS_HexCharToNibble(p[2]);
+ 224:Core/Src/gps_uart_task.c ****   if (hi < 0 || lo < 0) return false;
+ 225:Core/Src/gps_uart_task.c **** 
+ 226:Core/Src/gps_uart_task.c ****   return (calc == (uint8_t)((hi << 4) | lo));
+ 227:Core/Src/gps_uart_task.c **** }
+ 306              		.loc 1 227 1 view .LVU88
+ 307 0008 7047     		bx	lr
+ 308              	.LVL28:
+ 309              	.L27:
+ 310              	.LCFI3:
+ 311              		.cfi_def_cfa_offset 16
+ 312              		.cfi_offset 4, -16
+ 313              		.cfi_offset 5, -12
+ 314              		.cfi_offset 6, -8
+ 315              		.cfi_offset 14, -4
+ 211:Core/Src/gps_uart_task.c ****   if (line[0] != '$') return false;
+ 316              		.loc 1 211 30 discriminator 1 view .LVU89
+ 317 000a 0020     		movs	r0, #0
+ 318              	.L23:
+ 319              		.loc 1 227 1 view .LVU90
+ 320 000c 70BD     		pop	{r4, r5, r6, pc}
+ 321              	.LVL29:
+ 322              	.L22:
+ 323              	.LCFI4:
+ 324              		.cfi_def_cfa_offset 0
+ 325              		.cfi_restore 4
+ 326              		.cfi_restore 5
+ 327              		.cfi_restore 6
+ 328              		.cfi_restore 14
+ 210:Core/Src/gps_uart_task.c ****   if (line[0] != '$') return false;
+ 329              		.loc 1 210 1 view .LVU91
+ 330 000e 70B5     		push	{r4, r5, r6, lr}
+ 331              	.LCFI5:
+ 332              		.cfi_def_cfa_offset 16
+ 333              		.cfi_offset 4, -16
+ 334              		.cfi_offset 5, -12
+ 335              		.cfi_offset 6, -8
+ 336              		.cfi_offset 14, -4
+ 213:Core/Src/gps_uart_task.c ****   const char *p = line + 1;
+ 337              		.loc 1 213 3 is_stmt 1 view .LVU92
+ARM GAS  /tmp/ccmp3BBc.s 			page 11
+
+
+ 338              	.LVL30:
+ 214:Core/Src/gps_uart_task.c ****   while (*p != '\0' && *p != '*' && *p != '\r' && *p != '\n')
+ 339              		.loc 1 214 3 view .LVU93
+ 214:Core/Src/gps_uart_task.c ****   while (*p != '\0' && *p != '*' && *p != '\r' && *p != '\n')
+ 340              		.loc 1 214 15 is_stmt 0 view .LVU94
+ 341 0010 441C     		adds	r4, r0, #1
+ 342              	.LVL31:
+ 215:Core/Src/gps_uart_task.c ****   {
+ 343              		.loc 1 215 3 is_stmt 1 view .LVU95
+ 213:Core/Src/gps_uart_task.c ****   const char *p = line + 1;
+ 344              		.loc 1 213 11 is_stmt 0 view .LVU96
+ 345 0012 0025     		movs	r5, #0
+ 346              	.LVL32:
+ 347              	.L24:
+ 215:Core/Src/gps_uart_task.c ****   {
+ 348              		.loc 1 215 48 is_stmt 1 discriminator 1 view .LVU97
+ 215:Core/Src/gps_uart_task.c ****   {
+ 349              		.loc 1 215 10 is_stmt 0 discriminator 1 view .LVU98
+ 350 0014 2378     		ldrb	r3, [r4]	@ zero_extendqisi2
+ 215:Core/Src/gps_uart_task.c ****   {
+ 351              		.loc 1 215 48 discriminator 1 view .LVU99
+ 352 0016 43B1     		cbz	r3, .L25
+ 215:Core/Src/gps_uart_task.c ****   {
+ 353              		.loc 1 215 21 discriminator 2 view .LVU100
+ 354 0018 2A2B     		cmp	r3, #42
+ 355 001a 06D0     		beq	.L25
+ 215:Core/Src/gps_uart_task.c ****   {
+ 356              		.loc 1 215 34 discriminator 3 view .LVU101
+ 357 001c 0D2B     		cmp	r3, #13
+ 358 001e 04D0     		beq	.L25
+ 215:Core/Src/gps_uart_task.c ****   {
+ 359              		.loc 1 215 48 discriminator 4 view .LVU102
+ 360 0020 0A2B     		cmp	r3, #10
+ 361 0022 02D0     		beq	.L25
+ 217:Core/Src/gps_uart_task.c ****     p++;
+ 362              		.loc 1 217 5 is_stmt 1 view .LVU103
+ 217:Core/Src/gps_uart_task.c ****     p++;
+ 363              		.loc 1 217 10 is_stmt 0 view .LVU104
+ 364 0024 5D40     		eors	r5, r5, r3
+ 365              	.LVL33:
+ 218:Core/Src/gps_uart_task.c ****   }
+ 366              		.loc 1 218 5 is_stmt 1 view .LVU105
+ 218:Core/Src/gps_uart_task.c ****   }
+ 367              		.loc 1 218 6 is_stmt 0 view .LVU106
+ 368 0026 0134     		adds	r4, r4, #1
+ 369              	.LVL34:
+ 218:Core/Src/gps_uart_task.c ****   }
+ 370              		.loc 1 218 6 view .LVU107
+ 371 0028 F4E7     		b	.L24
+ 372              	.LVL35:
+ 373              	.L25:
+ 221:Core/Src/gps_uart_task.c ****   int32_t hi = GPS_HexCharToNibble(p[1]);
+ 374              		.loc 1 221 3 is_stmt 1 view .LVU108
+ 221:Core/Src/gps_uart_task.c ****   int32_t hi = GPS_HexCharToNibble(p[1]);
+ 375              		.loc 1 221 6 is_stmt 0 view .LVU109
+ 376 002a 2A2B     		cmp	r3, #42
+ 377 002c EDD1     		bne	.L27
+ARM GAS  /tmp/ccmp3BBc.s 			page 12
+
+
+ 222:Core/Src/gps_uart_task.c ****   int32_t lo = GPS_HexCharToNibble(p[2]);
+ 378              		.loc 1 222 3 is_stmt 1 view .LVU110
+ 222:Core/Src/gps_uart_task.c ****   int32_t lo = GPS_HexCharToNibble(p[2]);
+ 379              		.loc 1 222 16 is_stmt 0 view .LVU111
+ 380 002e 6078     		ldrb	r0, [r4, #1]	@ zero_extendqisi2
+ 381              	.LVL36:
+ 222:Core/Src/gps_uart_task.c ****   int32_t lo = GPS_HexCharToNibble(p[2]);
+ 382              		.loc 1 222 16 view .LVU112
+ 383 0030 FFF7FEFF 		bl	GPS_HexCharToNibble
+ 384              	.LVL37:
+ 385 0034 0646     		mov	r6, r0
+ 386              	.LVL38:
+ 223:Core/Src/gps_uart_task.c ****   if (hi < 0 || lo < 0) return false;
+ 387              		.loc 1 223 3 is_stmt 1 view .LVU113
+ 223:Core/Src/gps_uart_task.c ****   if (hi < 0 || lo < 0) return false;
+ 388              		.loc 1 223 16 is_stmt 0 view .LVU114
+ 389 0036 A078     		ldrb	r0, [r4, #2]	@ zero_extendqisi2
+ 390              	.LVL39:
+ 223:Core/Src/gps_uart_task.c ****   if (hi < 0 || lo < 0) return false;
+ 391              		.loc 1 223 16 view .LVU115
+ 392 0038 FFF7FEFF 		bl	GPS_HexCharToNibble
+ 393              	.LVL40:
+ 224:Core/Src/gps_uart_task.c **** 
+ 394              		.loc 1 224 3 is_stmt 1 view .LVU116
+ 224:Core/Src/gps_uart_task.c **** 
+ 395              		.loc 1 224 6 is_stmt 0 view .LVU117
+ 396 003c 002E     		cmp	r6, #0
+ 397 003e E4DB     		blt	.L27
+ 224:Core/Src/gps_uart_task.c **** 
+ 398              		.loc 1 224 14 discriminator 1 view .LVU118
+ 399 0040 0028     		cmp	r0, #0
+ 400 0042 E2DB     		blt	.L27
+ 226:Core/Src/gps_uart_task.c **** }
+ 401              		.loc 1 226 3 is_stmt 1 view .LVU119
+ 226:Core/Src/gps_uart_task.c **** }
+ 402              		.loc 1 226 39 is_stmt 0 view .LVU120
+ 403 0044 40EA0610 		orr	r0, r0, r6, lsl #4
+ 404              	.LVL41:
+ 226:Core/Src/gps_uart_task.c **** }
+ 405              		.loc 1 226 39 view .LVU121
+ 406 0048 43B2     		sxtb	r3, r0
+ 226:Core/Src/gps_uart_task.c **** }
+ 407              		.loc 1 226 16 view .LVU122
+ 408 004a 68B2     		sxtb	r0, r5
+ 409 004c 9842     		cmp	r0, r3
+ 410 004e 14BF     		ite	ne
+ 411 0050 0020     		movne	r0, #0
+ 412 0052 0120     		moveq	r0, #1
+ 413 0054 DAE7     		b	.L23
+ 414              		.cfi_endproc
+ 415              	.LFE170:
+ 417              		.section	.text.GPS_NextField,"ax",%progbits
+ 418              		.align	1
+ 419              		.syntax unified
+ 420              		.thumb
+ 421              		.thumb_func
+ 423              	GPS_NextField:
+ARM GAS  /tmp/ccmp3BBc.s 			page 13
+
+
+ 424              	.LVL42:
+ 425              	.LFB171:
+ 228:Core/Src/gps_uart_task.c **** 
+ 229:Core/Src/gps_uart_task.c **** static const char *GPS_NextField(const char *p)
+ 230:Core/Src/gps_uart_task.c **** {
+ 426              		.loc 1 230 1 is_stmt 1 view -0
+ 427              		.cfi_startproc
+ 428              		@ args = 0, pretend = 0, frame = 0
+ 429              		@ frame_needed = 0, uses_anonymous_args = 0
+ 430              		@ link register save eliminated.
+ 231:Core/Src/gps_uart_task.c ****   while (*p != '\0' && *p != ',' && *p != '*')
+ 431              		.loc 1 231 3 view .LVU124
+ 432              		.loc 1 231 9 is_stmt 0 view .LVU125
+ 433 0000 00E0     		b	.L32
+ 434              	.L34:
+ 232:Core/Src/gps_uart_task.c ****   {
+ 233:Core/Src/gps_uart_task.c ****     p++;
+ 435              		.loc 1 233 5 is_stmt 1 view .LVU126
+ 436              		.loc 1 233 6 is_stmt 0 view .LVU127
+ 437 0002 0130     		adds	r0, r0, #1
+ 438              	.LVL43:
+ 439              	.L32:
+ 231:Core/Src/gps_uart_task.c ****   while (*p != '\0' && *p != ',' && *p != '*')
+ 440              		.loc 1 231 34 is_stmt 1 discriminator 1 view .LVU128
+ 231:Core/Src/gps_uart_task.c ****   while (*p != '\0' && *p != ',' && *p != '*')
+ 441              		.loc 1 231 10 is_stmt 0 discriminator 1 view .LVU129
+ 442 0004 0378     		ldrb	r3, [r0]	@ zero_extendqisi2
+ 231:Core/Src/gps_uart_task.c ****   while (*p != '\0' && *p != ',' && *p != '*')
+ 443              		.loc 1 231 34 discriminator 1 view .LVU130
+ 444 0006 1BB1     		cbz	r3, .L33
+ 231:Core/Src/gps_uart_task.c ****   while (*p != '\0' && *p != ',' && *p != '*')
+ 445              		.loc 1 231 21 discriminator 2 view .LVU131
+ 446 0008 2C2B     		cmp	r3, #44
+ 447 000a 01D0     		beq	.L33
+ 231:Core/Src/gps_uart_task.c ****   while (*p != '\0' && *p != ',' && *p != '*')
+ 448              		.loc 1 231 34 discriminator 3 view .LVU132
+ 449 000c 2A2B     		cmp	r3, #42
+ 450 000e F8D1     		bne	.L34
+ 451              	.L33:
+ 234:Core/Src/gps_uart_task.c ****   }
+ 235:Core/Src/gps_uart_task.c ****   return (*p == ',') ? (p + 1) : p;
+ 452              		.loc 1 235 3 is_stmt 1 view .LVU133
+ 453              		.loc 1 235 32 is_stmt 0 view .LVU134
+ 454 0010 2C2B     		cmp	r3, #44
+ 455 0012 00D0     		beq	.L36
+ 456              	.LVL44:
+ 457              	.L35:
+ 236:Core/Src/gps_uart_task.c **** }
+ 458              		.loc 1 236 1 view .LVU135
+ 459 0014 7047     		bx	lr
+ 460              	.LVL45:
+ 461              	.L36:
+ 235:Core/Src/gps_uart_task.c **** }
+ 462              		.loc 1 235 32 discriminator 1 view .LVU136
+ 463 0016 0130     		adds	r0, r0, #1
+ 464              	.LVL46:
+ 235:Core/Src/gps_uart_task.c **** }
+ARM GAS  /tmp/ccmp3BBc.s 			page 14
+
+
+ 465              		.loc 1 235 32 discriminator 1 view .LVU137
+ 466 0018 FCE7     		b	.L35
+ 467              		.cfi_endproc
+ 468              	.LFE171:
+ 470              		.section	.text.GPS_ParseUtcTime,"ax",%progbits
+ 471              		.align	1
+ 472              		.syntax unified
+ 473              		.thumb
+ 474              		.thumb_func
+ 476              	GPS_ParseUtcTime:
+ 477              	.LVL47:
+ 478              	.LFB172:
+ 237:Core/Src/gps_uart_task.c **** 
+ 238:Core/Src/gps_uart_task.c **** static bool GPS_ParseUtcTime(const char *field, uint8_t *out_h, uint8_t *out_m, uint8_t *out_s)
+ 239:Core/Src/gps_uart_task.c **** {
+ 479              		.loc 1 239 1 is_stmt 1 view -0
+ 480              		.cfi_startproc
+ 481              		@ args = 0, pretend = 0, frame = 0
+ 482              		@ frame_needed = 0, uses_anonymous_args = 0
+ 483              		.loc 1 239 1 is_stmt 0 view .LVU139
+ 484 0000 10B5     		push	{r4, lr}
+ 485              	.LCFI6:
+ 486              		.cfi_def_cfa_offset 8
+ 487              		.cfi_offset 4, -8
+ 488              		.cfi_offset 14, -4
+ 240:Core/Src/gps_uart_task.c ****   for (int i = 0; i < 6; i++)
+ 489              		.loc 1 240 3 is_stmt 1 view .LVU140
+ 490              	.LBB4:
+ 491              		.loc 1 240 8 view .LVU141
+ 492              	.LVL48:
+ 493              		.loc 1 240 12 is_stmt 0 view .LVU142
+ 494 0002 4FF0000E 		mov	lr, #0
+ 495              	.LVL49:
+ 496              	.L38:
+ 497              		.loc 1 240 21 is_stmt 1 discriminator 2 view .LVU143
+ 498 0006 BEF1050F 		cmp	lr, #5
+ 499 000a 0DDC     		bgt	.L44
+ 241:Core/Src/gps_uart_task.c ****   {
+ 242:Core/Src/gps_uart_task.c ****     if (field[i] < '0' || field[i] > '9') return false;
+ 500              		.loc 1 242 5 view .LVU144
+ 501              		.loc 1 242 14 is_stmt 0 view .LVU145
+ 502 000c 10F80EC0 		ldrb	ip, [r0, lr]	@ zero_extendqisi2
+ 503              		.loc 1 242 24 view .LVU146
+ 504 0010 ACF1300C 		sub	ip, ip, #48
+ 505 0014 5FFA8CFC 		uxtb	ip, ip
+ 506              		.loc 1 242 8 view .LVU147
+ 507 0018 BCF1090F 		cmp	ip, #9
+ 508 001c 02D8     		bhi	.L42
+ 240:Core/Src/gps_uart_task.c ****   for (int i = 0; i < 6; i++)
+ 509              		.loc 1 240 27 is_stmt 1 discriminator 1 view .LVU148
+ 510 001e 0EF1010E 		add	lr, lr, #1
+ 511              	.LVL50:
+ 240:Core/Src/gps_uart_task.c ****   for (int i = 0; i < 6; i++)
+ 512              		.loc 1 240 27 is_stmt 0 discriminator 1 view .LVU149
+ 513 0022 F0E7     		b	.L38
+ 514              	.LVL51:
+ 515              	.L42:
+ARM GAS  /tmp/ccmp3BBc.s 			page 15
+
+
+ 516              		.loc 1 242 50 discriminator 1 view .LVU150
+ 517 0024 0020     		movs	r0, #0
+ 518              	.L40:
+ 519              	.LBE4:
+ 243:Core/Src/gps_uart_task.c ****   }
+ 244:Core/Src/gps_uart_task.c **** 
+ 245:Core/Src/gps_uart_task.c ****   uint8_t h = (uint8_t)((field[0] - '0') * 10 + (field[1] - '0'));
+ 246:Core/Src/gps_uart_task.c ****   uint8_t m = (uint8_t)((field[2] - '0') * 10 + (field[3] - '0'));
+ 247:Core/Src/gps_uart_task.c ****   uint8_t s = (uint8_t)((field[4] - '0') * 10 + (field[5] - '0'));
+ 248:Core/Src/gps_uart_task.c **** 
+ 249:Core/Src/gps_uart_task.c ****   if (h > 23U || m > 59U || s > 60U) return false;
+ 250:Core/Src/gps_uart_task.c **** 
+ 251:Core/Src/gps_uart_task.c ****   *out_h = h;
+ 252:Core/Src/gps_uart_task.c ****   *out_m = m;
+ 253:Core/Src/gps_uart_task.c ****   *out_s = s;
+ 254:Core/Src/gps_uart_task.c ****   return true;
+ 255:Core/Src/gps_uart_task.c **** }
+ 520              		.loc 1 255 1 view .LVU151
+ 521 0026 10BD     		pop	{r4, pc}
+ 522              	.LVL52:
+ 523              	.L44:
+ 245:Core/Src/gps_uart_task.c ****   uint8_t m = (uint8_t)((field[2] - '0') * 10 + (field[3] - '0'));
+ 524              		.loc 1 245 3 is_stmt 1 view .LVU152
+ 245:Core/Src/gps_uart_task.c ****   uint8_t m = (uint8_t)((field[2] - '0') * 10 + (field[3] - '0'));
+ 525              		.loc 1 245 31 is_stmt 0 view .LVU153
+ 526 0028 0478     		ldrb	r4, [r0]	@ zero_extendqisi2
+ 245:Core/Src/gps_uart_task.c ****   uint8_t m = (uint8_t)((field[2] - '0') * 10 + (field[3] - '0'));
+ 527              		.loc 1 245 55 view .LVU154
+ 528 002a 90F801C0 		ldrb	ip, [r0, #1]	@ zero_extendqisi2
+ 245:Core/Src/gps_uart_task.c ****   uint8_t m = (uint8_t)((field[2] - '0') * 10 + (field[3] - '0'));
+ 529              		.loc 1 245 47 view .LVU155
+ 530 002e 303C     		subs	r4, r4, #48
+ 531 0030 04EB8404 		add	r4, r4, r4, lsl #2
+ 532 0034 0CEB440C 		add	ip, ip, r4, lsl #1
+ 533 0038 5FFA8CFC 		uxtb	ip, ip
+ 245:Core/Src/gps_uart_task.c ****   uint8_t m = (uint8_t)((field[2] - '0') * 10 + (field[3] - '0'));
+ 534              		.loc 1 245 11 view .LVU156
+ 535 003c ACF1300C 		sub	ip, ip, #48
+ 536 0040 5FFA8CFC 		uxtb	ip, ip
+ 537              	.LVL53:
+ 246:Core/Src/gps_uart_task.c ****   uint8_t s = (uint8_t)((field[4] - '0') * 10 + (field[5] - '0'));
+ 538              		.loc 1 246 3 is_stmt 1 view .LVU157
+ 246:Core/Src/gps_uart_task.c ****   uint8_t s = (uint8_t)((field[4] - '0') * 10 + (field[5] - '0'));
+ 539              		.loc 1 246 31 is_stmt 0 view .LVU158
+ 540 0044 8478     		ldrb	r4, [r0, #2]	@ zero_extendqisi2
+ 246:Core/Src/gps_uart_task.c ****   uint8_t s = (uint8_t)((field[4] - '0') * 10 + (field[5] - '0'));
+ 541              		.loc 1 246 55 view .LVU159
+ 542 0046 90F803E0 		ldrb	lr, [r0, #3]	@ zero_extendqisi2
+ 543              	.LVL54:
+ 246:Core/Src/gps_uart_task.c ****   uint8_t s = (uint8_t)((field[4] - '0') * 10 + (field[5] - '0'));
+ 544              		.loc 1 246 47 view .LVU160
+ 545 004a 303C     		subs	r4, r4, #48
+ 546 004c 04EB8404 		add	r4, r4, r4, lsl #2
+ 547 0050 0EEB440E 		add	lr, lr, r4, lsl #1
+ 548 0054 5FFA8EFE 		uxtb	lr, lr
+ 246:Core/Src/gps_uart_task.c ****   uint8_t s = (uint8_t)((field[4] - '0') * 10 + (field[5] - '0'));
+ 549              		.loc 1 246 11 view .LVU161
+ARM GAS  /tmp/ccmp3BBc.s 			page 16
+
+
+ 550 0058 AEF1300E 		sub	lr, lr, #48
+ 551 005c 5FFA8EFE 		uxtb	lr, lr
+ 552              	.LVL55:
+ 247:Core/Src/gps_uart_task.c **** 
+ 553              		.loc 1 247 3 is_stmt 1 view .LVU162
+ 247:Core/Src/gps_uart_task.c **** 
+ 554              		.loc 1 247 31 is_stmt 0 view .LVU163
+ 555 0060 0479     		ldrb	r4, [r0, #4]	@ zero_extendqisi2
+ 247:Core/Src/gps_uart_task.c **** 
+ 556              		.loc 1 247 55 view .LVU164
+ 557 0062 4079     		ldrb	r0, [r0, #5]	@ zero_extendqisi2
+ 558              	.LVL56:
+ 247:Core/Src/gps_uart_task.c **** 
+ 559              		.loc 1 247 47 view .LVU165
+ 560 0064 303C     		subs	r4, r4, #48
+ 561 0066 04EB8404 		add	r4, r4, r4, lsl #2
+ 562 006a 00EB4400 		add	r0, r0, r4, lsl #1
+ 563 006e C0B2     		uxtb	r0, r0
+ 247:Core/Src/gps_uart_task.c **** 
+ 564              		.loc 1 247 11 view .LVU166
+ 565 0070 3038     		subs	r0, r0, #48
+ 566 0072 C0B2     		uxtb	r0, r0
+ 567              	.LVL57:
+ 249:Core/Src/gps_uart_task.c **** 
+ 568              		.loc 1 249 3 is_stmt 1 view .LVU167
+ 249:Core/Src/gps_uart_task.c **** 
+ 569              		.loc 1 249 6 is_stmt 0 view .LVU168
+ 570 0074 BCF1170F 		cmp	ip, #23
+ 571 0078 D4D8     		bhi	.L42
+ 249:Core/Src/gps_uart_task.c **** 
+ 572              		.loc 1 249 15 discriminator 1 view .LVU169
+ 573 007a BEF13B0F 		cmp	lr, #59
+ 574 007e D1D8     		bhi	.L42
+ 249:Core/Src/gps_uart_task.c **** 
+ 575              		.loc 1 249 26 discriminator 2 view .LVU170
+ 576 0080 3C28     		cmp	r0, #60
+ 577 0082 CFD8     		bhi	.L42
+ 251:Core/Src/gps_uart_task.c ****   *out_m = m;
+ 578              		.loc 1 251 3 is_stmt 1 view .LVU171
+ 251:Core/Src/gps_uart_task.c ****   *out_m = m;
+ 579              		.loc 1 251 10 is_stmt 0 view .LVU172
+ 580 0084 81F800C0 		strb	ip, [r1]
+ 252:Core/Src/gps_uart_task.c ****   *out_s = s;
+ 581              		.loc 1 252 3 is_stmt 1 view .LVU173
+ 252:Core/Src/gps_uart_task.c ****   *out_s = s;
+ 582              		.loc 1 252 10 is_stmt 0 view .LVU174
+ 583 0088 82F800E0 		strb	lr, [r2]
+ 253:Core/Src/gps_uart_task.c ****   return true;
+ 584              		.loc 1 253 3 is_stmt 1 view .LVU175
+ 253:Core/Src/gps_uart_task.c ****   return true;
+ 585              		.loc 1 253 10 is_stmt 0 view .LVU176
+ 586 008c 1870     		strb	r0, [r3]
+ 254:Core/Src/gps_uart_task.c **** }
+ 587              		.loc 1 254 3 is_stmt 1 view .LVU177
+ 254:Core/Src/gps_uart_task.c **** }
+ 588              		.loc 1 254 10 is_stmt 0 view .LVU178
+ 589 008e 0120     		movs	r0, #1
+ARM GAS  /tmp/ccmp3BBc.s 			page 17
+
+
+ 590              	.LVL58:
+ 254:Core/Src/gps_uart_task.c **** }
+ 591              		.loc 1 254 10 view .LVU179
+ 592 0090 C9E7     		b	.L40
+ 593              		.cfi_endproc
+ 594              	.LFE172:
+ 596              		.section	.text.GPS_ParseUtcDate,"ax",%progbits
+ 597              		.align	1
+ 598              		.syntax unified
+ 599              		.thumb
+ 600              		.thumb_func
+ 602              	GPS_ParseUtcDate:
+ 603              	.LVL59:
+ 604              	.LFB173:
+ 256:Core/Src/gps_uart_task.c **** 
+ 257:Core/Src/gps_uart_task.c **** static bool GPS_ParseUtcDate(const char *field, uint8_t *out_d, uint8_t *out_mo, uint16_t *out_y)
+ 258:Core/Src/gps_uart_task.c **** {
+ 605              		.loc 1 258 1 is_stmt 1 view -0
+ 606              		.cfi_startproc
+ 607              		@ args = 0, pretend = 0, frame = 0
+ 608              		@ frame_needed = 0, uses_anonymous_args = 0
+ 609              		.loc 1 258 1 is_stmt 0 view .LVU181
+ 610 0000 30B5     		push	{r4, r5, lr}
+ 611              	.LCFI7:
+ 612              		.cfi_def_cfa_offset 12
+ 613              		.cfi_offset 4, -12
+ 614              		.cfi_offset 5, -8
+ 615              		.cfi_offset 14, -4
+ 616 0002 1D46     		mov	r5, r3
+ 259:Core/Src/gps_uart_task.c ****   for (int i = 0; i < 6; i++)
+ 617              		.loc 1 259 3 is_stmt 1 view .LVU182
+ 618              	.LBB5:
+ 619              		.loc 1 259 8 view .LVU183
+ 620              	.LVL60:
+ 621              		.loc 1 259 12 is_stmt 0 view .LVU184
+ 622 0004 4FF0000E 		mov	lr, #0
+ 623              	.LVL61:
+ 624              	.L46:
+ 625              		.loc 1 259 21 is_stmt 1 discriminator 2 view .LVU185
+ 626 0008 BEF1050F 		cmp	lr, #5
+ 627 000c 0DDC     		bgt	.L52
+ 260:Core/Src/gps_uart_task.c ****   {
+ 261:Core/Src/gps_uart_task.c ****     if (field[i] < '0' || field[i] > '9') return false;
+ 628              		.loc 1 261 5 view .LVU186
+ 629              		.loc 1 261 14 is_stmt 0 view .LVU187
+ 630 000e 10F80EC0 		ldrb	ip, [r0, lr]	@ zero_extendqisi2
+ 631              		.loc 1 261 24 view .LVU188
+ 632 0012 ACF1300C 		sub	ip, ip, #48
+ 633 0016 5FFA8CFC 		uxtb	ip, ip
+ 634              		.loc 1 261 8 view .LVU189
+ 635 001a BCF1090F 		cmp	ip, #9
+ 636 001e 02D8     		bhi	.L50
+ 259:Core/Src/gps_uart_task.c ****   for (int i = 0; i < 6; i++)
+ 637              		.loc 1 259 27 is_stmt 1 discriminator 1 view .LVU190
+ 638 0020 0EF1010E 		add	lr, lr, #1
+ 639              	.LVL62:
+ 259:Core/Src/gps_uart_task.c ****   for (int i = 0; i < 6; i++)
+ARM GAS  /tmp/ccmp3BBc.s 			page 18
+
+
+ 640              		.loc 1 259 27 is_stmt 0 discriminator 1 view .LVU191
+ 641 0024 F0E7     		b	.L46
+ 642              	.LVL63:
+ 643              	.L50:
+ 644              		.loc 1 261 50 discriminator 1 view .LVU192
+ 645 0026 0020     		movs	r0, #0
+ 646              	.L48:
+ 647              	.LBE5:
+ 262:Core/Src/gps_uart_task.c ****   }
+ 263:Core/Src/gps_uart_task.c **** 
+ 264:Core/Src/gps_uart_task.c ****   uint8_t  d  = (uint8_t)((field[0] - '0') * 10 + (field[1] - '0'));
+ 265:Core/Src/gps_uart_task.c ****   uint8_t  mo = (uint8_t)((field[2] - '0') * 10 + (field[3] - '0'));
+ 266:Core/Src/gps_uart_task.c ****   uint16_t y  = (uint16_t)(2000U + (uint16_t)((field[4] - '0') * 10 + (field[5] - '0')));
+ 267:Core/Src/gps_uart_task.c **** 
+ 268:Core/Src/gps_uart_task.c ****   if (d < 1U || d > 31U || mo < 1U || mo > 12U) return false;
+ 269:Core/Src/gps_uart_task.c **** 
+ 270:Core/Src/gps_uart_task.c ****   *out_d  = d;
+ 271:Core/Src/gps_uart_task.c ****   *out_mo = mo;
+ 272:Core/Src/gps_uart_task.c ****   *out_y  = y;
+ 273:Core/Src/gps_uart_task.c ****   return true;
+ 274:Core/Src/gps_uart_task.c **** }
+ 648              		.loc 1 274 1 view .LVU193
+ 649 0028 30BD     		pop	{r4, r5, pc}
+ 650              	.LVL64:
+ 651              	.L52:
+ 264:Core/Src/gps_uart_task.c ****   uint8_t  mo = (uint8_t)((field[2] - '0') * 10 + (field[3] - '0'));
+ 652              		.loc 1 264 3 is_stmt 1 view .LVU194
+ 264:Core/Src/gps_uart_task.c ****   uint8_t  mo = (uint8_t)((field[2] - '0') * 10 + (field[3] - '0'));
+ 653              		.loc 1 264 33 is_stmt 0 view .LVU195
+ 654 002a 0378     		ldrb	r3, [r0]	@ zero_extendqisi2
+ 655              	.LVL65:
+ 264:Core/Src/gps_uart_task.c ****   uint8_t  mo = (uint8_t)((field[2] - '0') * 10 + (field[3] - '0'));
+ 656              		.loc 1 264 57 view .LVU196
+ 657 002c 90F801C0 		ldrb	ip, [r0, #1]	@ zero_extendqisi2
+ 264:Core/Src/gps_uart_task.c ****   uint8_t  mo = (uint8_t)((field[2] - '0') * 10 + (field[3] - '0'));
+ 658              		.loc 1 264 49 view .LVU197
+ 659 0030 303B     		subs	r3, r3, #48
+ 660 0032 03EB8303 		add	r3, r3, r3, lsl #2
+ 661 0036 0CEB430C 		add	ip, ip, r3, lsl #1
+ 662 003a 5FFA8CFC 		uxtb	ip, ip
+ 264:Core/Src/gps_uart_task.c ****   uint8_t  mo = (uint8_t)((field[2] - '0') * 10 + (field[3] - '0'));
+ 663              		.loc 1 264 12 view .LVU198
+ 664 003e ACF1300E 		sub	lr, ip, #48
+ 665              	.LVL66:
+ 264:Core/Src/gps_uart_task.c ****   uint8_t  mo = (uint8_t)((field[2] - '0') * 10 + (field[3] - '0'));
+ 666              		.loc 1 264 12 view .LVU199
+ 667 0042 5FFA8EFE 		uxtb	lr, lr
+ 668              	.LVL67:
+ 265:Core/Src/gps_uart_task.c ****   uint16_t y  = (uint16_t)(2000U + (uint16_t)((field[4] - '0') * 10 + (field[5] - '0')));
+ 669              		.loc 1 265 3 is_stmt 1 view .LVU200
+ 265:Core/Src/gps_uart_task.c ****   uint16_t y  = (uint16_t)(2000U + (uint16_t)((field[4] - '0') * 10 + (field[5] - '0')));
+ 670              		.loc 1 265 33 is_stmt 0 view .LVU201
+ 671 0046 8478     		ldrb	r4, [r0, #2]	@ zero_extendqisi2
+ 265:Core/Src/gps_uart_task.c ****   uint16_t y  = (uint16_t)(2000U + (uint16_t)((field[4] - '0') * 10 + (field[5] - '0')));
+ 672              		.loc 1 265 57 view .LVU202
+ 673 0048 C378     		ldrb	r3, [r0, #3]	@ zero_extendqisi2
+ 265:Core/Src/gps_uart_task.c ****   uint16_t y  = (uint16_t)(2000U + (uint16_t)((field[4] - '0') * 10 + (field[5] - '0')));
+ARM GAS  /tmp/ccmp3BBc.s 			page 19
+
+
+ 674              		.loc 1 265 49 view .LVU203
+ 675 004a 303C     		subs	r4, r4, #48
+ 676 004c 04EB8404 		add	r4, r4, r4, lsl #2
+ 677 0050 03EB4403 		add	r3, r3, r4, lsl #1
+ 678 0054 DBB2     		uxtb	r3, r3
+ 265:Core/Src/gps_uart_task.c ****   uint16_t y  = (uint16_t)(2000U + (uint16_t)((field[4] - '0') * 10 + (field[5] - '0')));
+ 679              		.loc 1 265 12 view .LVU204
+ 680 0056 303B     		subs	r3, r3, #48
+ 681 0058 DBB2     		uxtb	r3, r3
+ 682              	.LVL68:
+ 266:Core/Src/gps_uart_task.c **** 
+ 683              		.loc 1 266 3 is_stmt 1 view .LVU205
+ 266:Core/Src/gps_uart_task.c **** 
+ 684              		.loc 1 266 53 is_stmt 0 view .LVU206
+ 685 005a 0479     		ldrb	r4, [r0, #4]	@ zero_extendqisi2
+ 266:Core/Src/gps_uart_task.c **** 
+ 686              		.loc 1 266 57 view .LVU207
+ 687 005c 303C     		subs	r4, r4, #48
+ 266:Core/Src/gps_uart_task.c **** 
+ 688              		.loc 1 266 77 view .LVU208
+ 689 005e 4079     		ldrb	r0, [r0, #5]	@ zero_extendqisi2
+ 690              	.LVL69:
+ 266:Core/Src/gps_uart_task.c **** 
+ 691              		.loc 1 266 69 view .LVU209
+ 692 0060 04EB8404 		add	r4, r4, r4, lsl #2
+ 693 0064 00EB4400 		add	r0, r0, r4, lsl #1
+ 694 0068 80B2     		uxth	r0, r0
+ 266:Core/Src/gps_uart_task.c **** 
+ 695              		.loc 1 266 12 view .LVU210
+ 696 006a 00F5F460 		add	r0, r0, #1952
+ 697 006e 80B2     		uxth	r0, r0
+ 698              	.LVL70:
+ 268:Core/Src/gps_uart_task.c **** 
+ 699              		.loc 1 268 3 is_stmt 1 view .LVU211
+ 268:Core/Src/gps_uart_task.c **** 
+ 700              		.loc 1 268 14 is_stmt 0 view .LVU212
+ 701 0070 ACF1310C 		sub	ip, ip, #49
+ 702 0074 5FFA8CFC 		uxtb	ip, ip
+ 268:Core/Src/gps_uart_task.c **** 
+ 703              		.loc 1 268 6 view .LVU213
+ 704 0078 BCF11E0F 		cmp	ip, #30
+ 705 007c D3D8     		bhi	.L50
+ 268:Core/Src/gps_uart_task.c **** 
+ 706              		.loc 1 268 25 discriminator 1 view .LVU214
+ 707 007e 002B     		cmp	r3, #0
+ 708 0080 D1D0     		beq	.L50
+ 268:Core/Src/gps_uart_task.c **** 
+ 709              		.loc 1 268 36 discriminator 2 view .LVU215
+ 710 0082 0C2B     		cmp	r3, #12
+ 711 0084 CFD8     		bhi	.L50
+ 270:Core/Src/gps_uart_task.c ****   *out_mo = mo;
+ 712              		.loc 1 270 3 is_stmt 1 view .LVU216
+ 270:Core/Src/gps_uart_task.c ****   *out_mo = mo;
+ 713              		.loc 1 270 11 is_stmt 0 view .LVU217
+ 714 0086 81F800E0 		strb	lr, [r1]
+ 271:Core/Src/gps_uart_task.c ****   *out_y  = y;
+ 715              		.loc 1 271 3 is_stmt 1 view .LVU218
+ARM GAS  /tmp/ccmp3BBc.s 			page 20
+
+
+ 271:Core/Src/gps_uart_task.c ****   *out_y  = y;
+ 716              		.loc 1 271 11 is_stmt 0 view .LVU219
+ 717 008a 1370     		strb	r3, [r2]
+ 272:Core/Src/gps_uart_task.c ****   return true;
+ 718              		.loc 1 272 3 is_stmt 1 view .LVU220
+ 272:Core/Src/gps_uart_task.c ****   return true;
+ 719              		.loc 1 272 11 is_stmt 0 view .LVU221
+ 720 008c 2880     		strh	r0, [r5]	@ movhi
+ 273:Core/Src/gps_uart_task.c **** }
+ 721              		.loc 1 273 3 is_stmt 1 view .LVU222
+ 273:Core/Src/gps_uart_task.c **** }
+ 722              		.loc 1 273 10 is_stmt 0 view .LVU223
+ 723 008e 0120     		movs	r0, #1
+ 724              	.LVL71:
+ 273:Core/Src/gps_uart_task.c **** }
+ 725              		.loc 1 273 10 view .LVU224
+ 726 0090 CAE7     		b	.L48
+ 727              		.cfi_endproc
+ 728              	.LFE173:
+ 730              		.section	.text.GPS_ParseNmeaCoordE7,"ax",%progbits
+ 731              		.align	1
+ 732              		.syntax unified
+ 733              		.thumb
+ 734              		.thumb_func
+ 736              	GPS_ParseNmeaCoordE7:
+ 737              	.LVL72:
+ 738              	.LFB174:
+ 275:Core/Src/gps_uart_task.c **** 
+ 276:Core/Src/gps_uart_task.c **** /* Pure 64-bit integer NMEA coordinate parser ("ddmm.mmmm" / "dddmm.mmmm") -> 10^-7 degrees */
+ 277:Core/Src/gps_uart_task.c **** static bool GPS_ParseNmeaCoordE7(const char *field, char hemi, int32_t *out_e7)
+ 278:Core/Src/gps_uart_task.c **** {
+ 739              		.loc 1 278 1 is_stmt 1 view -0
+ 740              		.cfi_startproc
+ 741              		@ args = 0, pretend = 0, frame = 0
+ 742              		@ frame_needed = 0, uses_anonymous_args = 0
+ 743              		.loc 1 278 1 is_stmt 0 view .LVU226
+ 744 0000 2DE9F04F 		push	{r4, r5, r6, r7, r8, r9, r10, fp, lr}
+ 745              	.LCFI8:
+ 746              		.cfi_def_cfa_offset 36
+ 747              		.cfi_offset 4, -36
+ 748              		.cfi_offset 5, -32
+ 749              		.cfi_offset 6, -28
+ 750              		.cfi_offset 7, -24
+ 751              		.cfi_offset 8, -20
+ 752              		.cfi_offset 9, -16
+ 753              		.cfi_offset 10, -12
+ 754              		.cfi_offset 11, -8
+ 755              		.cfi_offset 14, -4
+ 756 0004 8A46     		mov	r10, r1
+ 757 0006 9346     		mov	fp, r2
+ 279:Core/Src/gps_uart_task.c ****   const char *dot = field;
+ 758              		.loc 1 279 3 is_stmt 1 view .LVU227
+ 759              	.LVL73:
+ 280:Core/Src/gps_uart_task.c ****   int32_t int_digits = 0;
+ 760              		.loc 1 280 3 view .LVU228
+ 281:Core/Src/gps_uart_task.c **** 
+ 282:Core/Src/gps_uart_task.c ****   while (dot[int_digits] >= '0' && dot[int_digits] <= '9')
+ARM GAS  /tmp/ccmp3BBc.s 			page 21
+
+
+ 761              		.loc 1 282 3 view .LVU229
+ 280:Core/Src/gps_uart_task.c ****   int32_t int_digits = 0;
+ 762              		.loc 1 280 11 is_stmt 0 view .LVU230
+ 763 0008 0023     		movs	r3, #0
+ 764              		.loc 1 282 9 view .LVU231
+ 765 000a 00E0     		b	.L54
+ 766              	.LVL74:
+ 767              	.L55:
+ 283:Core/Src/gps_uart_task.c ****   {
+ 284:Core/Src/gps_uart_task.c ****     int_digits++;
+ 768              		.loc 1 284 5 is_stmt 1 view .LVU232
+ 769              		.loc 1 284 15 is_stmt 0 view .LVU233
+ 770 000c 0133     		adds	r3, r3, #1
+ 771              	.LVL75:
+ 772              	.L54:
+ 282:Core/Src/gps_uart_task.c ****   {
+ 773              		.loc 1 282 33 is_stmt 1 discriminator 1 view .LVU234
+ 282:Core/Src/gps_uart_task.c ****   {
+ 774              		.loc 1 282 13 is_stmt 0 discriminator 1 view .LVU235
+ 775 000e 1D46     		mov	r5, r3
+ 776 0010 10F803E0 		ldrb	lr, [r0, r3]	@ zero_extendqisi2
+ 282:Core/Src/gps_uart_task.c ****   {
+ 777              		.loc 1 282 33 discriminator 1 view .LVU236
+ 778 0014 AEF1300C 		sub	ip, lr, #48
+ 779 0018 5FFA8CFC 		uxtb	ip, ip
+ 780 001c BCF1090F 		cmp	ip, #9
+ 781 0020 F4D9     		bls	.L55
+ 285:Core/Src/gps_uart_task.c ****   }
+ 286:Core/Src/gps_uart_task.c **** 
+ 287:Core/Src/gps_uart_task.c ****   if (int_digits < 4 || int_digits > 5 || dot[int_digits] != '.')
+ 782              		.loc 1 287 3 is_stmt 1 view .LVU237
+ 783              		.loc 1 287 22 is_stmt 0 view .LVU238
+ 784 0022 1C1F     		subs	r4, r3, #4
+ 785              		.loc 1 287 6 view .LVU239
+ 786 0024 012C     		cmp	r4, #1
+ 787 0026 02D8     		bhi	.L56
+ 788              		.loc 1 287 40 discriminator 1 view .LVU240
+ 789 0028 BEF12E0F 		cmp	lr, #46
+ 790 002c 02D0     		beq	.L57
+ 791              	.LVL76:
+ 792              	.L56:
+ 288:Core/Src/gps_uart_task.c ****   {
+ 289:Core/Src/gps_uart_task.c ****     return false;
+ 793              		.loc 1 289 12 view .LVU241
+ 794 002e 0020     		movs	r0, #0
+ 795              	.L58:
+ 290:Core/Src/gps_uart_task.c ****   }
+ 291:Core/Src/gps_uart_task.c **** 
+ 292:Core/Src/gps_uart_task.c ****   int32_t deg_digits = int_digits - 2;
+ 293:Core/Src/gps_uart_task.c ****   int32_t deg = 0;
+ 294:Core/Src/gps_uart_task.c ****   for (int32_t i = 0; i < deg_digits; i++)
+ 295:Core/Src/gps_uart_task.c ****   {
+ 296:Core/Src/gps_uart_task.c ****     deg = deg * 10 + (field[i] - '0');
+ 297:Core/Src/gps_uart_task.c ****   }
+ 298:Core/Src/gps_uart_task.c **** 
+ 299:Core/Src/gps_uart_task.c ****   int32_t min_int = (field[deg_digits] - '0') * 10 + (field[deg_digits + 1] - '0');
+ 300:Core/Src/gps_uart_task.c ****   if (min_int >= 60) return false;
+ARM GAS  /tmp/ccmp3BBc.s 			page 22
+
+
+ 301:Core/Src/gps_uart_task.c **** 
+ 302:Core/Src/gps_uart_task.c ****   const char *frac = &field[int_digits + 1];
+ 303:Core/Src/gps_uart_task.c ****   int64_t min_frac_e7 = 0;
+ 304:Core/Src/gps_uart_task.c ****   int64_t scale       = 1000000LL;
+ 305:Core/Src/gps_uart_task.c ****   while (*frac >= '0' && *frac <= '9')
+ 306:Core/Src/gps_uart_task.c ****   {
+ 307:Core/Src/gps_uart_task.c ****     if (scale > 0)
+ 308:Core/Src/gps_uart_task.c ****     {
+ 309:Core/Src/gps_uart_task.c ****       min_frac_e7 += (int64_t)(*frac - '0') * scale;
+ 310:Core/Src/gps_uart_task.c ****       scale /= 10LL;
+ 311:Core/Src/gps_uart_task.c ****     }
+ 312:Core/Src/gps_uart_task.c ****     frac++;
+ 313:Core/Src/gps_uart_task.c ****   }
+ 314:Core/Src/gps_uart_task.c **** 
+ 315:Core/Src/gps_uart_task.c ****   int64_t total_min_e7 = (int64_t)min_int * 10000000LL + min_frac_e7;
+ 316:Core/Src/gps_uart_task.c ****   int64_t coord_e7     = (int64_t)deg * 10000000LL + (total_min_e7 + 30LL) / 60LL;
+ 317:Core/Src/gps_uart_task.c **** 
+ 318:Core/Src/gps_uart_task.c ****   if (hemi == 'S' || hemi == 'W')
+ 319:Core/Src/gps_uart_task.c ****   {
+ 320:Core/Src/gps_uart_task.c ****     coord_e7 = -coord_e7;
+ 321:Core/Src/gps_uart_task.c ****   }
+ 322:Core/Src/gps_uart_task.c ****   else if (hemi != 'N' && hemi != 'E')
+ 323:Core/Src/gps_uart_task.c ****   {
+ 324:Core/Src/gps_uart_task.c ****     return false;
+ 325:Core/Src/gps_uart_task.c ****   }
+ 326:Core/Src/gps_uart_task.c **** 
+ 327:Core/Src/gps_uart_task.c ****   *out_e7 = (int32_t)coord_e7;
+ 328:Core/Src/gps_uart_task.c ****   return true;
+ 329:Core/Src/gps_uart_task.c **** }
+ 796              		.loc 1 329 1 view .LVU242
+ 797 0030 BDE8F08F 		pop	{r4, r5, r6, r7, r8, r9, r10, fp, pc}
+ 798              	.LVL77:
+ 799              	.L57:
+ 292:Core/Src/gps_uart_task.c ****   int32_t deg = 0;
+ 800              		.loc 1 292 3 is_stmt 1 view .LVU243
+ 292:Core/Src/gps_uart_task.c ****   int32_t deg = 0;
+ 801              		.loc 1 292 11 is_stmt 0 view .LVU244
+ 802 0034 023B     		subs	r3, r3, #2
+ 803              	.LVL78:
+ 293:Core/Src/gps_uart_task.c ****   for (int32_t i = 0; i < deg_digits; i++)
+ 804              		.loc 1 293 3 is_stmt 1 view .LVU245
+ 294:Core/Src/gps_uart_task.c ****   {
+ 805              		.loc 1 294 3 view .LVU246
+ 806              	.LBB6:
+ 294:Core/Src/gps_uart_task.c ****   {
+ 807              		.loc 1 294 8 view .LVU247
+ 294:Core/Src/gps_uart_task.c ****   {
+ 808              		.loc 1 294 16 is_stmt 0 view .LVU248
+ 809 0036 4FF0000C 		mov	ip, #0
+ 810              	.LBE6:
+ 293:Core/Src/gps_uart_task.c ****   for (int32_t i = 0; i < deg_digits; i++)
+ 811              		.loc 1 293 11 view .LVU249
+ 812 003a E646     		mov	lr, ip
+ 813              	.LBB7:
+ 294:Core/Src/gps_uart_task.c ****   {
+ 814              		.loc 1 294 3 view .LVU250
+ 815 003c 08E0     		b	.L59
+ARM GAS  /tmp/ccmp3BBc.s 			page 23
+
+
+ 816              	.LVL79:
+ 817              	.L60:
+ 296:Core/Src/gps_uart_task.c ****   }
+ 818              		.loc 1 296 5 is_stmt 1 view .LVU251
+ 296:Core/Src/gps_uart_task.c ****   }
+ 819              		.loc 1 296 15 is_stmt 0 view .LVU252
+ 820 003e 0EEB8E0E 		add	lr, lr, lr, lsl #2
+ 821              	.LVL80:
+ 296:Core/Src/gps_uart_task.c ****   }
+ 822              		.loc 1 296 28 view .LVU253
+ 823 0042 10F80C40 		ldrb	r4, [r0, ip]	@ zero_extendqisi2
+ 296:Core/Src/gps_uart_task.c ****   }
+ 824              		.loc 1 296 32 view .LVU254
+ 825 0046 303C     		subs	r4, r4, #48
+ 296:Core/Src/gps_uart_task.c ****   }
+ 826              		.loc 1 296 9 view .LVU255
+ 827 0048 04EB4E0E 		add	lr, r4, lr, lsl #1
+ 828              	.LVL81:
+ 294:Core/Src/gps_uart_task.c ****   {
+ 829              		.loc 1 294 40 is_stmt 1 discriminator 1 view .LVU256
+ 830 004c 0CF1010C 		add	ip, ip, #1
+ 831              	.LVL82:
+ 832              	.L59:
+ 294:Core/Src/gps_uart_task.c ****   {
+ 833              		.loc 1 294 25 discriminator 2 view .LVU257
+ 834 0050 9C45     		cmp	ip, r3
+ 835 0052 F4DB     		blt	.L60
+ 836              	.LBE7:
+ 299:Core/Src/gps_uart_task.c ****   if (min_int >= 60) return false;
+ 837              		.loc 1 299 3 view .LVU258
+ 299:Core/Src/gps_uart_task.c ****   if (min_int >= 60) return false;
+ 838              		.loc 1 299 27 is_stmt 0 view .LVU259
+ 839 0054 C35C     		ldrb	r3, [r0, r3]	@ zero_extendqisi2
+ 840              	.LVL83:
+ 299:Core/Src/gps_uart_task.c ****   if (min_int >= 60) return false;
+ 841              		.loc 1 299 40 view .LVU260
+ 842 0056 303B     		subs	r3, r3, #48
+ 299:Core/Src/gps_uart_task.c ****   if (min_int >= 60) return false;
+ 843              		.loc 1 299 47 view .LVU261
+ 844 0058 03EB8303 		add	r3, r3, r3, lsl #2
+ 299:Core/Src/gps_uart_task.c ****   if (min_int >= 60) return false;
+ 845              		.loc 1 299 72 view .LVU262
+ 846 005c 6C1E     		subs	r4, r5, #1
+ 299:Core/Src/gps_uart_task.c ****   if (min_int >= 60) return false;
+ 847              		.loc 1 299 60 view .LVU263
+ 848 005e 045D     		ldrb	r4, [r0, r4]	@ zero_extendqisi2
+ 299:Core/Src/gps_uart_task.c ****   if (min_int >= 60) return false;
+ 849              		.loc 1 299 77 view .LVU264
+ 850 0060 303C     		subs	r4, r4, #48
+ 299:Core/Src/gps_uart_task.c ****   if (min_int >= 60) return false;
+ 851              		.loc 1 299 11 view .LVU265
+ 852 0062 04EB4301 		add	r1, r4, r3, lsl #1
+ 853              	.LVL84:
+ 300:Core/Src/gps_uart_task.c **** 
+ 854              		.loc 1 300 3 is_stmt 1 view .LVU266
+ 300:Core/Src/gps_uart_task.c **** 
+ 855              		.loc 1 300 6 is_stmt 0 view .LVU267
+ARM GAS  /tmp/ccmp3BBc.s 			page 24
+
+
+ 856 0066 3B29     		cmp	r1, #59
+ 857 0068 E1DC     		bgt	.L56
+ 302:Core/Src/gps_uart_task.c ****   int64_t min_frac_e7 = 0;
+ 858              		.loc 1 302 3 is_stmt 1 view .LVU268
+ 302:Core/Src/gps_uart_task.c ****   int64_t min_frac_e7 = 0;
+ 859              		.loc 1 302 40 is_stmt 0 view .LVU269
+ 860 006a 6B1C     		adds	r3, r5, #1
+ 302:Core/Src/gps_uart_task.c ****   int64_t min_frac_e7 = 0;
+ 861              		.loc 1 302 15 view .LVU270
+ 862 006c 1844     		add	r0, r0, r3
+ 863              	.LVL85:
+ 303:Core/Src/gps_uart_task.c ****   int64_t scale       = 1000000LL;
+ 864              		.loc 1 303 3 is_stmt 1 view .LVU271
+ 304:Core/Src/gps_uart_task.c ****   while (*frac >= '0' && *frac <= '9')
+ 865              		.loc 1 304 3 view .LVU272
+ 305:Core/Src/gps_uart_task.c ****   {
+ 866              		.loc 1 305 3 view .LVU273
+ 304:Core/Src/gps_uart_task.c ****   while (*frac >= '0' && *frac <= '9')
+ 867              		.loc 1 304 11 is_stmt 0 view .LVU274
+ 868 006e 614C     		ldr	r4, .L76
+ 869 0070 0026     		movs	r6, #0
+ 303:Core/Src/gps_uart_task.c ****   int64_t scale       = 1000000LL;
+ 870              		.loc 1 303 11 view .LVU275
+ 871 0072 3246     		mov	r2, r6
+ 872              	.LVL86:
+ 303:Core/Src/gps_uart_task.c ****   int64_t scale       = 1000000LL;
+ 873              		.loc 1 303 11 view .LVU276
+ 874 0074 3546     		mov	r5, r6
+ 875              	.LVL87:
+ 305:Core/Src/gps_uart_task.c ****   {
+ 876              		.loc 1 305 9 view .LVU277
+ 877 0076 3EE0     		b	.L61
+ 878              	.LVL88:
+ 879              	.L74:
+ 309:Core/Src/gps_uart_task.c ****       scale /= 10LL;
+ 880              		.loc 1 309 7 is_stmt 1 view .LVU278
+ 309:Core/Src/gps_uart_task.c ****       scale /= 10LL;
+ 881              		.loc 1 309 38 is_stmt 0 view .LVU279
+ 882 0078 303B     		subs	r3, r3, #48
+ 309:Core/Src/gps_uart_task.c ****       scale /= 10LL;
+ 883              		.loc 1 309 22 view .LVU280
+ 884 007a 4FEAE37C 		asr	ip, r3, #31
+ 309:Core/Src/gps_uart_task.c ****       scale /= 10LL;
+ 885              		.loc 1 309 45 view .LVU281
+ 886 007e 03FB06F7 		mul	r7, r3, r6
+ 887 0082 04FB0C77 		mla	r7, r4, ip, r7
+ 888 0086 A3FB043C 		umull	r3, ip, r3, r4
+ 889 008a 6744     		add	r7, r7, ip
+ 309:Core/Src/gps_uart_task.c ****       scale /= 10LL;
+ 890              		.loc 1 309 19 view .LVU282
+ 891 008c 9B18     		adds	r3, r3, r2
+ 892 008e 1A46     		mov	r2, r3
+ 893              	.LVL89:
+ 309:Core/Src/gps_uart_task.c ****       scale /= 10LL;
+ 894              		.loc 1 309 19 view .LVU283
+ 895 0090 47EB0505 		adc	r5, r7, r5
+ 896              	.LVL90:
+ARM GAS  /tmp/ccmp3BBc.s 			page 25
+
+
+ 310:Core/Src/gps_uart_task.c ****     }
+ 897              		.loc 1 310 7 is_stmt 1 view .LVU284
+ 310:Core/Src/gps_uart_task.c ****     }
+ 898              		.loc 1 310 13 is_stmt 0 view .LVU285
+ 899 0094 F717     		asrs	r7, r6, #31
+ 900 0096 07F00303 		and	r3, r7, #3
+ 901 009a 24F0704C 		bic	ip, r4, #-268435456
+ 902 009e 4FEA1478 		lsr	r8, r4, #28
+ 903 00a2 48EA0618 		orr	r8, r8, r6, lsl #4
+ 904 00a6 28F07048 		bic	r8, r8, #-268435456
+ 905 00aa C444     		add	ip, ip, r8
+ 906 00ac 0CEB166C 		add	ip, ip, r6, lsr #24
+ 907 00b0 9C44     		add	ip, ip, r3
+ 908 00b2 514B     		ldr	r3, .L76+4
+ 909 00b4 A3FB0C89 		umull	r8, r9, r3, ip
+ 910 00b8 29F00308 		bic	r8, r9, #3
+ 911 00bc 08EB9908 		add	r8, r8, r9, lsr #2
+ 912 00c0 ACEB080C 		sub	ip, ip, r8
+ 913 00c4 27F00307 		bic	r7, r7, #3
+ 914 00c8 BC44     		add	ip, ip, r7
+ 915 00ca B4EB0C04 		subs	r4, r4, ip
+ 916              	.LVL91:
+ 310:Core/Src/gps_uart_task.c ****     }
+ 917              		.loc 1 310 13 view .LVU286
+ 918 00ce 66EBEC7C 		sbc	ip, r6, ip, asr #31
+ 919 00d2 4FF0CC36 		mov	r6, #-858993460
+ 920 00d6 04FB06F6 		mul	r6, r4, r6
+ 921 00da 03FB0C66 		mla	r6, r3, ip, r6
+ 922 00de A4FB0343 		umull	r4, r3, r4, r3
+ 923 00e2 3344     		add	r3, r3, r6
+ 924 00e4 DE0F     		lsrs	r6, r3, #31
+ 925 00e6 3619     		adds	r6, r6, r4
+ 926 00e8 43F10003 		adc	r3, r3, #0
+ 927 00ec 7608     		lsrs	r6, r6, #1
+ 928 00ee 46EAC374 		orr	r4, r6, r3, lsl #31
+ 929 00f2 5E10     		asrs	r6, r3, #1
+ 930              	.LVL92:
+ 931              	.L62:
+ 312:Core/Src/gps_uart_task.c ****   }
+ 932              		.loc 1 312 5 is_stmt 1 view .LVU287
+ 312:Core/Src/gps_uart_task.c ****   }
+ 933              		.loc 1 312 9 is_stmt 0 view .LVU288
+ 934 00f4 0130     		adds	r0, r0, #1
+ 935              	.LVL93:
+ 936              	.L61:
+ 305:Core/Src/gps_uart_task.c ****   {
+ 937              		.loc 1 305 23 is_stmt 1 discriminator 1 view .LVU289
+ 305:Core/Src/gps_uart_task.c ****   {
+ 938              		.loc 1 305 10 is_stmt 0 discriminator 1 view .LVU290
+ 939 00f6 0378     		ldrb	r3, [r0]	@ zero_extendqisi2
+ 305:Core/Src/gps_uart_task.c ****   {
+ 940              		.loc 1 305 23 discriminator 1 view .LVU291
+ 941 00f8 A3F1300C 		sub	ip, r3, #48
+ 942 00fc 5FFA8CFC 		uxtb	ip, ip
+ 943 0100 BCF1090F 		cmp	ip, #9
+ 944 0104 04D8     		bhi	.L73
+ 307:Core/Src/gps_uart_task.c ****     {
+ARM GAS  /tmp/ccmp3BBc.s 			page 26
+
+
+ 945              		.loc 1 307 5 is_stmt 1 view .LVU292
+ 307:Core/Src/gps_uart_task.c ****     {
+ 946              		.loc 1 307 8 is_stmt 0 view .LVU293
+ 947 0106 012C     		cmp	r4, #1
+ 948 0108 76F10007 		sbcs	r7, r6, #0
+ 949 010c B4DA     		bge	.L74
+ 950 010e F1E7     		b	.L62
+ 951              	.L73:
+ 315:Core/Src/gps_uart_task.c ****   int64_t coord_e7     = (int64_t)deg * 10000000LL + (total_min_e7 + 30LL) / 60LL;
+ 952              		.loc 1 315 3 is_stmt 1 view .LVU294
+ 315:Core/Src/gps_uart_task.c ****   int64_t coord_e7     = (int64_t)deg * 10000000LL + (total_min_e7 + 30LL) / 60LL;
+ 953              		.loc 1 315 26 is_stmt 0 view .LVU295
+ 954 0110 CE17     		asrs	r6, r1, #31
+ 955              	.LVL94:
+ 315:Core/Src/gps_uart_task.c ****   int64_t coord_e7     = (int64_t)deg * 10000000LL + (total_min_e7 + 30LL) / 60LL;
+ 956              		.loc 1 315 43 view .LVU296
+ 957 0112 3A48     		ldr	r0, .L76+8
+ 958              	.LVL95:
+ 315:Core/Src/gps_uart_task.c ****   int64_t coord_e7     = (int64_t)deg * 10000000LL + (total_min_e7 + 30LL) / 60LL;
+ 959              		.loc 1 315 43 view .LVU297
+ 960 0114 A1FB0034 		umull	r3, r4, r1, r0
+ 315:Core/Src/gps_uart_task.c ****   int64_t coord_e7     = (int64_t)deg * 10000000LL + (total_min_e7 + 30LL) / 60LL;
+ 961              		.loc 1 315 43 view .LVU298
+ 962 0118 00FB0644 		mla	r4, r0, r6, r4
+ 315:Core/Src/gps_uart_task.c ****   int64_t coord_e7     = (int64_t)deg * 10000000LL + (total_min_e7 + 30LL) / 60LL;
+ 963              		.loc 1 315 11 view .LVU299
+ 964 011c 9B18     		adds	r3, r3, r2
+ 965 011e 44EB0504 		adc	r4, r4, r5
+ 966              	.LVL96:
+ 316:Core/Src/gps_uart_task.c **** 
+ 967              		.loc 1 316 3 is_stmt 1 view .LVU300
+ 316:Core/Src/gps_uart_task.c **** 
+ 968              		.loc 1 316 39 is_stmt 0 view .LVU301
+ 969 0122 AEFB00E0 		umull	lr, r0, lr, r0
+ 970              	.LVL97:
+ 316:Core/Src/gps_uart_task.c **** 
+ 971              		.loc 1 316 68 view .LVU302
+ 972 0126 1E33     		adds	r3, r3, #30
+ 973              	.LVL98:
+ 316:Core/Src/gps_uart_task.c **** 
+ 974              		.loc 1 316 68 view .LVU303
+ 975 0128 44F10004 		adc	r4, r4, #0
+ 976              	.LVL99:
+ 316:Core/Src/gps_uart_task.c **** 
+ 977              		.loc 1 316 76 view .LVU304
+ 978 012c E617     		asrs	r6, r4, #31
+ 979              	.LVL100:
+ 316:Core/Src/gps_uart_task.c **** 
+ 980              		.loc 1 316 76 view .LVU305
+ 981 012e 06F00D07 		and	r7, r6, #13
+ 982 0132 23F07040 		bic	r0, r3, #-268435456
+ 983 0136 1D0F     		lsrs	r5, r3, #28
+ 984              	.LVL101:
+ 316:Core/Src/gps_uart_task.c **** 
+ 985              		.loc 1 316 76 view .LVU306
+ 986 0138 45EA0415 		orr	r5, r5, r4, lsl #4
+ 987 013c 25F07045 		bic	r5, r5, #-268435456
+ARM GAS  /tmp/ccmp3BBc.s 			page 27
+
+
+ 988 0140 2844     		add	r0, r0, r5
+ 989 0142 00EB1460 		add	r0, r0, r4, lsr #24
+ 990 0146 3844     		add	r0, r0, r7
+ 991 0148 2D4D     		ldr	r5, .L76+12
+ 992 014a A5FB0075 		umull	r7, r5, r5, r0
+ 993 014e ED08     		lsrs	r5, r5, #3
+ 994 0150 C5EB0515 		rsb	r5, r5, r5, lsl #4
+ 995 0154 401B     		subs	r0, r0, r5
+ 996 0156 26F00D06 		bic	r6, r6, #13
+ 997 015a 3044     		add	r0, r0, r6
+ 998 015c 1B1A     		subs	r3, r3, r0
+ 316:Core/Src/gps_uart_task.c **** 
+ 999              		.loc 1 316 76 view .LVU307
+ 1000 015e 64EBE074 		sbc	r4, r4, r0, asr #31
+ 1001 0162 2848     		ldr	r0, .L76+16
+ 1002 0164 4FF0EE35 		mov	r5, #-286331154
+ 1003 0168 03FB05F5 		mul	r5, r3, r5
+ 1004 016c 00FB0454 		mla	r4, r0, r4, r5
+ 1005 0170 A3FB0030 		umull	r3, r0, r3, r0
+ 1006 0174 0019     		adds	r0, r0, r4
+ 1007 0176 0446     		mov	r4, r0
+ 1008 0178 32D4     		bmi	.L75
+ 1009              	.L66:
+ 1010 017a 9B08     		lsrs	r3, r3, #2
+ 1011 017c 43EA8473 		orr	r3, r3, r4, lsl #30
+ 316:Core/Src/gps_uart_task.c **** 
+ 1012              		.loc 1 316 11 view .LVU308
+ 1013 0180 1EEB0300 		adds	r0, lr, r3
+ 1014              	.LVL102:
+ 318:Core/Src/gps_uart_task.c ****   {
+ 1015              		.loc 1 318 3 is_stmt 1 view .LVU309
+ 1016 0184 AAF14501 		sub	r1, r10, #69
+ 1017              	.LVL103:
+ 318:Core/Src/gps_uart_task.c ****   {
+ 1018              		.loc 1 318 3 is_stmt 0 view .LVU310
+ 1019 0188 1229     		cmp	r1, #18
+ 1020 018a 3FF650AF 		bhi	.L56
+ 1021 018e 01A3     		adr	r3, .L68
+ 1022 0190 53F821F0 		ldr	pc, [r3, r1, lsl #2]
+ 1023              		.p2align 2
+ 1024              	.L68:
+ 1025 0194 EB010000 		.word	.L69+1
+ 1026 0198 2F000000 		.word	.L56+1
+ 1027 019c 2F000000 		.word	.L56+1
+ 1028 01a0 2F000000 		.word	.L56+1
+ 1029 01a4 2F000000 		.word	.L56+1
+ 1030 01a8 2F000000 		.word	.L56+1
+ 1031 01ac 2F000000 		.word	.L56+1
+ 1032 01b0 2F000000 		.word	.L56+1
+ 1033 01b4 2F000000 		.word	.L56+1
+ 1034 01b8 EB010000 		.word	.L69+1
+ 1035 01bc 2F000000 		.word	.L56+1
+ 1036 01c0 2F000000 		.word	.L56+1
+ 1037 01c4 2F000000 		.word	.L56+1
+ 1038 01c8 2F000000 		.word	.L56+1
+ 1039 01cc E9010000 		.word	.L67+1
+ 1040 01d0 2F000000 		.word	.L56+1
+ARM GAS  /tmp/ccmp3BBc.s 			page 28
+
+
+ 1041 01d4 2F000000 		.word	.L56+1
+ 1042 01d8 2F000000 		.word	.L56+1
+ 1043 01dc E9010000 		.word	.L67+1
+ 1044              	.LVL104:
+ 1045              		.p2align 1
+ 1046              	.L75:
+ 316:Core/Src/gps_uart_task.c **** 
+ 1047              		.loc 1 316 76 view .LVU311
+ 1048 01e0 0333     		adds	r3, r3, #3
+ 1049 01e2 40F10004 		adc	r4, r0, #0
+ 1050 01e6 C8E7     		b	.L66
+ 1051              	.LVL105:
+ 1052              	.L67:
+ 320:Core/Src/gps_uart_task.c ****   }
+ 1053              		.loc 1 320 5 is_stmt 1 view .LVU312
+ 320:Core/Src/gps_uart_task.c ****   }
+ 1054              		.loc 1 320 14 is_stmt 0 view .LVU313
+ 1055 01e8 4042     		negs	r0, r0
+ 1056              	.L69:
+ 327:Core/Src/gps_uart_task.c ****   return true;
+ 1057              		.loc 1 327 3 is_stmt 1 view .LVU314
+ 327:Core/Src/gps_uart_task.c ****   return true;
+ 1058              		.loc 1 327 11 is_stmt 0 view .LVU315
+ 1059 01ea CBF80000 		str	r0, [fp]
+ 328:Core/Src/gps_uart_task.c **** }
+ 1060              		.loc 1 328 3 is_stmt 1 view .LVU316
+ 328:Core/Src/gps_uart_task.c **** }
+ 1061              		.loc 1 328 10 is_stmt 0 view .LVU317
+ 1062 01ee 0120     		movs	r0, #1
+ 328:Core/Src/gps_uart_task.c **** }
+ 1063              		.loc 1 328 10 view .LVU318
+ 1064 01f0 1EE7     		b	.L58
+ 1065              	.L77:
+ 1066 01f2 00BF     		.align	2
+ 1067              	.L76:
+ 1068 01f4 40420F00 		.word	1000000
+ 1069 01f8 CDCCCCCC 		.word	-858993459
+ 1070 01fc 80969800 		.word	10000000
+ 1071 0200 89888888 		.word	-2004318071
+ 1072 0204 EFEEEEEE 		.word	-286331153
+ 1073              		.cfi_endproc
+ 1074              	.LFE174:
+ 1076              		.section	.text.GPS_ParseDecimalX100,"ax",%progbits
+ 1077              		.align	1
+ 1078              		.syntax unified
+ 1079              		.thumb
+ 1080              		.thumb_func
+ 1082              	GPS_ParseDecimalX100:
+ 1083              	.LVL106:
+ 1084              	.LFB175:
+ 330:Core/Src/gps_uart_task.c **** 
+ 331:Core/Src/gps_uart_task.c **** static uint32_t GPS_ParseDecimalX100(const char *field)
+ 332:Core/Src/gps_uart_task.c **** {
+ 1085              		.loc 1 332 1 is_stmt 1 view -0
+ 1086              		.cfi_startproc
+ 1087              		@ args = 0, pretend = 0, frame = 0
+ 1088              		@ frame_needed = 0, uses_anonymous_args = 0
+ARM GAS  /tmp/ccmp3BBc.s 			page 29
+
+
+ 1089              		@ link register save eliminated.
+ 333:Core/Src/gps_uart_task.c ****   uint32_t int_part = 0U;
+ 1090              		.loc 1 333 3 view .LVU320
+ 334:Core/Src/gps_uart_task.c ****   while (*field >= '0' && *field <= '9')
+ 1091              		.loc 1 334 3 view .LVU321
+ 333:Core/Src/gps_uart_task.c ****   uint32_t int_part = 0U;
+ 1092              		.loc 1 333 12 is_stmt 0 view .LVU322
+ 1093 0000 0022     		movs	r2, #0
+ 1094              		.loc 1 334 9 view .LVU323
+ 1095 0002 06E0     		b	.L79
+ 1096              	.LVL107:
+ 1097              	.L80:
+ 335:Core/Src/gps_uart_task.c ****   {
+ 336:Core/Src/gps_uart_task.c ****     int_part = int_part * 10U + (uint32_t)(*field - '0');
+ 1098              		.loc 1 336 5 is_stmt 1 view .LVU324
+ 1099              		.loc 1 336 25 is_stmt 0 view .LVU325
+ 1100 0004 02EB8202 		add	r2, r2, r2, lsl #2
+ 1101              	.LVL108:
+ 1102              		.loc 1 336 31 view .LVU326
+ 1103 0008 03EB4203 		add	r3, r3, r2, lsl #1
+ 1104              		.loc 1 336 14 view .LVU327
+ 1105 000c A3F13002 		sub	r2, r3, #48
+ 1106              	.LVL109:
+ 337:Core/Src/gps_uart_task.c ****     field++;
+ 1107              		.loc 1 337 5 is_stmt 1 view .LVU328
+ 1108              		.loc 1 337 10 is_stmt 0 view .LVU329
+ 1109 0010 0130     		adds	r0, r0, #1
+ 1110              	.LVL110:
+ 1111              	.L79:
+ 334:Core/Src/gps_uart_task.c ****   while (*field >= '0' && *field <= '9')
+ 1112              		.loc 1 334 24 is_stmt 1 discriminator 1 view .LVU330
+ 334:Core/Src/gps_uart_task.c ****   while (*field >= '0' && *field <= '9')
+ 1113              		.loc 1 334 10 is_stmt 0 discriminator 1 view .LVU331
+ 1114 0012 0378     		ldrb	r3, [r0]	@ zero_extendqisi2
+ 334:Core/Src/gps_uart_task.c ****   while (*field >= '0' && *field <= '9')
+ 1115              		.loc 1 334 24 discriminator 1 view .LVU332
+ 1116 0014 A3F13001 		sub	r1, r3, #48
+ 1117 0018 C9B2     		uxtb	r1, r1
+ 1118 001a 0929     		cmp	r1, #9
+ 1119 001c F2D9     		bls	.L80
+ 338:Core/Src/gps_uart_task.c ****   }
+ 339:Core/Src/gps_uart_task.c **** 
+ 340:Core/Src/gps_uart_task.c ****   uint32_t frac_part = 0U;
+ 1120              		.loc 1 340 3 is_stmt 1 view .LVU333
+ 1121              	.LVL111:
+ 341:Core/Src/gps_uart_task.c ****   if (*field == '.')
+ 1122              		.loc 1 341 3 view .LVU334
+ 1123              		.loc 1 341 6 is_stmt 0 view .LVU335
+ 1124 001e 2E2B     		cmp	r3, #46
+ 1125 0020 04D0     		beq	.L81
+ 1126              	.LVL112:
+ 1127              	.L83:
+ 340:Core/Src/gps_uart_task.c ****   if (*field == '.')
+ 1128              		.loc 1 340 12 view .LVU336
+ 1129 0022 0023     		movs	r3, #0
+ 1130              	.LVL113:
+ 1131              	.L82:
+ARM GAS  /tmp/ccmp3BBc.s 			page 30
+
+
+ 342:Core/Src/gps_uart_task.c ****   {
+ 343:Core/Src/gps_uart_task.c ****     field++;
+ 344:Core/Src/gps_uart_task.c ****     if (*field >= '0' && *field <= '9')
+ 345:Core/Src/gps_uart_task.c ****     {
+ 346:Core/Src/gps_uart_task.c ****       frac_part += (uint32_t)(*field - '0') * 10U;
+ 347:Core/Src/gps_uart_task.c ****       field++;
+ 348:Core/Src/gps_uart_task.c ****       if (*field >= '0' && *field <= '9')
+ 349:Core/Src/gps_uart_task.c ****       {
+ 350:Core/Src/gps_uart_task.c ****         frac_part += (uint32_t)(*field - '0');
+ 351:Core/Src/gps_uart_task.c ****       }
+ 352:Core/Src/gps_uart_task.c ****     }
+ 353:Core/Src/gps_uart_task.c ****   }
+ 354:Core/Src/gps_uart_task.c **** 
+ 355:Core/Src/gps_uart_task.c ****   return int_part * 100U + frac_part;
+ 1132              		.loc 1 355 3 is_stmt 1 view .LVU337
+ 356:Core/Src/gps_uart_task.c **** }
+ 1133              		.loc 1 356 1 is_stmt 0 view .LVU338
+ 1134 0024 6420     		movs	r0, #100
+ 1135 0026 00FB0230 		mla	r0, r0, r2, r3
+ 1136 002a 7047     		bx	lr
+ 1137              	.LVL114:
+ 1138              	.L81:
+ 343:Core/Src/gps_uart_task.c ****     if (*field >= '0' && *field <= '9')
+ 1139              		.loc 1 343 5 is_stmt 1 view .LVU339
+ 344:Core/Src/gps_uart_task.c ****     {
+ 1140              		.loc 1 344 5 view .LVU340
+ 344:Core/Src/gps_uart_task.c ****     {
+ 1141              		.loc 1 344 9 is_stmt 0 view .LVU341
+ 1142 002c 4378     		ldrb	r3, [r0, #1]	@ zero_extendqisi2
+ 344:Core/Src/gps_uart_task.c ****     {
+ 1143              		.loc 1 344 23 view .LVU342
+ 1144 002e A3F13001 		sub	r1, r3, #48
+ 1145 0032 C9B2     		uxtb	r1, r1
+ 344:Core/Src/gps_uart_task.c ****     {
+ 1146              		.loc 1 344 8 view .LVU343
+ 1147 0034 0929     		cmp	r1, #9
+ 1148 0036 F4D8     		bhi	.L83
+ 346:Core/Src/gps_uart_task.c ****       field++;
+ 1149              		.loc 1 346 7 is_stmt 1 view .LVU344
+ 346:Core/Src/gps_uart_task.c ****       field++;
+ 1150              		.loc 1 346 38 is_stmt 0 view .LVU345
+ 1151 0038 303B     		subs	r3, r3, #48
+ 346:Core/Src/gps_uart_task.c ****       field++;
+ 1152              		.loc 1 346 45 view .LVU346
+ 1153 003a 03EB8303 		add	r3, r3, r3, lsl #2
+ 1154 003e 5900     		lsls	r1, r3, #1
+ 1155 0040 0B46     		mov	r3, r1
+ 1156              	.LVL115:
+ 347:Core/Src/gps_uart_task.c ****       if (*field >= '0' && *field <= '9')
+ 1157              		.loc 1 347 7 is_stmt 1 view .LVU347
+ 348:Core/Src/gps_uart_task.c ****       {
+ 1158              		.loc 1 348 7 view .LVU348
+ 348:Core/Src/gps_uart_task.c ****       {
+ 1159              		.loc 1 348 11 is_stmt 0 view .LVU349
+ 1160 0042 90F802C0 		ldrb	ip, [r0, #2]	@ zero_extendqisi2
+ 348:Core/Src/gps_uart_task.c ****       {
+ 1161              		.loc 1 348 25 view .LVU350
+ARM GAS  /tmp/ccmp3BBc.s 			page 31
+
+
+ 1162 0046 ACF13000 		sub	r0, ip, #48
+ 1163              	.LVL116:
+ 348:Core/Src/gps_uart_task.c ****       {
+ 1164              		.loc 1 348 25 view .LVU351
+ 1165 004a C0B2     		uxtb	r0, r0
+ 348:Core/Src/gps_uart_task.c ****       {
+ 1166              		.loc 1 348 10 view .LVU352
+ 1167 004c 0928     		cmp	r0, #9
+ 1168 004e E9D8     		bhi	.L82
+ 350:Core/Src/gps_uart_task.c ****       }
+ 1169              		.loc 1 350 9 is_stmt 1 view .LVU353
+ 350:Core/Src/gps_uart_task.c ****       }
+ 1170              		.loc 1 350 19 is_stmt 0 view .LVU354
+ 1171 0050 8C44     		add	ip, ip, r1
+ 1172 0052 ACF13003 		sub	r3, ip, #48
+ 1173 0056 E5E7     		b	.L82
+ 1174              		.cfi_endproc
+ 1175              	.LFE175:
+ 1177              		.section	.text.GPS_UART_DMA_Init,"ax",%progbits
+ 1178              		.align	1
+ 1179              		.syntax unified
+ 1180              		.thumb
+ 1181              		.thumb_func
+ 1183              	GPS_UART_DMA_Init:
+ 1184              	.LFB163:
+  62:Core/Src/gps_uart_task.c ****   /* 1. Enable peripheral clocks for GPIO TX/RX, UART, and DMA */
+ 1185              		.loc 1 62 1 is_stmt 1 view -0
+ 1186              		.cfi_startproc
+ 1187              		@ args = 0, pretend = 0, frame = 40
+ 1188              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1189 0000 30B5     		push	{r4, r5, lr}
+ 1190              	.LCFI9:
+ 1191              		.cfi_def_cfa_offset 12
+ 1192              		.cfi_offset 4, -12
+ 1193              		.cfi_offset 5, -8
+ 1194              		.cfi_offset 14, -4
+ 1195 0002 8BB0     		sub	sp, sp, #44
+ 1196              	.LCFI10:
+ 1197              		.cfi_def_cfa_offset 56
+  64:Core/Src/gps_uart_task.c ****   GPS_UART_RX_GPIO_CLK_ENABLE();
+ 1198              		.loc 1 64 3 view .LVU356
+ 1199              	.LBB8:
+  64:Core/Src/gps_uart_task.c ****   GPS_UART_RX_GPIO_CLK_ENABLE();
+ 1200              		.loc 1 64 3 view .LVU357
+ 1201 0004 0022     		movs	r2, #0
+ 1202 0006 0192     		str	r2, [sp, #4]
+  64:Core/Src/gps_uart_task.c ****   GPS_UART_RX_GPIO_CLK_ENABLE();
+ 1203              		.loc 1 64 3 view .LVU358
+ 1204 0008 424B     		ldr	r3, .L87
+ 1205 000a 196B     		ldr	r1, [r3, #48]
+ 1206 000c 41F00101 		orr	r1, r1, #1
+ 1207 0010 1963     		str	r1, [r3, #48]
+  64:Core/Src/gps_uart_task.c ****   GPS_UART_RX_GPIO_CLK_ENABLE();
+ 1208              		.loc 1 64 3 view .LVU359
+ 1209 0012 196B     		ldr	r1, [r3, #48]
+ 1210 0014 01F00101 		and	r1, r1, #1
+ 1211 0018 0191     		str	r1, [sp, #4]
+ARM GAS  /tmp/ccmp3BBc.s 			page 32
+
+
+  64:Core/Src/gps_uart_task.c ****   GPS_UART_RX_GPIO_CLK_ENABLE();
+ 1212              		.loc 1 64 3 view .LVU360
+ 1213 001a 0199     		ldr	r1, [sp, #4]
+ 1214              	.LBE8:
+  64:Core/Src/gps_uart_task.c ****   GPS_UART_RX_GPIO_CLK_ENABLE();
+ 1215              		.loc 1 64 3 view .LVU361
+  65:Core/Src/gps_uart_task.c ****   GPS_UART_CLK_ENABLE();
+ 1216              		.loc 1 65 3 view .LVU362
+ 1217              	.LBB9:
+  65:Core/Src/gps_uart_task.c ****   GPS_UART_CLK_ENABLE();
+ 1218              		.loc 1 65 3 view .LVU363
+ 1219 001c 0292     		str	r2, [sp, #8]
+  65:Core/Src/gps_uart_task.c ****   GPS_UART_CLK_ENABLE();
+ 1220              		.loc 1 65 3 view .LVU364
+ 1221 001e 196B     		ldr	r1, [r3, #48]
+ 1222 0020 41F00101 		orr	r1, r1, #1
+ 1223 0024 1963     		str	r1, [r3, #48]
+  65:Core/Src/gps_uart_task.c ****   GPS_UART_CLK_ENABLE();
+ 1224              		.loc 1 65 3 view .LVU365
+ 1225 0026 196B     		ldr	r1, [r3, #48]
+ 1226 0028 01F00101 		and	r1, r1, #1
+ 1227 002c 0291     		str	r1, [sp, #8]
+  65:Core/Src/gps_uart_task.c ****   GPS_UART_CLK_ENABLE();
+ 1228              		.loc 1 65 3 view .LVU366
+ 1229 002e 0299     		ldr	r1, [sp, #8]
+ 1230              	.LBE9:
+  65:Core/Src/gps_uart_task.c ****   GPS_UART_CLK_ENABLE();
+ 1231              		.loc 1 65 3 view .LVU367
+  66:Core/Src/gps_uart_task.c ****   GPS_DMA_CLK_ENABLE();
+ 1232              		.loc 1 66 3 view .LVU368
+ 1233              	.LBB10:
+  66:Core/Src/gps_uart_task.c ****   GPS_DMA_CLK_ENABLE();
+ 1234              		.loc 1 66 3 view .LVU369
+ 1235 0030 0392     		str	r2, [sp, #12]
+  66:Core/Src/gps_uart_task.c ****   GPS_DMA_CLK_ENABLE();
+ 1236              		.loc 1 66 3 view .LVU370
+ 1237 0032 596C     		ldr	r1, [r3, #68]
+ 1238 0034 41F01001 		orr	r1, r1, #16
+ 1239 0038 5964     		str	r1, [r3, #68]
+  66:Core/Src/gps_uart_task.c ****   GPS_DMA_CLK_ENABLE();
+ 1240              		.loc 1 66 3 view .LVU371
+ 1241 003a 596C     		ldr	r1, [r3, #68]
+ 1242 003c 01F01001 		and	r1, r1, #16
+ 1243 0040 0391     		str	r1, [sp, #12]
+  66:Core/Src/gps_uart_task.c ****   GPS_DMA_CLK_ENABLE();
+ 1244              		.loc 1 66 3 view .LVU372
+ 1245 0042 0399     		ldr	r1, [sp, #12]
+ 1246              	.LBE10:
+  66:Core/Src/gps_uart_task.c ****   GPS_DMA_CLK_ENABLE();
+ 1247              		.loc 1 66 3 view .LVU373
+  67:Core/Src/gps_uart_task.c **** 
+ 1248              		.loc 1 67 3 view .LVU374
+ 1249              	.LBB11:
+  67:Core/Src/gps_uart_task.c **** 
+ 1250              		.loc 1 67 3 view .LVU375
+ 1251 0044 0492     		str	r2, [sp, #16]
+  67:Core/Src/gps_uart_task.c **** 
+ARM GAS  /tmp/ccmp3BBc.s 			page 33
+
+
+ 1252              		.loc 1 67 3 view .LVU376
+ 1253 0046 196B     		ldr	r1, [r3, #48]
+ 1254 0048 41F48001 		orr	r1, r1, #4194304
+ 1255 004c 1963     		str	r1, [r3, #48]
+  67:Core/Src/gps_uart_task.c **** 
+ 1256              		.loc 1 67 3 view .LVU377
+ 1257 004e 1B6B     		ldr	r3, [r3, #48]
+ 1258 0050 03F48003 		and	r3, r3, #4194304
+ 1259 0054 0493     		str	r3, [sp, #16]
+  67:Core/Src/gps_uart_task.c **** 
+ 1260              		.loc 1 67 3 view .LVU378
+ 1261 0056 049B     		ldr	r3, [sp, #16]
+ 1262              	.LBE11:
+  67:Core/Src/gps_uart_task.c **** 
+ 1263              		.loc 1 67 3 view .LVU379
+  70:Core/Src/gps_uart_task.c ****   gpio.Mode      = GPIO_MODE_AF_PP;
+ 1264              		.loc 1 70 3 view .LVU380
+  70:Core/Src/gps_uart_task.c ****   gpio.Mode      = GPIO_MODE_AF_PP;
+ 1265              		.loc 1 70 20 is_stmt 0 view .LVU381
+ 1266 0058 05AC     		add	r4, sp, #20
+ 1267 005a 0592     		str	r2, [sp, #20]
+ 1268 005c 0692     		str	r2, [sp, #24]
+ 1269 005e 0792     		str	r2, [sp, #28]
+ 1270 0060 0892     		str	r2, [sp, #32]
+ 1271 0062 0992     		str	r2, [sp, #36]
+  71:Core/Src/gps_uart_task.c ****   gpio.Pull      = GPIO_PULLUP;
+ 1272              		.loc 1 71 3 is_stmt 1 view .LVU382
+  71:Core/Src/gps_uart_task.c ****   gpio.Pull      = GPIO_PULLUP;
+ 1273              		.loc 1 71 18 is_stmt 0 view .LVU383
+ 1274 0064 0223     		movs	r3, #2
+ 1275 0066 0693     		str	r3, [sp, #24]
+  72:Core/Src/gps_uart_task.c ****   gpio.Speed     = GPIO_SPEED_FAST;
+ 1276              		.loc 1 72 3 is_stmt 1 view .LVU384
+  72:Core/Src/gps_uart_task.c ****   gpio.Speed     = GPIO_SPEED_FAST;
+ 1277              		.loc 1 72 18 is_stmt 0 view .LVU385
+ 1278 0068 0122     		movs	r2, #1
+ 1279 006a 0792     		str	r2, [sp, #28]
+  73:Core/Src/gps_uart_task.c ****   gpio.Alternate = GPS_UART_AF;
+ 1280              		.loc 1 73 3 is_stmt 1 view .LVU386
+  73:Core/Src/gps_uart_task.c ****   gpio.Alternate = GPS_UART_AF;
+ 1281              		.loc 1 73 18 is_stmt 0 view .LVU387
+ 1282 006c 0893     		str	r3, [sp, #32]
+  74:Core/Src/gps_uart_task.c **** 
+ 1283              		.loc 1 74 3 is_stmt 1 view .LVU388
+  74:Core/Src/gps_uart_task.c **** 
+ 1284              		.loc 1 74 18 is_stmt 0 view .LVU389
+ 1285 006e 0723     		movs	r3, #7
+ 1286 0070 0993     		str	r3, [sp, #36]
+  76:Core/Src/gps_uart_task.c ****   HAL_GPIO_Init(GPS_UART_TX_GPIO_PORT, &gpio);
+ 1287              		.loc 1 76 3 is_stmt 1 view .LVU390
+  76:Core/Src/gps_uart_task.c ****   HAL_GPIO_Init(GPS_UART_TX_GPIO_PORT, &gpio);
+ 1288              		.loc 1 76 12 is_stmt 0 view .LVU391
+ 1289 0072 4FF40073 		mov	r3, #512
+ 1290 0076 0593     		str	r3, [sp, #20]
+  77:Core/Src/gps_uart_task.c **** 
+ 1291              		.loc 1 77 3 is_stmt 1 view .LVU392
+ 1292 0078 274D     		ldr	r5, .L87+4
+ARM GAS  /tmp/ccmp3BBc.s 			page 34
+
+
+ 1293 007a 2146     		mov	r1, r4
+ 1294 007c 2846     		mov	r0, r5
+ 1295 007e FFF7FEFF 		bl	HAL_GPIO_Init
+ 1296              	.LVL117:
+  79:Core/Src/gps_uart_task.c ****   HAL_GPIO_Init(GPS_UART_RX_GPIO_PORT, &gpio);
+ 1297              		.loc 1 79 3 view .LVU393
+  79:Core/Src/gps_uart_task.c ****   HAL_GPIO_Init(GPS_UART_RX_GPIO_PORT, &gpio);
+ 1298              		.loc 1 79 12 is_stmt 0 view .LVU394
+ 1299 0082 4FF48063 		mov	r3, #1024
+ 1300 0086 0593     		str	r3, [sp, #20]
+  80:Core/Src/gps_uart_task.c **** 
+ 1301              		.loc 1 80 3 is_stmt 1 view .LVU395
+ 1302 0088 2146     		mov	r1, r4
+ 1303 008a 2846     		mov	r0, r5
+ 1304 008c FFF7FEFF 		bl	HAL_GPIO_Init
+ 1305              	.LVL118:
+  83:Core/Src/gps_uart_task.c ****   while (GPS_DMA_RX_STREAM->CR & DMA_SxCR_EN) {}
+ 1306              		.loc 1 83 3 view .LVU396
+  83:Core/Src/gps_uart_task.c ****   while (GPS_DMA_RX_STREAM->CR & DMA_SxCR_EN) {}
+ 1307              		.loc 1 83 20 is_stmt 0 view .LVU397
+ 1308 0090 224A     		ldr	r2, .L87+8
+ 1309 0092 136C     		ldr	r3, [r2, #64]
+  83:Core/Src/gps_uart_task.c ****   while (GPS_DMA_RX_STREAM->CR & DMA_SxCR_EN) {}
+ 1310              		.loc 1 83 25 view .LVU398
+ 1311 0094 23F00103 		bic	r3, r3, #1
+ 1312 0098 1364     		str	r3, [r2, #64]
+  84:Core/Src/gps_uart_task.c **** 
+ 1313              		.loc 1 84 3 is_stmt 1 view .LVU399
+ 1314              	.L85:
+  84:Core/Src/gps_uart_task.c **** 
+ 1315              		.loc 1 84 48 discriminator 1 view .LVU400
+  84:Core/Src/gps_uart_task.c **** 
+ 1316              		.loc 1 84 10 discriminator 1 view .LVU401
+  84:Core/Src/gps_uart_task.c **** 
+ 1317              		.loc 1 84 27 is_stmt 0 discriminator 1 view .LVU402
+ 1318 009a 204B     		ldr	r3, .L87+8
+ 1319 009c 1B6C     		ldr	r3, [r3, #64]
+  84:Core/Src/gps_uart_task.c **** 
+ 1320              		.loc 1 84 10 discriminator 1 view .LVU403
+ 1321 009e 13F0010F 		tst	r3, #1
+ 1322 00a2 FAD1     		bne	.L85
+  86:Core/Src/gps_uart_task.c **** 
+ 1323              		.loc 1 86 3 is_stmt 1 view .LVU404
+  86:Core/Src/gps_uart_task.c **** 
+ 1324              		.loc 1 86 23 is_stmt 0 view .LVU405
+ 1325 00a4 1D4B     		ldr	r3, .L87+8
+ 1326 00a6 4FF47412 		mov	r2, #3997696
+ 1327 00aa 9A60     		str	r2, [r3, #8]
+  88:Core/Src/gps_uart_task.c ****   GPS_DMA_RX_STREAM->M0AR = (uint32_t)s_gps_dma_rx_buf;
+ 1328              		.loc 1 88 3 is_stmt 1 view .LVU406
+  88:Core/Src/gps_uart_task.c ****   GPS_DMA_RX_STREAM->M0AR = (uint32_t)s_gps_dma_rx_buf;
+ 1329              		.loc 1 88 27 is_stmt 0 view .LVU407
+ 1330 00ac 1C4A     		ldr	r2, .L87+12
+ 1331 00ae 9A64     		str	r2, [r3, #72]
+  89:Core/Src/gps_uart_task.c ****   GPS_DMA_RX_STREAM->NDTR = GPS_DMA_RX_BUF_SIZE;
+ 1332              		.loc 1 89 3 is_stmt 1 view .LVU408
+  89:Core/Src/gps_uart_task.c ****   GPS_DMA_RX_STREAM->NDTR = GPS_DMA_RX_BUF_SIZE;
+ARM GAS  /tmp/ccmp3BBc.s 			page 35
+
+
+ 1333              		.loc 1 89 29 is_stmt 0 view .LVU409
+ 1334 00b0 1C4A     		ldr	r2, .L87+16
+  89:Core/Src/gps_uart_task.c ****   GPS_DMA_RX_STREAM->NDTR = GPS_DMA_RX_BUF_SIZE;
+ 1335              		.loc 1 89 27 view .LVU410
+ 1336 00b2 DA64     		str	r2, [r3, #76]
+  90:Core/Src/gps_uart_task.c ****   GPS_DMA_RX_STREAM->FCR  = 0U;
+ 1337              		.loc 1 90 3 is_stmt 1 view .LVU411
+  90:Core/Src/gps_uart_task.c ****   GPS_DMA_RX_STREAM->FCR  = 0U;
+ 1338              		.loc 1 90 27 is_stmt 0 view .LVU412
+ 1339 00b4 4FF40072 		mov	r2, #512
+ 1340 00b8 5A64     		str	r2, [r3, #68]
+  91:Core/Src/gps_uart_task.c ****   GPS_DMA_RX_STREAM->CR   = (GPS_DMA_RX_CHANNEL << DMA_SxCR_CHSEL_Pos) |
+ 1341              		.loc 1 91 3 is_stmt 1 view .LVU413
+  91:Core/Src/gps_uart_task.c ****   GPS_DMA_RX_STREAM->CR   = (GPS_DMA_RX_CHANNEL << DMA_SxCR_CHSEL_Pos) |
+ 1342              		.loc 1 91 27 is_stmt 0 view .LVU414
+ 1343 00ba 0025     		movs	r5, #0
+ 1344 00bc 5D65     		str	r5, [r3, #84]
+  92:Core/Src/gps_uart_task.c ****                             DMA_SxCR_PL_1                              | /* High priority */
+ 1345              		.loc 1 92 3 is_stmt 1 view .LVU415
+  92:Core/Src/gps_uart_task.c ****                             DMA_SxCR_PL_1                              | /* High priority */
+ 1346              		.loc 1 92 27 is_stmt 0 view .LVU416
+ 1347 00be 1A4A     		ldr	r2, .L87+20
+ 1348 00c0 1A64     		str	r2, [r3, #64]
+  98:Core/Src/gps_uart_task.c **** 
+ 1349              		.loc 1 98 3 is_stmt 1 view .LVU417
+  98:Core/Src/gps_uart_task.c **** 
+ 1350              		.loc 1 98 20 is_stmt 0 view .LVU418
+ 1351 00c2 1A6C     		ldr	r2, [r3, #64]
+  98:Core/Src/gps_uart_task.c **** 
+ 1352              		.loc 1 98 26 view .LVU419
+ 1353 00c4 42F00102 		orr	r2, r2, #1
+ 1354 00c8 1A64     		str	r2, [r3, #64]
+ 101:Core/Src/gps_uart_task.c ****   GPS_UART_INSTANCE->CR2 = 0U;
+ 1355              		.loc 1 101 3 is_stmt 1 view .LVU420
+ 101:Core/Src/gps_uart_task.c ****   GPS_UART_INSTANCE->CR2 = 0U;
+ 1356              		.loc 1 101 26 is_stmt 0 view .LVU421
+ 1357 00ca 184C     		ldr	r4, .L87+24
+ 1358 00cc E560     		str	r5, [r4, #12]
+ 102:Core/Src/gps_uart_task.c ****   GPS_UART_INSTANCE->CR3 = USART_CR3_DMAR;
+ 1359              		.loc 1 102 3 is_stmt 1 view .LVU422
+ 102:Core/Src/gps_uart_task.c ****   GPS_UART_INSTANCE->CR3 = USART_CR3_DMAR;
+ 1360              		.loc 1 102 26 is_stmt 0 view .LVU423
+ 1361 00ce 2561     		str	r5, [r4, #16]
+ 103:Core/Src/gps_uart_task.c **** 
+ 1362              		.loc 1 103 3 is_stmt 1 view .LVU424
+ 103:Core/Src/gps_uart_task.c **** 
+ 1363              		.loc 1 103 26 is_stmt 0 view .LVU425
+ 1364 00d0 4023     		movs	r3, #64
+ 1365 00d2 6361     		str	r3, [r4, #20]
+ 105:Core/Src/gps_uart_task.c ****   GPS_UART_INSTANCE->BRR = (pclk + (GPS_UART_BAUDRATE / 2U)) / GPS_UART_BAUDRATE;
+ 1366              		.loc 1 105 3 is_stmt 1 view .LVU426
+ 105:Core/Src/gps_uart_task.c ****   GPS_UART_INSTANCE->BRR = (pclk + (GPS_UART_BAUDRATE / 2U)) / GPS_UART_BAUDRATE;
+ 1367              		.loc 1 105 19 is_stmt 0 view .LVU427
+ 1368 00d4 FFF7FEFF 		bl	HAL_RCC_GetPCLK2Freq
+ 1369              	.LVL119:
+ 106:Core/Src/gps_uart_task.c **** 
+ 1370              		.loc 1 106 3 is_stmt 1 view .LVU428
+ARM GAS  /tmp/ccmp3BBc.s 			page 36
+
+
+ 106:Core/Src/gps_uart_task.c **** 
+ 1371              		.loc 1 106 34 is_stmt 0 view .LVU429
+ 1372 00d8 00F59653 		add	r3, r0, #4800
+ 106:Core/Src/gps_uart_task.c **** 
+ 1373              		.loc 1 106 62 view .LVU430
+ 1374 00dc 144A     		ldr	r2, .L87+28
+ 1375 00de A2FB0323 		umull	r2, r3, r2, r3
+ 1376 00e2 9B0A     		lsrs	r3, r3, #10
+ 106:Core/Src/gps_uart_task.c **** 
+ 1377              		.loc 1 106 26 view .LVU431
+ 1378 00e4 A360     		str	r3, [r4, #8]
+ 108:Core/Src/gps_uart_task.c ****   (void)GPS_UART_INSTANCE->DR;
+ 1379              		.loc 1 108 3 is_stmt 1 view .LVU432
+ 1380 00e6 2368     		ldr	r3, [r4]
+ 109:Core/Src/gps_uart_task.c **** 
+ 1381              		.loc 1 109 3 view .LVU433
+ 1382 00e8 6368     		ldr	r3, [r4, #4]
+ 111:Core/Src/gps_uart_task.c **** 
+ 1383              		.loc 1 111 3 view .LVU434
+ 111:Core/Src/gps_uart_task.c **** 
+ 1384              		.loc 1 111 26 is_stmt 0 view .LVU435
+ 1385 00ea 42F21C03 		movw	r3, #8220
+ 1386 00ee E360     		str	r3, [r4, #12]
+ 114:Core/Src/gps_uart_task.c ****   HAL_NVIC_EnableIRQ(GPS_DMA_RX_IRQn);
+ 1387              		.loc 1 114 3 is_stmt 1 view .LVU436
+ 1388 00f0 2A46     		mov	r2, r5
+ 1389 00f2 0621     		movs	r1, #6
+ 1390 00f4 3A20     		movs	r0, #58
+ 1391              	.LVL120:
+ 114:Core/Src/gps_uart_task.c ****   HAL_NVIC_EnableIRQ(GPS_DMA_RX_IRQn);
+ 1392              		.loc 1 114 3 is_stmt 0 view .LVU437
+ 1393 00f6 FFF7FEFF 		bl	HAL_NVIC_SetPriority
+ 1394              	.LVL121:
+ 115:Core/Src/gps_uart_task.c ****   HAL_NVIC_SetPriority(GPS_UART_IRQn, 6, 0);
+ 1395              		.loc 1 115 3 is_stmt 1 view .LVU438
+ 1396 00fa 3A20     		movs	r0, #58
+ 1397 00fc FFF7FEFF 		bl	HAL_NVIC_EnableIRQ
+ 1398              	.LVL122:
+ 116:Core/Src/gps_uart_task.c ****   HAL_NVIC_EnableIRQ(GPS_UART_IRQn);
+ 1399              		.loc 1 116 3 view .LVU439
+ 1400 0100 2A46     		mov	r2, r5
+ 1401 0102 0621     		movs	r1, #6
+ 1402 0104 2520     		movs	r0, #37
+ 1403 0106 FFF7FEFF 		bl	HAL_NVIC_SetPriority
+ 1404              	.LVL123:
+ 117:Core/Src/gps_uart_task.c **** }
+ 1405              		.loc 1 117 3 view .LVU440
+ 1406 010a 2520     		movs	r0, #37
+ 1407 010c FFF7FEFF 		bl	HAL_NVIC_EnableIRQ
+ 1408              	.LVL124:
+ 118:Core/Src/gps_uart_task.c **** 
+ 1409              		.loc 1 118 1 is_stmt 0 view .LVU441
+ 1410 0110 0BB0     		add	sp, sp, #44
+ 1411              	.LCFI11:
+ 1412              		.cfi_def_cfa_offset 12
+ 1413              		@ sp needed
+ 1414 0112 30BD     		pop	{r4, r5, pc}
+ARM GAS  /tmp/ccmp3BBc.s 			page 37
+
+
+ 1415              	.L88:
+ 1416              		.align	2
+ 1417              	.L87:
+ 1418 0114 00380240 		.word	1073887232
+ 1419 0118 00000240 		.word	1073872896
+ 1420 011c 00640240 		.word	1073898496
+ 1421 0120 04100140 		.word	1073811460
+ 1422 0124 00000000 		.word	s_gps_dma_rx_buf
+ 1423 0128 18050208 		.word	134350104
+ 1424 012c 00100140 		.word	1073811456
+ 1425 0130 B5814E1B 		.word	458129845
+ 1426              		.cfi_endproc
+ 1427              	.LFE163:
+ 1429              		.section	.rodata.GPS_ParseNmeaSentence.str1.4,"aMS",%progbits,1
+ 1430              		.align	2
+ 1431              	.LC0:
+ 1432 0000 524D432C 		.ascii	"RMC,\000"
+ 1432      00
+ 1433 0005 000000   		.align	2
+ 1434              	.LC1:
+ 1435 0008 4747412C 		.ascii	"GGA,\000"
+ 1435      00
+ 1436 000d 000000   		.align	2
+ 1437              	.LC2:
+ 1438 0010 4753562C 		.ascii	"GSV,\000"
+ 1438      00
+ 1439              		.section	.text.GPS_ParseNmeaSentence,"ax",%progbits
+ 1440              		.align	1
+ 1441              		.syntax unified
+ 1442              		.thumb
+ 1443              		.thumb_func
+ 1445              	GPS_ParseNmeaSentence:
+ 1446              	.LVL125:
+ 1447              	.LFB176:
+ 357:Core/Src/gps_uart_task.c **** 
+ 358:Core/Src/gps_uart_task.c **** static bool GPS_ParseNmeaSentence(const char *line, GpsFix_t *fix)
+ 359:Core/Src/gps_uart_task.c **** {
+ 1448              		.loc 1 359 1 is_stmt 1 view -0
+ 1449              		.cfi_startproc
+ 1450              		@ args = 0, pretend = 0, frame = 32
+ 1451              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1452              		.loc 1 359 1 is_stmt 0 view .LVU443
+ 1453 0000 2DE9F04F 		push	{r4, r5, r6, r7, r8, r9, r10, fp, lr}
+ 1454              	.LCFI12:
+ 1455              		.cfi_def_cfa_offset 36
+ 1456              		.cfi_offset 4, -36
+ 1457              		.cfi_offset 5, -32
+ 1458              		.cfi_offset 6, -28
+ 1459              		.cfi_offset 7, -24
+ 1460              		.cfi_offset 8, -20
+ 1461              		.cfi_offset 9, -16
+ 1462              		.cfi_offset 10, -12
+ 1463              		.cfi_offset 11, -8
+ 1464              		.cfi_offset 14, -4
+ 1465 0004 89B0     		sub	sp, sp, #36
+ 1466              	.LCFI13:
+ 1467              		.cfi_def_cfa_offset 72
+ARM GAS  /tmp/ccmp3BBc.s 			page 38
+
+
+ 1468 0006 0546     		mov	r5, r0
+ 1469 0008 0C46     		mov	r4, r1
+ 360:Core/Src/gps_uart_task.c ****   if (!GPS_VerifyNmeaChecksum(line))
+ 1470              		.loc 1 360 3 is_stmt 1 view .LVU444
+ 1471              		.loc 1 360 8 is_stmt 0 view .LVU445
+ 1472 000a FFF7FEFF 		bl	GPS_VerifyNmeaChecksum
+ 1473              	.LVL126:
+ 1474              		.loc 1 360 6 discriminator 1 view .LVU446
+ 1475 000e 0746     		mov	r7, r0
+ 1476 0010 D0B1     		cbz	r0, .L91
+ 361:Core/Src/gps_uart_task.c ****   {
+ 362:Core/Src/gps_uart_task.c ****     return false;
+ 363:Core/Src/gps_uart_task.c ****   }
+ 364:Core/Src/gps_uart_task.c **** 
+ 365:Core/Src/gps_uart_task.c ****   /* Valid checksummed NMEA frame received -> UART link is active */
+ 366:Core/Src/gps_uart_task.c ****   fix->uart_ok = true;
+ 1477              		.loc 1 366 3 is_stmt 1 view .LVU447
+ 1478              		.loc 1 366 16 is_stmt 0 view .LVU448
+ 1479 0012 0123     		movs	r3, #1
+ 1480 0014 A375     		strb	r3, [r4, #22]
+ 367:Core/Src/gps_uart_task.c **** 
+ 368:Core/Src/gps_uart_task.c ****   /* Match $GPRMC / $GNRMC / $GLRMC / $GARMC:
+ 369:Core/Src/gps_uart_task.c ****    * $xxRMC,hhmmss.ss,A,llll.ll,N,yyyyy.yy,E,spd_kn,cog_deg,ddmmyy,...*hh */
+ 370:Core/Src/gps_uart_task.c ****   if (strncmp(line + 3, "RMC,", 4) == 0)
+ 1481              		.loc 1 370 3 is_stmt 1 view .LVU449
+ 1482              		.loc 1 370 7 is_stmt 0 view .LVU450
+ 1483 0016 EE1C     		adds	r6, r5, #3
+ 1484 0018 0422     		movs	r2, #4
+ 1485 001a 9549     		ldr	r1, .L116
+ 1486 001c 3046     		mov	r0, r6
+ 1487 001e FFF7FEFF 		bl	strncmp
+ 1488              	.LVL127:
+ 1489              		.loc 1 370 6 discriminator 1 view .LVU451
+ 1490 0022 A8B1     		cbz	r0, .L109
+ 371:Core/Src/gps_uart_task.c ****   {
+ 372:Core/Src/gps_uart_task.c ****     const char *f_time   = line + 7;
+ 373:Core/Src/gps_uart_task.c ****     const char *f_status = GPS_NextField(f_time);
+ 374:Core/Src/gps_uart_task.c ****     const char *f_lat    = GPS_NextField(f_status);
+ 375:Core/Src/gps_uart_task.c ****     const char *f_ns     = GPS_NextField(f_lat);
+ 376:Core/Src/gps_uart_task.c ****     const char *f_lon    = GPS_NextField(f_ns);
+ 377:Core/Src/gps_uart_task.c ****     const char *f_ew     = GPS_NextField(f_lon);
+ 378:Core/Src/gps_uart_task.c ****     const char *f_spd    = GPS_NextField(f_ew);
+ 379:Core/Src/gps_uart_task.c ****     const char *f_cog    = GPS_NextField(f_spd);
+ 380:Core/Src/gps_uart_task.c ****     const char *f_date   = GPS_NextField(f_cog);
+ 381:Core/Src/gps_uart_task.c **** 
+ 382:Core/Src/gps_uart_task.c ****     if (GPS_ParseUtcTime(f_time, &fix->utc_hour, &fix->utc_min, &fix->utc_sec))
+ 383:Core/Src/gps_uart_task.c ****     {
+ 384:Core/Src/gps_uart_task.c ****       fix->time_valid = true;
+ 385:Core/Src/gps_uart_task.c ****     }
+ 386:Core/Src/gps_uart_task.c **** 
+ 387:Core/Src/gps_uart_task.c ****     (void)GPS_ParseUtcDate(f_date, &fix->utc_day, &fix->utc_month, &fix->utc_year);
+ 388:Core/Src/gps_uart_task.c **** 
+ 389:Core/Src/gps_uart_task.c ****     if (*f_status == 'A')
+ 390:Core/Src/gps_uart_task.c ****     {
+ 391:Core/Src/gps_uart_task.c ****       int32_t lat_e7 = 0;
+ 392:Core/Src/gps_uart_task.c ****       int32_t lon_e7 = 0;
+ 393:Core/Src/gps_uart_task.c ****       if (GPS_ParseNmeaCoordE7(f_lat, *f_ns, &lat_e7) &&
+ARM GAS  /tmp/ccmp3BBc.s 			page 39
+
+
+ 394:Core/Src/gps_uart_task.c ****           GPS_ParseNmeaCoordE7(f_lon, *f_ew, &lon_e7))
+ 395:Core/Src/gps_uart_task.c ****       {
+ 396:Core/Src/gps_uart_task.c ****         fix->pos         = geo_coord_make(lat_e7, lon_e7);
+ 397:Core/Src/gps_uart_task.c ****         uint32_t kn_x100 = GPS_ParseDecimalX100(f_spd);
+ 398:Core/Src/gps_uart_task.c ****         fix->speed_kmh   = (uint16_t)((kn_x100 * 1852U + 50000U) / 100000U);
+ 399:Core/Src/gps_uart_task.c ****         fix->heading_deg = (uint16_t)((GPS_ParseDecimalX100(f_cog) + 50U) / 100U) % 360U;
+ 400:Core/Src/gps_uart_task.c ****         fix->valid       = true;
+ 401:Core/Src/gps_uart_task.c ****       }
+ 402:Core/Src/gps_uart_task.c ****     }
+ 403:Core/Src/gps_uart_task.c ****     else if (*f_status == 'V')
+ 404:Core/Src/gps_uart_task.c ****     {
+ 405:Core/Src/gps_uart_task.c ****       fix->valid = false;
+ 406:Core/Src/gps_uart_task.c ****     }
+ 407:Core/Src/gps_uart_task.c **** 
+ 408:Core/Src/gps_uart_task.c ****     return true;
+ 409:Core/Src/gps_uart_task.c ****   }
+ 410:Core/Src/gps_uart_task.c **** 
+ 411:Core/Src/gps_uart_task.c ****   /* Match $GPGGA / $GNGGA:
+ 412:Core/Src/gps_uart_task.c ****    * $xxGGA,hhmmss.ss,llll.ll,N,yyyyy.yy,E,qual,sats,hdop,alt,M,...*hh */
+ 413:Core/Src/gps_uart_task.c ****   if (strncmp(line + 3, "GGA,", 4) == 0)
+ 1491              		.loc 1 413 3 is_stmt 1 view .LVU452
+ 1492              		.loc 1 413 7 is_stmt 0 view .LVU453
+ 1493 0024 0422     		movs	r2, #4
+ 1494 0026 9349     		ldr	r1, .L116+4
+ 1495 0028 3046     		mov	r0, r6
+ 1496 002a FFF7FEFF 		bl	strncmp
+ 1497              	.LVL128:
+ 1498              		.loc 1 413 6 discriminator 1 view .LVU454
+ 1499 002e 0028     		cmp	r0, #0
+ 1500 0030 00F08980 		beq	.L110
+ 414:Core/Src/gps_uart_task.c ****   {
+ 415:Core/Src/gps_uart_task.c ****     const char *f_time = line + 7;
+ 416:Core/Src/gps_uart_task.c ****     const char *f_lat  = GPS_NextField(f_time);
+ 417:Core/Src/gps_uart_task.c ****     const char *f_ns   = GPS_NextField(f_lat);
+ 418:Core/Src/gps_uart_task.c ****     const char *f_lon  = GPS_NextField(f_ns);
+ 419:Core/Src/gps_uart_task.c ****     const char *f_ew   = GPS_NextField(f_lon);
+ 420:Core/Src/gps_uart_task.c ****     const char *f_qual = GPS_NextField(f_ew);
+ 421:Core/Src/gps_uart_task.c ****     const char *f_sats = GPS_NextField(f_qual);
+ 422:Core/Src/gps_uart_task.c **** 
+ 423:Core/Src/gps_uart_task.c ****     if (GPS_ParseUtcTime(f_time, &fix->utc_hour, &fix->utc_min, &fix->utc_sec))
+ 424:Core/Src/gps_uart_task.c ****     {
+ 425:Core/Src/gps_uart_task.c ****       fix->time_valid = true;
+ 426:Core/Src/gps_uart_task.c ****     }
+ 427:Core/Src/gps_uart_task.c **** 
+ 428:Core/Src/gps_uart_task.c ****     uint8_t sats = 0U;
+ 429:Core/Src/gps_uart_task.c ****     while (*f_sats >= '0' && *f_sats <= '9')
+ 430:Core/Src/gps_uart_task.c ****     {
+ 431:Core/Src/gps_uart_task.c ****       sats = (uint8_t)(sats * 10U + (uint8_t)(*f_sats - '0'));
+ 432:Core/Src/gps_uart_task.c ****       f_sats++;
+ 433:Core/Src/gps_uart_task.c ****     }
+ 434:Core/Src/gps_uart_task.c ****     fix->satellites = sats;
+ 435:Core/Src/gps_uart_task.c **** 
+ 436:Core/Src/gps_uart_task.c ****     if (*f_qual >= '1' && *f_qual <= '9')
+ 437:Core/Src/gps_uart_task.c ****     {
+ 438:Core/Src/gps_uart_task.c ****       int32_t lat_e7 = 0;
+ 439:Core/Src/gps_uart_task.c ****       int32_t lon_e7 = 0;
+ 440:Core/Src/gps_uart_task.c ****       if (GPS_ParseNmeaCoordE7(f_lat, *f_ns, &lat_e7) &&
+ARM GAS  /tmp/ccmp3BBc.s 			page 40
+
+
+ 441:Core/Src/gps_uart_task.c ****           GPS_ParseNmeaCoordE7(f_lon, *f_ew, &lon_e7))
+ 442:Core/Src/gps_uart_task.c ****       {
+ 443:Core/Src/gps_uart_task.c ****         fix->pos   = geo_coord_make(lat_e7, lon_e7);
+ 444:Core/Src/gps_uart_task.c ****         fix->valid = true;
+ 445:Core/Src/gps_uart_task.c ****       }
+ 446:Core/Src/gps_uart_task.c ****     }
+ 447:Core/Src/gps_uart_task.c ****     else if (*f_qual == '0')
+ 448:Core/Src/gps_uart_task.c ****     {
+ 449:Core/Src/gps_uart_task.c ****       fix->valid = false;
+ 450:Core/Src/gps_uart_task.c ****     }
+ 451:Core/Src/gps_uart_task.c **** 
+ 452:Core/Src/gps_uart_task.c ****     return true;
+ 453:Core/Src/gps_uart_task.c ****   }
+ 454:Core/Src/gps_uart_task.c **** 
+ 455:Core/Src/gps_uart_task.c ****   /* Match $GPGSV / $GLGSV / $BDGSV (Satellites in View):
+ 456:Core/Src/gps_uart_task.c ****    * $xxGSV,num_msgs,msg_num,sats_in_view,...*hh */
+ 457:Core/Src/gps_uart_task.c ****   if (strncmp(line + 3, "GSV,", 4) == 0)
+ 1501              		.loc 1 457 3 is_stmt 1 view .LVU455
+ 1502              		.loc 1 457 7 is_stmt 0 view .LVU456
+ 1503 0034 0422     		movs	r2, #4
+ 1504 0036 9049     		ldr	r1, .L116+8
+ 1505 0038 3046     		mov	r0, r6
+ 1506 003a FFF7FEFF 		bl	strncmp
+ 1507              	.LVL129:
+ 1508              		.loc 1 457 6 discriminator 1 view .LVU457
+ 1509 003e 0028     		cmp	r0, #0
+ 1510 0040 00F0E280 		beq	.L111
+ 458:Core/Src/gps_uart_task.c ****   {
+ 459:Core/Src/gps_uart_task.c ****     const char *f_num_msgs = line + 7;
+ 460:Core/Src/gps_uart_task.c ****     const char *f_msg_num  = GPS_NextField(f_num_msgs);
+ 461:Core/Src/gps_uart_task.c ****     const char *f_sats_vis = GPS_NextField(f_msg_num);
+ 462:Core/Src/gps_uart_task.c **** 
+ 463:Core/Src/gps_uart_task.c ****     uint8_t vis = 0U;
+ 464:Core/Src/gps_uart_task.c ****     while (*f_sats_vis >= '0' && *f_sats_vis <= '9')
+ 465:Core/Src/gps_uart_task.c ****     {
+ 466:Core/Src/gps_uart_task.c ****       vis = (uint8_t)(vis * 10U + (uint8_t)(*f_sats_vis - '0'));
+ 467:Core/Src/gps_uart_task.c ****       f_sats_vis++;
+ 468:Core/Src/gps_uart_task.c ****     }
+ 469:Core/Src/gps_uart_task.c **** 
+ 470:Core/Src/gps_uart_task.c ****     /* Keep Separate GPS ($GP) vs GLONASS ($GL) visible counts on message #1 */
+ 471:Core/Src/gps_uart_task.c ****     static uint8_t s_gp_vis = 0U;
+ 472:Core/Src/gps_uart_task.c ****     static uint8_t s_gl_vis = 0U;
+ 473:Core/Src/gps_uart_task.c ****     if (*f_msg_num == '1')
+ 474:Core/Src/gps_uart_task.c ****     {
+ 475:Core/Src/gps_uart_task.c ****       if (line[1] == 'G' && line[2] == 'P')
+ 476:Core/Src/gps_uart_task.c ****       {
+ 477:Core/Src/gps_uart_task.c ****         s_gp_vis = vis;
+ 478:Core/Src/gps_uart_task.c ****       }
+ 479:Core/Src/gps_uart_task.c ****       else if (line[1] == 'G' && line[2] == 'L')
+ 480:Core/Src/gps_uart_task.c ****       {
+ 481:Core/Src/gps_uart_task.c ****         s_gl_vis = vis;
+ 482:Core/Src/gps_uart_task.c ****       }
+ 483:Core/Src/gps_uart_task.c ****       fix->sats_in_view = (uint8_t)(s_gp_vis + s_gl_vis);
+ 484:Core/Src/gps_uart_task.c ****     }
+ 485:Core/Src/gps_uart_task.c ****     return true;
+ 486:Core/Src/gps_uart_task.c ****   }
+ 487:Core/Src/gps_uart_task.c **** 
+ARM GAS  /tmp/ccmp3BBc.s 			page 41
+
+
+ 488:Core/Src/gps_uart_task.c ****   return false;
+ 1511              		.loc 1 488 10 view .LVU458
+ 1512 0044 0023     		movs	r3, #0
+ 1513 0046 1F46     		mov	r7, r3
+ 1514              	.LVL130:
+ 1515              	.L91:
+ 489:Core/Src/gps_uart_task.c **** }
+ 1516              		.loc 1 489 1 view .LVU459
+ 1517 0048 3846     		mov	r0, r7
+ 1518 004a 09B0     		add	sp, sp, #36
+ 1519              	.LCFI14:
+ 1520              		.cfi_remember_state
+ 1521              		.cfi_def_cfa_offset 36
+ 1522              		@ sp needed
+ 1523 004c BDE8F08F 		pop	{r4, r5, r6, r7, r8, r9, r10, fp, pc}
+ 1524              	.LVL131:
+ 1525              	.L109:
+ 1526              	.LCFI15:
+ 1527              		.cfi_restore_state
+ 1528              	.LBB12:
+ 372:Core/Src/gps_uart_task.c ****     const char *f_status = GPS_NextField(f_time);
+ 1529              		.loc 1 372 5 is_stmt 1 view .LVU460
+ 372:Core/Src/gps_uart_task.c ****     const char *f_status = GPS_NextField(f_time);
+ 1530              		.loc 1 372 17 is_stmt 0 view .LVU461
+ 1531 0050 0735     		adds	r5, r5, #7
+ 1532              	.LVL132:
+ 373:Core/Src/gps_uart_task.c ****     const char *f_lat    = GPS_NextField(f_status);
+ 1533              		.loc 1 373 5 is_stmt 1 view .LVU462
+ 373:Core/Src/gps_uart_task.c ****     const char *f_lat    = GPS_NextField(f_status);
+ 1534              		.loc 1 373 28 is_stmt 0 view .LVU463
+ 1535 0052 2846     		mov	r0, r5
+ 1536 0054 FFF7FEFF 		bl	GPS_NextField
+ 1537              	.LVL133:
+ 1538 0058 0646     		mov	r6, r0
+ 1539              	.LVL134:
+ 374:Core/Src/gps_uart_task.c ****     const char *f_ns     = GPS_NextField(f_lat);
+ 1540              		.loc 1 374 5 is_stmt 1 view .LVU464
+ 374:Core/Src/gps_uart_task.c ****     const char *f_ns     = GPS_NextField(f_lat);
+ 1541              		.loc 1 374 28 is_stmt 0 view .LVU465
+ 1542 005a FFF7FEFF 		bl	GPS_NextField
+ 1543              	.LVL135:
+ 374:Core/Src/gps_uart_task.c ****     const char *f_ns     = GPS_NextField(f_lat);
+ 1544              		.loc 1 374 28 view .LVU466
+ 1545 005e 8146     		mov	r9, r0
+ 1546              	.LVL136:
+ 375:Core/Src/gps_uart_task.c ****     const char *f_lon    = GPS_NextField(f_ns);
+ 1547              		.loc 1 375 5 is_stmt 1 view .LVU467
+ 375:Core/Src/gps_uart_task.c ****     const char *f_lon    = GPS_NextField(f_ns);
+ 1548              		.loc 1 375 28 is_stmt 0 view .LVU468
+ 1549 0060 FFF7FEFF 		bl	GPS_NextField
+ 1550              	.LVL137:
+ 375:Core/Src/gps_uart_task.c ****     const char *f_lon    = GPS_NextField(f_ns);
+ 1551              		.loc 1 375 28 view .LVU469
+ 1552 0064 8246     		mov	r10, r0
+ 1553              	.LVL138:
+ 376:Core/Src/gps_uart_task.c ****     const char *f_ew     = GPS_NextField(f_lon);
+ 1554              		.loc 1 376 5 is_stmt 1 view .LVU470
+ARM GAS  /tmp/ccmp3BBc.s 			page 42
+
+
+ 376:Core/Src/gps_uart_task.c ****     const char *f_ew     = GPS_NextField(f_lon);
+ 1555              		.loc 1 376 28 is_stmt 0 view .LVU471
+ 1556 0066 FFF7FEFF 		bl	GPS_NextField
+ 1557              	.LVL139:
+ 376:Core/Src/gps_uart_task.c ****     const char *f_ew     = GPS_NextField(f_lon);
+ 1558              		.loc 1 376 28 view .LVU472
+ 1559 006a 8346     		mov	fp, r0
+ 1560              	.LVL140:
+ 377:Core/Src/gps_uart_task.c ****     const char *f_spd    = GPS_NextField(f_ew);
+ 1561              		.loc 1 377 5 is_stmt 1 view .LVU473
+ 377:Core/Src/gps_uart_task.c ****     const char *f_spd    = GPS_NextField(f_ew);
+ 1562              		.loc 1 377 28 is_stmt 0 view .LVU474
+ 1563 006c FFF7FEFF 		bl	GPS_NextField
+ 1564              	.LVL141:
+ 377:Core/Src/gps_uart_task.c ****     const char *f_spd    = GPS_NextField(f_ew);
+ 1565              		.loc 1 377 28 view .LVU475
+ 1566 0070 0190     		str	r0, [sp, #4]
+ 1567              	.LVL142:
+ 378:Core/Src/gps_uart_task.c ****     const char *f_cog    = GPS_NextField(f_spd);
+ 1568              		.loc 1 378 5 is_stmt 1 view .LVU476
+ 378:Core/Src/gps_uart_task.c ****     const char *f_cog    = GPS_NextField(f_spd);
+ 1569              		.loc 1 378 28 is_stmt 0 view .LVU477
+ 1570 0072 FFF7FEFF 		bl	GPS_NextField
+ 1571              	.LVL143:
+ 378:Core/Src/gps_uart_task.c ****     const char *f_cog    = GPS_NextField(f_spd);
+ 1572              		.loc 1 378 28 view .LVU478
+ 1573 0076 0290     		str	r0, [sp, #8]
+ 1574              	.LVL144:
+ 379:Core/Src/gps_uart_task.c ****     const char *f_date   = GPS_NextField(f_cog);
+ 1575              		.loc 1 379 5 is_stmt 1 view .LVU479
+ 379:Core/Src/gps_uart_task.c ****     const char *f_date   = GPS_NextField(f_cog);
+ 1576              		.loc 1 379 28 is_stmt 0 view .LVU480
+ 1577 0078 FFF7FEFF 		bl	GPS_NextField
+ 1578              	.LVL145:
+ 379:Core/Src/gps_uart_task.c ****     const char *f_date   = GPS_NextField(f_cog);
+ 1579              		.loc 1 379 28 view .LVU481
+ 1580 007c 0390     		str	r0, [sp, #12]
+ 1581              	.LVL146:
+ 380:Core/Src/gps_uart_task.c **** 
+ 1582              		.loc 1 380 5 is_stmt 1 view .LVU482
+ 380:Core/Src/gps_uart_task.c **** 
+ 1583              		.loc 1 380 28 is_stmt 0 view .LVU483
+ 1584 007e FFF7FEFF 		bl	GPS_NextField
+ 1585              	.LVL147:
+ 380:Core/Src/gps_uart_task.c **** 
+ 1586              		.loc 1 380 28 view .LVU484
+ 1587 0082 8046     		mov	r8, r0
+ 1588              	.LVL148:
+ 382:Core/Src/gps_uart_task.c ****     {
+ 1589              		.loc 1 382 5 is_stmt 1 view .LVU485
+ 382:Core/Src/gps_uart_task.c ****     {
+ 1590              		.loc 1 382 9 is_stmt 0 view .LVU486
+ 1591 0084 04F10E03 		add	r3, r4, #14
+ 1592 0088 04F10D02 		add	r2, r4, #13
+ 1593 008c 04F10C01 		add	r1, r4, #12
+ 1594 0090 2846     		mov	r0, r5
+ 1595              	.LVL149:
+ARM GAS  /tmp/ccmp3BBc.s 			page 43
+
+
+ 382:Core/Src/gps_uart_task.c ****     {
+ 1596              		.loc 1 382 9 view .LVU487
+ 1597 0092 FFF7FEFF 		bl	GPS_ParseUtcTime
+ 1598              	.LVL150:
+ 382:Core/Src/gps_uart_task.c ****     {
+ 1599              		.loc 1 382 8 discriminator 1 view .LVU488
+ 1600 0096 08B1     		cbz	r0, .L93
+ 384:Core/Src/gps_uart_task.c ****     }
+ 1601              		.loc 1 384 7 is_stmt 1 view .LVU489
+ 384:Core/Src/gps_uart_task.c ****     }
+ 1602              		.loc 1 384 23 is_stmt 0 view .LVU490
+ 1603 0098 0123     		movs	r3, #1
+ 1604 009a E375     		strb	r3, [r4, #23]
+ 1605              	.L93:
+ 387:Core/Src/gps_uart_task.c **** 
+ 1606              		.loc 1 387 5 is_stmt 1 view .LVU491
+ 387:Core/Src/gps_uart_task.c **** 
+ 1607              		.loc 1 387 11 is_stmt 0 view .LVU492
+ 1608 009c 04F11203 		add	r3, r4, #18
+ 1609 00a0 04F11002 		add	r2, r4, #16
+ 1610 00a4 04F10F01 		add	r1, r4, #15
+ 1611 00a8 4046     		mov	r0, r8
+ 1612 00aa FFF7FEFF 		bl	GPS_ParseUtcDate
+ 1613              	.LVL151:
+ 389:Core/Src/gps_uart_task.c ****     {
+ 1614              		.loc 1 389 5 is_stmt 1 view .LVU493
+ 389:Core/Src/gps_uart_task.c ****     {
+ 1615              		.loc 1 389 9 is_stmt 0 view .LVU494
+ 1616 00ae 3378     		ldrb	r3, [r6]	@ zero_extendqisi2
+ 389:Core/Src/gps_uart_task.c ****     {
+ 1617              		.loc 1 389 8 view .LVU495
+ 1618 00b0 412B     		cmp	r3, #65
+ 1619 00b2 04D0     		beq	.L112
+ 403:Core/Src/gps_uart_task.c ****     {
+ 1620              		.loc 1 403 10 is_stmt 1 view .LVU496
+ 403:Core/Src/gps_uart_task.c ****     {
+ 1621              		.loc 1 403 13 is_stmt 0 view .LVU497
+ 1622 00b4 562B     		cmp	r3, #86
+ 1623 00b6 C7D1     		bne	.L91
+ 405:Core/Src/gps_uart_task.c ****     }
+ 1624              		.loc 1 405 7 is_stmt 1 view .LVU498
+ 405:Core/Src/gps_uart_task.c ****     }
+ 1625              		.loc 1 405 18 is_stmt 0 view .LVU499
+ 1626 00b8 0023     		movs	r3, #0
+ 1627 00ba 2376     		strb	r3, [r4, #24]
+ 1628 00bc C4E7     		b	.L91
+ 1629              	.L112:
+ 1630              	.LBB13:
+ 391:Core/Src/gps_uart_task.c ****       int32_t lon_e7 = 0;
+ 1631              		.loc 1 391 7 is_stmt 1 view .LVU500
+ 391:Core/Src/gps_uart_task.c ****       int32_t lon_e7 = 0;
+ 1632              		.loc 1 391 15 is_stmt 0 view .LVU501
+ 1633 00be 0023     		movs	r3, #0
+ 1634 00c0 0693     		str	r3, [sp, #24]
+ 392:Core/Src/gps_uart_task.c ****       if (GPS_ParseNmeaCoordE7(f_lat, *f_ns, &lat_e7) &&
+ 1635              		.loc 1 392 7 is_stmt 1 view .LVU502
+ 392:Core/Src/gps_uart_task.c ****       if (GPS_ParseNmeaCoordE7(f_lat, *f_ns, &lat_e7) &&
+ARM GAS  /tmp/ccmp3BBc.s 			page 44
+
+
+ 1636              		.loc 1 392 15 is_stmt 0 view .LVU503
+ 1637 00c2 0793     		str	r3, [sp, #28]
+ 393:Core/Src/gps_uart_task.c ****           GPS_ParseNmeaCoordE7(f_lon, *f_ew, &lon_e7))
+ 1638              		.loc 1 393 7 is_stmt 1 view .LVU504
+ 393:Core/Src/gps_uart_task.c ****           GPS_ParseNmeaCoordE7(f_lon, *f_ew, &lon_e7))
+ 1639              		.loc 1 393 11 is_stmt 0 view .LVU505
+ 1640 00c4 06AA     		add	r2, sp, #24
+ 1641 00c6 9AF80010 		ldrb	r1, [r10]	@ zero_extendqisi2
+ 1642 00ca 4846     		mov	r0, r9
+ 1643 00cc FFF7FEFF 		bl	GPS_ParseNmeaCoordE7
+ 1644              	.LVL152:
+ 393:Core/Src/gps_uart_task.c ****           GPS_ParseNmeaCoordE7(f_lon, *f_ew, &lon_e7))
+ 1645              		.loc 1 393 10 discriminator 1 view .LVU506
+ 1646 00d0 0028     		cmp	r0, #0
+ 1647 00d2 B9D0     		beq	.L91
+ 394:Core/Src/gps_uart_task.c ****       {
+ 1648              		.loc 1 394 11 view .LVU507
+ 1649 00d4 07AA     		add	r2, sp, #28
+ 1650 00d6 019B     		ldr	r3, [sp, #4]
+ 1651 00d8 1978     		ldrb	r1, [r3]	@ zero_extendqisi2
+ 1652 00da 5846     		mov	r0, fp
+ 1653 00dc FFF7FEFF 		bl	GPS_ParseNmeaCoordE7
+ 1654              	.LVL153:
+ 393:Core/Src/gps_uart_task.c ****           GPS_ParseNmeaCoordE7(f_lon, *f_ew, &lon_e7))
+ 1655              		.loc 1 393 55 discriminator 2 view .LVU508
+ 1656 00e0 0028     		cmp	r0, #0
+ 1657 00e2 B1D0     		beq	.L91
+ 1658              	.LBB14:
+ 396:Core/Src/gps_uart_task.c ****         uint32_t kn_x100 = GPS_ParseDecimalX100(f_spd);
+ 1659              		.loc 1 396 9 is_stmt 1 view .LVU509
+ 396:Core/Src/gps_uart_task.c ****         uint32_t kn_x100 = GPS_ParseDecimalX100(f_spd);
+ 1660              		.loc 1 396 28 is_stmt 0 view .LVU510
+ 1661 00e4 04AD     		add	r5, sp, #16
+ 1662              	.LVL154:
+ 396:Core/Src/gps_uart_task.c ****         uint32_t kn_x100 = GPS_ParseDecimalX100(f_spd);
+ 1663              		.loc 1 396 28 view .LVU511
+ 1664 00e6 079A     		ldr	r2, [sp, #28]
+ 1665 00e8 0699     		ldr	r1, [sp, #24]
+ 1666 00ea 2846     		mov	r0, r5
+ 1667 00ec FFF7FEFF 		bl	geo_coord_make
+ 1668              	.LVL155:
+ 1669 00f0 95E80300 		ldm	r5, {r0, r1}
+ 1670 00f4 84E80300 		stm	r4, {r0, r1}
+ 397:Core/Src/gps_uart_task.c ****         fix->speed_kmh   = (uint16_t)((kn_x100 * 1852U + 50000U) / 100000U);
+ 1671              		.loc 1 397 9 is_stmt 1 view .LVU512
+ 397:Core/Src/gps_uart_task.c ****         fix->speed_kmh   = (uint16_t)((kn_x100 * 1852U + 50000U) / 100000U);
+ 1672              		.loc 1 397 28 is_stmt 0 view .LVU513
+ 1673 00f8 0298     		ldr	r0, [sp, #8]
+ 1674 00fa FFF7FEFF 		bl	GPS_ParseDecimalX100
+ 1675              	.LVL156:
+ 398:Core/Src/gps_uart_task.c ****         fix->heading_deg = (uint16_t)((GPS_ParseDecimalX100(f_cog) + 50U) / 100U) % 360U;
+ 1676              		.loc 1 398 9 is_stmt 1 view .LVU514
+ 398:Core/Src/gps_uart_task.c ****         fix->heading_deg = (uint16_t)((GPS_ParseDecimalX100(f_cog) + 50U) / 100U) % 360U;
+ 1677              		.loc 1 398 56 is_stmt 0 view .LVU515
+ 1678 00fe 40F23C72 		movw	r2, #1852
+ 1679 0102 4CF25033 		movw	r3, #50000
+ 1680 0106 02FB0033 		mla	r3, r2, r0, r3
+ARM GAS  /tmp/ccmp3BBc.s 			page 45
+
+
+ 398:Core/Src/gps_uart_task.c ****         fix->heading_deg = (uint16_t)((GPS_ParseDecimalX100(f_cog) + 50U) / 100U) % 360U;
+ 1681              		.loc 1 398 66 view .LVU516
+ 1682 010a 5B09     		lsrs	r3, r3, #5
+ 1683 010c 5B4A     		ldr	r2, .L116+12
+ 1684 010e A2FB0323 		umull	r2, r3, r2, r3
+ 398:Core/Src/gps_uart_task.c ****         fix->heading_deg = (uint16_t)((GPS_ParseDecimalX100(f_cog) + 50U) / 100U) % 360U;
+ 1685              		.loc 1 398 28 view .LVU517
+ 1686 0112 DB09     		lsrs	r3, r3, #7
+ 398:Core/Src/gps_uart_task.c ****         fix->heading_deg = (uint16_t)((GPS_ParseDecimalX100(f_cog) + 50U) / 100U) % 360U;
+ 1687              		.loc 1 398 26 view .LVU518
+ 1688 0114 2381     		strh	r3, [r4, #8]	@ movhi
+ 399:Core/Src/gps_uart_task.c ****         fix->valid       = true;
+ 1689              		.loc 1 399 9 is_stmt 1 view .LVU519
+ 399:Core/Src/gps_uart_task.c ****         fix->valid       = true;
+ 1690              		.loc 1 399 40 is_stmt 0 view .LVU520
+ 1691 0116 0398     		ldr	r0, [sp, #12]
+ 1692              	.LVL157:
+ 399:Core/Src/gps_uart_task.c ****         fix->valid       = true;
+ 1693              		.loc 1 399 40 view .LVU521
+ 1694 0118 FFF7FEFF 		bl	GPS_ParseDecimalX100
+ 1695              	.LVL158:
+ 399:Core/Src/gps_uart_task.c ****         fix->valid       = true;
+ 1696              		.loc 1 399 68 discriminator 1 view .LVU522
+ 1697 011c 00F13203 		add	r3, r0, #50
+ 399:Core/Src/gps_uart_task.c ****         fix->valid       = true;
+ 1698              		.loc 1 399 75 discriminator 1 view .LVU523
+ 1699 0120 574A     		ldr	r2, .L116+16
+ 1700 0122 A2FB0323 		umull	r2, r3, r2, r3
+ 399:Core/Src/gps_uart_task.c ****         fix->valid       = true;
+ 1701              		.loc 1 399 28 discriminator 1 view .LVU524
+ 1702 0126 C3F34F12 		ubfx	r2, r3, #5, #16
+ 399:Core/Src/gps_uart_task.c ****         fix->valid       = true;
+ 1703              		.loc 1 399 26 discriminator 1 view .LVU525
+ 1704 012a C3F30C23 		ubfx	r3, r3, #8, #13
+ 1705 012e 5549     		ldr	r1, .L116+20
+ 1706 0130 A1FB0313 		umull	r1, r3, r1, r3
+ 1707 0134 9B08     		lsrs	r3, r3, #2
+ 1708 0136 4FF4B471 		mov	r1, #360
+ 1709 013a 01FB1323 		mls	r3, r1, r3, r2
+ 1710 013e 6381     		strh	r3, [r4, #10]	@ movhi
+ 400:Core/Src/gps_uart_task.c ****       }
+ 1711              		.loc 1 400 9 is_stmt 1 view .LVU526
+ 400:Core/Src/gps_uart_task.c ****       }
+ 1712              		.loc 1 400 26 is_stmt 0 view .LVU527
+ 1713 0140 0123     		movs	r3, #1
+ 1714 0142 2376     		strb	r3, [r4, #24]
+ 1715 0144 80E7     		b	.L91
+ 1716              	.LVL159:
+ 1717              	.L110:
+ 400:Core/Src/gps_uart_task.c ****       }
+ 1718              		.loc 1 400 26 view .LVU528
+ 1719              	.LBE14:
+ 1720              	.LBE13:
+ 1721              	.LBE12:
+ 1722              	.LBB15:
+ 415:Core/Src/gps_uart_task.c ****     const char *f_lat  = GPS_NextField(f_time);
+ 1723              		.loc 1 415 5 is_stmt 1 view .LVU529
+ARM GAS  /tmp/ccmp3BBc.s 			page 46
+
+
+ 415:Core/Src/gps_uart_task.c ****     const char *f_lat  = GPS_NextField(f_time);
+ 1724              		.loc 1 415 17 is_stmt 0 view .LVU530
+ 1725 0146 EE1D     		adds	r6, r5, #7
+ 1726              	.LVL160:
+ 416:Core/Src/gps_uart_task.c ****     const char *f_ns   = GPS_NextField(f_lat);
+ 1727              		.loc 1 416 5 is_stmt 1 view .LVU531
+ 416:Core/Src/gps_uart_task.c ****     const char *f_ns   = GPS_NextField(f_lat);
+ 1728              		.loc 1 416 26 is_stmt 0 view .LVU532
+ 1729 0148 3046     		mov	r0, r6
+ 1730 014a FFF7FEFF 		bl	GPS_NextField
+ 1731              	.LVL161:
+ 1732 014e 8146     		mov	r9, r0
+ 1733              	.LVL162:
+ 417:Core/Src/gps_uart_task.c ****     const char *f_lon  = GPS_NextField(f_ns);
+ 1734              		.loc 1 417 5 is_stmt 1 view .LVU533
+ 417:Core/Src/gps_uart_task.c ****     const char *f_lon  = GPS_NextField(f_ns);
+ 1735              		.loc 1 417 26 is_stmt 0 view .LVU534
+ 1736 0150 FFF7FEFF 		bl	GPS_NextField
+ 1737              	.LVL163:
+ 417:Core/Src/gps_uart_task.c ****     const char *f_lon  = GPS_NextField(f_ns);
+ 1738              		.loc 1 417 26 view .LVU535
+ 1739 0154 8246     		mov	r10, r0
+ 1740              	.LVL164:
+ 418:Core/Src/gps_uart_task.c ****     const char *f_ew   = GPS_NextField(f_lon);
+ 1741              		.loc 1 418 5 is_stmt 1 view .LVU536
+ 418:Core/Src/gps_uart_task.c ****     const char *f_ew   = GPS_NextField(f_lon);
+ 1742              		.loc 1 418 26 is_stmt 0 view .LVU537
+ 1743 0156 FFF7FEFF 		bl	GPS_NextField
+ 1744              	.LVL165:
+ 418:Core/Src/gps_uart_task.c ****     const char *f_ew   = GPS_NextField(f_lon);
+ 1745              		.loc 1 418 26 view .LVU538
+ 1746 015a 8346     		mov	fp, r0
+ 1747              	.LVL166:
+ 419:Core/Src/gps_uart_task.c ****     const char *f_qual = GPS_NextField(f_ew);
+ 1748              		.loc 1 419 5 is_stmt 1 view .LVU539
+ 419:Core/Src/gps_uart_task.c ****     const char *f_qual = GPS_NextField(f_ew);
+ 1749              		.loc 1 419 26 is_stmt 0 view .LVU540
+ 1750 015c FFF7FEFF 		bl	GPS_NextField
+ 1751              	.LVL167:
+ 419:Core/Src/gps_uart_task.c ****     const char *f_qual = GPS_NextField(f_ew);
+ 1752              		.loc 1 419 26 view .LVU541
+ 1753 0160 0190     		str	r0, [sp, #4]
+ 1754              	.LVL168:
+ 420:Core/Src/gps_uart_task.c ****     const char *f_sats = GPS_NextField(f_qual);
+ 1755              		.loc 1 420 5 is_stmt 1 view .LVU542
+ 420:Core/Src/gps_uart_task.c ****     const char *f_sats = GPS_NextField(f_qual);
+ 1756              		.loc 1 420 26 is_stmt 0 view .LVU543
+ 1757 0162 FFF7FEFF 		bl	GPS_NextField
+ 1758              	.LVL169:
+ 420:Core/Src/gps_uart_task.c ****     const char *f_sats = GPS_NextField(f_qual);
+ 1759              		.loc 1 420 26 view .LVU544
+ 1760 0166 8046     		mov	r8, r0
+ 1761              	.LVL170:
+ 421:Core/Src/gps_uart_task.c **** 
+ 1762              		.loc 1 421 5 is_stmt 1 view .LVU545
+ 421:Core/Src/gps_uart_task.c **** 
+ 1763              		.loc 1 421 26 is_stmt 0 view .LVU546
+ARM GAS  /tmp/ccmp3BBc.s 			page 47
+
+
+ 1764 0168 FFF7FEFF 		bl	GPS_NextField
+ 1765              	.LVL171:
+ 421:Core/Src/gps_uart_task.c **** 
+ 1766              		.loc 1 421 26 view .LVU547
+ 1767 016c 0546     		mov	r5, r0
+ 1768              	.LVL172:
+ 423:Core/Src/gps_uart_task.c ****     {
+ 1769              		.loc 1 423 5 is_stmt 1 view .LVU548
+ 423:Core/Src/gps_uart_task.c ****     {
+ 1770              		.loc 1 423 9 is_stmt 0 view .LVU549
+ 1771 016e 04F10E03 		add	r3, r4, #14
+ 1772 0172 04F10D02 		add	r2, r4, #13
+ 1773 0176 04F10C01 		add	r1, r4, #12
+ 1774 017a 3046     		mov	r0, r6
+ 1775              	.LVL173:
+ 423:Core/Src/gps_uart_task.c ****     {
+ 1776              		.loc 1 423 9 view .LVU550
+ 1777 017c FFF7FEFF 		bl	GPS_ParseUtcTime
+ 1778              	.LVL174:
+ 423:Core/Src/gps_uart_task.c ****     {
+ 1779              		.loc 1 423 8 discriminator 1 view .LVU551
+ 1780 0180 08B1     		cbz	r0, .L98
+ 425:Core/Src/gps_uart_task.c ****     }
+ 1781              		.loc 1 425 7 is_stmt 1 view .LVU552
+ 425:Core/Src/gps_uart_task.c ****     }
+ 1782              		.loc 1 425 23 is_stmt 0 view .LVU553
+ 1783 0182 0123     		movs	r3, #1
+ 1784 0184 E375     		strb	r3, [r4, #23]
+ 1785              	.L98:
+ 428:Core/Src/gps_uart_task.c ****     while (*f_sats >= '0' && *f_sats <= '9')
+ 1786              		.loc 1 428 5 is_stmt 1 view .LVU554
+ 1787              	.LVL175:
+ 429:Core/Src/gps_uart_task.c ****     {
+ 1788              		.loc 1 429 5 view .LVU555
+ 428:Core/Src/gps_uart_task.c ****     while (*f_sats >= '0' && *f_sats <= '9')
+ 1789              		.loc 1 428 13 is_stmt 0 view .LVU556
+ 1790 0186 0023     		movs	r3, #0
+ 429:Core/Src/gps_uart_task.c ****     {
+ 1791              		.loc 1 429 11 view .LVU557
+ 1792 0188 08E0     		b	.L99
+ 1793              	.LVL176:
+ 1794              	.L100:
+ 431:Core/Src/gps_uart_task.c ****       f_sats++;
+ 1795              		.loc 1 431 7 is_stmt 1 view .LVU558
+ 431:Core/Src/gps_uart_task.c ****       f_sats++;
+ 1796              		.loc 1 431 29 is_stmt 0 view .LVU559
+ 1797 018a 03EB8303 		add	r3, r3, r3, lsl #2
+ 1798              	.LVL177:
+ 431:Core/Src/gps_uart_task.c ****       f_sats++;
+ 1799              		.loc 1 431 29 view .LVU560
+ 1800 018e 5B00     		lsls	r3, r3, #1
+ 1801 0190 DBB2     		uxtb	r3, r3
+ 431:Core/Src/gps_uart_task.c ****       f_sats++;
+ 1802              		.loc 1 431 35 view .LVU561
+ 1803 0192 0B44     		add	r3, r3, r1
+ 1804 0194 DBB2     		uxtb	r3, r3
+ 431:Core/Src/gps_uart_task.c ****       f_sats++;
+ARM GAS  /tmp/ccmp3BBc.s 			page 48
+
+
+ 1805              		.loc 1 431 12 view .LVU562
+ 1806 0196 303B     		subs	r3, r3, #48
+ 1807 0198 DBB2     		uxtb	r3, r3
+ 1808              	.LVL178:
+ 432:Core/Src/gps_uart_task.c ****     }
+ 1809              		.loc 1 432 7 is_stmt 1 view .LVU563
+ 432:Core/Src/gps_uart_task.c ****     }
+ 1810              		.loc 1 432 13 is_stmt 0 view .LVU564
+ 1811 019a 0135     		adds	r5, r5, #1
+ 1812              	.LVL179:
+ 1813              	.L99:
+ 429:Core/Src/gps_uart_task.c ****     {
+ 1814              		.loc 1 429 27 is_stmt 1 discriminator 1 view .LVU565
+ 429:Core/Src/gps_uart_task.c ****     {
+ 1815              		.loc 1 429 12 is_stmt 0 discriminator 1 view .LVU566
+ 1816 019c 2978     		ldrb	r1, [r5]	@ zero_extendqisi2
+ 429:Core/Src/gps_uart_task.c ****     {
+ 1817              		.loc 1 429 27 discriminator 1 view .LVU567
+ 1818 019e A1F13002 		sub	r2, r1, #48
+ 1819 01a2 D2B2     		uxtb	r2, r2
+ 1820 01a4 092A     		cmp	r2, #9
+ 1821 01a6 F0D9     		bls	.L100
+ 434:Core/Src/gps_uart_task.c **** 
+ 1822              		.loc 1 434 5 is_stmt 1 view .LVU568
+ 434:Core/Src/gps_uart_task.c **** 
+ 1823              		.loc 1 434 21 is_stmt 0 view .LVU569
+ 1824 01a8 2375     		strb	r3, [r4, #20]
+ 436:Core/Src/gps_uart_task.c ****     {
+ 1825              		.loc 1 436 5 is_stmt 1 view .LVU570
+ 436:Core/Src/gps_uart_task.c ****     {
+ 1826              		.loc 1 436 9 is_stmt 0 view .LVU571
+ 1827 01aa 98F80020 		ldrb	r2, [r8]	@ zero_extendqisi2
+ 436:Core/Src/gps_uart_task.c ****     {
+ 1828              		.loc 1 436 24 view .LVU572
+ 1829 01ae A2F13103 		sub	r3, r2, #49
+ 1830              	.LVL180:
+ 436:Core/Src/gps_uart_task.c ****     {
+ 1831              		.loc 1 436 24 view .LVU573
+ 1832 01b2 DBB2     		uxtb	r3, r3
+ 436:Core/Src/gps_uart_task.c ****     {
+ 1833              		.loc 1 436 8 view .LVU574
+ 1834 01b4 082B     		cmp	r3, #8
+ 1835 01b6 05D9     		bls	.L113
+ 447:Core/Src/gps_uart_task.c ****     {
+ 1836              		.loc 1 447 10 is_stmt 1 view .LVU575
+ 447:Core/Src/gps_uart_task.c ****     {
+ 1837              		.loc 1 447 13 is_stmt 0 view .LVU576
+ 1838 01b8 302A     		cmp	r2, #48
+ 1839 01ba 7FF445AF 		bne	.L91
+ 449:Core/Src/gps_uart_task.c ****     }
+ 1840              		.loc 1 449 7 is_stmt 1 view .LVU577
+ 449:Core/Src/gps_uart_task.c ****     }
+ 1841              		.loc 1 449 18 is_stmt 0 view .LVU578
+ 1842 01be 0023     		movs	r3, #0
+ 1843 01c0 2376     		strb	r3, [r4, #24]
+ 1844 01c2 41E7     		b	.L91
+ 1845              	.L113:
+ARM GAS  /tmp/ccmp3BBc.s 			page 49
+
+
+ 1846              	.LBB16:
+ 438:Core/Src/gps_uart_task.c ****       int32_t lon_e7 = 0;
+ 1847              		.loc 1 438 7 is_stmt 1 view .LVU579
+ 438:Core/Src/gps_uart_task.c ****       int32_t lon_e7 = 0;
+ 1848              		.loc 1 438 15 is_stmt 0 view .LVU580
+ 1849 01c4 0023     		movs	r3, #0
+ 1850 01c6 0693     		str	r3, [sp, #24]
+ 1851              	.LVL181:
+ 439:Core/Src/gps_uart_task.c ****       if (GPS_ParseNmeaCoordE7(f_lat, *f_ns, &lat_e7) &&
+ 1852              		.loc 1 439 7 is_stmt 1 view .LVU581
+ 439:Core/Src/gps_uart_task.c ****       if (GPS_ParseNmeaCoordE7(f_lat, *f_ns, &lat_e7) &&
+ 1853              		.loc 1 439 15 is_stmt 0 view .LVU582
+ 1854 01c8 0793     		str	r3, [sp, #28]
+ 440:Core/Src/gps_uart_task.c ****           GPS_ParseNmeaCoordE7(f_lon, *f_ew, &lon_e7))
+ 1855              		.loc 1 440 7 is_stmt 1 view .LVU583
+ 440:Core/Src/gps_uart_task.c ****           GPS_ParseNmeaCoordE7(f_lon, *f_ew, &lon_e7))
+ 1856              		.loc 1 440 11 is_stmt 0 view .LVU584
+ 1857 01ca 06AA     		add	r2, sp, #24
+ 1858 01cc 9AF80010 		ldrb	r1, [r10]	@ zero_extendqisi2
+ 1859 01d0 4846     		mov	r0, r9
+ 1860 01d2 FFF7FEFF 		bl	GPS_ParseNmeaCoordE7
+ 1861              	.LVL182:
+ 440:Core/Src/gps_uart_task.c ****           GPS_ParseNmeaCoordE7(f_lon, *f_ew, &lon_e7))
+ 1862              		.loc 1 440 10 discriminator 1 view .LVU585
+ 1863 01d6 0028     		cmp	r0, #0
+ 1864 01d8 3FF436AF 		beq	.L91
+ 441:Core/Src/gps_uart_task.c ****       {
+ 1865              		.loc 1 441 11 view .LVU586
+ 1866 01dc 07AA     		add	r2, sp, #28
+ 1867 01de 019B     		ldr	r3, [sp, #4]
+ 1868 01e0 1978     		ldrb	r1, [r3]	@ zero_extendqisi2
+ 1869 01e2 5846     		mov	r0, fp
+ 1870 01e4 FFF7FEFF 		bl	GPS_ParseNmeaCoordE7
+ 1871              	.LVL183:
+ 440:Core/Src/gps_uart_task.c ****           GPS_ParseNmeaCoordE7(f_lon, *f_ew, &lon_e7))
+ 1872              		.loc 1 440 55 discriminator 2 view .LVU587
+ 1873 01e8 0028     		cmp	r0, #0
+ 1874 01ea 3FF42DAF 		beq	.L91
+ 443:Core/Src/gps_uart_task.c ****         fix->valid = true;
+ 1875              		.loc 1 443 9 is_stmt 1 view .LVU588
+ 443:Core/Src/gps_uart_task.c ****         fix->valid = true;
+ 1876              		.loc 1 443 22 is_stmt 0 view .LVU589
+ 1877 01ee 04AD     		add	r5, sp, #16
+ 1878              	.LVL184:
+ 443:Core/Src/gps_uart_task.c ****         fix->valid = true;
+ 1879              		.loc 1 443 22 view .LVU590
+ 1880 01f0 079A     		ldr	r2, [sp, #28]
+ 1881 01f2 0699     		ldr	r1, [sp, #24]
+ 1882 01f4 2846     		mov	r0, r5
+ 1883 01f6 FFF7FEFF 		bl	geo_coord_make
+ 1884              	.LVL185:
+ 1885 01fa 95E80300 		ldm	r5, {r0, r1}
+ 1886 01fe 84E80300 		stm	r4, {r0, r1}
+ 444:Core/Src/gps_uart_task.c ****       }
+ 1887              		.loc 1 444 9 is_stmt 1 view .LVU591
+ 444:Core/Src/gps_uart_task.c ****       }
+ 1888              		.loc 1 444 20 is_stmt 0 view .LVU592
+ARM GAS  /tmp/ccmp3BBc.s 			page 50
+
+
+ 1889 0202 0123     		movs	r3, #1
+ 1890 0204 2376     		strb	r3, [r4, #24]
+ 1891 0206 1FE7     		b	.L91
+ 1892              	.LVL186:
+ 1893              	.L111:
+ 444:Core/Src/gps_uart_task.c ****       }
+ 1894              		.loc 1 444 20 view .LVU593
+ 1895              	.LBE16:
+ 1896              	.LBE15:
+ 1897              	.LBB17:
+ 459:Core/Src/gps_uart_task.c ****     const char *f_msg_num  = GPS_NextField(f_num_msgs);
+ 1898              		.loc 1 459 5 is_stmt 1 view .LVU594
+ 460:Core/Src/gps_uart_task.c ****     const char *f_sats_vis = GPS_NextField(f_msg_num);
+ 1899              		.loc 1 460 5 view .LVU595
+ 460:Core/Src/gps_uart_task.c ****     const char *f_sats_vis = GPS_NextField(f_msg_num);
+ 1900              		.loc 1 460 30 is_stmt 0 view .LVU596
+ 1901 0208 E81D     		adds	r0, r5, #7
+ 1902              	.LVL187:
+ 460:Core/Src/gps_uart_task.c ****     const char *f_sats_vis = GPS_NextField(f_msg_num);
+ 1903              		.loc 1 460 30 view .LVU597
+ 1904 020a FFF7FEFF 		bl	GPS_NextField
+ 1905              	.LVL188:
+ 460:Core/Src/gps_uart_task.c ****     const char *f_sats_vis = GPS_NextField(f_msg_num);
+ 1906              		.loc 1 460 30 view .LVU598
+ 1907 020e 0646     		mov	r6, r0
+ 1908              	.LVL189:
+ 461:Core/Src/gps_uart_task.c **** 
+ 1909              		.loc 1 461 5 is_stmt 1 view .LVU599
+ 461:Core/Src/gps_uart_task.c **** 
+ 1910              		.loc 1 461 30 is_stmt 0 view .LVU600
+ 1911 0210 FFF7FEFF 		bl	GPS_NextField
+ 1912              	.LVL190:
+ 463:Core/Src/gps_uart_task.c ****     while (*f_sats_vis >= '0' && *f_sats_vis <= '9')
+ 1913              		.loc 1 463 5 is_stmt 1 view .LVU601
+ 464:Core/Src/gps_uart_task.c ****     {
+ 1914              		.loc 1 464 5 view .LVU602
+ 463:Core/Src/gps_uart_task.c ****     while (*f_sats_vis >= '0' && *f_sats_vis <= '9')
+ 1915              		.loc 1 463 13 is_stmt 0 view .LVU603
+ 1916 0214 0023     		movs	r3, #0
+ 464:Core/Src/gps_uart_task.c ****     {
+ 1917              		.loc 1 464 11 view .LVU604
+ 1918 0216 08E0     		b	.L103
+ 1919              	.LVL191:
+ 1920              	.L104:
+ 466:Core/Src/gps_uart_task.c ****       f_sats_vis++;
+ 1921              		.loc 1 466 7 is_stmt 1 view .LVU605
+ 466:Core/Src/gps_uart_task.c ****       f_sats_vis++;
+ 1922              		.loc 1 466 27 is_stmt 0 view .LVU606
+ 1923 0218 03EB8303 		add	r3, r3, r3, lsl #2
+ 1924              	.LVL192:
+ 466:Core/Src/gps_uart_task.c ****       f_sats_vis++;
+ 1925              		.loc 1 466 27 view .LVU607
+ 1926 021c 5B00     		lsls	r3, r3, #1
+ 1927 021e DBB2     		uxtb	r3, r3
+ 466:Core/Src/gps_uart_task.c ****       f_sats_vis++;
+ 1928              		.loc 1 466 33 view .LVU608
+ 1929 0220 0B44     		add	r3, r3, r1
+ARM GAS  /tmp/ccmp3BBc.s 			page 51
+
+
+ 1930 0222 DBB2     		uxtb	r3, r3
+ 466:Core/Src/gps_uart_task.c ****       f_sats_vis++;
+ 1931              		.loc 1 466 11 view .LVU609
+ 1932 0224 303B     		subs	r3, r3, #48
+ 1933 0226 DBB2     		uxtb	r3, r3
+ 1934              	.LVL193:
+ 467:Core/Src/gps_uart_task.c ****     }
+ 1935              		.loc 1 467 7 is_stmt 1 view .LVU610
+ 467:Core/Src/gps_uart_task.c ****     }
+ 1936              		.loc 1 467 17 is_stmt 0 view .LVU611
+ 1937 0228 0130     		adds	r0, r0, #1
+ 1938              	.LVL194:
+ 1939              	.L103:
+ 464:Core/Src/gps_uart_task.c ****     {
+ 1940              		.loc 1 464 31 is_stmt 1 discriminator 1 view .LVU612
+ 464:Core/Src/gps_uart_task.c ****     {
+ 1941              		.loc 1 464 12 is_stmt 0 discriminator 1 view .LVU613
+ 1942 022a 0178     		ldrb	r1, [r0]	@ zero_extendqisi2
+ 464:Core/Src/gps_uart_task.c ****     {
+ 1943              		.loc 1 464 31 discriminator 1 view .LVU614
+ 1944 022c A1F13002 		sub	r2, r1, #48
+ 1945 0230 D2B2     		uxtb	r2, r2
+ 1946 0232 092A     		cmp	r2, #9
+ 1947 0234 F0D9     		bls	.L104
+ 471:Core/Src/gps_uart_task.c ****     static uint8_t s_gl_vis = 0U;
+ 1948              		.loc 1 471 5 is_stmt 1 view .LVU615
+ 472:Core/Src/gps_uart_task.c ****     if (*f_msg_num == '1')
+ 1949              		.loc 1 472 5 view .LVU616
+ 473:Core/Src/gps_uart_task.c ****     {
+ 1950              		.loc 1 473 5 view .LVU617
+ 473:Core/Src/gps_uart_task.c ****     {
+ 1951              		.loc 1 473 9 is_stmt 0 view .LVU618
+ 1952 0236 3278     		ldrb	r2, [r6]	@ zero_extendqisi2
+ 473:Core/Src/gps_uart_task.c ****     {
+ 1953              		.loc 1 473 8 view .LVU619
+ 1954 0238 312A     		cmp	r2, #49
+ 1955 023a 7FF405AF 		bne	.L91
+ 475:Core/Src/gps_uart_task.c ****       {
+ 1956              		.loc 1 475 7 is_stmt 1 view .LVU620
+ 475:Core/Src/gps_uart_task.c ****       {
+ 1957              		.loc 1 475 15 is_stmt 0 view .LVU621
+ 1958 023e 6A78     		ldrb	r2, [r5, #1]	@ zero_extendqisi2
+ 475:Core/Src/gps_uart_task.c ****       {
+ 1959              		.loc 1 475 10 view .LVU622
+ 1960 0240 472A     		cmp	r2, #71
+ 1961 0242 08D0     		beq	.L114
+ 1962              	.L105:
+ 479:Core/Src/gps_uart_task.c ****       {
+ 1963              		.loc 1 479 12 is_stmt 1 view .LVU623
+ 479:Core/Src/gps_uart_task.c ****       {
+ 1964              		.loc 1 479 15 is_stmt 0 view .LVU624
+ 1965 0244 472A     		cmp	r2, #71
+ 1966 0246 0CD0     		beq	.L115
+ 1967              	.L106:
+ 483:Core/Src/gps_uart_task.c ****     }
+ 1968              		.loc 1 483 7 is_stmt 1 view .LVU625
+ 483:Core/Src/gps_uart_task.c ****     }
+ARM GAS  /tmp/ccmp3BBc.s 			page 52
+
+
+ 1969              		.loc 1 483 27 is_stmt 0 view .LVU626
+ 1970 0248 0F4B     		ldr	r3, .L116+24
+ 1971              	.LVL195:
+ 483:Core/Src/gps_uart_task.c ****     }
+ 1972              		.loc 1 483 27 view .LVU627
+ 1973 024a 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 1974 024c 0F4A     		ldr	r2, .L116+28
+ 1975 024e 1278     		ldrb	r2, [r2]	@ zero_extendqisi2
+ 1976 0250 1344     		add	r3, r3, r2
+ 483:Core/Src/gps_uart_task.c ****     }
+ 1977              		.loc 1 483 25 view .LVU628
+ 1978 0252 6375     		strb	r3, [r4, #21]
+ 1979 0254 F8E6     		b	.L91
+ 1980              	.LVL196:
+ 1981              	.L114:
+ 475:Core/Src/gps_uart_task.c ****       {
+ 1982              		.loc 1 475 33 discriminator 1 view .LVU629
+ 1983 0256 A978     		ldrb	r1, [r5, #2]	@ zero_extendqisi2
+ 475:Core/Src/gps_uart_task.c ****       {
+ 1984              		.loc 1 475 26 discriminator 1 view .LVU630
+ 1985 0258 5029     		cmp	r1, #80
+ 1986 025a F3D1     		bne	.L105
+ 477:Core/Src/gps_uart_task.c ****       }
+ 1987              		.loc 1 477 9 is_stmt 1 view .LVU631
+ 477:Core/Src/gps_uart_task.c ****       }
+ 1988              		.loc 1 477 18 is_stmt 0 view .LVU632
+ 1989 025c 0A4A     		ldr	r2, .L116+24
+ 1990 025e 1370     		strb	r3, [r2]
+ 1991 0260 F2E7     		b	.L106
+ 1992              	.L115:
+ 479:Core/Src/gps_uart_task.c ****       {
+ 1993              		.loc 1 479 38 discriminator 1 view .LVU633
+ 1994 0262 AA78     		ldrb	r2, [r5, #2]	@ zero_extendqisi2
+ 479:Core/Src/gps_uart_task.c ****       {
+ 1995              		.loc 1 479 31 discriminator 1 view .LVU634
+ 1996 0264 4C2A     		cmp	r2, #76
+ 1997 0266 EFD1     		bne	.L106
+ 481:Core/Src/gps_uart_task.c ****       }
+ 1998              		.loc 1 481 9 is_stmt 1 view .LVU635
+ 481:Core/Src/gps_uart_task.c ****       }
+ 1999              		.loc 1 481 18 is_stmt 0 view .LVU636
+ 2000 0268 084A     		ldr	r2, .L116+28
+ 2001 026a 1370     		strb	r3, [r2]
+ 2002 026c ECE7     		b	.L106
+ 2003              	.L117:
+ 2004 026e 00BF     		.align	2
+ 2005              	.L116:
+ 2006 0270 00000000 		.word	.LC0
+ 2007 0274 08000000 		.word	.LC1
+ 2008 0278 10000000 		.word	.LC2
+ 2009 027c C55A7C0A 		.word	175921861
+ 2010 0280 1F85EB51 		.word	1374389535
+ 2011 0284 176CC116 		.word	381774871
+ 2012 0288 00000000 		.word	s_gp_vis.1
+ 2013 028c 00000000 		.word	s_gl_vis.0
+ 2014              	.LBE17:
+ 2015              		.cfi_endproc
+ARM GAS  /tmp/ccmp3BBc.s 			page 53
+
+
+ 2016              	.LFE176:
+ 2018              		.section	.text.USART1_IRQHandler,"ax",%progbits
+ 2019              		.align	1
+ 2020              		.global	USART1_IRQHandler
+ 2021              		.syntax unified
+ 2022              		.thumb
+ 2023              		.thumb_func
+ 2025              	USART1_IRQHandler:
+ 2026              	.LFB161:
+  26:Core/Src/gps_uart_task.c ****   uint32_t sr = GPS_UART_INSTANCE->SR;
+ 2027              		.loc 1 26 1 is_stmt 1 view -0
+ 2028              		.cfi_startproc
+ 2029              		@ args = 0, pretend = 0, frame = 8
+ 2030              		@ frame_needed = 0, uses_anonymous_args = 0
+  27:Core/Src/gps_uart_task.c ****   if (sr & (USART_SR_IDLE | USART_SR_ORE | USART_SR_FE | USART_SR_NE))
+ 2031              		.loc 1 27 3 view .LVU638
+  27:Core/Src/gps_uart_task.c ****   if (sr & (USART_SR_IDLE | USART_SR_ORE | USART_SR_FE | USART_SR_NE))
+ 2032              		.loc 1 27 12 is_stmt 0 view .LVU639
+ 2033 0000 114B     		ldr	r3, .L125
+ 2034 0002 1B68     		ldr	r3, [r3]
+ 2035              	.LVL197:
+  28:Core/Src/gps_uart_task.c ****   {
+ 2036              		.loc 1 28 3 is_stmt 1 view .LVU640
+  28:Core/Src/gps_uart_task.c ****   {
+ 2037              		.loc 1 28 6 is_stmt 0 view .LVU641
+ 2038 0004 13F01E0F 		tst	r3, #30
+ 2039 0008 1CD0     		beq	.L122
+  31:Core/Src/gps_uart_task.c **** 
+ 2040              		.loc 1 31 5 is_stmt 1 view .LVU642
+ 2041 000a 0F4A     		ldr	r2, .L125
+ 2042 000c 5268     		ldr	r2, [r2, #4]
+  33:Core/Src/gps_uart_task.c ****     {
+ 2043              		.loc 1 33 5 view .LVU643
+  33:Core/Src/gps_uart_task.c ****     {
+ 2044              		.loc 1 33 8 is_stmt 0 view .LVU644
+ 2045 000e 13F0100F 		tst	r3, #16
+ 2046 0012 17D0     		beq	.L122
+  33:Core/Src/gps_uart_task.c ****     {
+ 2047              		.loc 1 33 49 discriminator 1 view .LVU645
+ 2048 0014 0D4B     		ldr	r3, .L125+4
+ 2049              	.LVL198:
+  33:Core/Src/gps_uart_task.c ****     {
+ 2050              		.loc 1 33 49 discriminator 1 view .LVU646
+ 2051 0016 1868     		ldr	r0, [r3]
+  33:Core/Src/gps_uart_task.c ****     {
+ 2052              		.loc 1 33 30 discriminator 1 view .LVU647
+ 2053 0018 A0B1     		cbz	r0, .L122
+  26:Core/Src/gps_uart_task.c ****   uint32_t sr = GPS_UART_INSTANCE->SR;
+ 2054              		.loc 1 26 1 view .LVU648
+ 2055 001a 00B5     		push	{lr}
+ 2056              	.LCFI16:
+ 2057              		.cfi_def_cfa_offset 4
+ 2058              		.cfi_offset 14, -4
+ 2059 001c 83B0     		sub	sp, sp, #12
+ 2060              	.LCFI17:
+ 2061              		.cfi_def_cfa_offset 16
+ 2062              	.LBB18:
+ARM GAS  /tmp/ccmp3BBc.s 			page 54
+
+
+  35:Core/Src/gps_uart_task.c ****       vTaskNotifyGiveFromISR(g_gps_task_hdl, &xHigherPriorityTaskWoken);
+ 2063              		.loc 1 35 7 is_stmt 1 view .LVU649
+  35:Core/Src/gps_uart_task.c ****       vTaskNotifyGiveFromISR(g_gps_task_hdl, &xHigherPriorityTaskWoken);
+ 2064              		.loc 1 35 18 is_stmt 0 view .LVU650
+ 2065 001e 0023     		movs	r3, #0
+ 2066 0020 0193     		str	r3, [sp, #4]
+  36:Core/Src/gps_uart_task.c ****       portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+ 2067              		.loc 1 36 7 is_stmt 1 view .LVU651
+ 2068 0022 01A9     		add	r1, sp, #4
+ 2069 0024 FFF7FEFF 		bl	vTaskNotifyGiveFromISR
+ 2070              	.LVL199:
+  37:Core/Src/gps_uart_task.c ****     }
+ 2071              		.loc 1 37 7 view .LVU652
+ 2072 0028 019B     		ldr	r3, [sp, #4]
+ 2073 002a 4BB1     		cbz	r3, .L118
+  37:Core/Src/gps_uart_task.c ****     }
+ 2074              		.loc 1 37 7 discriminator 1 view .LVU653
+ 2075 002c 4FF0E023 		mov	r3, #-536813568
+ 2076 0030 4FF08052 		mov	r2, #268435456
+ 2077 0034 C3F8042D 		str	r2, [r3, #3332]
+  37:Core/Src/gps_uart_task.c ****     }
+ 2078              		.loc 1 37 7 discriminator 1 view .LVU654
+ 2079              		.syntax unified
+ 2080              	@ 37 "Core/Src/gps_uart_task.c" 1
+ 2081 0038 BFF34F8F 		dsb
+ 2082              	@ 0 "" 2
+  37:Core/Src/gps_uart_task.c ****     }
+ 2083              		.loc 1 37 7 discriminator 1 view .LVU655
+ 2084              	@ 37 "Core/Src/gps_uart_task.c" 1
+ 2085 003c BFF36F8F 		isb
+ 2086              	@ 0 "" 2
+  37:Core/Src/gps_uart_task.c ****     }
+ 2087              		.loc 1 37 51 discriminator 2 view .LVU656
+ 2088              		.thumb
+ 2089              		.syntax unified
+ 2090              	.L118:
+ 2091              	.LBE18:
+  40:Core/Src/gps_uart_task.c **** 
+ 2092              		.loc 1 40 1 is_stmt 0 view .LVU657
+ 2093 0040 03B0     		add	sp, sp, #12
+ 2094              	.LCFI18:
+ 2095              		.cfi_def_cfa_offset 4
+ 2096              		@ sp needed
+ 2097 0042 00BD     		pop	{pc}
+ 2098              	.L122:
+ 2099              	.LCFI19:
+ 2100              		.cfi_def_cfa_offset 0
+ 2101              		.cfi_restore 14
+ 2102 0044 7047     		bx	lr
+ 2103              	.L126:
+ 2104 0046 00BF     		.align	2
+ 2105              	.L125:
+ 2106 0048 00100140 		.word	1073811456
+ 2107 004c 00000000 		.word	g_gps_task_hdl
+ 2108              		.cfi_endproc
+ 2109              	.LFE161:
+ 2111              		.section	.text.DMA2_Stream2_IRQHandler,"ax",%progbits
+ARM GAS  /tmp/ccmp3BBc.s 			page 55
+
+
+ 2112              		.align	1
+ 2113              		.global	DMA2_Stream2_IRQHandler
+ 2114              		.syntax unified
+ 2115              		.thumb
+ 2116              		.thumb_func
+ 2118              	DMA2_Stream2_IRQHandler:
+ 2119              	.LFB162:
+  43:Core/Src/gps_uart_task.c ****   uint32_t isr = GPS_DMA_RX_ISR_REG;
+ 2120              		.loc 1 43 1 is_stmt 1 view -0
+ 2121              		.cfi_startproc
+ 2122              		@ args = 0, pretend = 0, frame = 8
+ 2123              		@ frame_needed = 0, uses_anonymous_args = 0
+  44:Core/Src/gps_uart_task.c ****   if (isr & GPS_DMA_RX_ISR_FLAGS)
+ 2124              		.loc 1 44 3 view .LVU659
+  44:Core/Src/gps_uart_task.c ****   if (isr & GPS_DMA_RX_ISR_FLAGS)
+ 2125              		.loc 1 44 12 is_stmt 0 view .LVU660
+ 2126 0000 104B     		ldr	r3, .L134
+ 2127 0002 1B68     		ldr	r3, [r3]
+ 2128              	.LVL200:
+  45:Core/Src/gps_uart_task.c ****   {
+ 2129              		.loc 1 45 3 is_stmt 1 view .LVU661
+  45:Core/Src/gps_uart_task.c ****   {
+ 2130              		.loc 1 45 6 is_stmt 0 view .LVU662
+ 2131 0004 13F4741F 		tst	r3, #3997696
+ 2132 0008 1BD0     		beq	.L131
+  47:Core/Src/gps_uart_task.c **** 
+ 2133              		.loc 1 47 5 is_stmt 1 view .LVU663
+  47:Core/Src/gps_uart_task.c **** 
+ 2134              		.loc 1 47 25 is_stmt 0 view .LVU664
+ 2135 000a 0E4B     		ldr	r3, .L134
+ 2136              	.LVL201:
+  47:Core/Src/gps_uart_task.c **** 
+ 2137              		.loc 1 47 25 view .LVU665
+ 2138 000c 4FF47412 		mov	r2, #3997696
+ 2139 0010 9A60     		str	r2, [r3, #8]
+  49:Core/Src/gps_uart_task.c ****     {
+ 2140              		.loc 1 49 5 is_stmt 1 view .LVU666
+  49:Core/Src/gps_uart_task.c ****     {
+ 2141              		.loc 1 49 24 is_stmt 0 view .LVU667
+ 2142 0012 0D4B     		ldr	r3, .L134+4
+ 2143 0014 1868     		ldr	r0, [r3]
+  49:Core/Src/gps_uart_task.c ****     {
+ 2144              		.loc 1 49 8 view .LVU668
+ 2145 0016 A0B1     		cbz	r0, .L131
+  43:Core/Src/gps_uart_task.c ****   uint32_t isr = GPS_DMA_RX_ISR_REG;
+ 2146              		.loc 1 43 1 view .LVU669
+ 2147 0018 00B5     		push	{lr}
+ 2148              	.LCFI20:
+ 2149              		.cfi_def_cfa_offset 4
+ 2150              		.cfi_offset 14, -4
+ 2151 001a 83B0     		sub	sp, sp, #12
+ 2152              	.LCFI21:
+ 2153              		.cfi_def_cfa_offset 16
+ 2154              	.LBB19:
+  51:Core/Src/gps_uart_task.c ****       vTaskNotifyGiveFromISR(g_gps_task_hdl, &xHigherPriorityTaskWoken);
+ 2155              		.loc 1 51 7 is_stmt 1 view .LVU670
+  51:Core/Src/gps_uart_task.c ****       vTaskNotifyGiveFromISR(g_gps_task_hdl, &xHigherPriorityTaskWoken);
+ARM GAS  /tmp/ccmp3BBc.s 			page 56
+
+
+ 2156              		.loc 1 51 18 is_stmt 0 view .LVU671
+ 2157 001c 0023     		movs	r3, #0
+ 2158 001e 0193     		str	r3, [sp, #4]
+  52:Core/Src/gps_uart_task.c ****       portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+ 2159              		.loc 1 52 7 is_stmt 1 view .LVU672
+ 2160 0020 01A9     		add	r1, sp, #4
+ 2161 0022 FFF7FEFF 		bl	vTaskNotifyGiveFromISR
+ 2162              	.LVL202:
+  53:Core/Src/gps_uart_task.c ****     }
+ 2163              		.loc 1 53 7 view .LVU673
+ 2164 0026 019B     		ldr	r3, [sp, #4]
+ 2165 0028 4BB1     		cbz	r3, .L127
+  53:Core/Src/gps_uart_task.c ****     }
+ 2166              		.loc 1 53 7 discriminator 1 view .LVU674
+ 2167 002a 4FF0E023 		mov	r3, #-536813568
+ 2168 002e 4FF08052 		mov	r2, #268435456
+ 2169 0032 C3F8042D 		str	r2, [r3, #3332]
+  53:Core/Src/gps_uart_task.c ****     }
+ 2170              		.loc 1 53 7 discriminator 1 view .LVU675
+ 2171              		.syntax unified
+ 2172              	@ 53 "Core/Src/gps_uart_task.c" 1
+ 2173 0036 BFF34F8F 		dsb
+ 2174              	@ 0 "" 2
+  53:Core/Src/gps_uart_task.c ****     }
+ 2175              		.loc 1 53 7 discriminator 1 view .LVU676
+ 2176              	@ 53 "Core/Src/gps_uart_task.c" 1
+ 2177 003a BFF36F8F 		isb
+ 2178              	@ 0 "" 2
+  53:Core/Src/gps_uart_task.c ****     }
+ 2179              		.loc 1 53 51 discriminator 2 view .LVU677
+ 2180              		.thumb
+ 2181              		.syntax unified
+ 2182              	.L127:
+ 2183              	.LBE19:
+  56:Core/Src/gps_uart_task.c **** 
+ 2184              		.loc 1 56 1 is_stmt 0 view .LVU678
+ 2185 003e 03B0     		add	sp, sp, #12
+ 2186              	.LCFI22:
+ 2187              		.cfi_def_cfa_offset 4
+ 2188              		@ sp needed
+ 2189 0040 00BD     		pop	{pc}
+ 2190              	.L131:
+ 2191              	.LCFI23:
+ 2192              		.cfi_def_cfa_offset 0
+ 2193              		.cfi_restore 14
+ 2194 0042 7047     		bx	lr
+ 2195              	.L135:
+ 2196              		.align	2
+ 2197              	.L134:
+ 2198 0044 00640240 		.word	1073898496
+ 2199 0048 00000000 		.word	g_gps_task_hdl
+ 2200              		.cfi_endproc
+ 2201              	.LFE162:
+ 2203              		.section	.rodata.GPS_ATGM336H_SetConstellation.str1.4,"aMS",%progbits,1
+ 2204              		.align	2
+ 2205              	.LC3:
+ 2206 0000 50434153 		.ascii	"PCAS04,%u\000"
+ARM GAS  /tmp/ccmp3BBc.s 			page 57
+
+
+ 2206      30342C25 
+ 2206      7500
+ 2207              		.section	.text.GPS_ATGM336H_SetConstellation,"ax",%progbits
+ 2208              		.align	1
+ 2209              		.global	GPS_ATGM336H_SetConstellation
+ 2210              		.syntax unified
+ 2211              		.thumb
+ 2212              		.thumb_func
+ 2214              	GPS_ATGM336H_SetConstellation:
+ 2215              	.LVL203:
+ 2216              	.LFB166:
+ 163:Core/Src/gps_uart_task.c ****   char cmd[16];
+ 2217              		.loc 1 163 1 is_stmt 1 view -0
+ 2218              		.cfi_startproc
+ 2219              		@ args = 0, pretend = 0, frame = 16
+ 2220              		@ frame_needed = 0, uses_anonymous_args = 0
+ 163:Core/Src/gps_uart_task.c ****   char cmd[16];
+ 2221              		.loc 1 163 1 is_stmt 0 view .LVU680
+ 2222 0000 10B5     		push	{r4, lr}
+ 2223              	.LCFI24:
+ 2224              		.cfi_def_cfa_offset 8
+ 2225              		.cfi_offset 4, -8
+ 2226              		.cfi_offset 14, -4
+ 2227 0002 84B0     		sub	sp, sp, #16
+ 2228              	.LCFI25:
+ 2229              		.cfi_def_cfa_offset 24
+ 2230 0004 0346     		mov	r3, r0
+ 164:Core/Src/gps_uart_task.c ****   (void)snprintf(cmd, sizeof(cmd), "PCAS04,%u", (unsigned)mode);
+ 2231              		.loc 1 164 3 is_stmt 1 view .LVU681
+ 165:Core/Src/gps_uart_task.c ****   GPS_SendCasicCmd(cmd);
+ 2232              		.loc 1 165 3 view .LVU682
+ 165:Core/Src/gps_uart_task.c ****   GPS_SendCasicCmd(cmd);
+ 2233              		.loc 1 165 9 is_stmt 0 view .LVU683
+ 2234 0006 054A     		ldr	r2, .L138
+ 2235 0008 1021     		movs	r1, #16
+ 2236 000a 6846     		mov	r0, sp
+ 2237              	.LVL204:
+ 165:Core/Src/gps_uart_task.c ****   GPS_SendCasicCmd(cmd);
+ 2238              		.loc 1 165 9 view .LVU684
+ 2239 000c FFF7FEFF 		bl	snprintf
+ 2240              	.LVL205:
+ 166:Core/Src/gps_uart_task.c **** }
+ 2241              		.loc 1 166 3 is_stmt 1 view .LVU685
+ 2242 0010 6846     		mov	r0, sp
+ 2243 0012 FFF7FEFF 		bl	GPS_SendCasicCmd
+ 2244              	.LVL206:
+ 167:Core/Src/gps_uart_task.c **** 
+ 2245              		.loc 1 167 1 is_stmt 0 view .LVU686
+ 2246 0016 04B0     		add	sp, sp, #16
+ 2247              	.LCFI26:
+ 2248              		.cfi_def_cfa_offset 8
+ 2249              		@ sp needed
+ 2250 0018 10BD     		pop	{r4, pc}
+ 2251              	.L139:
+ 2252 001a 00BF     		.align	2
+ 2253              	.L138:
+ 2254 001c 00000000 		.word	.LC3
+ARM GAS  /tmp/ccmp3BBc.s 			page 58
+
+
+ 2255              		.cfi_endproc
+ 2256              	.LFE166:
+ 2258              		.section	.rodata.GPS_ATGM336H_EnterSleep.str1.4,"aMS",%progbits,1
+ 2259              		.align	2
+ 2260              	.LC4:
+ 2261 0000 50434153 		.ascii	"PCAS12,%u\000"
+ 2261      31322C25 
+ 2261      7500
+ 2262              		.section	.text.GPS_ATGM336H_EnterSleep,"ax",%progbits
+ 2263              		.align	1
+ 2264              		.global	GPS_ATGM336H_EnterSleep
+ 2265              		.syntax unified
+ 2266              		.thumb
+ 2267              		.thumb_func
+ 2269              	GPS_ATGM336H_EnterSleep:
+ 2270              	.LVL207:
+ 2271              	.LFB167:
+ 175:Core/Src/gps_uart_task.c ****   uint16_t sec = (standby_sec == 0U) ? 65535U : standby_sec;
+ 2272              		.loc 1 175 1 is_stmt 1 view -0
+ 2273              		.cfi_startproc
+ 2274              		@ args = 0, pretend = 0, frame = 24
+ 2275              		@ frame_needed = 0, uses_anonymous_args = 0
+ 175:Core/Src/gps_uart_task.c ****   uint16_t sec = (standby_sec == 0U) ? 65535U : standby_sec;
+ 2276              		.loc 1 175 1 is_stmt 0 view .LVU688
+ 2277 0000 10B5     		push	{r4, lr}
+ 2278              	.LCFI27:
+ 2279              		.cfi_def_cfa_offset 8
+ 2280              		.cfi_offset 4, -8
+ 2281              		.cfi_offset 14, -4
+ 2282 0002 86B0     		sub	sp, sp, #24
+ 2283              	.LCFI28:
+ 2284              		.cfi_def_cfa_offset 32
+ 176:Core/Src/gps_uart_task.c ****   char cmd[24];
+ 2285              		.loc 1 176 3 is_stmt 1 view .LVU689
+ 176:Core/Src/gps_uart_task.c ****   char cmd[24];
+ 2286              		.loc 1 176 12 is_stmt 0 view .LVU690
+ 2287 0004 0346     		mov	r3, r0
+ 2288 0006 08B9     		cbnz	r0, .L141
+ 176:Core/Src/gps_uart_task.c ****   char cmd[24];
+ 2289              		.loc 1 176 12 discriminator 2 view .LVU691
+ 2290 0008 4FF6FF73 		movw	r3, #65535
+ 2291              	.L141:
+ 2292              	.LVL208:
+ 177:Core/Src/gps_uart_task.c ****   (void)snprintf(cmd, sizeof(cmd), "PCAS12,%u", (unsigned)sec);
+ 2293              		.loc 1 177 3 is_stmt 1 view .LVU692
+ 178:Core/Src/gps_uart_task.c ****   GPS_SendCasicCmd(cmd);
+ 2294              		.loc 1 178 3 view .LVU693
+ 178:Core/Src/gps_uart_task.c ****   GPS_SendCasicCmd(cmd);
+ 2295              		.loc 1 178 9 is_stmt 0 view .LVU694
+ 2296 000c 044A     		ldr	r2, .L144
+ 2297 000e 1821     		movs	r1, #24
+ 2298 0010 6846     		mov	r0, sp
+ 2299              	.LVL209:
+ 178:Core/Src/gps_uart_task.c ****   GPS_SendCasicCmd(cmd);
+ 2300              		.loc 1 178 9 view .LVU695
+ 2301 0012 FFF7FEFF 		bl	snprintf
+ 2302              	.LVL210:
+ARM GAS  /tmp/ccmp3BBc.s 			page 59
+
+
+ 179:Core/Src/gps_uart_task.c **** }
+ 2303              		.loc 1 179 3 is_stmt 1 view .LVU696
+ 2304 0016 6846     		mov	r0, sp
+ 2305 0018 FFF7FEFF 		bl	GPS_SendCasicCmd
+ 2306              	.LVL211:
+ 180:Core/Src/gps_uart_task.c **** 
+ 2307              		.loc 1 180 1 is_stmt 0 view .LVU697
+ 2308 001c 06B0     		add	sp, sp, #24
+ 2309              	.LCFI29:
+ 2310              		.cfi_def_cfa_offset 8
+ 2311              		@ sp needed
+ 2312 001e 10BD     		pop	{r4, pc}
+ 2313              	.L145:
+ 2314              		.align	2
+ 2315              	.L144:
+ 2316 0020 00000000 		.word	.LC4
+ 2317              		.cfi_endproc
+ 2318              	.LFE167:
+ 2320              		.section	.rodata.GPS_ATGM336H_Wakeup.str1.4,"aMS",%progbits,1
+ 2321              		.align	2
+ 2322              	.LC5:
+ 2323 0000 50434153 		.ascii	"PCAS10,0\000"
+ 2323      31302C30 
+ 2323      00
+ 2324              		.section	.text.GPS_ATGM336H_Wakeup,"ax",%progbits
+ 2325              		.align	1
+ 2326              		.global	GPS_ATGM336H_Wakeup
+ 2327              		.syntax unified
+ 2328              		.thumb
+ 2329              		.thumb_func
+ 2331              	GPS_ATGM336H_Wakeup:
+ 2332              	.LFB168:
+ 187:Core/Src/gps_uart_task.c ****   const uint8_t wake_pulse = 0xFFU;
+ 2333              		.loc 1 187 1 is_stmt 1 view -0
+ 2334              		.cfi_startproc
+ 2335              		@ args = 0, pretend = 0, frame = 8
+ 2336              		@ frame_needed = 0, uses_anonymous_args = 0
+ 2337 0000 00B5     		push	{lr}
+ 2338              	.LCFI30:
+ 2339              		.cfi_def_cfa_offset 4
+ 2340              		.cfi_offset 14, -4
+ 2341 0002 83B0     		sub	sp, sp, #12
+ 2342              	.LCFI31:
+ 2343              		.cfi_def_cfa_offset 16
+ 188:Core/Src/gps_uart_task.c ****   GPS_UART_SendBytes(&wake_pulse, 1U);
+ 2344              		.loc 1 188 3 view .LVU699
+ 188:Core/Src/gps_uart_task.c ****   GPS_UART_SendBytes(&wake_pulse, 1U);
+ 2345              		.loc 1 188 17 is_stmt 0 view .LVU700
+ 2346 0004 FF23     		movs	r3, #255
+ 2347 0006 8DF80730 		strb	r3, [sp, #7]
+ 189:Core/Src/gps_uart_task.c ****   vTaskDelay(pdMS_TO_TICKS(20));
+ 2348              		.loc 1 189 3 is_stmt 1 view .LVU701
+ 2349 000a 0121     		movs	r1, #1
+ 2350 000c 0DF10700 		add	r0, sp, #7
+ 2351 0010 FFF7FEFF 		bl	GPS_UART_SendBytes
+ 2352              	.LVL212:
+ 190:Core/Src/gps_uart_task.c **** 
+ARM GAS  /tmp/ccmp3BBc.s 			page 60
+
+
+ 2353              		.loc 1 190 3 view .LVU702
+ 2354 0014 1420     		movs	r0, #20
+ 2355 0016 FFF7FEFF 		bl	vTaskDelay
+ 2356              	.LVL213:
+ 193:Core/Src/gps_uart_task.c ****   vTaskDelay(pdMS_TO_TICKS(50));
+ 2357              		.loc 1 193 3 view .LVU703
+ 2358 001a 0548     		ldr	r0, .L148
+ 2359 001c FFF7FEFF 		bl	GPS_SendCasicCmd
+ 2360              	.LVL214:
+ 194:Core/Src/gps_uart_task.c ****   GPS_ATGM336H_SetConstellation(ATGM336H_MODE_GPS_GLONASS);
+ 2361              		.loc 1 194 3 view .LVU704
+ 2362 0020 3220     		movs	r0, #50
+ 2363 0022 FFF7FEFF 		bl	vTaskDelay
+ 2364              	.LVL215:
+ 195:Core/Src/gps_uart_task.c **** }
+ 2365              		.loc 1 195 3 view .LVU705
+ 2366 0026 0520     		movs	r0, #5
+ 2367 0028 FFF7FEFF 		bl	GPS_ATGM336H_SetConstellation
+ 2368              	.LVL216:
+ 196:Core/Src/gps_uart_task.c **** 
+ 2369              		.loc 1 196 1 is_stmt 0 view .LVU706
+ 2370 002c 03B0     		add	sp, sp, #12
+ 2371              	.LCFI32:
+ 2372              		.cfi_def_cfa_offset 4
+ 2373              		@ sp needed
+ 2374 002e 00BD     		pop	{pc}
+ 2375              	.L149:
+ 2376              		.align	2
+ 2377              	.L148:
+ 2378 0030 00000000 		.word	.LC5
+ 2379              		.cfi_endproc
+ 2380              	.LFE168:
+ 2382              		.section	.text.GPS_UART_Task,"ax",%progbits
+ 2383              		.align	1
+ 2384              		.global	GPS_UART_Task
+ 2385              		.syntax unified
+ 2386              		.thumb
+ 2387              		.thumb_func
+ 2389              	GPS_UART_Task:
+ 2390              	.LVL217:
+ 2391              	.LFB177:
+ 490:Core/Src/gps_uart_task.c **** 
+ 491:Core/Src/gps_uart_task.c **** /*============================================================================
+ 492:Core/Src/gps_uart_task.c ****  * 5. GPS_UART_Task Entry Point
+ 493:Core/Src/gps_uart_task.c ****  *============================================================================*/
+ 494:Core/Src/gps_uart_task.c **** void GPS_UART_Task(void *argument)
+ 495:Core/Src/gps_uart_task.c **** {
+ 2392              		.loc 1 495 1 is_stmt 1 view -0
+ 2393              		.cfi_startproc
+ 2394              		@ args = 0, pretend = 0, frame = 160
+ 2395              		@ frame_needed = 0, uses_anonymous_args = 0
+ 2396              		.loc 1 495 1 is_stmt 0 view .LVU708
+ 2397 0000 F0B5     		push	{r4, r5, r6, r7, lr}
+ 2398              	.LCFI33:
+ 2399              		.cfi_def_cfa_offset 20
+ 2400              		.cfi_offset 4, -20
+ 2401              		.cfi_offset 5, -16
+ARM GAS  /tmp/ccmp3BBc.s 			page 61
+
+
+ 2402              		.cfi_offset 6, -12
+ 2403              		.cfi_offset 7, -8
+ 2404              		.cfi_offset 14, -4
+ 2405 0002 A9B0     		sub	sp, sp, #164
+ 2406              	.LCFI34:
+ 2407              		.cfi_def_cfa_offset 184
+ 496:Core/Src/gps_uart_task.c ****   (void)argument;
+ 2408              		.loc 1 496 3 is_stmt 1 view .LVU709
+ 497:Core/Src/gps_uart_task.c **** 
+ 498:Core/Src/gps_uart_task.c ****   g_gps_task_hdl = xTaskGetCurrentTaskHandle();
+ 2409              		.loc 1 498 3 view .LVU710
+ 2410              		.loc 1 498 20 is_stmt 0 view .LVU711
+ 2411 0004 FFF7FEFF 		bl	xTaskGetCurrentTaskHandle
+ 2412              	.LVL218:
+ 2413              		.loc 1 498 18 discriminator 1 view .LVU712
+ 2414 0008 364B     		ldr	r3, .L166
+ 2415 000a 1860     		str	r0, [r3]
+ 499:Core/Src/gps_uart_task.c ****   GPS_UART_DMA_Init();
+ 2416              		.loc 1 499 3 is_stmt 1 view .LVU713
+ 2417 000c FFF7FEFF 		bl	GPS_UART_DMA_Init
+ 2418              	.LVL219:
+ 500:Core/Src/gps_uart_task.c **** 
+ 501:Core/Src/gps_uart_task.c ****   /* Allow ATGM336H-5N power-on boot, then select GPS + GLONASS ($PCAS04,5*1C) */
+ 502:Core/Src/gps_uart_task.c ****   vTaskDelay(pdMS_TO_TICKS(100));
+ 2419              		.loc 1 502 3 view .LVU714
+ 2420 0010 6420     		movs	r0, #100
+ 2421 0012 FFF7FEFF 		bl	vTaskDelay
+ 2422              	.LVL220:
+ 503:Core/Src/gps_uart_task.c ****   GPS_ATGM336H_SetConstellation(ATGM336H_MODE_GPS_GLONASS);
+ 2423              		.loc 1 503 3 view .LVU715
+ 2424 0016 0520     		movs	r0, #5
+ 2425 0018 FFF7FEFF 		bl	GPS_ATGM336H_SetConstellation
+ 2426              	.LVL221:
+ 504:Core/Src/gps_uart_task.c **** 
+ 505:Core/Src/gps_uart_task.c ****   uint32_t   rd_idx         = 0U;
+ 2427              		.loc 1 505 3 view .LVU716
+ 506:Core/Src/gps_uart_task.c ****   uint32_t   line_len       = 0U;
+ 2428              		.loc 1 506 3 view .LVU717
+ 507:Core/Src/gps_uart_task.c ****   char       line_buf[GPS_NMEA_MAX_LEN];
+ 2429              		.loc 1 507 3 view .LVU718
+ 508:Core/Src/gps_uart_task.c ****   GpsFix_t   cur_fix        = {0};
+ 2430              		.loc 1 508 3 view .LVU719
+ 2431              		.loc 1 508 14 is_stmt 0 view .LVU720
+ 2432 001c 0024     		movs	r4, #0
+ 2433 001e 0194     		str	r4, [sp, #4]
+ 2434 0020 0294     		str	r4, [sp, #8]
+ 2435 0022 0394     		str	r4, [sp, #12]
+ 2436 0024 0494     		str	r4, [sp, #16]
+ 2437 0026 0594     		str	r4, [sp, #20]
+ 2438 0028 0694     		str	r4, [sp, #24]
+ 2439 002a 0794     		str	r4, [sp, #28]
+ 509:Core/Src/gps_uart_task.c ****   TickType_t last_nmea_tick = xTaskGetTickCount();
+ 2440              		.loc 1 509 3 is_stmt 1 view .LVU721
+ 2441              		.loc 1 509 31 is_stmt 0 view .LVU722
+ 2442 002c FFF7FEFF 		bl	xTaskGetTickCount
+ 2443              	.LVL222:
+ 2444 0030 0746     		mov	r7, r0
+ARM GAS  /tmp/ccmp3BBc.s 			page 62
+
+
+ 2445              	.LVL223:
+ 506:Core/Src/gps_uart_task.c ****   char       line_buf[GPS_NMEA_MAX_LEN];
+ 2446              		.loc 1 506 14 view .LVU723
+ 2447 0032 2546     		mov	r5, r4
+ 2448 0034 40E0     		b	.L151
+ 2449              	.LVL224:
+ 2450              	.L163:
+ 2451              	.LBB20:
+ 2452              	.LBB21:
+ 510:Core/Src/gps_uart_task.c **** 
+ 511:Core/Src/gps_uart_task.c ****   for (;;)
+ 512:Core/Src/gps_uart_task.c ****   {
+ 513:Core/Src/gps_uart_task.c ****     /* Wait for UART DMA / Idle interrupt notification when GPS hardware is connected */
+ 514:Core/Src/gps_uart_task.c ****     (void)ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(100));
+ 515:Core/Src/gps_uart_task.c **** 
+ 516:Core/Src/gps_uart_task.c ****     uint32_t wr_idx = (GPS_DMA_RX_BUF_SIZE - GPS_DMA_RX_STREAM->NDTR) % GPS_DMA_RX_BUF_SIZE;
+ 517:Core/Src/gps_uart_task.c **** 
+ 518:Core/Src/gps_uart_task.c ****     while (rd_idx != wr_idx)
+ 519:Core/Src/gps_uart_task.c ****     {
+ 520:Core/Src/gps_uart_task.c ****       char c = (char)s_gps_dma_rx_buf[rd_idx];
+ 521:Core/Src/gps_uart_task.c ****       rd_idx = (rd_idx + 1U) % GPS_DMA_RX_BUF_SIZE;
+ 522:Core/Src/gps_uart_task.c **** 
+ 523:Core/Src/gps_uart_task.c ****       if (c == '$')
+ 524:Core/Src/gps_uart_task.c ****       {
+ 525:Core/Src/gps_uart_task.c ****         line_len = 0U;
+ 2453              		.loc 1 525 9 is_stmt 1 view .LVU724
+ 526:Core/Src/gps_uart_task.c ****         line_buf[line_len++] = c;
+ 2454              		.loc 1 526 9 view .LVU725
+ 2455              		.loc 1 526 30 is_stmt 0 view .LVU726
+ 2456 0036 8DF82030 		strb	r3, [sp, #32]
+ 2457              		.loc 1 526 26 view .LVU727
+ 2458 003a 0125     		movs	r5, #1
+ 2459              	.LVL225:
+ 2460              	.L152:
+ 2461              		.loc 1 526 26 view .LVU728
+ 2462              	.LBE21:
+ 518:Core/Src/gps_uart_task.c ****     {
+ 2463              		.loc 1 518 19 is_stmt 1 discriminator 1 view .LVU729
+ 2464 003c B442     		cmp	r4, r6
+ 2465 003e 31D0     		beq	.L162
+ 2466              	.LBB22:
+ 520:Core/Src/gps_uart_task.c ****       rd_idx = (rd_idx + 1U) % GPS_DMA_RX_BUF_SIZE;
+ 2467              		.loc 1 520 7 view .LVU730
+ 520:Core/Src/gps_uart_task.c ****       rd_idx = (rd_idx + 1U) % GPS_DMA_RX_BUF_SIZE;
+ 2468              		.loc 1 520 12 is_stmt 0 view .LVU731
+ 2469 0040 294B     		ldr	r3, .L166+4
+ 2470 0042 1B5D     		ldrb	r3, [r3, r4]	@ zero_extendqisi2
+ 2471              	.LVL226:
+ 521:Core/Src/gps_uart_task.c **** 
+ 2472              		.loc 1 521 7 is_stmt 1 view .LVU732
+ 521:Core/Src/gps_uart_task.c **** 
+ 2473              		.loc 1 521 24 is_stmt 0 view .LVU733
+ 2474 0044 0134     		adds	r4, r4, #1
+ 2475              	.LVL227:
+ 521:Core/Src/gps_uart_task.c **** 
+ 2476              		.loc 1 521 14 view .LVU734
+ 2477 0046 C4F30804 		ubfx	r4, r4, #0, #9
+ARM GAS  /tmp/ccmp3BBc.s 			page 63
+
+
+ 2478              	.LVL228:
+ 523:Core/Src/gps_uart_task.c ****       {
+ 2479              		.loc 1 523 7 is_stmt 1 view .LVU735
+ 523:Core/Src/gps_uart_task.c ****       {
+ 2480              		.loc 1 523 10 is_stmt 0 view .LVU736
+ 2481 004a 242B     		cmp	r3, #36
+ 2482 004c F3D0     		beq	.L163
+ 527:Core/Src/gps_uart_task.c ****       }
+ 528:Core/Src/gps_uart_task.c ****       else if (line_len > 0U)
+ 2483              		.loc 1 528 12 is_stmt 1 view .LVU737
+ 2484              		.loc 1 528 15 is_stmt 0 view .LVU738
+ 2485 004e 002D     		cmp	r5, #0
+ 2486 0050 F4D0     		beq	.L152
+ 529:Core/Src/gps_uart_task.c ****       {
+ 530:Core/Src/gps_uart_task.c ****         if (c == '\r' || c == '\n')
+ 2487              		.loc 1 530 9 is_stmt 1 view .LVU739
+ 2488              		.loc 1 530 12 is_stmt 0 view .LVU740
+ 2489 0052 0D2B     		cmp	r3, #13
+ 2490 0054 0AD0     		beq	.L155
+ 2491              		.loc 1 530 23 discriminator 1 view .LVU741
+ 2492 0056 0A2B     		cmp	r3, #10
+ 2493 0058 08D0     		beq	.L155
+ 531:Core/Src/gps_uart_task.c ****         {
+ 532:Core/Src/gps_uart_task.c ****           line_buf[line_len] = '\0';
+ 533:Core/Src/gps_uart_task.c ****           if (GPS_ParseNmeaSentence(line_buf, &cur_fix))
+ 534:Core/Src/gps_uart_task.c ****           {
+ 535:Core/Src/gps_uart_task.c ****             last_nmea_tick = xTaskGetTickCount();
+ 536:Core/Src/gps_uart_task.c ****             xQueueOverwrite(g_q_gps_fix, &cur_fix);
+ 537:Core/Src/gps_uart_task.c ****           }
+ 538:Core/Src/gps_uart_task.c ****           line_len = 0U;
+ 539:Core/Src/gps_uart_task.c ****         }
+ 540:Core/Src/gps_uart_task.c ****         else if (line_len < (GPS_NMEA_MAX_LEN - 1U))
+ 2494              		.loc 1 540 14 is_stmt 1 view .LVU742
+ 2495              		.loc 1 540 17 is_stmt 0 view .LVU743
+ 2496 005a 7E2D     		cmp	r5, #126
+ 2497 005c 20D8     		bhi	.L160
+ 541:Core/Src/gps_uart_task.c ****         {
+ 542:Core/Src/gps_uart_task.c ****           line_buf[line_len++] = c;
+ 2498              		.loc 1 542 11 is_stmt 1 view .LVU744
+ 2499              	.LVL229:
+ 2500              		.loc 1 542 32 is_stmt 0 view .LVU745
+ 2501 005e 05F1A002 		add	r2, r5, #160
+ 2502 0062 6A44     		add	r2, sp, r2
+ 2503 0064 02F8803C 		strb	r3, [r2, #-128]
+ 2504              		.loc 1 542 28 view .LVU746
+ 2505 0068 0135     		adds	r5, r5, #1
+ 2506              	.LVL230:
+ 2507              		.loc 1 542 28 view .LVU747
+ 2508 006a E7E7     		b	.L152
+ 2509              	.L155:
+ 532:Core/Src/gps_uart_task.c ****           if (GPS_ParseNmeaSentence(line_buf, &cur_fix))
+ 2510              		.loc 1 532 11 is_stmt 1 view .LVU748
+ 532:Core/Src/gps_uart_task.c ****           if (GPS_ParseNmeaSentence(line_buf, &cur_fix))
+ 2511              		.loc 1 532 30 is_stmt 0 view .LVU749
+ 2512 006c 05F1A003 		add	r3, r5, #160
+ 2513              	.LVL231:
+ 532:Core/Src/gps_uart_task.c ****           if (GPS_ParseNmeaSentence(line_buf, &cur_fix))
+ARM GAS  /tmp/ccmp3BBc.s 			page 64
+
+
+ 2514              		.loc 1 532 30 view .LVU750
+ 2515 0070 0DEB0305 		add	r5, sp, r3
+ 2516              	.LVL232:
+ 532:Core/Src/gps_uart_task.c ****           if (GPS_ParseNmeaSentence(line_buf, &cur_fix))
+ 2517              		.loc 1 532 30 view .LVU751
+ 2518 0074 0023     		movs	r3, #0
+ 2519              	.LVL233:
+ 532:Core/Src/gps_uart_task.c ****           if (GPS_ParseNmeaSentence(line_buf, &cur_fix))
+ 2520              		.loc 1 532 30 view .LVU752
+ 2521 0076 05F8803C 		strb	r3, [r5, #-128]
+ 533:Core/Src/gps_uart_task.c ****           {
+ 2522              		.loc 1 533 11 is_stmt 1 view .LVU753
+ 533:Core/Src/gps_uart_task.c ****           {
+ 2523              		.loc 1 533 15 is_stmt 0 view .LVU754
+ 2524 007a 01A9     		add	r1, sp, #4
+ 2525 007c 08A8     		add	r0, sp, #32
+ 2526 007e FFF7FEFF 		bl	GPS_ParseNmeaSentence
+ 2527              	.LVL234:
+ 533:Core/Src/gps_uart_task.c ****           {
+ 2528              		.loc 1 533 14 discriminator 1 view .LVU755
+ 2529 0082 08B9     		cbnz	r0, .L164
+ 538:Core/Src/gps_uart_task.c ****         }
+ 2530              		.loc 1 538 20 view .LVU756
+ 2531 0084 0546     		mov	r5, r0
+ 2532 0086 D9E7     		b	.L152
+ 2533              	.L164:
+ 535:Core/Src/gps_uart_task.c ****             xQueueOverwrite(g_q_gps_fix, &cur_fix);
+ 2534              		.loc 1 535 13 is_stmt 1 view .LVU757
+ 535:Core/Src/gps_uart_task.c ****             xQueueOverwrite(g_q_gps_fix, &cur_fix);
+ 2535              		.loc 1 535 30 is_stmt 0 view .LVU758
+ 2536 0088 FFF7FEFF 		bl	xTaskGetTickCount
+ 2537              	.LVL235:
+ 2538 008c 0746     		mov	r7, r0
+ 2539              	.LVL236:
+ 536:Core/Src/gps_uart_task.c ****           }
+ 2540              		.loc 1 536 13 is_stmt 1 view .LVU759
+ 2541 008e 0223     		movs	r3, #2
+ 2542 0090 0022     		movs	r2, #0
+ 2543 0092 01A9     		add	r1, sp, #4
+ 2544 0094 1548     		ldr	r0, .L166+8
+ 2545              	.LVL237:
+ 536:Core/Src/gps_uart_task.c ****           }
+ 2546              		.loc 1 536 13 is_stmt 0 view .LVU760
+ 2547 0096 0068     		ldr	r0, [r0]
+ 2548 0098 FFF7FEFF 		bl	xQueueGenericSend
+ 2549              	.LVL238:
+ 538:Core/Src/gps_uart_task.c ****         }
+ 2550              		.loc 1 538 20 view .LVU761
+ 2551 009c 0025     		movs	r5, #0
+ 2552 009e CDE7     		b	.L152
+ 2553              	.LVL239:
+ 2554              	.L160:
+ 543:Core/Src/gps_uart_task.c ****         }
+ 544:Core/Src/gps_uart_task.c ****         else
+ 545:Core/Src/gps_uart_task.c ****         {
+ 546:Core/Src/gps_uart_task.c ****           /* Sentence overflow -> reset until next '$' */
+ 547:Core/Src/gps_uart_task.c ****           line_len = 0U;
+ARM GAS  /tmp/ccmp3BBc.s 			page 65
+
+
+ 2555              		.loc 1 547 20 view .LVU762
+ 2556 00a0 0025     		movs	r5, #0
+ 2557              	.LVL240:
+ 2558              		.loc 1 547 20 view .LVU763
+ 2559 00a2 CBE7     		b	.L152
+ 2560              	.LVL241:
+ 2561              	.L162:
+ 2562              		.loc 1 547 20 view .LVU764
+ 2563              	.LBE22:
+ 548:Core/Src/gps_uart_task.c ****         }
+ 549:Core/Src/gps_uart_task.c ****       }
+ 550:Core/Src/gps_uart_task.c ****     }
+ 551:Core/Src/gps_uart_task.c **** 
+ 552:Core/Src/gps_uart_task.c ****     /* If no valid NMEA sentence arrived for > 2.5s, mark UART as disconnected */
+ 553:Core/Src/gps_uart_task.c ****     if (cur_fix.uart_ok && ((xTaskGetTickCount() - last_nmea_tick) > pdMS_TO_TICKS(2500)))
+ 2564              		.loc 1 553 5 is_stmt 1 view .LVU765
+ 2565              		.loc 1 553 16 is_stmt 0 view .LVU766
+ 2566 00a4 9DF81A30 		ldrb	r3, [sp, #26]	@ zero_extendqisi2
+ 2567              		.loc 1 553 8 view .LVU767
+ 2568 00a8 33B1     		cbz	r3, .L151
+ 2569              		.loc 1 553 30 discriminator 1 view .LVU768
+ 2570 00aa FFF7FEFF 		bl	xTaskGetTickCount
+ 2571              	.LVL242:
+ 2572              		.loc 1 553 50 discriminator 2 view .LVU769
+ 2573 00ae C01B     		subs	r0, r0, r7
+ 2574              		.loc 1 553 25 discriminator 2 view .LVU770
+ 2575 00b0 40F6C413 		movw	r3, #2500
+ 2576 00b4 9842     		cmp	r0, r3
+ 2577 00b6 09D8     		bhi	.L165
+ 2578              	.LVL243:
+ 2579              	.L151:
+ 2580              		.loc 1 553 25 discriminator 2 view .LVU771
+ 2581              	.LBE20:
+ 511:Core/Src/gps_uart_task.c ****   {
+ 2582              		.loc 1 511 3 is_stmt 1 view .LVU772
+ 2583              	.LBB23:
+ 514:Core/Src/gps_uart_task.c **** 
+ 2584              		.loc 1 514 5 view .LVU773
+ 514:Core/Src/gps_uart_task.c **** 
+ 2585              		.loc 1 514 11 is_stmt 0 view .LVU774
+ 2586 00b8 6421     		movs	r1, #100
+ 2587 00ba 0120     		movs	r0, #1
+ 2588 00bc FFF7FEFF 		bl	ulTaskNotifyTake
+ 2589              	.LVL244:
+ 516:Core/Src/gps_uart_task.c **** 
+ 2590              		.loc 1 516 5 is_stmt 1 view .LVU775
+ 516:Core/Src/gps_uart_task.c **** 
+ 2591              		.loc 1 516 63 is_stmt 0 view .LVU776
+ 2592 00c0 0B4B     		ldr	r3, .L166+12
+ 2593 00c2 5E6C     		ldr	r6, [r3, #68]
+ 516:Core/Src/gps_uart_task.c **** 
+ 2594              		.loc 1 516 14 view .LVU777
+ 2595 00c4 7642     		rsbs	r6, r6, #0
+ 2596 00c6 C6F30806 		ubfx	r6, r6, #0, #9
+ 2597              	.LVL245:
+ 518:Core/Src/gps_uart_task.c ****     {
+ 2598              		.loc 1 518 5 is_stmt 1 view .LVU778
+ARM GAS  /tmp/ccmp3BBc.s 			page 66
+
+
+ 518:Core/Src/gps_uart_task.c ****     {
+ 2599              		.loc 1 518 11 is_stmt 0 view .LVU779
+ 2600 00ca B7E7     		b	.L152
+ 2601              	.L165:
+ 554:Core/Src/gps_uart_task.c ****     {
+ 555:Core/Src/gps_uart_task.c ****       cur_fix.uart_ok = false;
+ 2602              		.loc 1 555 7 is_stmt 1 view .LVU780
+ 2603              		.loc 1 555 23 is_stmt 0 view .LVU781
+ 2604 00cc 0022     		movs	r2, #0
+ 2605 00ce 8DF81A20 		strb	r2, [sp, #26]
+ 556:Core/Src/gps_uart_task.c ****       cur_fix.valid   = false;
+ 2606              		.loc 1 556 7 is_stmt 1 view .LVU782
+ 2607              		.loc 1 556 23 is_stmt 0 view .LVU783
+ 2608 00d2 8DF81C20 		strb	r2, [sp, #28]
+ 557:Core/Src/gps_uart_task.c ****       xQueueOverwrite(g_q_gps_fix, &cur_fix);
+ 2609              		.loc 1 557 7 is_stmt 1 view .LVU784
+ 2610 00d6 0223     		movs	r3, #2
+ 2611 00d8 01A9     		add	r1, sp, #4
+ 2612 00da 0448     		ldr	r0, .L166+8
+ 2613 00dc 0068     		ldr	r0, [r0]
+ 2614 00de FFF7FEFF 		bl	xQueueGenericSend
+ 2615              	.LVL246:
+ 2616 00e2 E9E7     		b	.L151
+ 2617              	.L167:
+ 2618              		.align	2
+ 2619              	.L166:
+ 2620 00e4 00000000 		.word	g_gps_task_hdl
+ 2621 00e8 00000000 		.word	s_gps_dma_rx_buf
+ 2622 00ec 00000000 		.word	g_q_gps_fix
+ 2623 00f0 00640240 		.word	1073898496
+ 2624              	.LBE23:
+ 2625              		.cfi_endproc
+ 2626              	.LFE177:
+ 2628              		.section	.bss.s_gl_vis.0,"aw",%nobits
+ 2631              	s_gl_vis.0:
+ 2632 0000 00       		.space	1
+ 2633              		.section	.bss.s_gp_vis.1,"aw",%nobits
+ 2636              	s_gp_vis.1:
+ 2637 0000 00       		.space	1
+ 2638              		.section	.rodata.hex_lut.2,"a"
+ 2639              		.align	2
+ 2642              	hex_lut.2:
+ 2643 0000 30313233 		.ascii	"0123456789ABCDEF"
+ 2643      34353637 
+ 2643      38394142 
+ 2643      43444546 
+ 2644              		.section	.bss.s_gps_dma_rx_buf,"aw",%nobits
+ 2645              		.align	2
+ 2648              	s_gps_dma_rx_buf:
+ 2649 0000 00000000 		.space	512
+ 2649      00000000 
+ 2649      00000000 
+ 2649      00000000 
+ 2649      00000000 
+ 2650              		.text
+ 2651              	.Letext0:
+ 2652              		.file 2 "/usr/arm-none-eabi/include/machine/_default_types.h"
+ARM GAS  /tmp/ccmp3BBc.s 			page 67
+
+
+ 2653              		.file 3 "/usr/arm-none-eabi/include/sys/_stdint.h"
+ 2654              		.file 4 "Drivers/CMSIS/Device/ST/STM32F4xx/Include/stm32f429xx.h"
+ 2655              		.file 5 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_gpio.h"
+ 2656              		.file 6 "Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F/portmacro.h"
+ 2657              		.file 7 "Middlewares/Third_Party/FreeRTOS/Source/include/task.h"
+ 2658              		.file 8 "Middlewares/Third_Party/FreeRTOS/Source/include/queue.h"
+ 2659              		.file 9 "Drivers/lvgl/include/lvgl/core/../indev/lv_indev.h"
+ 2660              		.file 10 "Drivers/lvgl/include/lvgl/widgets/lv_bar.h"
+ 2661              		.file 11 "Core/Inc/geo_math.h"
+ 2662              		.file 12 "Core/Inc/app.h"
+ 2663              		.file 13 "/usr/arm-none-eabi/include/string.h"
+ 2664              		.file 14 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_cortex.h"
+ 2665              		.file 15 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_rcc.h"
+ 2666              		.file 16 "/usr/arm-none-eabi/include/stdio.h"
+ARM GAS  /tmp/ccmp3BBc.s 			page 68
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 gps_uart_task.c
+     /tmp/ccmp3BBc.s:21     .text.GPS_UART_SendBytes:00000000 $t
+     /tmp/ccmp3BBc.s:26     .text.GPS_UART_SendBytes:00000000 GPS_UART_SendBytes
+     /tmp/ccmp3BBc.s:82     .text.GPS_UART_SendBytes:00000028 $d
+     /tmp/ccmp3BBc.s:87     .text.GPS_SendCasicCmd:00000000 $t
+     /tmp/ccmp3BBc.s:92     .text.GPS_SendCasicCmd:00000000 GPS_SendCasicCmd
+     /tmp/ccmp3BBc.s:213    .text.GPS_SendCasicCmd:00000084 $d
+     /tmp/ccmp3BBc.s:2642   .rodata.hex_lut.2:00000000 hex_lut.2
+     /tmp/ccmp3BBc.s:218    .text.GPS_HexCharToNibble:00000000 $t
+     /tmp/ccmp3BBc.s:223    .text.GPS_HexCharToNibble:00000000 GPS_HexCharToNibble
+     /tmp/ccmp3BBc.s:285    .text.GPS_VerifyNmeaChecksum:00000000 $t
+     /tmp/ccmp3BBc.s:290    .text.GPS_VerifyNmeaChecksum:00000000 GPS_VerifyNmeaChecksum
+     /tmp/ccmp3BBc.s:418    .text.GPS_NextField:00000000 $t
+     /tmp/ccmp3BBc.s:423    .text.GPS_NextField:00000000 GPS_NextField
+     /tmp/ccmp3BBc.s:471    .text.GPS_ParseUtcTime:00000000 $t
+     /tmp/ccmp3BBc.s:476    .text.GPS_ParseUtcTime:00000000 GPS_ParseUtcTime
+     /tmp/ccmp3BBc.s:597    .text.GPS_ParseUtcDate:00000000 $t
+     /tmp/ccmp3BBc.s:602    .text.GPS_ParseUtcDate:00000000 GPS_ParseUtcDate
+     /tmp/ccmp3BBc.s:731    .text.GPS_ParseNmeaCoordE7:00000000 $t
+     /tmp/ccmp3BBc.s:736    .text.GPS_ParseNmeaCoordE7:00000000 GPS_ParseNmeaCoordE7
+     /tmp/ccmp3BBc.s:1025   .text.GPS_ParseNmeaCoordE7:00000194 $d
+     /tmp/ccmp3BBc.s:1045   .text.GPS_ParseNmeaCoordE7:000001e0 $t
+     /tmp/ccmp3BBc.s:1068   .text.GPS_ParseNmeaCoordE7:000001f4 $d
+     /tmp/ccmp3BBc.s:1077   .text.GPS_ParseDecimalX100:00000000 $t
+     /tmp/ccmp3BBc.s:1082   .text.GPS_ParseDecimalX100:00000000 GPS_ParseDecimalX100
+     /tmp/ccmp3BBc.s:1178   .text.GPS_UART_DMA_Init:00000000 $t
+     /tmp/ccmp3BBc.s:1183   .text.GPS_UART_DMA_Init:00000000 GPS_UART_DMA_Init
+     /tmp/ccmp3BBc.s:1418   .text.GPS_UART_DMA_Init:00000114 $d
+     /tmp/ccmp3BBc.s:2648   .bss.s_gps_dma_rx_buf:00000000 s_gps_dma_rx_buf
+     /tmp/ccmp3BBc.s:1430   .rodata.GPS_ParseNmeaSentence.str1.4:00000000 $d
+     /tmp/ccmp3BBc.s:1440   .text.GPS_ParseNmeaSentence:00000000 $t
+     /tmp/ccmp3BBc.s:1445   .text.GPS_ParseNmeaSentence:00000000 GPS_ParseNmeaSentence
+     /tmp/ccmp3BBc.s:2006   .text.GPS_ParseNmeaSentence:00000270 $d
+     /tmp/ccmp3BBc.s:2636   .bss.s_gp_vis.1:00000000 s_gp_vis.1
+     /tmp/ccmp3BBc.s:2631   .bss.s_gl_vis.0:00000000 s_gl_vis.0
+     /tmp/ccmp3BBc.s:2019   .text.USART1_IRQHandler:00000000 $t
+     /tmp/ccmp3BBc.s:2025   .text.USART1_IRQHandler:00000000 USART1_IRQHandler
+     /tmp/ccmp3BBc.s:2106   .text.USART1_IRQHandler:00000048 $d
+     /tmp/ccmp3BBc.s:2112   .text.DMA2_Stream2_IRQHandler:00000000 $t
+     /tmp/ccmp3BBc.s:2118   .text.DMA2_Stream2_IRQHandler:00000000 DMA2_Stream2_IRQHandler
+     /tmp/ccmp3BBc.s:2198   .text.DMA2_Stream2_IRQHandler:00000044 $d
+     /tmp/ccmp3BBc.s:2204   .rodata.GPS_ATGM336H_SetConstellation.str1.4:00000000 $d
+     /tmp/ccmp3BBc.s:2208   .text.GPS_ATGM336H_SetConstellation:00000000 $t
+     /tmp/ccmp3BBc.s:2214   .text.GPS_ATGM336H_SetConstellation:00000000 GPS_ATGM336H_SetConstellation
+     /tmp/ccmp3BBc.s:2254   .text.GPS_ATGM336H_SetConstellation:0000001c $d
+     /tmp/ccmp3BBc.s:2259   .rodata.GPS_ATGM336H_EnterSleep.str1.4:00000000 $d
+     /tmp/ccmp3BBc.s:2263   .text.GPS_ATGM336H_EnterSleep:00000000 $t
+     /tmp/ccmp3BBc.s:2269   .text.GPS_ATGM336H_EnterSleep:00000000 GPS_ATGM336H_EnterSleep
+     /tmp/ccmp3BBc.s:2316   .text.GPS_ATGM336H_EnterSleep:00000020 $d
+     /tmp/ccmp3BBc.s:2321   .rodata.GPS_ATGM336H_Wakeup.str1.4:00000000 $d
+     /tmp/ccmp3BBc.s:2325   .text.GPS_ATGM336H_Wakeup:00000000 $t
+     /tmp/ccmp3BBc.s:2331   .text.GPS_ATGM336H_Wakeup:00000000 GPS_ATGM336H_Wakeup
+     /tmp/ccmp3BBc.s:2378   .text.GPS_ATGM336H_Wakeup:00000030 $d
+     /tmp/ccmp3BBc.s:2383   .text.GPS_UART_Task:00000000 $t
+     /tmp/ccmp3BBc.s:2389   .text.GPS_UART_Task:00000000 GPS_UART_Task
+     /tmp/ccmp3BBc.s:2620   .text.GPS_UART_Task:000000e4 $d
+ARM GAS  /tmp/ccmp3BBc.s 			page 69
+
+
+     /tmp/ccmp3BBc.s:2632   .bss.s_gl_vis.0:00000000 $d
+     /tmp/ccmp3BBc.s:2637   .bss.s_gp_vis.1:00000000 $d
+     /tmp/ccmp3BBc.s:2639   .rodata.hex_lut.2:00000000 $d
+     /tmp/ccmp3BBc.s:2645   .bss.s_gps_dma_rx_buf:00000000 $d
+
+UNDEFINED SYMBOLS
+HAL_GPIO_Init
+HAL_RCC_GetPCLK2Freq
+HAL_NVIC_SetPriority
+HAL_NVIC_EnableIRQ
+strncmp
+geo_coord_make
+vTaskNotifyGiveFromISR
+g_gps_task_hdl
+snprintf
+vTaskDelay
+xTaskGetCurrentTaskHandle
+xTaskGetTickCount
+xQueueGenericSend
+ulTaskNotifyTake
+g_q_gps_fix

@@ -1,4 +1,42 @@
 build/Core/Src/lvgl_port_example.o: Core/Src/lvgl_port_example.c \
+ Core/Inc/main.h Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery.h \
+ Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h \
+ Core/Inc/stm32f4xx_hal_conf.h \
+ Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_rcc.h \
+ Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_def.h \
+ Drivers/CMSIS/Device/ST/STM32F4xx/Include/stm32f4xx.h \
+ Drivers/CMSIS/Device/ST/STM32F4xx/Include/stm32f429xx.h \
+ Drivers/CMSIS/Include/core_cm4.h Drivers/CMSIS/Include/cmsis_version.h \
+ Drivers/CMSIS/Include/cmsis_compiler.h Drivers/CMSIS/Include/cmsis_gcc.h \
+ Drivers/CMSIS/Include/mpu_armv7.h \
+ Drivers/CMSIS/Device/ST/STM32F4xx/Include/system_stm32f4xx.h \
+ Drivers/STM32F4xx_HAL_Driver/Inc/Legacy/stm32_hal_legacy.h \
+ Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_rcc_ex.h \
+ Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_gpio.h \
+ Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_gpio_ex.h \
+ Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_dma.h \
+ Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_dma_ex.h \
+ Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_cortex.h \
+ Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_dma2d.h \
+ Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_flash.h \
+ Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_flash_ex.h \
+ Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_flash_ramfunc.h \
+ Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_sdram.h \
+ Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_ll_fmc.h \
+ Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_i2c.h \
+ Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_i2c_ex.h \
+ Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_ltdc.h \
+ Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_ltdc_ex.h \
+ Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr.h \
+ Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr_ex.h \
+ Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_spi.h \
+ Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_lcd.h \
+ Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery.h \
+ Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.h \
+ Drivers/BSP/STM32F429I-Discovery/../../../Utilities/Fonts/fonts.h \
+ Drivers/BSP/STM32F429I-Discovery/../Components/ili9341/ili9341.h \
+ Drivers/BSP/STM32F429I-Discovery/../Components/ili9341/../Common/lcd.h \
+ Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.h \
  Middlewares/Third_Party/FreeRTOS/Source/include/FreeRTOS.h \
  Core/Inc/FreeRTOSConfig.h \
  Middlewares/Third_Party/FreeRTOS/Source/include/projdefs.h \
@@ -423,53 +461,58 @@ build/Core/Src/lvgl_port_example.o: Core/Src/lvgl_port_example.c \
  Drivers/lvgl/include/lvgl/api_map/lv_api_map_v9_5.h \
  Drivers/lvgl/include/lvgl/api_map/../core/lv_area.h \
  Drivers/lvgl/include/lvgl/api_map/lv_api_map_v9_6.h \
- Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery.h \
- Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h \
- Core/Inc/stm32f4xx_hal_conf.h \
- Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_rcc.h \
- Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_def.h \
- Drivers/CMSIS/Device/ST/STM32F4xx/Include/stm32f4xx.h \
- Drivers/CMSIS/Device/ST/STM32F4xx/Include/stm32f429xx.h \
- Drivers/CMSIS/Include/core_cm4.h Drivers/CMSIS/Include/cmsis_version.h \
- Drivers/CMSIS/Include/cmsis_compiler.h Drivers/CMSIS/Include/cmsis_gcc.h \
- Drivers/CMSIS/Include/mpu_armv7.h \
- Drivers/CMSIS/Device/ST/STM32F4xx/Include/system_stm32f4xx.h \
- Drivers/STM32F4xx_HAL_Driver/Inc/Legacy/stm32_hal_legacy.h \
- Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_rcc_ex.h \
- Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_gpio.h \
- Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_gpio_ex.h \
- Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_dma.h \
- Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_dma_ex.h \
- Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_cortex.h \
- Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_dma2d.h \
- Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_flash.h \
- Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_flash_ex.h \
- Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_flash_ramfunc.h \
- Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_sdram.h \
- Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_ll_fmc.h \
- Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_i2c.h \
- Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_i2c_ex.h \
- Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_ltdc.h \
- Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_ltdc_ex.h \
- Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr.h \
- Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr_ex.h \
- Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_spi.h \
- Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_lcd.h \
- Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery.h \
- Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.h \
- Drivers/BSP/STM32F429I-Discovery/../../../Utilities/Fonts/fonts.h \
- Drivers/BSP/STM32F429I-Discovery/../Components/ili9341/ili9341.h \
- Drivers/BSP/STM32F429I-Discovery/../Components/ili9341/../Common/lcd.h \
  Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.h \
  Drivers/BSP/STM32F429I-Discovery/../Components/stmpe811/stmpe811.h \
  Drivers/BSP/STM32F429I-Discovery/../Components/stmpe811/../Common/ts.h \
  Drivers/BSP/STM32F429I-Discovery/../Components/stmpe811/../Common/io.h \
  Middlewares/Third_Party/FatFs/src/ff.h \
  Middlewares/Third_Party/FatFs/src/integer.h Core/Inc/ffconf.h \
- Core/Inc/sd_spi.h Middlewares/Third_Party/FatFs/src/diskio.h \
- Core/Inc/geo_math.h Core/Inc/map_camera.h Core/Inc/geo_math.h \
- Core/Inc/tile_graph_cache.h Core/Inc/map_binary_formats.h \
- Core/Inc/pathfinder.h Core/Inc/tile_graph_cache.h
+ Core/Inc/sd_spi.h Core/Inc/main.h \
+ Middlewares/Third_Party/FatFs/src/diskio.h Core/Inc/geo_math.h \
+ Core/Inc/map_camera.h Core/Inc/geo_math.h Core/Inc/tile_graph_cache.h \
+ Core/Inc/map_binary_formats.h Core/Inc/pathfinder.h \
+ Core/Inc/tile_graph_cache.h
+Core/Inc/main.h:
+Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery.h:
+Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h:
+Core/Inc/stm32f4xx_hal_conf.h:
+Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_rcc.h:
+Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_def.h:
+Drivers/CMSIS/Device/ST/STM32F4xx/Include/stm32f4xx.h:
+Drivers/CMSIS/Device/ST/STM32F4xx/Include/stm32f429xx.h:
+Drivers/CMSIS/Include/core_cm4.h:
+Drivers/CMSIS/Include/cmsis_version.h:
+Drivers/CMSIS/Include/cmsis_compiler.h:
+Drivers/CMSIS/Include/cmsis_gcc.h:
+Drivers/CMSIS/Include/mpu_armv7.h:
+Drivers/CMSIS/Device/ST/STM32F4xx/Include/system_stm32f4xx.h:
+Drivers/STM32F4xx_HAL_Driver/Inc/Legacy/stm32_hal_legacy.h:
+Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_rcc_ex.h:
+Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_gpio.h:
+Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_gpio_ex.h:
+Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_dma.h:
+Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_dma_ex.h:
+Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_cortex.h:
+Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_dma2d.h:
+Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_flash.h:
+Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_flash_ex.h:
+Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_flash_ramfunc.h:
+Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_sdram.h:
+Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_ll_fmc.h:
+Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_i2c.h:
+Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_i2c_ex.h:
+Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_ltdc.h:
+Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_ltdc_ex.h:
+Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr.h:
+Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr_ex.h:
+Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_spi.h:
+Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_lcd.h:
+Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery.h:
+Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.h:
+Drivers/BSP/STM32F429I-Discovery/../../../Utilities/Fonts/fonts.h:
+Drivers/BSP/STM32F429I-Discovery/../Components/ili9341/ili9341.h:
+Drivers/BSP/STM32F429I-Discovery/../Components/ili9341/../Common/lcd.h:
+Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.h:
 Middlewares/Third_Party/FreeRTOS/Source/include/FreeRTOS.h:
 Core/Inc/FreeRTOSConfig.h:
 Middlewares/Third_Party/FreeRTOS/Source/include/projdefs.h:
@@ -896,45 +939,6 @@ Drivers/lvgl/include/lvgl/api_map/lv_api_map_v9_4.h:
 Drivers/lvgl/include/lvgl/api_map/lv_api_map_v9_5.h:
 Drivers/lvgl/include/lvgl/api_map/../core/lv_area.h:
 Drivers/lvgl/include/lvgl/api_map/lv_api_map_v9_6.h:
-Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery.h:
-Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h:
-Core/Inc/stm32f4xx_hal_conf.h:
-Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_rcc.h:
-Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_def.h:
-Drivers/CMSIS/Device/ST/STM32F4xx/Include/stm32f4xx.h:
-Drivers/CMSIS/Device/ST/STM32F4xx/Include/stm32f429xx.h:
-Drivers/CMSIS/Include/core_cm4.h:
-Drivers/CMSIS/Include/cmsis_version.h:
-Drivers/CMSIS/Include/cmsis_compiler.h:
-Drivers/CMSIS/Include/cmsis_gcc.h:
-Drivers/CMSIS/Include/mpu_armv7.h:
-Drivers/CMSIS/Device/ST/STM32F4xx/Include/system_stm32f4xx.h:
-Drivers/STM32F4xx_HAL_Driver/Inc/Legacy/stm32_hal_legacy.h:
-Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_rcc_ex.h:
-Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_gpio.h:
-Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_gpio_ex.h:
-Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_dma.h:
-Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_dma_ex.h:
-Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_cortex.h:
-Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_dma2d.h:
-Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_flash.h:
-Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_flash_ex.h:
-Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_flash_ramfunc.h:
-Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_sdram.h:
-Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_ll_fmc.h:
-Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_i2c.h:
-Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_i2c_ex.h:
-Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_ltdc.h:
-Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_ltdc_ex.h:
-Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr.h:
-Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr_ex.h:
-Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_spi.h:
-Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_lcd.h:
-Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery.h:
-Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_sdram.h:
-Drivers/BSP/STM32F429I-Discovery/../../../Utilities/Fonts/fonts.h:
-Drivers/BSP/STM32F429I-Discovery/../Components/ili9341/ili9341.h:
-Drivers/BSP/STM32F429I-Discovery/../Components/ili9341/../Common/lcd.h:
 Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.h:
 Drivers/BSP/STM32F429I-Discovery/../Components/stmpe811/stmpe811.h:
 Drivers/BSP/STM32F429I-Discovery/../Components/stmpe811/../Common/ts.h:
@@ -943,6 +947,7 @@ Middlewares/Third_Party/FatFs/src/ff.h:
 Middlewares/Third_Party/FatFs/src/integer.h:
 Core/Inc/ffconf.h:
 Core/Inc/sd_spi.h:
+Core/Inc/main.h:
 Middlewares/Third_Party/FatFs/src/diskio.h:
 Core/Inc/geo_math.h:
 Core/Inc/map_camera.h:

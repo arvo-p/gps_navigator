@@ -12,7 +12,12 @@ BUILD_DIR = build
 ######################################
 C_SOURCES =  \
 Core/Src/main.c \
-Core/Src/lvgl_port_example.c \
+Core/Src/app.c \
+Core/Src/sensor_input_task.c \
+Core/Src/gps_uart_task.c \
+Core/Src/tile_loader_task.c \
+Core/Src/pathfinder_task.c \
+Core/Src/ui_lvgl_task.c \
 Core/Src/sd_spi.c \
 Core/Src/astar_heap.c \
 Core/Src/geo_math.c \
