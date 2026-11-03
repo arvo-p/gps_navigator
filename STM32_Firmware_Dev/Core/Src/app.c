@@ -127,7 +127,7 @@ static void GPS_Library_Init(void)
   map_camera_get_visible_tiles(&g_camera, &g_visible_tiles);
 
   /* Step C: Initialize Road Graph Cache & Hybrid A* Pathfinder */
-  tile_graph_cache_init(&g_graph_cache, "binary_map_data", TILE_GRAPH_CACHE_MAX_LOCAL);
+  tile_graph_cache_init(&g_graph_cache, "binaries", TILE_GRAPH_CACHE_MAX_LOCAL);
   pathfinder_init(&g_pathfinder, &g_graph_cache);
   memset(&g_current_route, 0, sizeof(RouteResult));
 

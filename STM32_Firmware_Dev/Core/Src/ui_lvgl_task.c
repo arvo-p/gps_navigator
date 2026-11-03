@@ -98,8 +98,106 @@ static const TileCacheSlot *Request_Or_Get_Tile_Async(int32_t tx, int32_t ty)
 }
 
 /*----------------------------------------------------------------------------
- * 2. Render Visible Tiles (Non-Blocking) + GPS Dot into s_map_fb
+ * 2. Render Visible Tiles (Non-Blocking) + Route + GPS Dot into s_map_fb
  *----------------------------------------------------------------------------*/
+static void Draw_Thick_Line_Clipped(int32_t x0, int32_t y0, int32_t x1, int32_t y1, uint16_t color)
+{
+  /* Fast reject if segment bounding box is completely outside the screen */
+  if ((x0 < -16 && x1 < -16) || (x0 >= MY_DISP_HOR_RES + 16 && x1 >= MY_DISP_HOR_RES + 16) ||
+      (y0 < -16 && y1 < -16) || (y0 >= MY_DISP_VER_RES + 16 && y1 >= MY_DISP_VER_RES + 16))
+  {
+    return;
+  }
+
+  int32_t dx  = (x1 > x0) ? (x1 - x0) : (x0 - x1);
+  int32_t sx  = (x0 < x1) ? 1 : -1;
+  int32_t dy  = (y1 > y0) ? -(y1 - y0) : -(y0 - y1);
+  int32_t sy  = (y0 < y1) ? 1 : -1;
+  int32_t err = dx + dy;
+
+  for (;;)
+  {
+    /* Draw a 3x3 pixel brush for high visibility on LCD */
+    for (int32_t by = -1; by <= 1; by++)
+    {
+      int32_t py = y0 + by;
+      if (py < 0 || py >= MY_DISP_VER_RES) continue;
+      for (int32_t bx = -1; bx <= 1; bx++)
+      {
+        int32_t px = x0 + bx;
+        if (px < 0 || px >= MY_DISP_HOR_RES) continue;
+        s_map_fb[py * MY_DISP_HOR_RES + px] = color;
+      }
+    }
+
+    if (x0 == x1 && y0 == y1) break;
+    int32_t e2 = 2 * err;
+    if (e2 >= dy) { err += dy; x0 += sx; }
+    if (e2 <= dx) { err += dx; y0 += sy; }
+  }
+}
+
+static void Draw_Pin_Marker(int32_t cx, int32_t cy, uint16_t fill_col)
+{
+  const int32_t r_outer    = 6;
+  const int32_t r_inner    = 4;
+  const uint16_t col_white = 0xFFFFU;
+
+  for (int32_t dy = -r_outer; dy <= r_outer; dy++)
+  {
+    int32_t py = cy + dy;
+    if (py < 0 || py >= MY_DISP_VER_RES) continue;
+    for (int32_t dx = -r_outer; dx <= r_outer; dx++)
+    {
+      int32_t px = cx + dx;
+      if (px < 0 || px >= MY_DISP_HOR_RES) continue;
+      int32_t d2 = dx * dx + dy * dy;
+      if (d2 <= r_inner * r_inner)
+      {
+        s_map_fb[py * MY_DISP_HOR_RES + px] = fill_col;
+      }
+      else if (d2 <= r_outer * r_outer)
+      {
+        s_map_fb[py * MY_DISP_HOR_RES + px] = col_white;
+      }
+    }
+  }
+}
+
+static void Draw_Route_On_MapFB(void)
+{
+  if (!g_current_route.found || g_current_route.geom_point_count < 2)
+  {
+    return;
+  }
+
+  /* Bright cyan (0x07FF) for Car, bright green (0x07E0) for Hiking/Stroller */
+  const uint16_t route_col = (g_current_route.routing_profile == (int)PROFILE_STROLLER)
+                             ? 0x07E0U : 0x07FFU;
+
+  int32_t prev_sx = 0, prev_sy = 0;
+  GeoCoord p0 = geo_coord_make(g_current_route.geom_points[0].lat_scaled,
+                               g_current_route.geom_points[0].lon_scaled);
+  map_camera_latlon_to_screen(&g_camera, p0, &prev_sx, &prev_sy);
+
+  for (int32_t i = 1; i < g_current_route.geom_point_count; i++)
+  {
+    int32_t cur_sx = 0, cur_sy = 0;
+    GeoCoord pt = geo_coord_make(g_current_route.geom_points[i].lat_scaled,
+                                 g_current_route.geom_points[i].lon_scaled);
+    map_camera_latlon_to_screen(&g_camera, pt, &cur_sx, &cur_sy);
+    Draw_Thick_Line_Clipped(prev_sx, prev_sy, cur_sx, cur_sy, route_col);
+    prev_sx = cur_sx;
+    prev_sy = cur_sy;
+  }
+
+  /* Draw Start (Green) and Goal (Magenta) pins */
+  int32_t start_sx = 0, start_sy = 0;
+  map_camera_latlon_to_screen(&g_camera, p0, &start_sx, &start_sy);
+  Draw_Pin_Marker(start_sx, start_sy, 0x07E0U);
+  Draw_Pin_Marker(prev_sx, prev_sy, 0xF81FU);
+}
+
 static void Draw_GPS_Marker(int32_t cx, int32_t cy)
 {
   const int32_t r_outer    = 7;
@@ -190,6 +288,9 @@ static uint32_t Render_Visible_Tiles_To_MapFB(void)
     }
   }
 
+  /* Draw active route polyline and start/goal pins if a route is loaded */
+  Draw_Route_On_MapFB();
+
   /* Project GPS position onto the camera viewport */
   int32_t gps_sx = 0, gps_sy = 0;
   map_camera_latlon_to_screen(&g_camera, g_gps_pos, &gps_sx, &gps_sy);
@@ -278,6 +379,16 @@ void UI_LVGL_Task(void *argument)
         lv_label_set_text(status_lbl, "SD Err (Retrying...)");
       }
 #endif
+      if (notify_bits & NOTIFY_SD_MOUNTED)
+      {
+        /* Request test route: Liège-Guillemins (50.6242°N, 5.5666°E) -> Liège-Carré (50.6428°N, 5.5702°E) */
+        RouteRequest_t test_req = {
+          .start = geo_coord_make(506242000L, 55666000L),
+          .goal  = geo_coord_make(506428000L, 55702000L),
+        };
+        xQueueOverwrite(g_q_route_req, &test_req);
+      }
+
       if (notify_bits & (NOTIFY_SD_MOUNTED | NOTIFY_TILE_LOADED | NOTIFY_ROUTE_READY))
       {
         need_redraw = true;

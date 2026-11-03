@@ -1,4 +1,4 @@
-ARM GAS  /tmp/ccuGYnyw.s 			page 1
+ARM GAS  /tmp/cccULq5X.s 			page 1
 
 
    1              		.cpu cortex-m4
@@ -20,12 +20,12 @@ ARM GAS  /tmp/ccuGYnyw.s 			page 1
   17              	.Ltext0:
   18              		.cfi_sections	.debug_frame
   19              		.file 1 "Core/Src/ui_lvgl_task.c"
-  20              		.section	.text.Draw_GPS_Marker,"ax",%progbits
+  20              		.section	.text.Draw_Thick_Line_Clipped,"ax",%progbits
   21              		.align	1
   22              		.syntax unified
   23              		.thumb
   24              		.thumb_func
-  26              	Draw_GPS_Marker:
+  26              	Draw_Thick_Line_Clipped:
   27              	.LVL0:
   28              	.LFB162:
    1:Core/Src/ui_lvgl_task.c **** /**
@@ -58,7 +58,7 @@ ARM GAS  /tmp/ccuGYnyw.s 			page 1
   28:Core/Src/ui_lvgl_task.c **** };
   29:Core/Src/ui_lvgl_task.c **** 
   30:Core/Src/ui_lvgl_task.c **** /*----------------------------------------------------------------------------
-ARM GAS  /tmp/ccuGYnyw.s 			page 2
+ARM GAS  /tmp/cccULq5X.s 			page 2
 
 
   31:Core/Src/ui_lvgl_task.c ****  * 1. Non-Blocking Tile Cache Lookup (Queues Async Request on Miss)
@@ -118,7 +118,7 @@ ARM GAS  /tmp/ccuGYnyw.s 			page 1
   85:Core/Src/ui_lvgl_task.c ****   TileRequest_t req = {
   86:Core/Src/ui_lvgl_task.c ****     .slot_idx = (uint8_t)victim,
   87:Core/Src/ui_lvgl_task.c ****     .tx       = tx,
-ARM GAS  /tmp/ccuGYnyw.s 			page 3
+ARM GAS  /tmp/cccULq5X.s 			page 3
 
 
   88:Core/Src/ui_lvgl_task.c ****     .ty       = ty,
@@ -134,1739 +134,2633 @@ ARM GAS  /tmp/ccuGYnyw.s 			page 1
   98:Core/Src/ui_lvgl_task.c **** }
   99:Core/Src/ui_lvgl_task.c **** 
  100:Core/Src/ui_lvgl_task.c **** /*----------------------------------------------------------------------------
- 101:Core/Src/ui_lvgl_task.c ****  * 2. Render Visible Tiles (Non-Blocking) + GPS Dot into s_map_fb
+ 101:Core/Src/ui_lvgl_task.c ****  * 2. Render Visible Tiles (Non-Blocking) + Route + GPS Dot into s_map_fb
  102:Core/Src/ui_lvgl_task.c ****  *----------------------------------------------------------------------------*/
- 103:Core/Src/ui_lvgl_task.c **** static void Draw_GPS_Marker(int32_t cx, int32_t cy)
+ 103:Core/Src/ui_lvgl_task.c **** static void Draw_Thick_Line_Clipped(int32_t x0, int32_t y0, int32_t x1, int32_t y1, uint16_t color)
  104:Core/Src/ui_lvgl_task.c **** {
   29              		.loc 1 104 1 view -0
   30              		.cfi_startproc
-  31              		@ args = 0, pretend = 0, frame = 0
+  31              		@ args = 4, pretend = 0, frame = 8
   32              		@ frame_needed = 0, uses_anonymous_args = 0
   33              		.loc 1 104 1 is_stmt 0 view .LVU1
-  34 0000 30B5     		push	{r4, r5, lr}
+  34 0000 2DE9F04F 		push	{r4, r5, r6, r7, r8, r9, r10, fp, lr}
   35              	.LCFI0:
-  36              		.cfi_def_cfa_offset 12
-  37              		.cfi_offset 4, -12
-  38              		.cfi_offset 5, -8
-  39              		.cfi_offset 14, -4
-  40 0002 0D46     		mov	r5, r1
- 105:Core/Src/ui_lvgl_task.c ****   const int32_t r_outer    = 7;
-  41              		.loc 1 105 3 is_stmt 1 view .LVU2
-  42              	.LVL1:
- 106:Core/Src/ui_lvgl_task.c ****   const int32_t r_inner    = 5;
-  43              		.loc 1 106 3 view .LVU3
- 107:Core/Src/ui_lvgl_task.c ****   const uint16_t col_white = 0xFFFFU;
-  44              		.loc 1 107 3 view .LVU4
- 108:Core/Src/ui_lvgl_task.c ****   const uint16_t col_red   = 0xF800U;
-  45              		.loc 1 108 3 view .LVU5
- 109:Core/Src/ui_lvgl_task.c **** 
- 110:Core/Src/ui_lvgl_task.c ****   for (int32_t dy = -r_outer; dy <= r_outer; dy++)
-  46              		.loc 1 110 3 view .LVU6
-  47              	.LBB2:
-  48              		.loc 1 110 8 view .LVU7
-  49              		.loc 1 110 16 is_stmt 0 view .LVU8
-  50 0004 6FF0060E 		mvn	lr, #6
-  51              		.loc 1 110 3 view .LVU9
-  52 0008 24E0     		b	.L2
-  53              	.LVL2:
-  54              	.L6:
-  55              	.LBB3:
-  56              	.LBB4:
-  57              	.LBB5:
- 111:Core/Src/ui_lvgl_task.c ****   {
- 112:Core/Src/ui_lvgl_task.c ****     int32_t py = cy + dy;
- 113:Core/Src/ui_lvgl_task.c ****     if (py < 0 || py >= MY_DISP_VER_RES) continue;
- 114:Core/Src/ui_lvgl_task.c **** 
- 115:Core/Src/ui_lvgl_task.c ****     for (int32_t dx = -r_outer; dx <= r_outer; dx++)
-ARM GAS  /tmp/ccuGYnyw.s 			page 4
+  36              		.cfi_def_cfa_offset 36
+  37              		.cfi_offset 4, -36
+  38              		.cfi_offset 5, -32
+  39              		.cfi_offset 6, -28
+  40              		.cfi_offset 7, -24
+  41              		.cfi_offset 8, -20
+  42              		.cfi_offset 9, -16
+  43              		.cfi_offset 10, -12
+  44              		.cfi_offset 11, -8
+  45              		.cfi_offset 14, -4
+  46 0004 83B0     		sub	sp, sp, #12
+  47              	.LCFI1:
+  48              		.cfi_def_cfa_offset 48
+  49 0006 1646     		mov	r6, r2
+  50 0008 1F46     		mov	r7, r3
+  51 000a BDF83040 		ldrh	r4, [sp, #48]
+ 105:Core/Src/ui_lvgl_task.c ****   /* Fast reject if segment bounding box is completely outside the screen */
+ 106:Core/Src/ui_lvgl_task.c ****   if ((x0 < -16 && x1 < -16) || (x0 >= MY_DISP_HOR_RES + 16 && x1 >= MY_DISP_HOR_RES + 16) ||
+  52              		.loc 1 106 3 is_stmt 1 view .LVU2
+  53              		.loc 1 106 6 is_stmt 0 view .LVU3
+  54 000e 10F1100F 		cmn	r0, #16
+  55 0012 02DA     		bge	.L2
+  56              		.loc 1 106 17 discriminator 1 view .LVU4
+  57 0014 12F1100F 		cmn	r2, #16
+  58 0018 5ADB     		blt	.L1
+  59              	.L2:
+  60              		.loc 1 106 30 discriminator 2 view .LVU5
+  61 001a FF28     		cmp	r0, #255
+  62 001c 01DD     		ble	.L4
+  63              		.loc 1 106 61 discriminator 3 view .LVU6
+  64 001e FF2E     		cmp	r6, #255
+  65 0020 56DC     		bgt	.L1
+  66              	.L4:
+ARM GAS  /tmp/cccULq5X.s 			page 4
 
 
- 116:Core/Src/ui_lvgl_task.c ****     {
- 117:Core/Src/ui_lvgl_task.c ****       int32_t px = cx + dx;
- 118:Core/Src/ui_lvgl_task.c ****       if (px < 0 || px >= MY_DISP_HOR_RES) continue;
- 119:Core/Src/ui_lvgl_task.c **** 
- 120:Core/Src/ui_lvgl_task.c ****       int32_t d2 = dx * dx + dy * dy;
- 121:Core/Src/ui_lvgl_task.c ****       if (d2 <= r_inner * r_inner)
- 122:Core/Src/ui_lvgl_task.c ****       {
- 123:Core/Src/ui_lvgl_task.c ****         s_map_fb[py * MY_DISP_HOR_RES + px] = col_red;
- 124:Core/Src/ui_lvgl_task.c ****       }
- 125:Core/Src/ui_lvgl_task.c ****       else if (d2 <= r_outer * r_outer)
-  58              		.loc 1 125 12 is_stmt 1 view .LVU10
-  59              		.loc 1 125 15 is_stmt 0 view .LVU11
-  60 000a BCF1310F 		cmp	ip, #49
-  61 000e 08DC     		bgt	.L5
+  67              		.loc 1 106 92 discriminator 4 view .LVU7
+  68 0022 11F1100F 		cmn	r1, #16
+  69 0026 02DA     		bge	.L5
+ 107:Core/Src/ui_lvgl_task.c ****       (y0 < -16 && y1 < -16) || (y0 >= MY_DISP_VER_RES + 16 && y1 >= MY_DISP_VER_RES + 16))
+  70              		.loc 1 107 17 view .LVU8
+  71 0028 17F1100F 		cmn	r7, #16
+  72 002c 50DB     		blt	.L1
+  73              	.L5:
+  74              		.loc 1 107 30 discriminator 1 view .LVU9
+  75 002e B1F5A87F 		cmp	r1, #336
+  76 0032 02DB     		blt	.L6
+  77              		.loc 1 107 61 discriminator 2 view .LVU10
+  78 0034 B7F5A87F 		cmp	r7, #336
+  79 0038 4ADA     		bge	.L1
+  80              	.L6:
+ 108:Core/Src/ui_lvgl_task.c ****   {
+ 109:Core/Src/ui_lvgl_task.c ****     return;
+ 110:Core/Src/ui_lvgl_task.c ****   }
+ 111:Core/Src/ui_lvgl_task.c **** 
+ 112:Core/Src/ui_lvgl_task.c ****   int32_t dx  = (x1 > x0) ? (x1 - x0) : (x0 - x1);
+  81              		.loc 1 112 3 is_stmt 1 view .LVU11
+  82              		.loc 1 112 39 is_stmt 0 view .LVU12
+  83 003a B042     		cmp	r0, r6
+  84 003c 0EDA     		bge	.L7
+  85              		.loc 1 112 11 discriminator 1 view .LVU13
+  86 003e 351A     		subs	r5, r6, r0
+  87              	.LVL1:
+  88              	.L8:
+ 113:Core/Src/ui_lvgl_task.c ****   int32_t sx  = (x0 < x1) ? 1 : -1;
+  89              		.loc 1 113 3 is_stmt 1 view .LVU14
+  90              		.loc 1 113 31 is_stmt 0 view .LVU15
+  91 0040 B042     		cmp	r0, r6
+  92 0042 0DDA     		bge	.L23
+  93              		.loc 1 113 11 discriminator 1 view .LVU16
+  94 0044 4FF00109 		mov	r9, #1
+  95              	.L9:
+  96              	.LVL2:
+ 114:Core/Src/ui_lvgl_task.c ****   int32_t dy  = (y1 > y0) ? -(y1 - y0) : -(y0 - y1);
+  97              		.loc 1 114 3 is_stmt 1 view .LVU17
+  98              		.loc 1 114 40 is_stmt 0 view .LVU18
+  99 0048 B942     		cmp	r1, r7
+ 100 004a 0CDA     		bge	.L10
+ 101              		.loc 1 114 11 discriminator 1 view .LVU19
+ 102 004c CA1B     		subs	r2, r1, r7
+ 103              	.LVL3:
+ 104              	.L11:
+ 115:Core/Src/ui_lvgl_task.c ****   int32_t sy  = (y0 < y1) ? 1 : -1;
+ 105              		.loc 1 115 3 is_stmt 1 view .LVU20
+ 106              		.loc 1 115 31 is_stmt 0 view .LVU21
+ 107 004e B942     		cmp	r1, r7
+ 108 0050 0BDA     		bge	.L24
+ 109              		.loc 1 115 11 discriminator 1 view .LVU22
+ 110 0052 4FF00108 		mov	r8, #1
+ 111              	.L12:
+ 112              	.LVL4:
+ 116:Core/Src/ui_lvgl_task.c ****   int32_t err = dx + dy;
+ 113              		.loc 1 116 3 is_stmt 1 view .LVU23
+ARM GAS  /tmp/cccULq5X.s 			page 5
+
+
+ 114              		.loc 1 116 11 is_stmt 0 view .LVU24
+ 115 0056 05EB020E 		add	lr, r5, r2
+ 116 005a 33E0     		b	.L13
+ 117              	.LVL5:
+ 118              	.L7:
+ 112:Core/Src/ui_lvgl_task.c ****   int32_t sx  = (x0 < x1) ? 1 : -1;
+ 119              		.loc 1 112 11 discriminator 2 view .LVU25
+ 120 005c 851B     		subs	r5, r0, r6
+ 121 005e EFE7     		b	.L8
+ 122              	.LVL6:
+ 123              	.L23:
+ 113:Core/Src/ui_lvgl_task.c ****   int32_t dy  = (y1 > y0) ? -(y1 - y0) : -(y0 - y1);
+ 124              		.loc 1 113 11 discriminator 2 view .LVU26
+ 125 0060 4FF0FF39 		mov	r9, #-1
+ 126 0064 F0E7     		b	.L9
+ 127              	.LVL7:
+ 128              	.L10:
+ 114:Core/Src/ui_lvgl_task.c ****   int32_t sy  = (y0 < y1) ? 1 : -1;
+ 129              		.loc 1 114 11 discriminator 2 view .LVU27
+ 130 0066 7A1A     		subs	r2, r7, r1
+ 131              	.LVL8:
+ 114:Core/Src/ui_lvgl_task.c ****   int32_t sy  = (y0 < y1) ? 1 : -1;
+ 132              		.loc 1 114 11 discriminator 2 view .LVU28
+ 133 0068 F1E7     		b	.L11
+ 134              	.LVL9:
+ 135              	.L24:
+ 115:Core/Src/ui_lvgl_task.c ****   int32_t err = dx + dy;
+ 136              		.loc 1 115 11 discriminator 2 view .LVU29
+ 137 006a 4FF0FF38 		mov	r8, #-1
+ 138 006e F2E7     		b	.L12
+ 139              	.LVL10:
+ 140              	.L17:
+ 141              	.LBB2:
+ 142              	.LBB3:
+ 143              	.LBB4:
+ 144              	.LBB5:
+ 117:Core/Src/ui_lvgl_task.c **** 
+ 118:Core/Src/ui_lvgl_task.c ****   for (;;)
+ 119:Core/Src/ui_lvgl_task.c ****   {
+ 120:Core/Src/ui_lvgl_task.c ****     /* Draw a 3x3 pixel brush for high visibility on LCD */
+ 121:Core/Src/ui_lvgl_task.c ****     for (int32_t by = -1; by <= 1; by++)
+ 122:Core/Src/ui_lvgl_task.c ****     {
+ 123:Core/Src/ui_lvgl_task.c ****       int32_t py = y0 + by;
+ 124:Core/Src/ui_lvgl_task.c ****       if (py < 0 || py >= MY_DISP_VER_RES) continue;
+ 125:Core/Src/ui_lvgl_task.c ****       for (int32_t bx = -1; bx <= 1; bx++)
+ 145              		.loc 1 125 40 is_stmt 1 discriminator 1 view .LVU30
+ 146 0070 0133     		adds	r3, r3, #1
+ 147              	.LVL11:
+ 148              	.L16:
+ 149              		.loc 1 125 32 discriminator 2 view .LVU31
+ 150 0072 012B     		cmp	r3, #1
+ 151 0074 0BDC     		bgt	.L15
+ 152              	.LBB6:
  126:Core/Src/ui_lvgl_task.c ****       {
- 127:Core/Src/ui_lvgl_task.c ****         s_map_fb[py * MY_DISP_HOR_RES + px] = col_white;
-  62              		.loc 1 127 9 is_stmt 1 view .LVU12
-  63              		.loc 1 127 21 is_stmt 0 view .LVU13
-  64 0010 C1EB0114 		rsb	r4, r1, r1, lsl #4
-  65              		.loc 1 127 39 view .LVU14
-  66 0014 02EB0412 		add	r2, r2, r4, lsl #4
-  67              	.LVL3:
-  68              		.loc 1 127 45 view .LVU15
-  69 0018 144C     		ldr	r4, .L11
-  70 001a 4FF6FF7C 		movw	ip, #65535
-  71              	.LVL4:
-  72              		.loc 1 127 45 view .LVU16
-  73 001e 24F812C0 		strh	ip, [r4, r2, lsl #1]	@ movhi
-  74              	.LVL5:
-  75              	.L5:
-  76              		.loc 1 127 45 view .LVU17
-  77              	.LBE5:
- 115:Core/Src/ui_lvgl_task.c ****     {
-  78              		.loc 1 115 50 is_stmt 1 discriminator 1 view .LVU18
-  79 0022 0133     		adds	r3, r3, #1
-  80              	.LVL6:
-  81              	.L4:
- 115:Core/Src/ui_lvgl_task.c ****     {
-  82              		.loc 1 115 36 discriminator 2 view .LVU19
-  83 0024 072B     		cmp	r3, #7
-  84 0026 13DC     		bgt	.L3
-  85              	.LBB6:
- 117:Core/Src/ui_lvgl_task.c ****       if (px < 0 || px >= MY_DISP_HOR_RES) continue;
-  86              		.loc 1 117 7 view .LVU20
- 117:Core/Src/ui_lvgl_task.c ****       if (px < 0 || px >= MY_DISP_HOR_RES) continue;
-  87              		.loc 1 117 15 is_stmt 0 view .LVU21
-  88 0028 1A18     		adds	r2, r3, r0
-  89              	.LVL7:
- 118:Core/Src/ui_lvgl_task.c **** 
-  90              		.loc 1 118 7 is_stmt 1 view .LVU22
- 118:Core/Src/ui_lvgl_task.c **** 
-  91              		.loc 1 118 10 is_stmt 0 view .LVU23
-  92 002a EF2A     		cmp	r2, #239
-  93 002c F9D8     		bhi	.L5
- 120:Core/Src/ui_lvgl_task.c ****       if (d2 <= r_inner * r_inner)
-  94              		.loc 1 120 7 is_stmt 1 view .LVU24
- 120:Core/Src/ui_lvgl_task.c ****       if (d2 <= r_inner * r_inner)
-ARM GAS  /tmp/ccuGYnyw.s 			page 5
+ 127:Core/Src/ui_lvgl_task.c ****         int32_t px = x0 + bx;
+ 153              		.loc 1 127 9 view .LVU32
+ 154              		.loc 1 127 17 is_stmt 0 view .LVU33
+ARM GAS  /tmp/cccULq5X.s 			page 6
 
 
-  95              		.loc 1 120 33 is_stmt 0 view .LVU25
-  96 002e 0EFB0EFC 		mul	ip, lr, lr
- 120:Core/Src/ui_lvgl_task.c ****       if (d2 <= r_inner * r_inner)
-  97              		.loc 1 120 15 view .LVU26
-  98 0032 03FB03CC 		mla	ip, r3, r3, ip
-  99              	.LVL8:
- 121:Core/Src/ui_lvgl_task.c ****       {
- 100              		.loc 1 121 7 is_stmt 1 view .LVU27
- 121:Core/Src/ui_lvgl_task.c ****       {
- 101              		.loc 1 121 10 is_stmt 0 view .LVU28
- 102 0036 BCF1190F 		cmp	ip, #25
- 103 003a E6DC     		bgt	.L6
- 123:Core/Src/ui_lvgl_task.c ****       }
- 104              		.loc 1 123 9 is_stmt 1 view .LVU29
- 123:Core/Src/ui_lvgl_task.c ****       }
- 105              		.loc 1 123 21 is_stmt 0 view .LVU30
- 106 003c C1EB0114 		rsb	r4, r1, r1, lsl #4
- 123:Core/Src/ui_lvgl_task.c ****       }
- 107              		.loc 1 123 39 view .LVU31
- 108 0040 02EB0412 		add	r2, r2, r4, lsl #4
- 109              	.LVL9:
- 123:Core/Src/ui_lvgl_task.c ****       }
- 110              		.loc 1 123 45 view .LVU32
- 111 0044 094C     		ldr	r4, .L11
- 112 0046 4FF4784C 		mov	ip, #63488
- 113              	.LVL10:
- 123:Core/Src/ui_lvgl_task.c ****       }
- 114              		.loc 1 123 45 view .LVU33
- 115 004a 24F812C0 		strh	ip, [r4, r2, lsl #1]	@ movhi
- 116 004e E8E7     		b	.L5
- 117              	.LVL11:
- 118              	.L3:
- 123:Core/Src/ui_lvgl_task.c ****       }
- 119              		.loc 1 123 45 view .LVU34
- 120              	.LBE6:
- 121              	.LBE4:
- 122              	.LBE3:
- 110:Core/Src/ui_lvgl_task.c ****   {
- 123              		.loc 1 110 48 is_stmt 1 discriminator 1 view .LVU35
- 124 0050 0EF1010E 		add	lr, lr, #1
- 125              	.LVL12:
- 126              	.L2:
- 110:Core/Src/ui_lvgl_task.c ****   {
- 127              		.loc 1 110 34 discriminator 2 view .LVU36
- 128 0054 BEF1070F 		cmp	lr, #7
- 129 0058 07DC     		bgt	.L10
- 130              	.LBB8:
- 112:Core/Src/ui_lvgl_task.c ****     if (py < 0 || py >= MY_DISP_VER_RES) continue;
- 131              		.loc 1 112 5 view .LVU37
- 112:Core/Src/ui_lvgl_task.c ****     if (py < 0 || py >= MY_DISP_VER_RES) continue;
- 132              		.loc 1 112 13 is_stmt 0 view .LVU38
- 133 005a 0EEB0501 		add	r1, lr, r5
- 134              	.LVL13:
- 113:Core/Src/ui_lvgl_task.c **** 
- 135              		.loc 1 113 5 is_stmt 1 view .LVU39
- 113:Core/Src/ui_lvgl_task.c **** 
- 136              		.loc 1 113 8 is_stmt 0 view .LVU40
-ARM GAS  /tmp/ccuGYnyw.s 			page 6
+ 155 0076 C518     		adds	r5, r0, r3
+ 156              	.LVL12:
+ 128:Core/Src/ui_lvgl_task.c ****         if (px < 0 || px >= MY_DISP_HOR_RES) continue;
+ 157              		.loc 1 128 9 is_stmt 1 view .LVU34
+ 158              		.loc 1 128 12 is_stmt 0 view .LVU35
+ 159 0078 EF2D     		cmp	r5, #239
+ 160 007a F9D8     		bhi	.L17
+ 129:Core/Src/ui_lvgl_task.c ****         s_map_fb[py * MY_DISP_HOR_RES + px] = color;
+ 161              		.loc 1 129 9 is_stmt 1 view .LVU36
+ 162              		.loc 1 129 21 is_stmt 0 view .LVU37
+ 163 007c CAEB0A1B 		rsb	fp, r10, r10, lsl #4
+ 164              		.loc 1 129 39 view .LVU38
+ 165 0080 05EB0B15 		add	r5, r5, fp, lsl #4
+ 166              	.LVL13:
+ 167              		.loc 1 129 45 view .LVU39
+ 168 0084 DFF850B0 		ldr	fp, .L28
+ 169 0088 2BF81540 		strh	r4, [fp, r5, lsl #1]	@ movhi
+ 170 008c F0E7     		b	.L17
+ 171              	.LVL14:
+ 172              	.L15:
+ 173              		.loc 1 129 45 view .LVU40
+ 174              	.LBE6:
+ 175              	.LBE5:
+ 176              	.LBE4:
+ 121:Core/Src/ui_lvgl_task.c ****     {
+ 177              		.loc 1 121 38 is_stmt 1 discriminator 1 view .LVU41
+ 178 008e 0CF1010C 		add	ip, ip, #1
+ 179              	.LVL15:
+ 180              	.L14:
+ 121:Core/Src/ui_lvgl_task.c ****     {
+ 181              		.loc 1 121 30 discriminator 2 view .LVU42
+ 182 0092 BCF1010F 		cmp	ip, #1
+ 183 0096 07DC     		bgt	.L26
+ 184              	.LBB8:
+ 123:Core/Src/ui_lvgl_task.c ****       if (py < 0 || py >= MY_DISP_VER_RES) continue;
+ 185              		.loc 1 123 7 view .LVU43
+ 123:Core/Src/ui_lvgl_task.c ****       if (py < 0 || py >= MY_DISP_VER_RES) continue;
+ 186              		.loc 1 123 15 is_stmt 0 view .LVU44
+ 187 0098 01EB0C0A 		add	r10, r1, ip
+ 188              	.LVL16:
+ 124:Core/Src/ui_lvgl_task.c ****       for (int32_t bx = -1; bx <= 1; bx++)
+ 189              		.loc 1 124 7 is_stmt 1 view .LVU45
+ 124:Core/Src/ui_lvgl_task.c ****       for (int32_t bx = -1; bx <= 1; bx++)
+ 190              		.loc 1 124 10 is_stmt 0 view .LVU46
+ 191 009c BAF5A07F 		cmp	r10, #320
+ 192 00a0 F5D2     		bcs	.L15
+ 193              	.LBB7:
+ 125:Core/Src/ui_lvgl_task.c ****       {
+ 194              		.loc 1 125 20 view .LVU47
+ 195 00a2 4FF0FF33 		mov	r3, #-1
+ 196 00a6 E4E7     		b	.L16
+ 197              	.LVL17:
+ 198              	.L26:
+ 125:Core/Src/ui_lvgl_task.c ****       {
+ 199              		.loc 1 125 20 view .LVU48
+ 200              	.LBE7:
+ 201              	.LBE8:
+ARM GAS  /tmp/cccULq5X.s 			page 7
 
 
- 137 005e B1F5A07F 		cmp	r1, #320
- 138 0062 F5D2     		bcs	.L3
- 139              	.LBB7:
- 115:Core/Src/ui_lvgl_task.c ****     {
- 140              		.loc 1 115 18 view .LVU41
- 141 0064 6FF00603 		mvn	r3, #6
- 142 0068 DCE7     		b	.L4
- 143              	.LVL14:
- 144              	.L10:
- 115:Core/Src/ui_lvgl_task.c ****     {
- 145              		.loc 1 115 18 view .LVU42
- 146              	.LBE7:
- 147              	.LBE8:
- 148              	.LBE2:
- 128:Core/Src/ui_lvgl_task.c ****       }
- 129:Core/Src/ui_lvgl_task.c ****     }
- 130:Core/Src/ui_lvgl_task.c ****   }
- 131:Core/Src/ui_lvgl_task.c **** }
- 149              		.loc 1 131 1 view .LVU43
- 150 006a 30BD     		pop	{r4, r5, pc}
- 151              	.LVL15:
- 152              	.L12:
- 153              		.loc 1 131 1 view .LVU44
- 154              		.align	2
- 155              	.L11:
- 156 006c 00000000 		.word	s_map_fb
- 157              		.cfi_endproc
- 158              	.LFE162:
- 160              		.section	.text.Request_Or_Get_Tile_Async,"ax",%progbits
- 161              		.align	1
- 162              		.syntax unified
- 163              		.thumb
- 164              		.thumb_func
- 166              	Request_Or_Get_Tile_Async:
- 167              	.LVL16:
- 168              	.LFB161:
-  34:Core/Src/ui_lvgl_task.c ****   if (!g_pak_ready)
- 169              		.loc 1 34 1 is_stmt 1 view -0
- 170              		.cfi_startproc
- 171              		@ args = 0, pretend = 0, frame = 16
- 172              		@ frame_needed = 0, uses_anonymous_args = 0
-  34:Core/Src/ui_lvgl_task.c ****   if (!g_pak_ready)
- 173              		.loc 1 34 1 is_stmt 0 view .LVU46
- 174 0000 30B5     		push	{r4, r5, lr}
- 175              	.LCFI1:
- 176              		.cfi_def_cfa_offset 12
- 177              		.cfi_offset 4, -12
- 178              		.cfi_offset 5, -8
- 179              		.cfi_offset 14, -4
- 180 0002 85B0     		sub	sp, sp, #20
- 181              	.LCFI2:
- 182              		.cfi_def_cfa_offset 32
-  35:Core/Src/ui_lvgl_task.c ****   {
- 183              		.loc 1 35 3 is_stmt 1 view .LVU47
-  35:Core/Src/ui_lvgl_task.c ****   {
- 184              		.loc 1 35 7 is_stmt 0 view .LVU48
- 185 0004 354B     		ldr	r3, .L28
-ARM GAS  /tmp/ccuGYnyw.s 			page 7
-
-
- 186 0006 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
-  35:Core/Src/ui_lvgl_task.c ****   {
- 187              		.loc 1 35 6 view .LVU49
- 188 0008 002B     		cmp	r3, #0
- 189 000a 62D0     		beq	.L23
-  40:Core/Src/ui_lvgl_task.c **** 
- 190              		.loc 1 40 3 is_stmt 1 view .LVU50
-  40:Core/Src/ui_lvgl_task.c **** 
- 191              		.loc 1 40 16 is_stmt 0 view .LVU51
- 192 000c 344B     		ldr	r3, .L28+4
- 193 000e 1A68     		ldr	r2, [r3]
- 194 0010 02F1010E 		add	lr, r2, #1
- 195 0014 C3F800E0 		str	lr, [r3]
-  43:Core/Src/ui_lvgl_task.c ****   {
- 196              		.loc 1 43 3 is_stmt 1 view .LVU52
- 197              	.LBB9:
-  43:Core/Src/ui_lvgl_task.c ****   {
- 198              		.loc 1 43 8 view .LVU53
- 199              	.LVL17:
-  43:Core/Src/ui_lvgl_task.c ****   {
- 200              		.loc 1 43 12 is_stmt 0 view .LVU54
- 201 0018 0023     		movs	r3, #0
-  43:Core/Src/ui_lvgl_task.c ****   {
- 202              		.loc 1 43 3 view .LVU55
- 203 001a 00E0     		b	.L16
- 204              	.LVL18:
- 205              	.L17:
-  43:Core/Src/ui_lvgl_task.c ****   {
- 206              		.loc 1 43 42 is_stmt 1 discriminator 1 view .LVU56
- 207 001c 0133     		adds	r3, r3, #1
- 208              	.LVL19:
- 209              	.L16:
-  43:Core/Src/ui_lvgl_task.c ****   {
- 210              		.loc 1 43 21 discriminator 2 view .LVU57
- 211 001e 082B     		cmp	r3, #8
- 212 0020 1ADC     		bgt	.L27
-  45:Core/Src/ui_lvgl_task.c ****         g_tile_cache[i].tx == tx &&
- 213              		.loc 1 45 5 view .LVU58
-  45:Core/Src/ui_lvgl_task.c ****         g_tile_cache[i].tx == tx &&
- 214              		.loc 1 45 24 is_stmt 0 view .LVU59
- 215 0022 03EB033C 		add	ip, r3, r3, lsl #12
- 216 0026 2F4A     		ldr	r2, .L28+8
- 217 0028 02EB0C12 		add	r2, r2, ip, lsl #4
- 218 002c 127B     		ldrb	r2, [r2, #12]	@ zero_extendqisi2
-  45:Core/Src/ui_lvgl_task.c ****         g_tile_cache[i].tx == tx &&
- 219              		.loc 1 45 8 view .LVU60
- 220 002e 002A     		cmp	r2, #0
- 221 0030 F4D0     		beq	.L17
-  46:Core/Src/ui_lvgl_task.c ****         g_tile_cache[i].ty == ty)
- 222              		.loc 1 46 24 view .LVU61
- 223 0032 6246     		mov	r2, ip
- 224 0034 1201     		lsls	r2, r2, #4
- 225 0036 2B4C     		ldr	r4, .L28+8
- 226 0038 A258     		ldr	r2, [r4, r2]
-  45:Core/Src/ui_lvgl_task.c ****         g_tile_cache[i].tx == tx &&
- 227              		.loc 1 45 50 discriminator 1 view .LVU62
- 228 003a 8242     		cmp	r2, r0
-ARM GAS  /tmp/ccuGYnyw.s 			page 8
-
-
- 229 003c EED1     		bne	.L17
-  47:Core/Src/ui_lvgl_task.c ****     {
- 230              		.loc 1 47 24 view .LVU63
- 231 003e 294A     		ldr	r2, .L28+8
- 232 0040 02EB0C12 		add	r2, r2, ip, lsl #4
- 233 0044 5268     		ldr	r2, [r2, #4]
-  46:Core/Src/ui_lvgl_task.c ****         g_tile_cache[i].ty == ty)
- 234              		.loc 1 46 34 discriminator 1 view .LVU64
- 235 0046 8A42     		cmp	r2, r1
- 236 0048 E8D1     		bne	.L17
-  49:Core/Src/ui_lvgl_task.c ****       return &g_tile_cache[i];
- 237              		.loc 1 49 7 is_stmt 1 view .LVU65
-  49:Core/Src/ui_lvgl_task.c ****       return &g_tile_cache[i];
- 238              		.loc 1 49 32 is_stmt 0 view .LVU66
- 239 004a 264D     		ldr	r5, .L28+8
- 240 004c 05EB0C12 		add	r2, r5, ip, lsl #4
- 241 0050 C2F808E0 		str	lr, [r2, #8]
-  50:Core/Src/ui_lvgl_task.c ****     }
- 242              		.loc 1 50 7 is_stmt 1 view .LVU67
-  50:Core/Src/ui_lvgl_task.c ****     }
- 243              		.loc 1 50 14 is_stmt 0 view .LVU68
- 244 0054 1546     		mov	r5, r2
- 245 0056 3DE0     		b	.L13
- 246              	.L27:
-  50:Core/Src/ui_lvgl_task.c ****     }
- 247              		.loc 1 50 14 view .LVU69
- 248              	.LBE9:
- 249              	.LBB10:
-  58:Core/Src/ui_lvgl_task.c ****   {
- 250              		.loc 1 58 12 view .LVU70
- 251 0058 0023     		movs	r3, #0
- 252              	.LVL20:
-  58:Core/Src/ui_lvgl_task.c ****   {
- 253              		.loc 1 58 12 view .LVU71
- 254              	.LBE10:
-  56:Core/Src/ui_lvgl_task.c **** 
- 255              		.loc 1 56 12 view .LVU72
- 256 005a 4FF0FF35 		mov	r5, #-1
-  55:Core/Src/ui_lvgl_task.c ****   uint32_t min_tick = 0xFFFFFFFFUL;
- 257              		.loc 1 55 7 view .LVU73
- 258 005e 2C46     		mov	r4, r5
- 259 0060 00E0     		b	.L19
- 260              	.LVL21:
- 261              	.L21:
- 262              	.LBB11:
-  58:Core/Src/ui_lvgl_task.c ****   {
- 263              		.loc 1 58 42 is_stmt 1 discriminator 1 view .LVU74
- 264 0062 0133     		adds	r3, r3, #1
- 265              	.LVL22:
- 266              	.L19:
-  58:Core/Src/ui_lvgl_task.c ****   {
- 267              		.loc 1 58 21 discriminator 2 view .LVU75
- 268 0064 082B     		cmp	r3, #8
- 269 0066 16DC     		bgt	.L20
-  60:Core/Src/ui_lvgl_task.c ****     {
- 270              		.loc 1 60 5 view .LVU76
-  60:Core/Src/ui_lvgl_task.c ****     {
-ARM GAS  /tmp/ccuGYnyw.s 			page 9
-
-
- 271              		.loc 1 60 24 is_stmt 0 view .LVU77
- 272 0068 03EB033C 		add	ip, r3, r3, lsl #12
- 273 006c 1D4A     		ldr	r2, .L28+8
- 274 006e 02EB0C12 		add	r2, r2, ip, lsl #4
- 275 0072 127B     		ldrb	r2, [r2, #12]	@ zero_extendqisi2
-  60:Core/Src/ui_lvgl_task.c ****     {
- 276              		.loc 1 60 8 view .LVU78
- 277 0074 72B1     		cbz	r2, .L24
-  65:Core/Src/ui_lvgl_task.c ****     {
- 278              		.loc 1 65 5 is_stmt 1 view .LVU79
-  65:Core/Src/ui_lvgl_task.c ****     {
- 279              		.loc 1 65 24 is_stmt 0 view .LVU80
- 280 0076 1B4A     		ldr	r2, .L28+8
- 281 0078 02EB0C12 		add	r2, r2, ip, lsl #4
- 282 007c 127B     		ldrb	r2, [r2, #12]	@ zero_extendqisi2
-  65:Core/Src/ui_lvgl_task.c ****     {
- 283              		.loc 1 65 8 view .LVU81
- 284 007e 022A     		cmp	r2, #2
- 285 0080 EFD1     		bne	.L21
-  65:Core/Src/ui_lvgl_task.c ****     {
- 286              		.loc 1 65 68 discriminator 1 view .LVU82
- 287 0082 184A     		ldr	r2, .L28+8
- 288 0084 02EB0C12 		add	r2, r2, ip, lsl #4
- 289 0088 9268     		ldr	r2, [r2, #8]
-  65:Core/Src/ui_lvgl_task.c ****     {
- 290              		.loc 1 65 50 discriminator 1 view .LVU83
- 291 008a AA42     		cmp	r2, r5
- 292 008c E9D2     		bcs	.L21
-  67:Core/Src/ui_lvgl_task.c ****       victim   = i;
- 293              		.loc 1 67 16 view .LVU84
- 294 008e 1546     		mov	r5, r2
- 295              	.LVL23:
-  68:Core/Src/ui_lvgl_task.c ****     }
- 296              		.loc 1 68 16 view .LVU85
- 297 0090 1C46     		mov	r4, r3
- 298              	.LVL24:
-  68:Core/Src/ui_lvgl_task.c ****     }
- 299              		.loc 1 68 16 view .LVU86
- 300 0092 E6E7     		b	.L21
- 301              	.LVL25:
- 302              	.L24:
-  62:Core/Src/ui_lvgl_task.c ****       break;
- 303              		.loc 1 62 14 view .LVU87
- 304 0094 1C46     		mov	r4, r3
- 305              	.LVL26:
- 306              	.L20:
-  62:Core/Src/ui_lvgl_task.c ****       break;
- 307              		.loc 1 62 14 view .LVU88
- 308              	.LBE11:
-  72:Core/Src/ui_lvgl_task.c ****   {
- 309              		.loc 1 72 3 is_stmt 1 view .LVU89
-  72:Core/Src/ui_lvgl_task.c ****   {
- 310              		.loc 1 72 6 is_stmt 0 view .LVU90
- 311 0096 002C     		cmp	r4, #0
- 312 0098 1BDB     		blt	.L23
-  78:Core/Src/ui_lvgl_task.c ****   slot->tx       = tx;
- 313              		.loc 1 78 3 is_stmt 1 view .LVU91
-ARM GAS  /tmp/ccuGYnyw.s 			page 10
-
-
-  78:Core/Src/ui_lvgl_task.c ****   slot->tx       = tx;
- 314              		.loc 1 78 18 is_stmt 0 view .LVU92
- 315 009a 04EB0435 		add	r5, r4, r4, lsl #12
- 316              	.LVL27:
-  78:Core/Src/ui_lvgl_task.c ****   slot->tx       = tx;
- 317              		.loc 1 78 18 view .LVU93
- 318 009e 2A01     		lsls	r2, r5, #4
- 319 00a0 104B     		ldr	r3, .L28+8
- 320              	.LVL28:
-  78:Core/Src/ui_lvgl_task.c ****   slot->tx       = tx;
- 321              		.loc 1 78 18 view .LVU94
- 322 00a2 03EB0515 		add	r5, r3, r5, lsl #4
- 323              	.LVL29:
-  79:Core/Src/ui_lvgl_task.c ****   slot->ty       = ty;
- 324              		.loc 1 79 3 is_stmt 1 view .LVU95
-  79:Core/Src/ui_lvgl_task.c ****   slot->ty       = ty;
- 325              		.loc 1 79 18 is_stmt 0 view .LVU96
- 326 00a6 9850     		str	r0, [r3, r2]
-  80:Core/Src/ui_lvgl_task.c ****   slot->lru_tick = g_cache_clock;
- 327              		.loc 1 80 3 is_stmt 1 view .LVU97
-  80:Core/Src/ui_lvgl_task.c ****   slot->lru_tick = g_cache_clock;
- 328              		.loc 1 80 18 is_stmt 0 view .LVU98
- 329 00a8 6960     		str	r1, [r5, #4]
-  81:Core/Src/ui_lvgl_task.c ****   slot->has_data = false;
- 330              		.loc 1 81 3 is_stmt 1 view .LVU99
-  81:Core/Src/ui_lvgl_task.c ****   slot->has_data = false;
- 331              		.loc 1 81 18 is_stmt 0 view .LVU100
- 332 00aa C5F808E0 		str	lr, [r5, #8]
-  82:Core/Src/ui_lvgl_task.c ****   slot->state    = TILE_SLOT_LOADING;
- 333              		.loc 1 82 3 is_stmt 1 view .LVU101
-  82:Core/Src/ui_lvgl_task.c ****   slot->state    = TILE_SLOT_LOADING;
- 334              		.loc 1 82 18 is_stmt 0 view .LVU102
- 335 00ae 0022     		movs	r2, #0
- 336 00b0 6A73     		strb	r2, [r5, #13]
-  83:Core/Src/ui_lvgl_task.c **** 
- 337              		.loc 1 83 3 is_stmt 1 view .LVU103
-  83:Core/Src/ui_lvgl_task.c **** 
- 338              		.loc 1 83 18 is_stmt 0 view .LVU104
- 339 00b2 0123     		movs	r3, #1
- 340 00b4 2B73     		strb	r3, [r5, #12]
-  85:Core/Src/ui_lvgl_task.c ****     .slot_idx = (uint8_t)victim,
- 341              		.loc 1 85 3 is_stmt 1 view .LVU105
-  85:Core/Src/ui_lvgl_task.c ****     .slot_idx = (uint8_t)victim,
- 342              		.loc 1 85 17 is_stmt 0 view .LVU106
- 343 00b6 8DF80440 		strb	r4, [sp, #4]
- 344 00ba 0290     		str	r0, [sp, #8]
- 345 00bc 0391     		str	r1, [sp, #12]
-  91:Core/Src/ui_lvgl_task.c ****   {
- 346              		.loc 1 91 3 is_stmt 1 view .LVU107
-  91:Core/Src/ui_lvgl_task.c ****   {
- 347              		.loc 1 91 7 is_stmt 0 view .LVU108
- 348 00be 1346     		mov	r3, r2
- 349 00c0 01A9     		add	r1, sp, #4
- 350              	.LVL30:
-  91:Core/Src/ui_lvgl_task.c ****   {
- 351              		.loc 1 91 7 view .LVU109
- 352 00c2 0948     		ldr	r0, .L28+12
-ARM GAS  /tmp/ccuGYnyw.s 			page 11
-
-
- 353              	.LVL31:
-  91:Core/Src/ui_lvgl_task.c ****   {
- 354              		.loc 1 91 7 view .LVU110
- 355 00c4 0068     		ldr	r0, [r0]
- 356 00c6 FFF7FEFF 		bl	xQueueGenericSend
- 357              	.LVL32:
-  91:Core/Src/ui_lvgl_task.c ****   {
- 358              		.loc 1 91 6 discriminator 1 view .LVU111
- 359 00ca 0128     		cmp	r0, #1
- 360 00cc 02D0     		beq	.L13
-  93:Core/Src/ui_lvgl_task.c ****     return NULL;
- 361              		.loc 1 93 5 is_stmt 1 view .LVU112
-  93:Core/Src/ui_lvgl_task.c ****     return NULL;
- 362              		.loc 1 93 17 is_stmt 0 view .LVU113
- 363 00ce 0022     		movs	r2, #0
- 364 00d0 2A73     		strb	r2, [r5, #12]
-  94:Core/Src/ui_lvgl_task.c ****   }
- 365              		.loc 1 94 5 is_stmt 1 view .LVU114
- 366              	.LVL33:
- 367              	.L23:
-  37:Core/Src/ui_lvgl_task.c ****   }
- 368              		.loc 1 37 12 is_stmt 0 view .LVU115
- 369 00d2 0025     		movs	r5, #0
- 370              	.L13:
-  98:Core/Src/ui_lvgl_task.c **** 
- 371              		.loc 1 98 1 view .LVU116
- 372 00d4 2846     		mov	r0, r5
- 373 00d6 05B0     		add	sp, sp, #20
- 374              	.LCFI3:
- 375              		.cfi_def_cfa_offset 12
- 376              		@ sp needed
- 377 00d8 30BD     		pop	{r4, r5, pc}
- 378              	.L29:
- 379 00da 00BF     		.align	2
- 380              	.L28:
- 381 00dc 00000000 		.word	g_pak_ready
- 382 00e0 00000000 		.word	g_cache_clock
- 383 00e4 00000000 		.word	g_tile_cache
- 384 00e8 00000000 		.word	g_q_tile_req
- 385              		.cfi_endproc
- 386              	.LFE161:
- 388              		.section	.text.Render_Visible_Tiles_To_MapFB,"ax",%progbits
- 389              		.align	1
- 390              		.syntax unified
- 391              		.thumb
- 392              		.thumb_func
- 394              	Render_Visible_Tiles_To_MapFB:
- 395              	.LFB163:
+ 202              	.LBE3:
+ 130:Core/Src/ui_lvgl_task.c ****       }
+ 131:Core/Src/ui_lvgl_task.c ****     }
  132:Core/Src/ui_lvgl_task.c **** 
- 133:Core/Src/ui_lvgl_task.c **** static uint32_t Render_Visible_Tiles_To_MapFB(void)
- 134:Core/Src/ui_lvgl_task.c **** {
- 396              		.loc 1 134 1 is_stmt 1 view -0
- 397              		.cfi_startproc
- 398              		@ args = 0, pretend = 0, frame = 8
- 399              		@ frame_needed = 0, uses_anonymous_args = 0
- 400 0000 2DE9F04F 		push	{r4, r5, r6, r7, r8, r9, r10, fp, lr}
- 401              	.LCFI4:
-ARM GAS  /tmp/ccuGYnyw.s 			page 12
+ 133:Core/Src/ui_lvgl_task.c ****     if (x0 == x1 && y0 == y1) break;
+ 203              		.loc 1 133 8 view .LVU49
+ 204 00a8 019D     		ldr	r5, [sp, #4]
+ 205              		.loc 1 133 5 is_stmt 1 view .LVU50
+ 206              		.loc 1 133 8 is_stmt 0 view .LVU51
+ 207 00aa B042     		cmp	r0, r6
+ 208 00ac 0ED0     		beq	.L27
+ 209              	.L20:
+ 134:Core/Src/ui_lvgl_task.c ****     int32_t e2 = 2 * err;
+ 210              		.loc 1 134 5 is_stmt 1 view .LVU52
+ 211              		.loc 1 134 13 is_stmt 0 view .LVU53
+ 212 00ae 4FEA4E03 		lsl	r3, lr, #1
+ 213              	.LVL18:
+ 135:Core/Src/ui_lvgl_task.c ****     if (e2 >= dy) { err += dy; x0 += sx; }
+ 214              		.loc 1 135 5 is_stmt 1 view .LVU54
+ 215              		.loc 1 135 8 is_stmt 0 view .LVU55
+ 216 00b2 B2EB4E0F 		cmp	r2, lr, lsl #1
+ 217 00b6 01DC     		bgt	.L21
+ 218              		.loc 1 135 21 is_stmt 1 discriminator 1 view .LVU56
+ 219              		.loc 1 135 25 is_stmt 0 discriminator 1 view .LVU57
+ 220 00b8 9644     		add	lr, lr, r2
+ 221              	.LVL19:
+ 222              		.loc 1 135 32 is_stmt 1 discriminator 1 view .LVU58
+ 223              		.loc 1 135 35 is_stmt 0 discriminator 1 view .LVU59
+ 224 00ba 4844     		add	r0, r0, r9
+ 225              	.LVL20:
+ 226              	.L21:
+ 136:Core/Src/ui_lvgl_task.c ****     if (e2 <= dx) { err += dx; y0 += sy; }
+ 227              		.loc 1 136 5 is_stmt 1 view .LVU60
+ 228              		.loc 1 136 8 is_stmt 0 view .LVU61
+ 229 00bc 9D42     		cmp	r5, r3
+ 230 00be 01DB     		blt	.L13
+ 231              		.loc 1 136 21 is_stmt 1 discriminator 1 view .LVU62
+ 232              		.loc 1 136 25 is_stmt 0 discriminator 1 view .LVU63
+ 233 00c0 AE44     		add	lr, lr, r5
+ 234              	.LVL21:
+ 235              		.loc 1 136 32 is_stmt 1 discriminator 1 view .LVU64
+ 236              		.loc 1 136 35 is_stmt 0 discriminator 1 view .LVU65
+ 237 00c2 4144     		add	r1, r1, r8
+ 238              	.LVL22:
+ 239              	.L13:
+ 240              		.loc 1 136 35 discriminator 1 view .LVU66
+ 241              	.LBE2:
+ 118:Core/Src/ui_lvgl_task.c ****   {
+ 242              		.loc 1 118 3 is_stmt 1 view .LVU67
+ 243              	.LBB10:
+ 121:Core/Src/ui_lvgl_task.c ****     {
+ 244              		.loc 1 121 5 view .LVU68
+ 245              	.LBB9:
+ 121:Core/Src/ui_lvgl_task.c ****     {
+ 246              		.loc 1 121 10 view .LVU69
+ 121:Core/Src/ui_lvgl_task.c ****     {
+ 247              		.loc 1 121 18 is_stmt 0 view .LVU70
+ARM GAS  /tmp/cccULq5X.s 			page 8
 
 
- 402              		.cfi_def_cfa_offset 36
- 403              		.cfi_offset 4, -36
- 404              		.cfi_offset 5, -32
- 405              		.cfi_offset 6, -28
- 406              		.cfi_offset 7, -24
- 407              		.cfi_offset 8, -20
- 408              		.cfi_offset 9, -16
- 409              		.cfi_offset 10, -12
- 410              		.cfi_offset 11, -8
- 411              		.cfi_offset 14, -4
- 412 0004 85B0     		sub	sp, sp, #20
- 413              	.LCFI5:
- 414              		.cfi_def_cfa_offset 56
- 135:Core/Src/ui_lvgl_task.c ****   memset(s_map_fb, 0xDF, sizeof(s_map_fb));
- 415              		.loc 1 135 3 view .LVU118
- 416 0006 4FF41632 		mov	r2, #153600
- 417 000a DF21     		movs	r1, #223
- 418 000c 3E48     		ldr	r0, .L49
- 419 000e FFF7FEFF 		bl	memset
- 420              	.LVL34:
- 136:Core/Src/ui_lvgl_task.c **** 
- 137:Core/Src/ui_lvgl_task.c ****   uint32_t ready_count = 0;
- 421              		.loc 1 137 3 view .LVU119
- 138:Core/Src/ui_lvgl_task.c **** 
- 139:Core/Src/ui_lvgl_task.c ****   for (int32_t i = 0; i < g_visible_tiles.count; i++)
- 422              		.loc 1 139 3 view .LVU120
- 423              	.LBB12:
- 424              		.loc 1 139 8 view .LVU121
- 425              		.loc 1 139 16 is_stmt 0 view .LVU122
- 426 0012 0025     		movs	r5, #0
- 427              	.LBE12:
- 137:Core/Src/ui_lvgl_task.c **** 
- 428              		.loc 1 137 12 view .LVU123
- 429 0014 2E46     		mov	r6, r5
- 430              	.LBB29:
- 431              		.loc 1 139 3 view .LVU124
- 432 0016 38E0     		b	.L31
- 433              	.LVL35:
- 434              	.L36:
- 435              	.LBB13:
- 436              	.LBB14:
- 437              	.LBB15:
- 438              	.LBB16:
- 439              	.LBB17:
- 140:Core/Src/ui_lvgl_task.c ****   {
- 141:Core/Src/ui_lvgl_task.c ****     const VisibleTile *vt     = &g_visible_tiles.tiles[i];
- 142:Core/Src/ui_lvgl_task.c ****     const TileCacheSlot *slot = Request_Or_Get_Tile_Async(vt->tile.x, vt->tile.y);
- 143:Core/Src/ui_lvgl_task.c **** 
- 144:Core/Src/ui_lvgl_task.c ****     int32_t dst_x0 = vt->screen_x;
- 145:Core/Src/ui_lvgl_task.c ****     int32_t dst_y0 = vt->screen_y;
- 146:Core/Src/ui_lvgl_task.c ****     int32_t dst_x1 = dst_x0 + TILE_PX_SIZE;
- 147:Core/Src/ui_lvgl_task.c ****     int32_t dst_y1 = dst_y0 + TILE_PX_SIZE;
- 148:Core/Src/ui_lvgl_task.c **** 
- 149:Core/Src/ui_lvgl_task.c ****     int32_t clip_x0 = (dst_x0 < 0) ? 0 : dst_x0;
- 150:Core/Src/ui_lvgl_task.c ****     int32_t clip_y0 = (dst_y0 < 0) ? 0 : dst_y0;
- 151:Core/Src/ui_lvgl_task.c ****     int32_t clip_x1 = (dst_x1 > MY_DISP_HOR_RES) ? MY_DISP_HOR_RES : dst_x1;
- 152:Core/Src/ui_lvgl_task.c ****     int32_t clip_y1 = (dst_y1 > MY_DISP_VER_RES) ? MY_DISP_VER_RES : dst_y1;
-ARM GAS  /tmp/ccuGYnyw.s 			page 13
+ 248 00c4 4FF0FF3C 		mov	ip, #-1
+ 249 00c8 0195     		str	r5, [sp, #4]
+ 121:Core/Src/ui_lvgl_task.c ****     {
+ 250              		.loc 1 121 5 view .LVU71
+ 251 00ca E2E7     		b	.L14
+ 252              	.LVL23:
+ 253              	.L27:
+ 121:Core/Src/ui_lvgl_task.c ****     {
+ 254              		.loc 1 121 5 view .LVU72
+ 255              	.LBE9:
+ 133:Core/Src/ui_lvgl_task.c ****     int32_t e2 = 2 * err;
+ 256              		.loc 1 133 18 discriminator 1 view .LVU73
+ 257 00cc B942     		cmp	r1, r7
+ 258 00ce EED1     		bne	.L20
+ 259              	.LVL24:
+ 260              	.L1:
+ 133:Core/Src/ui_lvgl_task.c ****     int32_t e2 = 2 * err;
+ 261              		.loc 1 133 18 discriminator 1 view .LVU74
+ 262              	.LBE10:
+ 137:Core/Src/ui_lvgl_task.c ****   }
+ 138:Core/Src/ui_lvgl_task.c **** }
+ 263              		.loc 1 138 1 view .LVU75
+ 264 00d0 03B0     		add	sp, sp, #12
+ 265              	.LCFI2:
+ 266              		.cfi_def_cfa_offset 36
+ 267              		@ sp needed
+ 268 00d2 BDE8F08F 		pop	{r4, r5, r6, r7, r8, r9, r10, fp, pc}
+ 269              	.LVL25:
+ 270              	.L29:
+ 271              		.loc 1 138 1 view .LVU76
+ 272 00d6 00BF     		.align	2
+ 273              	.L28:
+ 274 00d8 00000000 		.word	s_map_fb
+ 275              		.cfi_endproc
+ 276              	.LFE162:
+ 278              		.section	.text.Draw_Pin_Marker,"ax",%progbits
+ 279              		.align	1
+ 280              		.syntax unified
+ 281              		.thumb
+ 282              		.thumb_func
+ 284              	Draw_Pin_Marker:
+ 285              	.LVL26:
+ 286              	.LFB163:
+ 139:Core/Src/ui_lvgl_task.c **** 
+ 140:Core/Src/ui_lvgl_task.c **** static void Draw_Pin_Marker(int32_t cx, int32_t cy, uint16_t fill_col)
+ 141:Core/Src/ui_lvgl_task.c **** {
+ 287              		.loc 1 141 1 is_stmt 1 view -0
+ 288              		.cfi_startproc
+ 289              		@ args = 0, pretend = 0, frame = 0
+ 290              		@ frame_needed = 0, uses_anonymous_args = 0
+ 291              		.loc 1 141 1 is_stmt 0 view .LVU78
+ 292 0000 70B5     		push	{r4, r5, r6, lr}
+ 293              	.LCFI3:
+ 294              		.cfi_def_cfa_offset 16
+ 295              		.cfi_offset 4, -16
+ 296              		.cfi_offset 5, -12
+ 297              		.cfi_offset 6, -8
+ARM GAS  /tmp/cccULq5X.s 			page 9
 
 
- 153:Core/Src/ui_lvgl_task.c **** 
- 154:Core/Src/ui_lvgl_task.c ****     if (slot != NULL && slot->state == TILE_SLOT_READY)
- 155:Core/Src/ui_lvgl_task.c ****     {
- 156:Core/Src/ui_lvgl_task.c ****       if (slot->has_data)
- 157:Core/Src/ui_lvgl_task.c ****       {
- 158:Core/Src/ui_lvgl_task.c ****         ready_count++;
- 159:Core/Src/ui_lvgl_task.c ****       }
- 160:Core/Src/ui_lvgl_task.c **** 
- 161:Core/Src/ui_lvgl_task.c ****       for (int32_t sy = clip_y0; sy < clip_y1; sy++)
- 162:Core/Src/ui_lvgl_task.c ****       {
- 163:Core/Src/ui_lvgl_task.c ****         int32_t ty             = sy - dst_y0;
- 164:Core/Src/ui_lvgl_task.c ****         const uint8_t *src_row = &slot->pixels[ty * TILE_PX_SIZE];
- 165:Core/Src/ui_lvgl_task.c ****         uint16_t *dst_row      = &s_map_fb[sy * MY_DISP_HOR_RES];
+ 298              		.cfi_offset 14, -4
+ 299 0002 0E46     		mov	r6, r1
+ 300 0004 1546     		mov	r5, r2
+ 142:Core/Src/ui_lvgl_task.c ****   const int32_t r_outer    = 6;
+ 301              		.loc 1 142 3 is_stmt 1 view .LVU79
+ 302              	.LVL27:
+ 143:Core/Src/ui_lvgl_task.c ****   const int32_t r_inner    = 4;
+ 303              		.loc 1 143 3 view .LVU80
+ 144:Core/Src/ui_lvgl_task.c ****   const uint16_t col_white = 0xFFFFU;
+ 304              		.loc 1 144 3 view .LVU81
+ 145:Core/Src/ui_lvgl_task.c **** 
+ 146:Core/Src/ui_lvgl_task.c ****   for (int32_t dy = -r_outer; dy <= r_outer; dy++)
+ 305              		.loc 1 146 3 view .LVU82
+ 306              	.LBB11:
+ 307              		.loc 1 146 8 view .LVU83
+ 308              		.loc 1 146 16 is_stmt 0 view .LVU84
+ 309 0006 6FF00502 		mvn	r2, #5
+ 310              	.LVL28:
+ 311              		.loc 1 146 3 view .LVU85
+ 312 000a 23E0     		b	.L31
+ 313              	.LVL29:
+ 314              	.L35:
+ 315              	.LBB12:
+ 316              	.LBB13:
+ 317              	.LBB14:
+ 147:Core/Src/ui_lvgl_task.c ****   {
+ 148:Core/Src/ui_lvgl_task.c ****     int32_t py = cy + dy;
+ 149:Core/Src/ui_lvgl_task.c ****     if (py < 0 || py >= MY_DISP_VER_RES) continue;
+ 150:Core/Src/ui_lvgl_task.c ****     for (int32_t dx = -r_outer; dx <= r_outer; dx++)
+ 151:Core/Src/ui_lvgl_task.c ****     {
+ 152:Core/Src/ui_lvgl_task.c ****       int32_t px = cx + dx;
+ 153:Core/Src/ui_lvgl_task.c ****       if (px < 0 || px >= MY_DISP_HOR_RES) continue;
+ 154:Core/Src/ui_lvgl_task.c ****       int32_t d2 = dx * dx + dy * dy;
+ 155:Core/Src/ui_lvgl_task.c ****       if (d2 <= r_inner * r_inner)
+ 156:Core/Src/ui_lvgl_task.c ****       {
+ 157:Core/Src/ui_lvgl_task.c ****         s_map_fb[py * MY_DISP_HOR_RES + px] = fill_col;
+ 158:Core/Src/ui_lvgl_task.c ****       }
+ 159:Core/Src/ui_lvgl_task.c ****       else if (d2 <= r_outer * r_outer)
+ 318              		.loc 1 159 12 is_stmt 1 view .LVU86
+ 319              		.loc 1 159 15 is_stmt 0 view .LVU87
+ 320 000c BEF1240F 		cmp	lr, #36
+ 321 0010 08DC     		bgt	.L34
+ 160:Core/Src/ui_lvgl_task.c ****       {
+ 161:Core/Src/ui_lvgl_task.c ****         s_map_fb[py * MY_DISP_HOR_RES + px] = col_white;
+ 322              		.loc 1 161 9 is_stmt 1 view .LVU88
+ 323              		.loc 1 161 21 is_stmt 0 view .LVU89
+ 324 0012 C1EB0114 		rsb	r4, r1, r1, lsl #4
+ 325              		.loc 1 161 39 view .LVU90
+ 326 0016 0CEB041C 		add	ip, ip, r4, lsl #4
+ 327              	.LVL30:
+ 328              		.loc 1 161 45 view .LVU91
+ 329 001a 134C     		ldr	r4, .L40
+ 330 001c 4FF6FF7E 		movw	lr, #65535
+ 331              	.LVL31:
+ 332              		.loc 1 161 45 view .LVU92
+ 333 0020 24F81CE0 		strh	lr, [r4, ip, lsl #1]	@ movhi
+ 334              	.LVL32:
+ARM GAS  /tmp/cccULq5X.s 			page 10
+
+
+ 335              	.L34:
+ 336              		.loc 1 161 45 view .LVU93
+ 337              	.LBE14:
+ 150:Core/Src/ui_lvgl_task.c ****     {
+ 338              		.loc 1 150 50 is_stmt 1 discriminator 1 view .LVU94
+ 339 0024 0133     		adds	r3, r3, #1
+ 340              	.LVL33:
+ 341              	.L33:
+ 150:Core/Src/ui_lvgl_task.c ****     {
+ 342              		.loc 1 150 36 discriminator 2 view .LVU95
+ 343 0026 062B     		cmp	r3, #6
+ 344 0028 13DC     		bgt	.L32
+ 345              	.LBB15:
+ 152:Core/Src/ui_lvgl_task.c ****       if (px < 0 || px >= MY_DISP_HOR_RES) continue;
+ 346              		.loc 1 152 7 view .LVU96
+ 152:Core/Src/ui_lvgl_task.c ****       if (px < 0 || px >= MY_DISP_HOR_RES) continue;
+ 347              		.loc 1 152 15 is_stmt 0 view .LVU97
+ 348 002a 03EB000C 		add	ip, r3, r0
+ 349              	.LVL34:
+ 153:Core/Src/ui_lvgl_task.c ****       int32_t d2 = dx * dx + dy * dy;
+ 350              		.loc 1 153 7 is_stmt 1 view .LVU98
+ 153:Core/Src/ui_lvgl_task.c ****       int32_t d2 = dx * dx + dy * dy;
+ 351              		.loc 1 153 10 is_stmt 0 view .LVU99
+ 352 002e BCF1EF0F 		cmp	ip, #239
+ 353 0032 F7D8     		bhi	.L34
+ 154:Core/Src/ui_lvgl_task.c ****       if (d2 <= r_inner * r_inner)
+ 354              		.loc 1 154 7 is_stmt 1 view .LVU100
+ 154:Core/Src/ui_lvgl_task.c ****       if (d2 <= r_inner * r_inner)
+ 355              		.loc 1 154 33 is_stmt 0 view .LVU101
+ 356 0034 02FB02FE 		mul	lr, r2, r2
+ 154:Core/Src/ui_lvgl_task.c ****       if (d2 <= r_inner * r_inner)
+ 357              		.loc 1 154 15 view .LVU102
+ 358 0038 03FB03EE 		mla	lr, r3, r3, lr
+ 359              	.LVL35:
+ 155:Core/Src/ui_lvgl_task.c ****       {
+ 360              		.loc 1 155 7 is_stmt 1 view .LVU103
+ 155:Core/Src/ui_lvgl_task.c ****       {
+ 361              		.loc 1 155 10 is_stmt 0 view .LVU104
+ 362 003c BEF1100F 		cmp	lr, #16
+ 363 0040 E4DC     		bgt	.L35
+ 157:Core/Src/ui_lvgl_task.c ****       }
+ 364              		.loc 1 157 9 is_stmt 1 view .LVU105
+ 157:Core/Src/ui_lvgl_task.c ****       }
+ 365              		.loc 1 157 21 is_stmt 0 view .LVU106
+ 366 0042 C1EB0114 		rsb	r4, r1, r1, lsl #4
+ 157:Core/Src/ui_lvgl_task.c ****       }
+ 367              		.loc 1 157 39 view .LVU107
+ 368 0046 0CEB041C 		add	ip, ip, r4, lsl #4
+ 369              	.LVL36:
+ 157:Core/Src/ui_lvgl_task.c ****       }
+ 370              		.loc 1 157 45 view .LVU108
+ 371 004a 074C     		ldr	r4, .L40
+ 372 004c 24F81C50 		strh	r5, [r4, ip, lsl #1]	@ movhi
+ 373 0050 E8E7     		b	.L34
+ 374              	.LVL37:
+ 375              	.L32:
+ 157:Core/Src/ui_lvgl_task.c ****       }
+ARM GAS  /tmp/cccULq5X.s 			page 11
+
+
+ 376              		.loc 1 157 45 view .LVU109
+ 377              	.LBE15:
+ 378              	.LBE13:
+ 379              	.LBE12:
+ 146:Core/Src/ui_lvgl_task.c ****   {
+ 380              		.loc 1 146 48 is_stmt 1 discriminator 1 view .LVU110
+ 381 0052 0132     		adds	r2, r2, #1
+ 382              	.LVL38:
+ 383              	.L31:
+ 146:Core/Src/ui_lvgl_task.c ****   {
+ 384              		.loc 1 146 34 discriminator 2 view .LVU111
+ 385 0054 062A     		cmp	r2, #6
+ 386 0056 06DC     		bgt	.L39
+ 387              	.LBB17:
+ 148:Core/Src/ui_lvgl_task.c ****     if (py < 0 || py >= MY_DISP_VER_RES) continue;
+ 388              		.loc 1 148 5 view .LVU112
+ 148:Core/Src/ui_lvgl_task.c ****     if (py < 0 || py >= MY_DISP_VER_RES) continue;
+ 389              		.loc 1 148 13 is_stmt 0 view .LVU113
+ 390 0058 9119     		adds	r1, r2, r6
+ 391              	.LVL39:
+ 149:Core/Src/ui_lvgl_task.c ****     for (int32_t dx = -r_outer; dx <= r_outer; dx++)
+ 392              		.loc 1 149 5 is_stmt 1 view .LVU114
+ 149:Core/Src/ui_lvgl_task.c ****     for (int32_t dx = -r_outer; dx <= r_outer; dx++)
+ 393              		.loc 1 149 8 is_stmt 0 view .LVU115
+ 394 005a B1F5A07F 		cmp	r1, #320
+ 395 005e F8D2     		bcs	.L32
+ 396              	.LBB16:
+ 150:Core/Src/ui_lvgl_task.c ****     {
+ 397              		.loc 1 150 18 view .LVU116
+ 398 0060 6FF00503 		mvn	r3, #5
+ 399 0064 DFE7     		b	.L33
+ 400              	.LVL40:
+ 401              	.L39:
+ 150:Core/Src/ui_lvgl_task.c ****     {
+ 402              		.loc 1 150 18 view .LVU117
+ 403              	.LBE16:
+ 404              	.LBE17:
+ 405              	.LBE11:
+ 162:Core/Src/ui_lvgl_task.c ****       }
+ 163:Core/Src/ui_lvgl_task.c ****     }
+ 164:Core/Src/ui_lvgl_task.c ****   }
+ 165:Core/Src/ui_lvgl_task.c **** }
+ 406              		.loc 1 165 1 view .LVU118
+ 407 0066 70BD     		pop	{r4, r5, r6, pc}
+ 408              	.LVL41:
+ 409              	.L41:
+ 410              		.loc 1 165 1 view .LVU119
+ 411              		.align	2
+ 412              	.L40:
+ 413 0068 00000000 		.word	s_map_fb
+ 414              		.cfi_endproc
+ 415              	.LFE163:
+ 417              		.section	.text.Draw_GPS_Marker,"ax",%progbits
+ 418              		.align	1
+ 419              		.syntax unified
+ 420              		.thumb
+ 421              		.thumb_func
+ARM GAS  /tmp/cccULq5X.s 			page 12
+
+
+ 423              	Draw_GPS_Marker:
+ 424              	.LVL42:
+ 425              	.LFB165:
  166:Core/Src/ui_lvgl_task.c **** 
- 167:Core/Src/ui_lvgl_task.c ****         for (int32_t sx = clip_x0; sx < clip_x1; sx++)
- 168:Core/Src/ui_lvgl_task.c ****         {
- 169:Core/Src/ui_lvgl_task.c ****           int32_t tx = sx - dst_x0;
- 440              		.loc 1 169 11 is_stmt 1 view .LVU125
- 441              		.loc 1 169 19 is_stmt 0 view .LVU126
- 442 0018 181B     		subs	r0, r3, r4
- 443              	.LVL36:
- 170:Core/Src/ui_lvgl_task.c ****           dst_row[sx] = g_palette_rgb565[src_row[tx]];
- 444              		.loc 1 170 11 is_stmt 1 view .LVU127
- 445              		.loc 1 170 49 is_stmt 0 view .LVU128
- 446 001a 12F800B0 		ldrb	fp, [r2, r0]	@ zero_extendqisi2
- 447              		.loc 1 170 41 view .LVU129
- 448 001e 3B48     		ldr	r0, .L49+4
- 449              	.LVL37:
- 450              		.loc 1 170 41 view .LVU130
- 451 0020 30F81B00 		ldrh	r0, [r0, fp, lsl #1]
- 452              		.loc 1 170 23 view .LVU131
- 453 0024 29F81300 		strh	r0, [r9, r3, lsl #1]	@ movhi
- 454              	.LBE17:
- 167:Core/Src/ui_lvgl_task.c ****         {
- 455              		.loc 1 167 52 is_stmt 1 discriminator 1 view .LVU132
- 456 0028 0133     		adds	r3, r3, #1
- 457              	.LVL38:
- 458              	.L35:
- 167:Core/Src/ui_lvgl_task.c ****         {
- 459              		.loc 1 167 39 discriminator 2 view .LVU133
- 460 002a 8B42     		cmp	r3, r1
- 461 002c F4DB     		blt	.L36
- 167:Core/Src/ui_lvgl_task.c ****         {
- 462              		.loc 1 167 39 is_stmt 0 discriminator 2 view .LVU134
- 463              	.LBE16:
- 464              	.LBE15:
- 161:Core/Src/ui_lvgl_task.c ****       {
- 465              		.loc 1 161 50 is_stmt 1 discriminator 1 view .LVU135
- 466 002e 0CF1010C 		add	ip, ip, #1
- 467              	.LVL39:
- 468              	.L34:
- 161:Core/Src/ui_lvgl_task.c ****       {
- 469              		.loc 1 161 37 discriminator 2 view .LVU136
- 470 0032 F445     		cmp	ip, lr
- 471 0034 28DA     		bge	.L38
- 472              	.LBB19:
- 163:Core/Src/ui_lvgl_task.c ****         const uint8_t *src_row = &slot->pixels[ty * TILE_PX_SIZE];
-ARM GAS  /tmp/ccuGYnyw.s 			page 14
-
-
- 473              		.loc 1 163 9 view .LVU137
- 163:Core/Src/ui_lvgl_task.c ****         const uint8_t *src_row = &slot->pixels[ty * TILE_PX_SIZE];
- 474              		.loc 1 163 17 is_stmt 0 view .LVU138
- 475 0036 ACEB0702 		sub	r2, ip, r7
- 476              	.LVL40:
- 164:Core/Src/ui_lvgl_task.c ****         uint16_t *dst_row      = &s_map_fb[sy * MY_DISP_HOR_RES];
- 477              		.loc 1 164 9 is_stmt 1 view .LVU139
- 164:Core/Src/ui_lvgl_task.c ****         uint16_t *dst_row      = &s_map_fb[sy * MY_DISP_HOR_RES];
- 478              		.loc 1 164 51 is_stmt 0 view .LVU140
- 479 003a 1202     		lsls	r2, r2, #8
- 480              	.LVL41:
- 164:Core/Src/ui_lvgl_task.c ****         uint16_t *dst_row      = &s_map_fb[sy * MY_DISP_HOR_RES];
- 481              		.loc 1 164 24 view .LVU141
- 482 003c 0832     		adds	r2, r2, #8
- 483 003e 5244     		add	r2, r2, r10
- 484 0040 0632     		adds	r2, r2, #6
- 485              	.LVL42:
- 165:Core/Src/ui_lvgl_task.c **** 
- 486              		.loc 1 165 9 is_stmt 1 view .LVU142
- 165:Core/Src/ui_lvgl_task.c **** 
- 487              		.loc 1 165 47 is_stmt 0 view .LVU143
- 488 0042 CCEB0C13 		rsb	r3, ip, ip, lsl #4
- 165:Core/Src/ui_lvgl_task.c **** 
- 489              		.loc 1 165 19 view .LVU144
- 490 0046 3048     		ldr	r0, .L49
- 491 0048 00EB4319 		add	r9, r0, r3, lsl #5
- 492              	.LVL43:
- 167:Core/Src/ui_lvgl_task.c ****         {
- 493              		.loc 1 167 9 is_stmt 1 view .LVU145
- 494              	.LBB18:
- 167:Core/Src/ui_lvgl_task.c ****         {
- 495              		.loc 1 167 14 view .LVU146
- 167:Core/Src/ui_lvgl_task.c ****         {
- 496              		.loc 1 167 22 is_stmt 0 view .LVU147
- 497 004c 4346     		mov	r3, r8
- 167:Core/Src/ui_lvgl_task.c ****         {
- 498              		.loc 1 167 9 view .LVU148
- 499 004e ECE7     		b	.L35
- 500              	.LVL44:
- 501              	.L40:
- 167:Core/Src/ui_lvgl_task.c ****         {
- 502              		.loc 1 167 9 view .LVU149
- 503              	.LBE18:
- 504              	.LBE19:
- 505              	.LBE14:
- 506              	.LBB20:
- 507              	.LBB21:
- 508              	.LBB22:
- 509              	.LBB23:
- 171:Core/Src/ui_lvgl_task.c ****         }
- 172:Core/Src/ui_lvgl_task.c ****       }
- 173:Core/Src/ui_lvgl_task.c ****     }
- 174:Core/Src/ui_lvgl_task.c ****     else
- 175:Core/Src/ui_lvgl_task.c ****     {
- 176:Core/Src/ui_lvgl_task.c ****       /* Tile is streaming in the background -> draw subtle grid border */
- 177:Core/Src/ui_lvgl_task.c ****       for (int32_t sy = clip_y0; sy < clip_y1; sy++)
- 178:Core/Src/ui_lvgl_task.c ****       {
-ARM GAS  /tmp/ccuGYnyw.s 			page 15
-
-
- 179:Core/Src/ui_lvgl_task.c ****         int32_t ty        = sy - dst_y0;
- 180:Core/Src/ui_lvgl_task.c ****         uint16_t *dst_row = &s_map_fb[sy * MY_DISP_HOR_RES];
- 181:Core/Src/ui_lvgl_task.c ****         for (int32_t sx = clip_x0; sx < clip_x1; sx++)
- 182:Core/Src/ui_lvgl_task.c ****         {
- 183:Core/Src/ui_lvgl_task.c ****           int32_t tx = sx - dst_x0;
- 184:Core/Src/ui_lvgl_task.c ****           if ((tx & 31) == 0 || (ty & 31) == 0)
- 185:Core/Src/ui_lvgl_task.c ****           {
- 186:Core/Src/ui_lvgl_task.c ****             dst_row[sx] = 0xCE59U;
- 510              		.loc 1 186 13 is_stmt 1 view .LVU150
- 511              		.loc 1 186 25 is_stmt 0 view .LVU151
- 512 0050 4CF65962 		movw	r2, #52825
- 513              	.LVL45:
- 514              		.loc 1 186 25 view .LVU152
- 515 0054 20F81320 		strh	r2, [r0, r3, lsl #1]	@ movhi
- 516              	.L41:
- 517              		.loc 1 186 25 view .LVU153
- 518              	.LBE23:
- 181:Core/Src/ui_lvgl_task.c ****         {
- 519              		.loc 1 181 52 is_stmt 1 discriminator 1 view .LVU154
- 520 0058 0133     		adds	r3, r3, #1
- 521              	.LVL46:
- 522              	.L39:
- 181:Core/Src/ui_lvgl_task.c ****         {
- 523              		.loc 1 181 39 discriminator 2 view .LVU155
- 524 005a 8B42     		cmp	r3, r1
- 525 005c 07DA     		bge	.L47
- 526              	.LBB24:
- 183:Core/Src/ui_lvgl_task.c ****           if ((tx & 31) == 0 || (ty & 31) == 0)
- 527              		.loc 1 183 11 view .LVU156
- 183:Core/Src/ui_lvgl_task.c ****           if ((tx & 31) == 0 || (ty & 31) == 0)
- 528              		.loc 1 183 19 is_stmt 0 view .LVU157
- 529 005e 1A1B     		subs	r2, r3, r4
- 530              	.LVL47:
- 184:Core/Src/ui_lvgl_task.c ****           {
- 531              		.loc 1 184 11 is_stmt 1 view .LVU158
- 184:Core/Src/ui_lvgl_task.c ****           {
- 532              		.loc 1 184 14 is_stmt 0 view .LVU159
- 533 0060 12F01F0F 		tst	r2, #31
- 534 0064 F4D0     		beq	.L40
- 184:Core/Src/ui_lvgl_task.c ****           {
- 535              		.loc 1 184 30 discriminator 1 view .LVU160
- 536 0066 19F01F0F 		tst	r9, #31
- 537 006a F5D1     		bne	.L41
- 184:Core/Src/ui_lvgl_task.c ****           {
- 538              		.loc 1 184 30 discriminator 1 view .LVU161
- 539 006c F0E7     		b	.L40
- 540              	.LVL48:
- 541              	.L47:
- 184:Core/Src/ui_lvgl_task.c ****           {
- 542              		.loc 1 184 30 discriminator 1 view .LVU162
- 543              	.LBE24:
- 544              	.LBE22:
- 545              	.LBE21:
- 177:Core/Src/ui_lvgl_task.c ****       {
- 546              		.loc 1 177 50 is_stmt 1 discriminator 1 view .LVU163
- 547 006e 0CF1010C 		add	ip, ip, #1
- 548              	.LVL49:
-ARM GAS  /tmp/ccuGYnyw.s 			page 16
-
-
- 549              	.L43:
- 177:Core/Src/ui_lvgl_task.c ****       {
- 550              		.loc 1 177 37 discriminator 2 view .LVU164
- 551 0072 F445     		cmp	ip, lr
- 552 0074 08DA     		bge	.L38
- 553              	.LBB26:
- 179:Core/Src/ui_lvgl_task.c ****         uint16_t *dst_row = &s_map_fb[sy * MY_DISP_HOR_RES];
- 554              		.loc 1 179 9 view .LVU165
- 179:Core/Src/ui_lvgl_task.c ****         uint16_t *dst_row = &s_map_fb[sy * MY_DISP_HOR_RES];
- 555              		.loc 1 179 17 is_stmt 0 view .LVU166
- 556 0076 ACEB0709 		sub	r9, ip, r7
- 557              	.LVL50:
- 180:Core/Src/ui_lvgl_task.c ****         for (int32_t sx = clip_x0; sx < clip_x1; sx++)
- 558              		.loc 1 180 9 is_stmt 1 view .LVU167
- 180:Core/Src/ui_lvgl_task.c ****         for (int32_t sx = clip_x0; sx < clip_x1; sx++)
- 559              		.loc 1 180 42 is_stmt 0 view .LVU168
- 560 007a CCEB0C13 		rsb	r3, ip, ip, lsl #4
- 180:Core/Src/ui_lvgl_task.c ****         for (int32_t sx = clip_x0; sx < clip_x1; sx++)
- 561              		.loc 1 180 19 view .LVU169
- 562 007e 2248     		ldr	r0, .L49
- 563 0080 00EB4310 		add	r0, r0, r3, lsl #5
- 564              	.LVL51:
- 181:Core/Src/ui_lvgl_task.c ****         {
- 565              		.loc 1 181 9 is_stmt 1 view .LVU170
- 566              	.LBB25:
- 181:Core/Src/ui_lvgl_task.c ****         {
- 567              		.loc 1 181 14 view .LVU171
- 181:Core/Src/ui_lvgl_task.c ****         {
- 568              		.loc 1 181 22 is_stmt 0 view .LVU172
- 569 0084 4346     		mov	r3, r8
- 181:Core/Src/ui_lvgl_task.c ****         {
- 570              		.loc 1 181 9 view .LVU173
- 571 0086 E8E7     		b	.L39
- 572              	.LVL52:
- 573              	.L38:
- 181:Core/Src/ui_lvgl_task.c ****         {
- 574              		.loc 1 181 9 view .LVU174
- 575              	.LBE25:
- 576              	.LBE26:
- 577              	.LBE20:
- 578              	.LBE13:
- 139:Core/Src/ui_lvgl_task.c ****   {
- 579              		.loc 1 139 51 is_stmt 1 discriminator 1 view .LVU175
- 580 0088 0135     		adds	r5, r5, #1
- 581              	.LVL53:
- 582              	.L31:
- 139:Core/Src/ui_lvgl_task.c ****   {
- 583              		.loc 1 139 25 discriminator 2 view .LVU176
- 139:Core/Src/ui_lvgl_task.c ****   {
- 584              		.loc 1 139 42 is_stmt 0 discriminator 2 view .LVU177
- 585 008a 214B     		ldr	r3, .L49+8
- 586 008c D3F8003C 		ldr	r3, [r3, #3072]
- 139:Core/Src/ui_lvgl_task.c ****   {
- 587              		.loc 1 139 25 discriminator 2 view .LVU178
- 588 0090 AB42     		cmp	r3, r5
- 589 0092 26DD     		ble	.L48
- 590              	.LBB28:
-ARM GAS  /tmp/ccuGYnyw.s 			page 17
-
-
- 141:Core/Src/ui_lvgl_task.c ****     const TileCacheSlot *slot = Request_Or_Get_Tile_Async(vt->tile.x, vt->tile.y);
- 591              		.loc 1 141 5 is_stmt 1 view .LVU179
- 592              	.LVL54:
- 142:Core/Src/ui_lvgl_task.c **** 
- 593              		.loc 1 142 5 view .LVU180
- 142:Core/Src/ui_lvgl_task.c **** 
- 594              		.loc 1 142 67 is_stmt 0 view .LVU181
- 595 0094 1F4B     		ldr	r3, .L49+12
- 596 0096 C5EBC502 		rsb	r2, r5, r5, lsl #3
- 597 009a 03EB8207 		add	r7, r3, r2, lsl #2
- 142:Core/Src/ui_lvgl_task.c **** 
- 598              		.loc 1 142 33 view .LVU182
- 599 009e 7968     		ldr	r1, [r7, #4]
- 600 00a0 53F82200 		ldr	r0, [r3, r2, lsl #2]
- 601 00a4 FFF7FEFF 		bl	Request_Or_Get_Tile_Async
- 602              	.LVL55:
- 144:Core/Src/ui_lvgl_task.c ****     int32_t dst_y0 = vt->screen_y;
- 603              		.loc 1 144 5 is_stmt 1 view .LVU183
- 144:Core/Src/ui_lvgl_task.c ****     int32_t dst_y0 = vt->screen_y;
- 604              		.loc 1 144 13 is_stmt 0 view .LVU184
- 605 00a8 FC68     		ldr	r4, [r7, #12]
- 606              	.LVL56:
- 145:Core/Src/ui_lvgl_task.c ****     int32_t dst_x1 = dst_x0 + TILE_PX_SIZE;
- 607              		.loc 1 145 5 is_stmt 1 view .LVU185
- 145:Core/Src/ui_lvgl_task.c ****     int32_t dst_x1 = dst_x0 + TILE_PX_SIZE;
- 608              		.loc 1 145 13 is_stmt 0 view .LVU186
- 609 00aa 3F69     		ldr	r7, [r7, #16]
- 610              	.LVL57:
- 146:Core/Src/ui_lvgl_task.c ****     int32_t dst_y1 = dst_y0 + TILE_PX_SIZE;
- 611              		.loc 1 146 5 is_stmt 1 view .LVU187
- 146:Core/Src/ui_lvgl_task.c ****     int32_t dst_y1 = dst_y0 + TILE_PX_SIZE;
- 612              		.loc 1 146 13 is_stmt 0 view .LVU188
- 613 00ac 04F58071 		add	r1, r4, #256
- 614              	.LVL58:
- 147:Core/Src/ui_lvgl_task.c **** 
- 615              		.loc 1 147 5 is_stmt 1 view .LVU189
- 147:Core/Src/ui_lvgl_task.c **** 
- 616              		.loc 1 147 13 is_stmt 0 view .LVU190
- 617 00b0 07F5807E 		add	lr, r7, #256
- 618              	.LVL59:
- 149:Core/Src/ui_lvgl_task.c ****     int32_t clip_y0 = (dst_y0 < 0) ? 0 : dst_y0;
- 619              		.loc 1 149 5 is_stmt 1 view .LVU191
- 149:Core/Src/ui_lvgl_task.c ****     int32_t clip_y0 = (dst_y0 < 0) ? 0 : dst_y0;
- 620              		.loc 1 149 13 is_stmt 0 view .LVU192
- 621 00b4 24EAE478 		bic	r8, r4, r4, asr #31
- 622              	.LVL60:
- 150:Core/Src/ui_lvgl_task.c ****     int32_t clip_x1 = (dst_x1 > MY_DISP_HOR_RES) ? MY_DISP_HOR_RES : dst_x1;
- 623              		.loc 1 150 5 is_stmt 1 view .LVU193
- 150:Core/Src/ui_lvgl_task.c ****     int32_t clip_x1 = (dst_x1 > MY_DISP_HOR_RES) ? MY_DISP_HOR_RES : dst_x1;
- 624              		.loc 1 150 13 is_stmt 0 view .LVU194
- 625 00b8 27EAE77C 		bic	ip, r7, r7, asr #31
- 626              	.LVL61:
- 151:Core/Src/ui_lvgl_task.c ****     int32_t clip_y1 = (dst_y1 > MY_DISP_VER_RES) ? MY_DISP_VER_RES : dst_y1;
- 627              		.loc 1 151 5 is_stmt 1 view .LVU195
- 151:Core/Src/ui_lvgl_task.c ****     int32_t clip_y1 = (dst_y1 > MY_DISP_VER_RES) ? MY_DISP_VER_RES : dst_y1;
- 628              		.loc 1 151 13 is_stmt 0 view .LVU196
- 629 00bc F029     		cmp	r1, #240
-ARM GAS  /tmp/ccuGYnyw.s 			page 18
-
-
- 630 00be A8BF     		it	ge
- 631 00c0 F021     		movge	r1, #240
- 632              	.LVL62:
- 152:Core/Src/ui_lvgl_task.c **** 
- 633              		.loc 1 152 5 is_stmt 1 view .LVU197
- 152:Core/Src/ui_lvgl_task.c **** 
- 634              		.loc 1 152 13 is_stmt 0 view .LVU198
- 635 00c2 BEF5A07F 		cmp	lr, #320
- 636 00c6 A8BF     		it	ge
- 637 00c8 4FF4A07E 		movge	lr, #320
- 638              	.LVL63:
- 154:Core/Src/ui_lvgl_task.c ****     {
- 639              		.loc 1 154 5 is_stmt 1 view .LVU199
- 154:Core/Src/ui_lvgl_task.c ****     {
- 640              		.loc 1 154 8 is_stmt 0 view .LVU200
- 641 00cc 8246     		mov	r10, r0
- 642 00ce 0028     		cmp	r0, #0
- 643 00d0 CFD0     		beq	.L43
- 154:Core/Src/ui_lvgl_task.c ****     {
- 644              		.loc 1 154 29 discriminator 1 view .LVU201
- 645 00d2 037B     		ldrb	r3, [r0, #12]	@ zero_extendqisi2
- 154:Core/Src/ui_lvgl_task.c ****     {
- 646              		.loc 1 154 22 discriminator 1 view .LVU202
- 647 00d4 022B     		cmp	r3, #2
- 648 00d6 CCD1     		bne	.L43
- 156:Core/Src/ui_lvgl_task.c ****       {
- 649              		.loc 1 156 7 is_stmt 1 view .LVU203
- 156:Core/Src/ui_lvgl_task.c ****       {
- 650              		.loc 1 156 15 is_stmt 0 view .LVU204
- 651 00d8 437B     		ldrb	r3, [r0, #13]	@ zero_extendqisi2
- 156:Core/Src/ui_lvgl_task.c ****       {
- 652              		.loc 1 156 10 view .LVU205
- 653 00da 002B     		cmp	r3, #0
- 654 00dc A9D0     		beq	.L34
- 158:Core/Src/ui_lvgl_task.c ****       }
- 655              		.loc 1 158 9 is_stmt 1 view .LVU206
- 158:Core/Src/ui_lvgl_task.c ****       }
- 656              		.loc 1 158 20 is_stmt 0 view .LVU207
- 657 00de 0136     		adds	r6, r6, #1
- 658              	.LVL64:
- 161:Core/Src/ui_lvgl_task.c ****       {
- 659              		.loc 1 161 7 is_stmt 1 view .LVU208
- 660              	.LBB27:
- 161:Core/Src/ui_lvgl_task.c ****       {
- 661              		.loc 1 161 12 view .LVU209
- 161:Core/Src/ui_lvgl_task.c ****       {
- 662              		.loc 1 161 7 is_stmt 0 view .LVU210
- 663 00e0 A7E7     		b	.L34
- 664              	.LVL65:
- 665              	.L48:
- 161:Core/Src/ui_lvgl_task.c ****       {
- 666              		.loc 1 161 7 view .LVU211
- 667              	.LBE27:
- 668              	.LBE28:
- 669              	.LBE29:
- 187:Core/Src/ui_lvgl_task.c ****           }
- 188:Core/Src/ui_lvgl_task.c ****         }
-ARM GAS  /tmp/ccuGYnyw.s 			page 19
-
-
- 189:Core/Src/ui_lvgl_task.c ****       }
- 190:Core/Src/ui_lvgl_task.c ****     }
- 191:Core/Src/ui_lvgl_task.c ****   }
- 192:Core/Src/ui_lvgl_task.c **** 
- 193:Core/Src/ui_lvgl_task.c ****   /* Project GPS position onto the camera viewport */
- 194:Core/Src/ui_lvgl_task.c ****   int32_t gps_sx = 0, gps_sy = 0;
- 670              		.loc 1 194 3 is_stmt 1 view .LVU212
- 671              		.loc 1 194 11 is_stmt 0 view .LVU213
- 672 00e2 0023     		movs	r3, #0
- 673 00e4 0393     		str	r3, [sp, #12]
- 674              		.loc 1 194 23 view .LVU214
- 675 00e6 0293     		str	r3, [sp, #8]
- 195:Core/Src/ui_lvgl_task.c ****   map_camera_latlon_to_screen(&g_camera, g_gps_pos, &gps_sx, &gps_sy);
- 676              		.loc 1 195 3 is_stmt 1 view .LVU215
- 677 00e8 0B4A     		ldr	r2, .L49+16
- 678 00ea 02AB     		add	r3, sp, #8
- 679 00ec 0093     		str	r3, [sp]
- 680 00ee 03AB     		add	r3, sp, #12
- 681 00f0 06CA     		ldm	r2, {r1, r2}
- 682 00f2 0A48     		ldr	r0, .L49+20
- 683 00f4 FFF7FEFF 		bl	map_camera_latlon_to_screen
- 684              	.LVL66:
- 196:Core/Src/ui_lvgl_task.c ****   Draw_GPS_Marker(gps_sx, gps_sy);
- 685              		.loc 1 196 3 view .LVU216
- 686 00f8 0299     		ldr	r1, [sp, #8]
- 687 00fa 0398     		ldr	r0, [sp, #12]
- 688 00fc FFF7FEFF 		bl	Draw_GPS_Marker
- 689              	.LVL67:
- 197:Core/Src/ui_lvgl_task.c **** 
- 198:Core/Src/ui_lvgl_task.c ****   return ready_count;
- 690              		.loc 1 198 3 view .LVU217
+ 167:Core/Src/ui_lvgl_task.c **** static void Draw_Route_On_MapFB(void)
+ 168:Core/Src/ui_lvgl_task.c **** {
+ 169:Core/Src/ui_lvgl_task.c ****   if (!g_current_route.found || g_current_route.geom_point_count < 2)
+ 170:Core/Src/ui_lvgl_task.c ****   {
+ 171:Core/Src/ui_lvgl_task.c ****     return;
+ 172:Core/Src/ui_lvgl_task.c ****   }
+ 173:Core/Src/ui_lvgl_task.c **** 
+ 174:Core/Src/ui_lvgl_task.c ****   /* Bright cyan (0x07FF) for Car, bright green (0x07E0) for Hiking/Stroller */
+ 175:Core/Src/ui_lvgl_task.c ****   const uint16_t route_col = (g_current_route.routing_profile == (int)PROFILE_STROLLER)
+ 176:Core/Src/ui_lvgl_task.c ****                              ? 0x07E0U : 0x07FFU;
+ 177:Core/Src/ui_lvgl_task.c **** 
+ 178:Core/Src/ui_lvgl_task.c ****   int32_t prev_sx = 0, prev_sy = 0;
+ 179:Core/Src/ui_lvgl_task.c ****   GeoCoord p0 = geo_coord_make(g_current_route.geom_points[0].lat_scaled,
+ 180:Core/Src/ui_lvgl_task.c ****                                g_current_route.geom_points[0].lon_scaled);
+ 181:Core/Src/ui_lvgl_task.c ****   map_camera_latlon_to_screen(&g_camera, p0, &prev_sx, &prev_sy);
+ 182:Core/Src/ui_lvgl_task.c **** 
+ 183:Core/Src/ui_lvgl_task.c ****   for (int32_t i = 1; i < g_current_route.geom_point_count; i++)
+ 184:Core/Src/ui_lvgl_task.c ****   {
+ 185:Core/Src/ui_lvgl_task.c ****     int32_t cur_sx = 0, cur_sy = 0;
+ 186:Core/Src/ui_lvgl_task.c ****     GeoCoord pt = geo_coord_make(g_current_route.geom_points[i].lat_scaled,
+ 187:Core/Src/ui_lvgl_task.c ****                                  g_current_route.geom_points[i].lon_scaled);
+ 188:Core/Src/ui_lvgl_task.c ****     map_camera_latlon_to_screen(&g_camera, pt, &cur_sx, &cur_sy);
+ 189:Core/Src/ui_lvgl_task.c ****     Draw_Thick_Line_Clipped(prev_sx, prev_sy, cur_sx, cur_sy, route_col);
+ 190:Core/Src/ui_lvgl_task.c ****     prev_sx = cur_sx;
+ 191:Core/Src/ui_lvgl_task.c ****     prev_sy = cur_sy;
+ 192:Core/Src/ui_lvgl_task.c ****   }
+ 193:Core/Src/ui_lvgl_task.c **** 
+ 194:Core/Src/ui_lvgl_task.c ****   /* Draw Start (Green) and Goal (Magenta) pins */
+ 195:Core/Src/ui_lvgl_task.c ****   int32_t start_sx = 0, start_sy = 0;
+ 196:Core/Src/ui_lvgl_task.c ****   map_camera_latlon_to_screen(&g_camera, p0, &start_sx, &start_sy);
+ 197:Core/Src/ui_lvgl_task.c ****   Draw_Pin_Marker(start_sx, start_sy, 0x07E0U);
+ 198:Core/Src/ui_lvgl_task.c ****   Draw_Pin_Marker(prev_sx, prev_sy, 0xF81FU);
  199:Core/Src/ui_lvgl_task.c **** }
- 691              		.loc 1 199 1 is_stmt 0 view .LVU218
- 692 0100 3046     		mov	r0, r6
- 693 0102 05B0     		add	sp, sp, #20
- 694              	.LCFI6:
- 695              		.cfi_def_cfa_offset 36
- 696              		@ sp needed
- 697 0104 BDE8F08F 		pop	{r4, r5, r6, r7, r8, r9, r10, fp, pc}
- 698              	.LVL68:
- 699              	.L50:
- 700              		.loc 1 199 1 view .LVU219
- 701              		.align	2
- 702              	.L49:
- 703 0108 00000000 		.word	s_map_fb
- 704 010c 00000000 		.word	g_palette_rgb565
- 705 0110 00100000 		.word	g_visible_tiles+4096
- 706 0114 00000000 		.word	g_visible_tiles
- 707 0118 00000000 		.word	g_gps_pos
- 708 011c 00000000 		.word	g_camera
- 709              		.cfi_endproc
- 710              	.LFE163:
- 712              		.section	.rodata.UI_LVGL_Task.str1.4,"aMS",%progbits,1
- 713              		.align	2
- 714              	.LC0:
- 715 0000 46697800 		.ascii	"Fix\000"
- 716              		.align	2
-ARM GAS  /tmp/ccuGYnyw.s 			page 20
-
-
- 717              	.LC1:
- 718 0004 4E6F4669 		.ascii	"NoFix\000"
- 718      7800
- 719 000a 0000     		.align	2
- 720              	.LC2:
- 721 000c 52544F53 		.ascii	"RTOS: Mounting SD...\000"
- 721      3A204D6F 
- 721      756E7469 
- 721      6E672053 
- 721      442E2E2E 
- 722 0021 000000   		.align	2
- 723              	.LC3:
- 724 0024 53442045 		.ascii	"SD Err (Retrying...)\000"
- 724      72722028 
- 724      52657472 
- 724      79696E67 
- 724      2E2E2E29 
- 725 0039 000000   		.align	2
- 726              	.LC4:
- 727 003c 4750533A 		.ascii	"GPS: No UART | z%ld\000"
- 727      204E6F20 
- 727      55415254 
- 727      207C207A 
- 727      256C6400 
- 728              		.align	2
- 729              	.LC5:
- 730 0050 25303275 		.ascii	"%02u:%02u:%02u | %s (%u/%usat)\000"
- 730      3A253032 
- 730      753A2530 
- 730      3275207C 
- 730      20257320 
- 731 006f 00       		.align	2
- 732              	.LC6:
- 733 0070 2D2D3A2D 		.ascii	"--:--:-- | %s (%u/%usat)\000"
- 733      2D3A2D2D 
- 733      207C2025 
- 733      73202825 
- 733      752F2575 
- 734              		.section	.text.UI_LVGL_Task,"ax",%progbits
- 735              		.align	1
- 736              		.global	UI_LVGL_Task
- 737              		.syntax unified
- 738              		.thumb
- 739              		.thumb_func
- 741              	UI_LVGL_Task:
- 742              	.LVL69:
- 743              	.LFB164:
  200:Core/Src/ui_lvgl_task.c **** 
- 201:Core/Src/ui_lvgl_task.c **** /*============================================================================
- 202:Core/Src/ui_lvgl_task.c ****  * 3. UI_LVGL_Task Entry Point
- 203:Core/Src/ui_lvgl_task.c ****  *============================================================================*/
- 204:Core/Src/ui_lvgl_task.c **** void UI_LVGL_Task(void *argument)
- 205:Core/Src/ui_lvgl_task.c **** {
- 744              		.loc 1 205 1 is_stmt 1 view -0
- 745              		.cfi_startproc
- 746              		@ args = 0, pretend = 0, frame = 48
- 747              		@ frame_needed = 0, uses_anonymous_args = 0
-ARM GAS  /tmp/ccuGYnyw.s 			page 21
+ 201:Core/Src/ui_lvgl_task.c **** static void Draw_GPS_Marker(int32_t cx, int32_t cy)
+ 202:Core/Src/ui_lvgl_task.c **** {
+ 426              		.loc 1 202 1 is_stmt 1 view -0
+ 427              		.cfi_startproc
+ 428              		@ args = 0, pretend = 0, frame = 0
+ 429              		@ frame_needed = 0, uses_anonymous_args = 0
+ 430              		.loc 1 202 1 is_stmt 0 view .LVU121
+ 431 0000 30B5     		push	{r4, r5, lr}
+ 432              	.LCFI4:
+ 433              		.cfi_def_cfa_offset 12
+ 434              		.cfi_offset 4, -12
+ 435              		.cfi_offset 5, -8
+ 436              		.cfi_offset 14, -4
+ 437 0002 0D46     		mov	r5, r1
+ 203:Core/Src/ui_lvgl_task.c ****   const int32_t r_outer    = 7;
+ 438              		.loc 1 203 3 is_stmt 1 view .LVU122
+ 439              	.LVL43:
+ 204:Core/Src/ui_lvgl_task.c ****   const int32_t r_inner    = 5;
+ 440              		.loc 1 204 3 view .LVU123
+ARM GAS  /tmp/cccULq5X.s 			page 13
 
 
- 748              		.loc 1 205 1 is_stmt 0 view .LVU221
- 749 0000 2DE9F043 		push	{r4, r5, r6, r7, r8, r9, lr}
- 750              	.LCFI7:
- 751              		.cfi_def_cfa_offset 28
- 752              		.cfi_offset 4, -28
- 753              		.cfi_offset 5, -24
- 754              		.cfi_offset 6, -20
- 755              		.cfi_offset 7, -16
- 756              		.cfi_offset 8, -12
- 757              		.cfi_offset 9, -8
- 758              		.cfi_offset 14, -4
- 759 0004 91B0     		sub	sp, sp, #68
- 760              	.LCFI8:
- 761              		.cfi_def_cfa_offset 96
- 206:Core/Src/ui_lvgl_task.c ****   (void)argument;
- 762              		.loc 1 206 3 is_stmt 1 view .LVU222
+ 205:Core/Src/ui_lvgl_task.c ****   const uint16_t col_white = 0xFFFFU;
+ 441              		.loc 1 205 3 view .LVU124
+ 206:Core/Src/ui_lvgl_task.c ****   const uint16_t col_red   = 0xF800U;
+ 442              		.loc 1 206 3 view .LVU125
  207:Core/Src/ui_lvgl_task.c **** 
- 208:Core/Src/ui_lvgl_task.c ****   memset(s_map_fb, 0x21, sizeof(s_map_fb));
- 763              		.loc 1 208 3 view .LVU223
- 764 0006 4FF41632 		mov	r2, #153600
- 765 000a 2121     		movs	r1, #33
- 766 000c 6A48     		ldr	r0, .L76
- 767              	.LVL70:
- 768              		.loc 1 208 3 is_stmt 0 view .LVU224
- 769 000e FFF7FEFF 		bl	memset
- 770              	.LVL71:
- 209:Core/Src/ui_lvgl_task.c **** 
- 210:Core/Src/ui_lvgl_task.c ****   lv_obj_t * scr = lv_screen_active();
- 771              		.loc 1 210 3 is_stmt 1 view .LVU225
- 772              		.loc 1 210 20 is_stmt 0 view .LVU226
- 773 0012 FFF7FEFF 		bl	lv_screen_active
- 774              	.LVL72:
- 775 0016 0446     		mov	r4, r0
- 776              	.LVL73:
- 211:Core/Src/ui_lvgl_task.c **** 
- 212:Core/Src/ui_lvgl_task.c ****   /* Full-screen LVGL image widget displaying s_map_fb */
- 213:Core/Src/ui_lvgl_task.c ****   lv_obj_t * map_img = lv_image_create(scr);
- 777              		.loc 1 213 3 is_stmt 1 view .LVU227
- 778              		.loc 1 213 24 is_stmt 0 view .LVU228
- 779 0018 FFF7FEFF 		bl	lv_image_create
- 780              	.LVL74:
- 781              		.loc 1 213 24 view .LVU229
- 782 001c 8046     		mov	r8, r0
- 783              	.LVL75:
- 214:Core/Src/ui_lvgl_task.c ****   lv_image_set_src(map_img, &s_map_img_dsc);
- 784              		.loc 1 214 3 is_stmt 1 view .LVU230
- 785 001e 6749     		ldr	r1, .L76+4
- 786 0020 FFF7FEFF 		bl	lv_image_set_src
- 787              	.LVL76:
- 215:Core/Src/ui_lvgl_task.c ****   lv_obj_align(map_img, LV_ALIGN_TOP_LEFT, 0, 0);
- 788              		.loc 1 215 3 view .LVU231
- 789 0024 0023     		movs	r3, #0
- 790 0026 1A46     		mov	r2, r3
- 791 0028 0121     		movs	r1, #1
- 792 002a 4046     		mov	r0, r8
- 793 002c FFF7FEFF 		bl	lv_obj_align
- 794              	.LVL77:
-ARM GAS  /tmp/ccuGYnyw.s 			page 22
+ 208:Core/Src/ui_lvgl_task.c ****   for (int32_t dy = -r_outer; dy <= r_outer; dy++)
+ 443              		.loc 1 208 3 view .LVU126
+ 444              	.LBB18:
+ 445              		.loc 1 208 8 view .LVU127
+ 446              		.loc 1 208 16 is_stmt 0 view .LVU128
+ 447 0004 6FF0060E 		mvn	lr, #6
+ 448              		.loc 1 208 3 view .LVU129
+ 449 0008 24E0     		b	.L43
+ 450              	.LVL44:
+ 451              	.L47:
+ 452              	.LBB19:
+ 453              	.LBB20:
+ 454              	.LBB21:
+ 209:Core/Src/ui_lvgl_task.c ****   {
+ 210:Core/Src/ui_lvgl_task.c ****     int32_t py = cy + dy;
+ 211:Core/Src/ui_lvgl_task.c ****     if (py < 0 || py >= MY_DISP_VER_RES) continue;
+ 212:Core/Src/ui_lvgl_task.c **** 
+ 213:Core/Src/ui_lvgl_task.c ****     for (int32_t dx = -r_outer; dx <= r_outer; dx++)
+ 214:Core/Src/ui_lvgl_task.c ****     {
+ 215:Core/Src/ui_lvgl_task.c ****       int32_t px = cx + dx;
+ 216:Core/Src/ui_lvgl_task.c ****       if (px < 0 || px >= MY_DISP_HOR_RES) continue;
+ 217:Core/Src/ui_lvgl_task.c **** 
+ 218:Core/Src/ui_lvgl_task.c ****       int32_t d2 = dx * dx + dy * dy;
+ 219:Core/Src/ui_lvgl_task.c ****       if (d2 <= r_inner * r_inner)
+ 220:Core/Src/ui_lvgl_task.c ****       {
+ 221:Core/Src/ui_lvgl_task.c ****         s_map_fb[py * MY_DISP_HOR_RES + px] = col_red;
+ 222:Core/Src/ui_lvgl_task.c ****       }
+ 223:Core/Src/ui_lvgl_task.c ****       else if (d2 <= r_outer * r_outer)
+ 455              		.loc 1 223 12 is_stmt 1 view .LVU130
+ 456              		.loc 1 223 15 is_stmt 0 view .LVU131
+ 457 000a BCF1310F 		cmp	ip, #49
+ 458 000e 08DC     		bgt	.L46
+ 224:Core/Src/ui_lvgl_task.c ****       {
+ 225:Core/Src/ui_lvgl_task.c ****         s_map_fb[py * MY_DISP_HOR_RES + px] = col_white;
+ 459              		.loc 1 225 9 is_stmt 1 view .LVU132
+ 460              		.loc 1 225 21 is_stmt 0 view .LVU133
+ 461 0010 C1EB0114 		rsb	r4, r1, r1, lsl #4
+ 462              		.loc 1 225 39 view .LVU134
+ 463 0014 02EB0412 		add	r2, r2, r4, lsl #4
+ 464              	.LVL45:
+ 465              		.loc 1 225 45 view .LVU135
+ 466 0018 144C     		ldr	r4, .L52
+ 467 001a 4FF6FF7C 		movw	ip, #65535
+ 468              	.LVL46:
+ 469              		.loc 1 225 45 view .LVU136
+ 470 001e 24F812C0 		strh	ip, [r4, r2, lsl #1]	@ movhi
+ 471              	.LVL47:
+ 472              	.L46:
+ 473              		.loc 1 225 45 view .LVU137
+ 474              	.LBE21:
+ 213:Core/Src/ui_lvgl_task.c ****     {
+ 475              		.loc 1 213 50 is_stmt 1 discriminator 1 view .LVU138
+ARM GAS  /tmp/cccULq5X.s 			page 14
 
 
+ 476 0022 0133     		adds	r3, r3, #1
+ 477              	.LVL48:
+ 478              	.L45:
+ 213:Core/Src/ui_lvgl_task.c ****     {
+ 479              		.loc 1 213 36 discriminator 2 view .LVU139
+ 480 0024 072B     		cmp	r3, #7
+ 481 0026 13DC     		bgt	.L44
+ 482              	.LBB22:
+ 215:Core/Src/ui_lvgl_task.c ****       if (px < 0 || px >= MY_DISP_HOR_RES) continue;
+ 483              		.loc 1 215 7 view .LVU140
+ 215:Core/Src/ui_lvgl_task.c ****       if (px < 0 || px >= MY_DISP_HOR_RES) continue;
+ 484              		.loc 1 215 15 is_stmt 0 view .LVU141
+ 485 0028 1A18     		adds	r2, r3, r0
+ 486              	.LVL49:
  216:Core/Src/ui_lvgl_task.c **** 
- 217:Core/Src/ui_lvgl_task.c **** #if APP_DEBUG_ENABLE
- 218:Core/Src/ui_lvgl_task.c ****   /* Compact top debug HUD overlay bar (only created when APP_DEBUG_ENABLE == 1) */
- 219:Core/Src/ui_lvgl_task.c ****   lv_obj_t * hud_bar = lv_obj_create(scr);
- 795              		.loc 1 219 3 view .LVU232
- 796              		.loc 1 219 24 is_stmt 0 view .LVU233
- 797 0030 2046     		mov	r0, r4
- 798 0032 FFF7FEFF 		bl	lv_obj_create
- 799              	.LVL78:
- 800 0036 0446     		mov	r4, r0
- 801              	.LVL79:
- 220:Core/Src/ui_lvgl_task.c ****   lv_obj_set_size(hud_bar, 232, 28);
- 802              		.loc 1 220 3 is_stmt 1 view .LVU234
- 803 0038 1C22     		movs	r2, #28
- 804 003a E821     		movs	r1, #232
- 805 003c FFF7FEFF 		bl	lv_obj_set_size
- 806              	.LVL80:
- 221:Core/Src/ui_lvgl_task.c ****   lv_obj_align(hud_bar, LV_ALIGN_TOP_MID, 0, 4);
- 807              		.loc 1 221 3 view .LVU235
- 808 0040 0423     		movs	r3, #4
- 809 0042 0022     		movs	r2, #0
- 810 0044 0221     		movs	r1, #2
- 811 0046 2046     		mov	r0, r4
- 812 0048 FFF7FEFF 		bl	lv_obj_align
- 813              	.LVL81:
- 222:Core/Src/ui_lvgl_task.c ****   lv_obj_set_style_pad_all(hud_bar, 2, 0);
- 814              		.loc 1 222 3 view .LVU236
- 815 004c 0022     		movs	r2, #0
- 816 004e 0221     		movs	r1, #2
- 817 0050 2046     		mov	r0, r4
- 818 0052 FFF7FEFF 		bl	lv_obj_set_style_pad_all
- 819              	.LVL82:
- 223:Core/Src/ui_lvgl_task.c ****   lv_obj_set_style_bg_opa(hud_bar, LV_OPA_80, 0);
- 820              		.loc 1 223 3 view .LVU237
- 821 0056 0022     		movs	r2, #0
- 822 0058 CC21     		movs	r1, #204
- 823 005a 2046     		mov	r0, r4
- 824 005c FFF7FEFF 		bl	lv_obj_set_style_bg_opa
- 825              	.LVL83:
- 224:Core/Src/ui_lvgl_task.c **** 
- 225:Core/Src/ui_lvgl_task.c ****   lv_obj_t * status_lbl = lv_label_create(hud_bar);
- 826              		.loc 1 225 3 view .LVU238
- 827              		.loc 1 225 27 is_stmt 0 view .LVU239
- 828 0060 2046     		mov	r0, r4
- 829 0062 FFF7FEFF 		bl	lv_label_create
- 830              	.LVL84:
- 831 0066 0646     		mov	r6, r0
- 832              	.LVL85:
- 226:Core/Src/ui_lvgl_task.c ****   lv_label_set_text(status_lbl, "RTOS: Mounting SD...");
- 833              		.loc 1 226 3 is_stmt 1 view .LVU240
- 834 0068 5549     		ldr	r1, .L76+8
- 835 006a FFF7FEFF 		bl	lv_label_set_text
- 836              	.LVL86:
- 227:Core/Src/ui_lvgl_task.c ****   lv_obj_center(status_lbl);
- 837              		.loc 1 227 3 view .LVU241
- 838 006e 3046     		mov	r0, r6
- 839 0070 FFF7FEFF 		bl	lv_obj_center
-ARM GAS  /tmp/ccuGYnyw.s 			page 23
+ 487              		.loc 1 216 7 is_stmt 1 view .LVU142
+ 216:Core/Src/ui_lvgl_task.c **** 
+ 488              		.loc 1 216 10 is_stmt 0 view .LVU143
+ 489 002a EF2A     		cmp	r2, #239
+ 490 002c F9D8     		bhi	.L46
+ 218:Core/Src/ui_lvgl_task.c ****       if (d2 <= r_inner * r_inner)
+ 491              		.loc 1 218 7 is_stmt 1 view .LVU144
+ 218:Core/Src/ui_lvgl_task.c ****       if (d2 <= r_inner * r_inner)
+ 492              		.loc 1 218 33 is_stmt 0 view .LVU145
+ 493 002e 0EFB0EFC 		mul	ip, lr, lr
+ 218:Core/Src/ui_lvgl_task.c ****       if (d2 <= r_inner * r_inner)
+ 494              		.loc 1 218 15 view .LVU146
+ 495 0032 03FB03CC 		mla	ip, r3, r3, ip
+ 496              	.LVL50:
+ 219:Core/Src/ui_lvgl_task.c ****       {
+ 497              		.loc 1 219 7 is_stmt 1 view .LVU147
+ 219:Core/Src/ui_lvgl_task.c ****       {
+ 498              		.loc 1 219 10 is_stmt 0 view .LVU148
+ 499 0036 BCF1190F 		cmp	ip, #25
+ 500 003a E6DC     		bgt	.L47
+ 221:Core/Src/ui_lvgl_task.c ****       }
+ 501              		.loc 1 221 9 is_stmt 1 view .LVU149
+ 221:Core/Src/ui_lvgl_task.c ****       }
+ 502              		.loc 1 221 21 is_stmt 0 view .LVU150
+ 503 003c C1EB0114 		rsb	r4, r1, r1, lsl #4
+ 221:Core/Src/ui_lvgl_task.c ****       }
+ 504              		.loc 1 221 39 view .LVU151
+ 505 0040 02EB0412 		add	r2, r2, r4, lsl #4
+ 506              	.LVL51:
+ 221:Core/Src/ui_lvgl_task.c ****       }
+ 507              		.loc 1 221 45 view .LVU152
+ 508 0044 094C     		ldr	r4, .L52
+ 509 0046 4FF4784C 		mov	ip, #63488
+ 510              	.LVL52:
+ 221:Core/Src/ui_lvgl_task.c ****       }
+ 511              		.loc 1 221 45 view .LVU153
+ 512 004a 24F812C0 		strh	ip, [r4, r2, lsl #1]	@ movhi
+ 513 004e E8E7     		b	.L46
+ 514              	.LVL53:
+ 515              	.L44:
+ 221:Core/Src/ui_lvgl_task.c ****       }
+ 516              		.loc 1 221 45 view .LVU154
+ARM GAS  /tmp/cccULq5X.s 			page 15
 
 
- 840              	.LVL87:
- 228:Core/Src/ui_lvgl_task.c **** #endif
- 229:Core/Src/ui_lvgl_task.c **** 
- 230:Core/Src/ui_lvgl_task.c ****   bool had_first_fix = false;
- 841              		.loc 1 230 3 view .LVU242
- 842              		.loc 1 230 8 is_stmt 0 view .LVU243
- 843 0074 0027     		movs	r7, #0
- 844 0076 45E0     		b	.L65
- 845              	.LVL88:
- 846              	.L53:
- 847              	.LBB30:
- 231:Core/Src/ui_lvgl_task.c **** 
- 232:Core/Src/ui_lvgl_task.c ****   for (;;)
- 233:Core/Src/ui_lvgl_task.c ****   {
- 234:Core/Src/ui_lvgl_task.c ****     bool need_redraw = false;
- 235:Core/Src/ui_lvgl_task.c **** 
- 236:Core/Src/ui_lvgl_task.c ****     /* 1. Drain all pending touch/sensor drag events and accumulate delta */
- 237:Core/Src/ui_lvgl_task.c ****     InputEvent_t evt;
- 238:Core/Src/ui_lvgl_task.c ****     int32_t sum_dx = 0;
- 239:Core/Src/ui_lvgl_task.c ****     int32_t sum_dy = 0;
- 240:Core/Src/ui_lvgl_task.c ****     while (xQueueReceive(g_q_input_evt, &evt, 0) == pdPASS)
- 241:Core/Src/ui_lvgl_task.c ****     {
- 242:Core/Src/ui_lvgl_task.c ****       sum_dx += evt.dx;
- 848              		.loc 1 242 7 is_stmt 1 view .LVU244
- 849              		.loc 1 242 20 is_stmt 0 view .LVU245
- 850 0078 BDF91430 		ldrsh	r3, [sp, #20]
- 851              		.loc 1 242 14 view .LVU246
- 852 007c 1D44     		add	r5, r5, r3
- 853              	.LVL89:
- 243:Core/Src/ui_lvgl_task.c ****       sum_dy += evt.dy;
- 854              		.loc 1 243 7 is_stmt 1 view .LVU247
- 855              		.loc 1 243 20 is_stmt 0 view .LVU248
- 856 007e BDF91630 		ldrsh	r3, [sp, #22]
- 857              		.loc 1 243 14 view .LVU249
- 858 0082 1C44     		add	r4, r4, r3
- 859              	.LVL90:
- 860              	.L52:
- 240:Core/Src/ui_lvgl_task.c ****     {
- 861              		.loc 1 240 50 is_stmt 1 discriminator 1 view .LVU250
- 240:Core/Src/ui_lvgl_task.c ****     {
- 862              		.loc 1 240 12 is_stmt 0 discriminator 1 view .LVU251
- 863 0084 0022     		movs	r2, #0
- 864 0086 05A9     		add	r1, sp, #20
- 865 0088 4E4B     		ldr	r3, .L76+12
- 866 008a 1868     		ldr	r0, [r3]
- 867 008c FFF7FEFF 		bl	xQueueReceive
- 868              	.LVL91:
- 240:Core/Src/ui_lvgl_task.c ****     {
- 869              		.loc 1 240 50 discriminator 2 view .LVU252
- 870 0090 0128     		cmp	r0, #1
- 871 0092 F1D0     		beq	.L53
- 244:Core/Src/ui_lvgl_task.c ****     }
- 245:Core/Src/ui_lvgl_task.c **** 
- 246:Core/Src/ui_lvgl_task.c ****     if (sum_dx != 0 || sum_dy != 0)
- 872              		.loc 1 246 5 is_stmt 1 view .LVU253
- 873              		.loc 1 246 8 is_stmt 0 view .LVU254
- 874 0094 05B9     		cbnz	r5, .L54
-ARM GAS  /tmp/ccuGYnyw.s 			page 24
+ 517              	.LBE22:
+ 518              	.LBE20:
+ 519              	.LBE19:
+ 208:Core/Src/ui_lvgl_task.c ****   {
+ 520              		.loc 1 208 48 is_stmt 1 discriminator 1 view .LVU155
+ 521 0050 0EF1010E 		add	lr, lr, #1
+ 522              	.LVL54:
+ 523              	.L43:
+ 208:Core/Src/ui_lvgl_task.c ****   {
+ 524              		.loc 1 208 34 discriminator 2 view .LVU156
+ 525 0054 BEF1070F 		cmp	lr, #7
+ 526 0058 07DC     		bgt	.L51
+ 527              	.LBB24:
+ 210:Core/Src/ui_lvgl_task.c ****     if (py < 0 || py >= MY_DISP_VER_RES) continue;
+ 528              		.loc 1 210 5 view .LVU157
+ 210:Core/Src/ui_lvgl_task.c ****     if (py < 0 || py >= MY_DISP_VER_RES) continue;
+ 529              		.loc 1 210 13 is_stmt 0 view .LVU158
+ 530 005a 0EEB0501 		add	r1, lr, r5
+ 531              	.LVL55:
+ 211:Core/Src/ui_lvgl_task.c **** 
+ 532              		.loc 1 211 5 is_stmt 1 view .LVU159
+ 211:Core/Src/ui_lvgl_task.c **** 
+ 533              		.loc 1 211 8 is_stmt 0 view .LVU160
+ 534 005e B1F5A07F 		cmp	r1, #320
+ 535 0062 F5D2     		bcs	.L44
+ 536              	.LBB23:
+ 213:Core/Src/ui_lvgl_task.c ****     {
+ 537              		.loc 1 213 18 view .LVU161
+ 538 0064 6FF00603 		mvn	r3, #6
+ 539 0068 DCE7     		b	.L45
+ 540              	.LVL56:
+ 541              	.L51:
+ 213:Core/Src/ui_lvgl_task.c ****     {
+ 542              		.loc 1 213 18 view .LVU162
+ 543              	.LBE23:
+ 544              	.LBE24:
+ 545              	.LBE18:
+ 226:Core/Src/ui_lvgl_task.c ****       }
+ 227:Core/Src/ui_lvgl_task.c ****     }
+ 228:Core/Src/ui_lvgl_task.c ****   }
+ 229:Core/Src/ui_lvgl_task.c **** }
+ 546              		.loc 1 229 1 view .LVU163
+ 547 006a 30BD     		pop	{r4, r5, pc}
+ 548              	.LVL57:
+ 549              	.L53:
+ 550              		.loc 1 229 1 view .LVU164
+ 551              		.align	2
+ 552              	.L52:
+ 553 006c 00000000 		.word	s_map_fb
+ 554              		.cfi_endproc
+ 555              	.LFE165:
+ 557              		.section	.text.Request_Or_Get_Tile_Async,"ax",%progbits
+ 558              		.align	1
+ 559              		.syntax unified
+ 560              		.thumb
+ 561              		.thumb_func
+ 563              	Request_Or_Get_Tile_Async:
+ARM GAS  /tmp/cccULq5X.s 			page 16
 
 
- 875              		.loc 1 246 21 discriminator 1 view .LVU255
- 876 0096 5CB1     		cbz	r4, .L55
- 877              	.L54:
- 247:Core/Src/ui_lvgl_task.c ****     {
- 248:Core/Src/ui_lvgl_task.c ****       map_camera_pan_pixels(&g_camera, -sum_dx, -sum_dy);
- 878              		.loc 1 248 7 is_stmt 1 view .LVU256
- 879 0098 DFF83C91 		ldr	r9, .L76+32
- 880 009c 6242     		rsbs	r2, r4, #0
- 881 009e 6942     		rsbs	r1, r5, #0
- 882 00a0 4846     		mov	r0, r9
- 883 00a2 FFF7FEFF 		bl	map_camera_pan_pixels
- 884              	.LVL92:
- 249:Core/Src/ui_lvgl_task.c ****       map_camera_get_visible_tiles(&g_camera, &g_visible_tiles);
- 885              		.loc 1 249 7 view .LVU257
- 886 00a6 4849     		ldr	r1, .L76+16
- 887 00a8 4846     		mov	r0, r9
- 888 00aa FFF7FEFF 		bl	map_camera_get_visible_tiles
- 889              	.LVL93:
- 250:Core/Src/ui_lvgl_task.c ****       need_redraw = true;
- 890              		.loc 1 250 7 view .LVU258
- 891              		.loc 1 250 19 is_stmt 0 view .LVU259
- 892 00ae 0124     		movs	r4, #1
- 893              	.LVL94:
- 894              	.L55:
- 251:Core/Src/ui_lvgl_task.c ****     }
- 252:Core/Src/ui_lvgl_task.c **** 
- 253:Core/Src/ui_lvgl_task.c ****     /* 2. Check for new GPS fix / UTC time from GPS_UART_Task */
- 254:Core/Src/ui_lvgl_task.c ****     GpsFix_t fix;
- 895              		.loc 1 254 5 is_stmt 1 view .LVU260
- 255:Core/Src/ui_lvgl_task.c ****     if (xQueueReceive(g_q_gps_fix, &fix, 0) == pdPASS)
- 896              		.loc 1 255 5 view .LVU261
- 897              		.loc 1 255 9 is_stmt 0 view .LVU262
- 898 00b0 0022     		movs	r2, #0
- 899 00b2 09A9     		add	r1, sp, #36
- 900 00b4 454B     		ldr	r3, .L76+20
- 901 00b6 1868     		ldr	r0, [r3]
- 902 00b8 FFF7FEFF 		bl	xQueueReceive
- 903              	.LVL95:
- 904              		.loc 1 255 8 discriminator 1 view .LVU263
- 905 00bc 0128     		cmp	r0, #1
- 906 00be 24D0     		beq	.L72
- 907              	.LVL96:
- 908              	.L56:
- 256:Core/Src/ui_lvgl_task.c ****     {
- 257:Core/Src/ui_lvgl_task.c ****       g_gps_fix = fix;
- 258:Core/Src/ui_lvgl_task.c ****       if (fix.valid)
- 259:Core/Src/ui_lvgl_task.c ****       {
- 260:Core/Src/ui_lvgl_task.c ****         g_gps_pos = fix.pos;
- 261:Core/Src/ui_lvgl_task.c ****         if (!had_first_fix)
- 262:Core/Src/ui_lvgl_task.c ****         {
- 263:Core/Src/ui_lvgl_task.c ****           had_first_fix = true;
- 264:Core/Src/ui_lvgl_task.c ****           map_camera_set_center(&g_camera, g_gps_pos);
- 265:Core/Src/ui_lvgl_task.c ****           map_camera_get_visible_tiles(&g_camera, &g_visible_tiles);
- 266:Core/Src/ui_lvgl_task.c ****         }
- 267:Core/Src/ui_lvgl_task.c ****       }
- 268:Core/Src/ui_lvgl_task.c ****       need_redraw = true;
- 269:Core/Src/ui_lvgl_task.c ****     }
-ARM GAS  /tmp/ccuGYnyw.s 			page 25
+ 564              	.LVL58:
+ 565              	.LFB161:
+  34:Core/Src/ui_lvgl_task.c ****   if (!g_pak_ready)
+ 566              		.loc 1 34 1 is_stmt 1 view -0
+ 567              		.cfi_startproc
+ 568              		@ args = 0, pretend = 0, frame = 16
+ 569              		@ frame_needed = 0, uses_anonymous_args = 0
+  34:Core/Src/ui_lvgl_task.c ****   if (!g_pak_ready)
+ 570              		.loc 1 34 1 is_stmt 0 view .LVU166
+ 571 0000 30B5     		push	{r4, r5, lr}
+ 572              	.LCFI5:
+ 573              		.cfi_def_cfa_offset 12
+ 574              		.cfi_offset 4, -12
+ 575              		.cfi_offset 5, -8
+ 576              		.cfi_offset 14, -4
+ 577 0002 85B0     		sub	sp, sp, #20
+ 578              	.LCFI6:
+ 579              		.cfi_def_cfa_offset 32
+  35:Core/Src/ui_lvgl_task.c ****   {
+ 580              		.loc 1 35 3 is_stmt 1 view .LVU167
+  35:Core/Src/ui_lvgl_task.c ****   {
+ 581              		.loc 1 35 7 is_stmt 0 view .LVU168
+ 582 0004 354B     		ldr	r3, .L69
+ 583 0006 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+  35:Core/Src/ui_lvgl_task.c ****   {
+ 584              		.loc 1 35 6 view .LVU169
+ 585 0008 002B     		cmp	r3, #0
+ 586 000a 62D0     		beq	.L64
+  40:Core/Src/ui_lvgl_task.c **** 
+ 587              		.loc 1 40 3 is_stmt 1 view .LVU170
+  40:Core/Src/ui_lvgl_task.c **** 
+ 588              		.loc 1 40 16 is_stmt 0 view .LVU171
+ 589 000c 344B     		ldr	r3, .L69+4
+ 590 000e 1A68     		ldr	r2, [r3]
+ 591 0010 02F1010E 		add	lr, r2, #1
+ 592 0014 C3F800E0 		str	lr, [r3]
+  43:Core/Src/ui_lvgl_task.c ****   {
+ 593              		.loc 1 43 3 is_stmt 1 view .LVU172
+ 594              	.LBB25:
+  43:Core/Src/ui_lvgl_task.c ****   {
+ 595              		.loc 1 43 8 view .LVU173
+ 596              	.LVL59:
+  43:Core/Src/ui_lvgl_task.c ****   {
+ 597              		.loc 1 43 12 is_stmt 0 view .LVU174
+ 598 0018 0023     		movs	r3, #0
+  43:Core/Src/ui_lvgl_task.c ****   {
+ 599              		.loc 1 43 3 view .LVU175
+ 600 001a 00E0     		b	.L57
+ 601              	.LVL60:
+ 602              	.L58:
+  43:Core/Src/ui_lvgl_task.c ****   {
+ 603              		.loc 1 43 42 is_stmt 1 discriminator 1 view .LVU176
+ 604 001c 0133     		adds	r3, r3, #1
+ 605              	.LVL61:
+ 606              	.L57:
+  43:Core/Src/ui_lvgl_task.c ****   {
+ 607              		.loc 1 43 21 discriminator 2 view .LVU177
+ARM GAS  /tmp/cccULq5X.s 			page 17
 
 
- 270:Core/Src/ui_lvgl_task.c **** 
- 271:Core/Src/ui_lvgl_task.c ****     /* 3. Check async notifications from Tile_Loader_Task & Pathfinder_Task */
- 272:Core/Src/ui_lvgl_task.c ****     uint32_t notify_bits = 0;
- 909              		.loc 1 272 5 is_stmt 1 view .LVU264
- 910              		.loc 1 272 14 is_stmt 0 view .LVU265
- 911 00c0 0020     		movs	r0, #0
- 912 00c2 0490     		str	r0, [sp, #16]
- 273:Core/Src/ui_lvgl_task.c ****     if (xTaskNotifyWait(0, 0xFFFFFFFFUL, &notify_bits, 0) == pdPASS)
- 913              		.loc 1 273 5 is_stmt 1 view .LVU266
- 914              		.loc 1 273 9 is_stmt 0 view .LVU267
- 915 00c4 0346     		mov	r3, r0
- 916 00c6 04AA     		add	r2, sp, #16
- 917 00c8 4FF0FF31 		mov	r1, #-1
- 918 00cc FFF7FEFF 		bl	xTaskNotifyWait
- 919              	.LVL97:
- 920              		.loc 1 273 8 discriminator 1 view .LVU268
- 921 00d0 0128     		cmp	r0, #1
- 922 00d2 3CD0     		beq	.L73
- 923              	.L57:
- 274:Core/Src/ui_lvgl_task.c ****     {
- 275:Core/Src/ui_lvgl_task.c **** #if APP_DEBUG_ENABLE
- 276:Core/Src/ui_lvgl_task.c ****       if (notify_bits & NOTIFY_SD_ERROR)
- 277:Core/Src/ui_lvgl_task.c ****       {
- 278:Core/Src/ui_lvgl_task.c ****         lv_label_set_text(status_lbl, "SD Err (Retrying...)");
- 279:Core/Src/ui_lvgl_task.c ****       }
- 280:Core/Src/ui_lvgl_task.c **** #endif
- 281:Core/Src/ui_lvgl_task.c ****       if (notify_bits & (NOTIFY_SD_MOUNTED | NOTIFY_TILE_LOADED | NOTIFY_ROUTE_READY))
- 282:Core/Src/ui_lvgl_task.c ****       {
- 283:Core/Src/ui_lvgl_task.c ****         need_redraw = true;
- 284:Core/Src/ui_lvgl_task.c ****       }
- 285:Core/Src/ui_lvgl_task.c ****     }
- 286:Core/Src/ui_lvgl_task.c **** 
- 287:Core/Src/ui_lvgl_task.c ****     /* 4. Re-blit visible tiles from SDRAM cache if camera moved or tile arrived */
- 288:Core/Src/ui_lvgl_task.c ****     if (need_redraw && g_pak_ready)
- 924              		.loc 1 288 5 is_stmt 1 view .LVU269
- 925              		.loc 1 288 8 is_stmt 0 view .LVU270
- 926 00d4 8CB1     		cbz	r4, .L60
- 927              	.L59:
- 928              	.LVL98:
- 929              		.loc 1 288 21 discriminator 1 view .LVU271
- 930 00d6 3E4B     		ldr	r3, .L76+24
- 931 00d8 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
- 932 00da 73B1     		cbz	r3, .L60
- 289:Core/Src/ui_lvgl_task.c ****     {
- 290:Core/Src/ui_lvgl_task.c ****       (void)Render_Visible_Tiles_To_MapFB();
- 933              		.loc 1 290 7 is_stmt 1 view .LVU272
- 934              		.loc 1 290 13 is_stmt 0 view .LVU273
- 935 00dc FFF7FEFF 		bl	Render_Visible_Tiles_To_MapFB
- 936              	.LVL99:
- 291:Core/Src/ui_lvgl_task.c ****       lv_obj_invalidate(map_img);
- 937              		.loc 1 291 7 is_stmt 1 view .LVU274
- 938 00e0 4046     		mov	r0, r8
- 939 00e2 FFF7FEFF 		bl	lv_obj_invalidate
- 940              	.LVL100:
- 292:Core/Src/ui_lvgl_task.c **** 
- 293:Core/Src/ui_lvgl_task.c **** #if APP_DEBUG_ENABLE
- 294:Core/Src/ui_lvgl_task.c ****       if (!g_gps_fix.uart_ok)
-ARM GAS  /tmp/ccuGYnyw.s 			page 26
+ 608 001e 082B     		cmp	r3, #8
+ 609 0020 1ADC     		bgt	.L68
+  45:Core/Src/ui_lvgl_task.c ****         g_tile_cache[i].tx == tx &&
+ 610              		.loc 1 45 5 view .LVU178
+  45:Core/Src/ui_lvgl_task.c ****         g_tile_cache[i].tx == tx &&
+ 611              		.loc 1 45 24 is_stmt 0 view .LVU179
+ 612 0022 03EB033C 		add	ip, r3, r3, lsl #12
+ 613 0026 2F4A     		ldr	r2, .L69+8
+ 614 0028 02EB0C12 		add	r2, r2, ip, lsl #4
+ 615 002c 127B     		ldrb	r2, [r2, #12]	@ zero_extendqisi2
+  45:Core/Src/ui_lvgl_task.c ****         g_tile_cache[i].tx == tx &&
+ 616              		.loc 1 45 8 view .LVU180
+ 617 002e 002A     		cmp	r2, #0
+ 618 0030 F4D0     		beq	.L58
+  46:Core/Src/ui_lvgl_task.c ****         g_tile_cache[i].ty == ty)
+ 619              		.loc 1 46 24 view .LVU181
+ 620 0032 6246     		mov	r2, ip
+ 621 0034 1201     		lsls	r2, r2, #4
+ 622 0036 2B4C     		ldr	r4, .L69+8
+ 623 0038 A258     		ldr	r2, [r4, r2]
+  45:Core/Src/ui_lvgl_task.c ****         g_tile_cache[i].tx == tx &&
+ 624              		.loc 1 45 50 discriminator 1 view .LVU182
+ 625 003a 8242     		cmp	r2, r0
+ 626 003c EED1     		bne	.L58
+  47:Core/Src/ui_lvgl_task.c ****     {
+ 627              		.loc 1 47 24 view .LVU183
+ 628 003e 294A     		ldr	r2, .L69+8
+ 629 0040 02EB0C12 		add	r2, r2, ip, lsl #4
+ 630 0044 5268     		ldr	r2, [r2, #4]
+  46:Core/Src/ui_lvgl_task.c ****         g_tile_cache[i].ty == ty)
+ 631              		.loc 1 46 34 discriminator 1 view .LVU184
+ 632 0046 8A42     		cmp	r2, r1
+ 633 0048 E8D1     		bne	.L58
+  49:Core/Src/ui_lvgl_task.c ****       return &g_tile_cache[i];
+ 634              		.loc 1 49 7 is_stmt 1 view .LVU185
+  49:Core/Src/ui_lvgl_task.c ****       return &g_tile_cache[i];
+ 635              		.loc 1 49 32 is_stmt 0 view .LVU186
+ 636 004a 264D     		ldr	r5, .L69+8
+ 637 004c 05EB0C12 		add	r2, r5, ip, lsl #4
+ 638 0050 C2F808E0 		str	lr, [r2, #8]
+  50:Core/Src/ui_lvgl_task.c ****     }
+ 639              		.loc 1 50 7 is_stmt 1 view .LVU187
+  50:Core/Src/ui_lvgl_task.c ****     }
+ 640              		.loc 1 50 14 is_stmt 0 view .LVU188
+ 641 0054 1546     		mov	r5, r2
+ 642 0056 3DE0     		b	.L54
+ 643              	.L68:
+  50:Core/Src/ui_lvgl_task.c ****     }
+ 644              		.loc 1 50 14 view .LVU189
+ 645              	.LBE25:
+ 646              	.LBB26:
+  58:Core/Src/ui_lvgl_task.c ****   {
+ 647              		.loc 1 58 12 view .LVU190
+ 648 0058 0023     		movs	r3, #0
+ 649              	.LVL62:
+  58:Core/Src/ui_lvgl_task.c ****   {
+ 650              		.loc 1 58 12 view .LVU191
+ARM GAS  /tmp/cccULq5X.s 			page 18
 
 
- 941              		.loc 1 294 7 view .LVU275
- 942              		.loc 1 294 21 is_stmt 0 view .LVU276
- 943 00e6 3B4B     		ldr	r3, .L76+28
- 944 00e8 9B7D     		ldrb	r3, [r3, #22]	@ zero_extendqisi2
- 945              		.loc 1 294 10 view .LVU277
- 946 00ea 002B     		cmp	r3, #0
- 947 00ec 3DD1     		bne	.L61
- 295:Core/Src/ui_lvgl_task.c ****       {
- 296:Core/Src/ui_lvgl_task.c ****         lv_label_set_text_fmt(status_lbl, "GPS: No UART | z%ld",
- 948              		.loc 1 296 9 is_stmt 1 view .LVU278
- 949 00ee 3A4B     		ldr	r3, .L76+32
- 950 00f0 1A69     		ldr	r2, [r3, #16]
- 951 00f2 3A49     		ldr	r1, .L76+36
- 952 00f4 3046     		mov	r0, r6
- 953 00f6 FFF7FEFF 		bl	lv_label_set_text_fmt
- 954              	.LVL101:
- 955              	.L60:
- 297:Core/Src/ui_lvgl_task.c ****                               (long)g_camera.zoom);
- 298:Core/Src/ui_lvgl_task.c ****       }
- 299:Core/Src/ui_lvgl_task.c ****       else if (g_gps_fix.time_valid)
- 300:Core/Src/ui_lvgl_task.c ****       {
- 301:Core/Src/ui_lvgl_task.c ****         lv_label_set_text_fmt(status_lbl, "%02u:%02u:%02u | %s (%u/%usat)",
- 302:Core/Src/ui_lvgl_task.c ****                               (unsigned)g_gps_fix.utc_hour,
- 303:Core/Src/ui_lvgl_task.c ****                               (unsigned)g_gps_fix.utc_min,
- 304:Core/Src/ui_lvgl_task.c ****                               (unsigned)g_gps_fix.utc_sec,
- 305:Core/Src/ui_lvgl_task.c ****                               g_gps_fix.valid ? "Fix" : "NoFix",
- 306:Core/Src/ui_lvgl_task.c ****                               (unsigned)g_gps_fix.satellites,
- 307:Core/Src/ui_lvgl_task.c ****                               (unsigned)g_gps_fix.sats_in_view);
- 308:Core/Src/ui_lvgl_task.c ****       }
- 309:Core/Src/ui_lvgl_task.c ****       else
- 310:Core/Src/ui_lvgl_task.c ****       {
- 311:Core/Src/ui_lvgl_task.c ****         lv_label_set_text_fmt(status_lbl, "--:--:-- | %s (%u/%usat)",
- 312:Core/Src/ui_lvgl_task.c ****                               g_gps_fix.valid ? "Fix" : "NoFix",
- 313:Core/Src/ui_lvgl_task.c ****                               (unsigned)g_gps_fix.satellites,
- 314:Core/Src/ui_lvgl_task.c ****                               (unsigned)g_gps_fix.sats_in_view);
- 315:Core/Src/ui_lvgl_task.c ****       }
- 316:Core/Src/ui_lvgl_task.c **** #endif
- 317:Core/Src/ui_lvgl_task.c ****     }
- 318:Core/Src/ui_lvgl_task.c **** 
- 319:Core/Src/ui_lvgl_task.c ****     lv_timer_handler();
- 956              		.loc 1 319 5 view .LVU279
- 957 00fa FFF7FEFF 		bl	lv_timer_handler
- 958              	.LVL102:
- 320:Core/Src/ui_lvgl_task.c ****     vTaskDelay(pdMS_TO_TICKS(10));
- 959              		.loc 1 320 5 view .LVU280
- 960 00fe 0A20     		movs	r0, #10
- 961 0100 FFF7FEFF 		bl	vTaskDelay
- 962              	.LVL103:
- 963              	.LBE30:
- 232:Core/Src/ui_lvgl_task.c ****   {
- 964              		.loc 1 232 3 discriminator 1 view .LVU281
- 965              	.L65:
- 232:Core/Src/ui_lvgl_task.c ****   {
- 966              		.loc 1 232 3 view .LVU282
- 967              	.LBB31:
+ 651              	.LBE26:
+  56:Core/Src/ui_lvgl_task.c **** 
+ 652              		.loc 1 56 12 view .LVU192
+ 653 005a 4FF0FF35 		mov	r5, #-1
+  55:Core/Src/ui_lvgl_task.c ****   uint32_t min_tick = 0xFFFFFFFFUL;
+ 654              		.loc 1 55 7 view .LVU193
+ 655 005e 2C46     		mov	r4, r5
+ 656 0060 00E0     		b	.L60
+ 657              	.LVL63:
+ 658              	.L62:
+ 659              	.LBB27:
+  58:Core/Src/ui_lvgl_task.c ****   {
+ 660              		.loc 1 58 42 is_stmt 1 discriminator 1 view .LVU194
+ 661 0062 0133     		adds	r3, r3, #1
+ 662              	.LVL64:
+ 663              	.L60:
+  58:Core/Src/ui_lvgl_task.c ****   {
+ 664              		.loc 1 58 21 discriminator 2 view .LVU195
+ 665 0064 082B     		cmp	r3, #8
+ 666 0066 16DC     		bgt	.L61
+  60:Core/Src/ui_lvgl_task.c ****     {
+ 667              		.loc 1 60 5 view .LVU196
+  60:Core/Src/ui_lvgl_task.c ****     {
+ 668              		.loc 1 60 24 is_stmt 0 view .LVU197
+ 669 0068 03EB033C 		add	ip, r3, r3, lsl #12
+ 670 006c 1D4A     		ldr	r2, .L69+8
+ 671 006e 02EB0C12 		add	r2, r2, ip, lsl #4
+ 672 0072 127B     		ldrb	r2, [r2, #12]	@ zero_extendqisi2
+  60:Core/Src/ui_lvgl_task.c ****     {
+ 673              		.loc 1 60 8 view .LVU198
+ 674 0074 72B1     		cbz	r2, .L65
+  65:Core/Src/ui_lvgl_task.c ****     {
+ 675              		.loc 1 65 5 is_stmt 1 view .LVU199
+  65:Core/Src/ui_lvgl_task.c ****     {
+ 676              		.loc 1 65 24 is_stmt 0 view .LVU200
+ 677 0076 1B4A     		ldr	r2, .L69+8
+ 678 0078 02EB0C12 		add	r2, r2, ip, lsl #4
+ 679 007c 127B     		ldrb	r2, [r2, #12]	@ zero_extendqisi2
+  65:Core/Src/ui_lvgl_task.c ****     {
+ 680              		.loc 1 65 8 view .LVU201
+ 681 007e 022A     		cmp	r2, #2
+ 682 0080 EFD1     		bne	.L62
+  65:Core/Src/ui_lvgl_task.c ****     {
+ 683              		.loc 1 65 68 discriminator 1 view .LVU202
+ 684 0082 184A     		ldr	r2, .L69+8
+ 685 0084 02EB0C12 		add	r2, r2, ip, lsl #4
+ 686 0088 9268     		ldr	r2, [r2, #8]
+  65:Core/Src/ui_lvgl_task.c ****     {
+ 687              		.loc 1 65 50 discriminator 1 view .LVU203
+ 688 008a AA42     		cmp	r2, r5
+ 689 008c E9D2     		bcs	.L62
+  67:Core/Src/ui_lvgl_task.c ****       victim   = i;
+ 690              		.loc 1 67 16 view .LVU204
+ 691 008e 1546     		mov	r5, r2
+ 692              	.LVL65:
+  68:Core/Src/ui_lvgl_task.c ****     }
+ 693              		.loc 1 68 16 view .LVU205
+ARM GAS  /tmp/cccULq5X.s 			page 19
+
+
+ 694 0090 1C46     		mov	r4, r3
+ 695              	.LVL66:
+  68:Core/Src/ui_lvgl_task.c ****     }
+ 696              		.loc 1 68 16 view .LVU206
+ 697 0092 E6E7     		b	.L62
+ 698              	.LVL67:
+ 699              	.L65:
+  62:Core/Src/ui_lvgl_task.c ****       break;
+ 700              		.loc 1 62 14 view .LVU207
+ 701 0094 1C46     		mov	r4, r3
+ 702              	.LVL68:
+ 703              	.L61:
+  62:Core/Src/ui_lvgl_task.c ****       break;
+ 704              		.loc 1 62 14 view .LVU208
+ 705              	.LBE27:
+  72:Core/Src/ui_lvgl_task.c ****   {
+ 706              		.loc 1 72 3 is_stmt 1 view .LVU209
+  72:Core/Src/ui_lvgl_task.c ****   {
+ 707              		.loc 1 72 6 is_stmt 0 view .LVU210
+ 708 0096 002C     		cmp	r4, #0
+ 709 0098 1BDB     		blt	.L64
+  78:Core/Src/ui_lvgl_task.c ****   slot->tx       = tx;
+ 710              		.loc 1 78 3 is_stmt 1 view .LVU211
+  78:Core/Src/ui_lvgl_task.c ****   slot->tx       = tx;
+ 711              		.loc 1 78 18 is_stmt 0 view .LVU212
+ 712 009a 04EB0435 		add	r5, r4, r4, lsl #12
+ 713              	.LVL69:
+  78:Core/Src/ui_lvgl_task.c ****   slot->tx       = tx;
+ 714              		.loc 1 78 18 view .LVU213
+ 715 009e 2A01     		lsls	r2, r5, #4
+ 716 00a0 104B     		ldr	r3, .L69+8
+ 717              	.LVL70:
+  78:Core/Src/ui_lvgl_task.c ****   slot->tx       = tx;
+ 718              		.loc 1 78 18 view .LVU214
+ 719 00a2 03EB0515 		add	r5, r3, r5, lsl #4
+ 720              	.LVL71:
+  79:Core/Src/ui_lvgl_task.c ****   slot->ty       = ty;
+ 721              		.loc 1 79 3 is_stmt 1 view .LVU215
+  79:Core/Src/ui_lvgl_task.c ****   slot->ty       = ty;
+ 722              		.loc 1 79 18 is_stmt 0 view .LVU216
+ 723 00a6 9850     		str	r0, [r3, r2]
+  80:Core/Src/ui_lvgl_task.c ****   slot->lru_tick = g_cache_clock;
+ 724              		.loc 1 80 3 is_stmt 1 view .LVU217
+  80:Core/Src/ui_lvgl_task.c ****   slot->lru_tick = g_cache_clock;
+ 725              		.loc 1 80 18 is_stmt 0 view .LVU218
+ 726 00a8 6960     		str	r1, [r5, #4]
+  81:Core/Src/ui_lvgl_task.c ****   slot->has_data = false;
+ 727              		.loc 1 81 3 is_stmt 1 view .LVU219
+  81:Core/Src/ui_lvgl_task.c ****   slot->has_data = false;
+ 728              		.loc 1 81 18 is_stmt 0 view .LVU220
+ 729 00aa C5F808E0 		str	lr, [r5, #8]
+  82:Core/Src/ui_lvgl_task.c ****   slot->state    = TILE_SLOT_LOADING;
+ 730              		.loc 1 82 3 is_stmt 1 view .LVU221
+  82:Core/Src/ui_lvgl_task.c ****   slot->state    = TILE_SLOT_LOADING;
+ 731              		.loc 1 82 18 is_stmt 0 view .LVU222
+ 732 00ae 0022     		movs	r2, #0
+ 733 00b0 6A73     		strb	r2, [r5, #13]
+ARM GAS  /tmp/cccULq5X.s 			page 20
+
+
+  83:Core/Src/ui_lvgl_task.c **** 
+ 734              		.loc 1 83 3 is_stmt 1 view .LVU223
+  83:Core/Src/ui_lvgl_task.c **** 
+ 735              		.loc 1 83 18 is_stmt 0 view .LVU224
+ 736 00b2 0123     		movs	r3, #1
+ 737 00b4 2B73     		strb	r3, [r5, #12]
+  85:Core/Src/ui_lvgl_task.c ****     .slot_idx = (uint8_t)victim,
+ 738              		.loc 1 85 3 is_stmt 1 view .LVU225
+  85:Core/Src/ui_lvgl_task.c ****     .slot_idx = (uint8_t)victim,
+ 739              		.loc 1 85 17 is_stmt 0 view .LVU226
+ 740 00b6 8DF80440 		strb	r4, [sp, #4]
+ 741 00ba 0290     		str	r0, [sp, #8]
+ 742 00bc 0391     		str	r1, [sp, #12]
+  91:Core/Src/ui_lvgl_task.c ****   {
+ 743              		.loc 1 91 3 is_stmt 1 view .LVU227
+  91:Core/Src/ui_lvgl_task.c ****   {
+ 744              		.loc 1 91 7 is_stmt 0 view .LVU228
+ 745 00be 1346     		mov	r3, r2
+ 746 00c0 01A9     		add	r1, sp, #4
+ 747              	.LVL72:
+  91:Core/Src/ui_lvgl_task.c ****   {
+ 748              		.loc 1 91 7 view .LVU229
+ 749 00c2 0948     		ldr	r0, .L69+12
+ 750              	.LVL73:
+  91:Core/Src/ui_lvgl_task.c ****   {
+ 751              		.loc 1 91 7 view .LVU230
+ 752 00c4 0068     		ldr	r0, [r0]
+ 753 00c6 FFF7FEFF 		bl	xQueueGenericSend
+ 754              	.LVL74:
+  91:Core/Src/ui_lvgl_task.c ****   {
+ 755              		.loc 1 91 6 discriminator 1 view .LVU231
+ 756 00ca 0128     		cmp	r0, #1
+ 757 00cc 02D0     		beq	.L54
+  93:Core/Src/ui_lvgl_task.c ****     return NULL;
+ 758              		.loc 1 93 5 is_stmt 1 view .LVU232
+  93:Core/Src/ui_lvgl_task.c ****     return NULL;
+ 759              		.loc 1 93 17 is_stmt 0 view .LVU233
+ 760 00ce 0022     		movs	r2, #0
+ 761 00d0 2A73     		strb	r2, [r5, #12]
+  94:Core/Src/ui_lvgl_task.c ****   }
+ 762              		.loc 1 94 5 is_stmt 1 view .LVU234
+ 763              	.LVL75:
+ 764              	.L64:
+  37:Core/Src/ui_lvgl_task.c ****   }
+ 765              		.loc 1 37 12 is_stmt 0 view .LVU235
+ 766 00d2 0025     		movs	r5, #0
+ 767              	.L54:
+  98:Core/Src/ui_lvgl_task.c **** 
+ 768              		.loc 1 98 1 view .LVU236
+ 769 00d4 2846     		mov	r0, r5
+ 770 00d6 05B0     		add	sp, sp, #20
+ 771              	.LCFI7:
+ 772              		.cfi_def_cfa_offset 12
+ 773              		@ sp needed
+ 774 00d8 30BD     		pop	{r4, r5, pc}
+ 775              	.L70:
+ 776 00da 00BF     		.align	2
+ARM GAS  /tmp/cccULq5X.s 			page 21
+
+
+ 777              	.L69:
+ 778 00dc 00000000 		.word	g_pak_ready
+ 779 00e0 00000000 		.word	g_cache_clock
+ 780 00e4 00000000 		.word	g_tile_cache
+ 781 00e8 00000000 		.word	g_q_tile_req
+ 782              		.cfi_endproc
+ 783              	.LFE161:
+ 785              		.section	.text.Draw_Route_On_MapFB,"ax",%progbits
+ 786              		.align	1
+ 787              		.syntax unified
+ 788              		.thumb
+ 789              		.thumb_func
+ 791              	Draw_Route_On_MapFB:
+ 792              	.LFB164:
+ 168:Core/Src/ui_lvgl_task.c ****   if (!g_current_route.found || g_current_route.geom_point_count < 2)
+ 793              		.loc 1 168 1 is_stmt 1 view -0
+ 794              		.cfi_startproc
+ 795              		@ args = 0, pretend = 0, frame = 40
+ 796              		@ frame_needed = 0, uses_anonymous_args = 0
+ 169:Core/Src/ui_lvgl_task.c ****   {
+ 797              		.loc 1 169 3 view .LVU238
+ 169:Core/Src/ui_lvgl_task.c ****   {
+ 798              		.loc 1 169 23 is_stmt 0 view .LVU239
+ 799 0000 334B     		ldr	r3, .L84
+ 800 0002 1B7C     		ldrb	r3, [r3, #16]	@ zero_extendqisi2
+ 169:Core/Src/ui_lvgl_task.c ****   {
+ 801              		.loc 1 169 6 view .LVU240
+ 802 0004 002B     		cmp	r3, #0
+ 803 0006 62D0     		beq	.L80
+ 169:Core/Src/ui_lvgl_task.c ****   {
+ 804              		.loc 1 169 48 discriminator 1 view .LVU241
+ 805 0008 314B     		ldr	r3, .L84
+ 806 000a DB68     		ldr	r3, [r3, #12]
+ 169:Core/Src/ui_lvgl_task.c ****   {
+ 807              		.loc 1 169 30 discriminator 1 view .LVU242
+ 808 000c 012B     		cmp	r3, #1
+ 809 000e 5EDD     		ble	.L80
+ 168:Core/Src/ui_lvgl_task.c ****   if (!g_current_route.found || g_current_route.geom_point_count < 2)
+ 810              		.loc 1 168 1 view .LVU243
+ 811 0010 70B5     		push	{r4, r5, r6, lr}
+ 812              	.LCFI8:
+ 813              		.cfi_def_cfa_offset 16
+ 814              		.cfi_offset 4, -16
+ 815              		.cfi_offset 5, -12
+ 816              		.cfi_offset 6, -8
+ 817              		.cfi_offset 14, -4
+ 818 0012 8CB0     		sub	sp, sp, #48
+ 819              	.LCFI9:
+ 820              		.cfi_def_cfa_offset 64
+ 175:Core/Src/ui_lvgl_task.c ****                              ? 0x07E0U : 0x07FFU;
+ 821              		.loc 1 175 3 is_stmt 1 view .LVU244
+ 175:Core/Src/ui_lvgl_task.c ****                              ? 0x07E0U : 0x07FFU;
+ 822              		.loc 1 175 46 is_stmt 0 view .LVU245
+ 823 0014 2E4B     		ldr	r3, .L84
+ 824 0016 9B69     		ldr	r3, [r3, #24]
+ 175:Core/Src/ui_lvgl_task.c ****                              ? 0x07E0U : 0x07FFU;
+ 825              		.loc 1 175 18 view .LVU246
+ARM GAS  /tmp/cccULq5X.s 			page 22
+
+
+ 826 0018 012B     		cmp	r3, #1
+ 827 001a 15D0     		beq	.L83
+ 175:Core/Src/ui_lvgl_task.c ****                              ? 0x07E0U : 0x07FFU;
+ 828              		.loc 1 175 18 discriminator 2 view .LVU247
+ 829 001c 40F2FF76 		movw	r6, #2047
+ 830              	.L75:
+ 831              	.LVL76:
+ 178:Core/Src/ui_lvgl_task.c ****   GeoCoord p0 = geo_coord_make(g_current_route.geom_points[0].lat_scaled,
+ 832              		.loc 1 178 3 is_stmt 1 view .LVU248
+ 178:Core/Src/ui_lvgl_task.c ****   GeoCoord p0 = geo_coord_make(g_current_route.geom_points[0].lat_scaled,
+ 833              		.loc 1 178 11 is_stmt 0 view .LVU249
+ 834 0020 0023     		movs	r3, #0
+ 835 0022 0B93     		str	r3, [sp, #44]
+ 178:Core/Src/ui_lvgl_task.c ****   GeoCoord p0 = geo_coord_make(g_current_route.geom_points[0].lat_scaled,
+ 836              		.loc 1 178 24 view .LVU250
+ 837 0024 0A93     		str	r3, [sp, #40]
+ 179:Core/Src/ui_lvgl_task.c ****                                g_current_route.geom_points[0].lon_scaled);
+ 838              		.loc 1 179 3 is_stmt 1 view .LVU251
+ 179:Core/Src/ui_lvgl_task.c ****                                g_current_route.geom_points[0].lon_scaled);
+ 839              		.loc 1 179 17 is_stmt 0 view .LVU252
+ 840 0026 08AC     		add	r4, sp, #32
+ 841 0028 2A4B     		ldr	r3, .L84+4
+ 842 002a 1A69     		ldr	r2, [r3, #16]
+ 843 002c D968     		ldr	r1, [r3, #12]
+ 844 002e 2046     		mov	r0, r4
+ 845 0030 FFF7FEFF 		bl	geo_coord_make
+ 846              	.LVL77:
+ 181:Core/Src/ui_lvgl_task.c **** 
+ 847              		.loc 1 181 3 is_stmt 1 view .LVU253
+ 848 0034 0AAB     		add	r3, sp, #40
+ 849 0036 0093     		str	r3, [sp]
+ 850 0038 0BAB     		add	r3, sp, #44
+ 851 003a 94E80600 		ldm	r4, {r1, r2}
+ 852 003e 2648     		ldr	r0, .L84+8
+ 853 0040 FFF7FEFF 		bl	map_camera_latlon_to_screen
+ 854              	.LVL78:
+ 183:Core/Src/ui_lvgl_task.c ****   {
+ 855              		.loc 1 183 3 view .LVU254
+ 856              	.LBB28:
+ 183:Core/Src/ui_lvgl_task.c ****   {
+ 857              		.loc 1 183 8 view .LVU255
+ 183:Core/Src/ui_lvgl_task.c ****   {
+ 858              		.loc 1 183 16 is_stmt 0 view .LVU256
+ 859 0044 0124     		movs	r4, #1
+ 183:Core/Src/ui_lvgl_task.c ****   {
+ 860              		.loc 1 183 3 view .LVU257
+ 861 0046 25E0     		b	.L76
+ 862              	.LVL79:
+ 863              	.L83:
+ 183:Core/Src/ui_lvgl_task.c ****   {
+ 864              		.loc 1 183 3 view .LVU258
+ 865              	.LBE28:
+ 175:Core/Src/ui_lvgl_task.c ****                              ? 0x07E0U : 0x07FFU;
+ 866              		.loc 1 175 18 discriminator 1 view .LVU259
+ 867 0048 4FF4FC66 		mov	r6, #2016
+ 868 004c E8E7     		b	.L75
+ 869              	.LVL80:
+ARM GAS  /tmp/cccULq5X.s 			page 23
+
+
+ 870              	.L77:
+ 871              	.LBB30:
+ 872              	.LBB29:
+ 185:Core/Src/ui_lvgl_task.c ****     GeoCoord pt = geo_coord_make(g_current_route.geom_points[i].lat_scaled,
+ 873              		.loc 1 185 5 is_stmt 1 view .LVU260
+ 185:Core/Src/ui_lvgl_task.c ****     GeoCoord pt = geo_coord_make(g_current_route.geom_points[i].lat_scaled,
+ 874              		.loc 1 185 13 is_stmt 0 view .LVU261
+ 875 004e 0023     		movs	r3, #0
+ 876 0050 0293     		str	r3, [sp, #8]
+ 185:Core/Src/ui_lvgl_task.c ****     GeoCoord pt = geo_coord_make(g_current_route.geom_points[i].lat_scaled,
+ 877              		.loc 1 185 25 view .LVU262
+ 878 0052 0393     		str	r3, [sp, #12]
+ 186:Core/Src/ui_lvgl_task.c ****                                  g_current_route.geom_points[i].lon_scaled);
+ 879              		.loc 1 186 5 is_stmt 1 view .LVU263
+ 186:Core/Src/ui_lvgl_task.c ****                                  g_current_route.geom_points[i].lon_scaled);
+ 880              		.loc 1 186 19 is_stmt 0 view .LVU264
+ 881 0054 04AD     		add	r5, sp, #16
+ 882 0056 04F59052 		add	r2, r4, #4608
+ 883 005a 0132     		adds	r2, r2, #1
+ 884 005c 1F4B     		ldr	r3, .L84+12
+ 885 005e 03EBC203 		add	r3, r3, r2, lsl #3
+ 886 0062 9A68     		ldr	r2, [r3, #8]
+ 887 0064 5968     		ldr	r1, [r3, #4]
+ 888 0066 2846     		mov	r0, r5
+ 889 0068 FFF7FEFF 		bl	geo_coord_make
+ 890              	.LVL81:
+ 188:Core/Src/ui_lvgl_task.c ****     Draw_Thick_Line_Clipped(prev_sx, prev_sy, cur_sx, cur_sy, route_col);
+ 891              		.loc 1 188 5 is_stmt 1 view .LVU265
+ 892 006c 03AB     		add	r3, sp, #12
+ 893 006e 0093     		str	r3, [sp]
+ 894 0070 02AB     		add	r3, sp, #8
+ 895 0072 95E80600 		ldm	r5, {r1, r2}
+ 896 0076 1848     		ldr	r0, .L84+8
+ 897 0078 FFF7FEFF 		bl	map_camera_latlon_to_screen
+ 898              	.LVL82:
+ 189:Core/Src/ui_lvgl_task.c ****     prev_sx = cur_sx;
+ 899              		.loc 1 189 5 view .LVU266
+ 900 007c 0096     		str	r6, [sp]
+ 901 007e 039B     		ldr	r3, [sp, #12]
+ 902 0080 029A     		ldr	r2, [sp, #8]
+ 903 0082 0A99     		ldr	r1, [sp, #40]
+ 904 0084 0B98     		ldr	r0, [sp, #44]
+ 905 0086 FFF7FEFF 		bl	Draw_Thick_Line_Clipped
+ 906              	.LVL83:
+ 190:Core/Src/ui_lvgl_task.c ****     prev_sy = cur_sy;
+ 907              		.loc 1 190 5 view .LVU267
+ 190:Core/Src/ui_lvgl_task.c ****     prev_sy = cur_sy;
+ 908              		.loc 1 190 13 is_stmt 0 view .LVU268
+ 909 008a 029B     		ldr	r3, [sp, #8]
+ 910 008c 0B93     		str	r3, [sp, #44]
+ 191:Core/Src/ui_lvgl_task.c ****   }
+ 911              		.loc 1 191 5 is_stmt 1 view .LVU269
+ 191:Core/Src/ui_lvgl_task.c ****   }
+ 912              		.loc 1 191 13 is_stmt 0 view .LVU270
+ 913 008e 039B     		ldr	r3, [sp, #12]
+ 914 0090 0A93     		str	r3, [sp, #40]
+ 915              	.LBE29:
+ARM GAS  /tmp/cccULq5X.s 			page 24
+
+
+ 183:Core/Src/ui_lvgl_task.c ****   {
+ 916              		.loc 1 183 62 is_stmt 1 discriminator 1 view .LVU271
+ 917 0092 0134     		adds	r4, r4, #1
+ 918              	.LVL84:
+ 919              	.L76:
+ 183:Core/Src/ui_lvgl_task.c ****   {
+ 920              		.loc 1 183 25 discriminator 2 view .LVU272
+ 183:Core/Src/ui_lvgl_task.c ****   {
+ 921              		.loc 1 183 42 is_stmt 0 discriminator 2 view .LVU273
+ 922 0094 0E4B     		ldr	r3, .L84
+ 923 0096 DB68     		ldr	r3, [r3, #12]
+ 183:Core/Src/ui_lvgl_task.c ****   {
+ 924              		.loc 1 183 25 discriminator 2 view .LVU274
+ 925 0098 A342     		cmp	r3, r4
+ 926 009a D8DC     		bgt	.L77
+ 927              	.LBE30:
+ 195:Core/Src/ui_lvgl_task.c ****   map_camera_latlon_to_screen(&g_camera, p0, &start_sx, &start_sy);
+ 928              		.loc 1 195 3 is_stmt 1 view .LVU275
+ 195:Core/Src/ui_lvgl_task.c ****   map_camera_latlon_to_screen(&g_camera, p0, &start_sx, &start_sy);
+ 929              		.loc 1 195 11 is_stmt 0 view .LVU276
+ 930 009c 0023     		movs	r3, #0
+ 931 009e 0793     		str	r3, [sp, #28]
+ 195:Core/Src/ui_lvgl_task.c ****   map_camera_latlon_to_screen(&g_camera, p0, &start_sx, &start_sy);
+ 932              		.loc 1 195 25 view .LVU277
+ 933 00a0 0693     		str	r3, [sp, #24]
+ 196:Core/Src/ui_lvgl_task.c ****   Draw_Pin_Marker(start_sx, start_sy, 0x07E0U);
+ 934              		.loc 1 196 3 is_stmt 1 view .LVU278
+ 935 00a2 06AB     		add	r3, sp, #24
+ 936 00a4 0093     		str	r3, [sp]
+ 937 00a6 07AB     		add	r3, sp, #28
+ 938 00a8 08AA     		add	r2, sp, #32
+ 939 00aa 06CA     		ldm	r2, {r1, r2}
+ 940 00ac 0A48     		ldr	r0, .L84+8
+ 941 00ae FFF7FEFF 		bl	map_camera_latlon_to_screen
+ 942              	.LVL85:
+ 197:Core/Src/ui_lvgl_task.c ****   Draw_Pin_Marker(prev_sx, prev_sy, 0xF81FU);
+ 943              		.loc 1 197 3 view .LVU279
+ 944 00b2 4FF4FC62 		mov	r2, #2016
+ 945 00b6 0699     		ldr	r1, [sp, #24]
+ 946 00b8 0798     		ldr	r0, [sp, #28]
+ 947 00ba FFF7FEFF 		bl	Draw_Pin_Marker
+ 948              	.LVL86:
+ 198:Core/Src/ui_lvgl_task.c **** }
+ 949              		.loc 1 198 3 view .LVU280
+ 950 00be 4FF61F02 		movw	r2, #63519
+ 951 00c2 0A99     		ldr	r1, [sp, #40]
+ 952 00c4 0B98     		ldr	r0, [sp, #44]
+ 953 00c6 FFF7FEFF 		bl	Draw_Pin_Marker
+ 954              	.LVL87:
+ 199:Core/Src/ui_lvgl_task.c **** 
+ 955              		.loc 1 199 1 is_stmt 0 view .LVU281
+ 956 00ca 0CB0     		add	sp, sp, #48
+ 957              	.LCFI10:
+ 958              		.cfi_def_cfa_offset 16
+ 959              		@ sp needed
+ 960 00cc 70BD     		pop	{r4, r5, r6, pc}
+ 961              	.LVL88:
+ARM GAS  /tmp/cccULq5X.s 			page 25
+
+
+ 962              	.L80:
+ 963              	.LCFI11:
+ 964              		.cfi_def_cfa_offset 0
+ 965              		.cfi_restore 4
+ 966              		.cfi_restore 5
+ 967              		.cfi_restore 6
+ 968              		.cfi_restore 14
+ 199:Core/Src/ui_lvgl_task.c **** 
+ 969              		.loc 1 199 1 view .LVU282
+ 970 00ce 7047     		bx	lr
+ 971              	.L85:
+ 972              		.align	2
+ 973              	.L84:
+ 974 00d0 00900100 		.word	g_current_route+102400
+ 975 00d4 00900000 		.word	g_current_route+36864
+ 976 00d8 00000000 		.word	g_camera
+ 977 00dc 00000000 		.word	g_current_route
+ 978              		.cfi_endproc
+ 979              	.LFE164:
+ 981              		.section	.text.Render_Visible_Tiles_To_MapFB,"ax",%progbits
+ 982              		.align	1
+ 983              		.syntax unified
+ 984              		.thumb
+ 985              		.thumb_func
+ 987              	Render_Visible_Tiles_To_MapFB:
+ 988              	.LFB166:
+ 230:Core/Src/ui_lvgl_task.c **** 
+ 231:Core/Src/ui_lvgl_task.c **** static uint32_t Render_Visible_Tiles_To_MapFB(void)
+ 232:Core/Src/ui_lvgl_task.c **** {
+ 989              		.loc 1 232 1 is_stmt 1 view -0
+ 990              		.cfi_startproc
+ 991              		@ args = 0, pretend = 0, frame = 8
+ 992              		@ frame_needed = 0, uses_anonymous_args = 0
+ 993 0000 2DE9F04F 		push	{r4, r5, r6, r7, r8, r9, r10, fp, lr}
+ 994              	.LCFI12:
+ 995              		.cfi_def_cfa_offset 36
+ 996              		.cfi_offset 4, -36
+ 997              		.cfi_offset 5, -32
+ 998              		.cfi_offset 6, -28
+ 999              		.cfi_offset 7, -24
+ 1000              		.cfi_offset 8, -20
+ 1001              		.cfi_offset 9, -16
+ 1002              		.cfi_offset 10, -12
+ 1003              		.cfi_offset 11, -8
+ 1004              		.cfi_offset 14, -4
+ 1005 0004 85B0     		sub	sp, sp, #20
+ 1006              	.LCFI13:
+ 1007              		.cfi_def_cfa_offset 56
+ 233:Core/Src/ui_lvgl_task.c ****   memset(s_map_fb, 0xDF, sizeof(s_map_fb));
+ 1008              		.loc 1 233 3 view .LVU284
+ 1009 0006 4FF41632 		mov	r2, #153600
+ 1010 000a DF21     		movs	r1, #223
+ 1011 000c 3F48     		ldr	r0, .L105
+ 1012 000e FFF7FEFF 		bl	memset
+ 1013              	.LVL89:
  234:Core/Src/ui_lvgl_task.c **** 
- 968              		.loc 1 234 5 view .LVU283
-ARM GAS  /tmp/ccuGYnyw.s 			page 27
+ 235:Core/Src/ui_lvgl_task.c ****   uint32_t ready_count = 0;
+ARM GAS  /tmp/cccULq5X.s 			page 26
 
 
- 237:Core/Src/ui_lvgl_task.c ****     int32_t sum_dx = 0;
- 969              		.loc 1 237 5 view .LVU284
- 238:Core/Src/ui_lvgl_task.c ****     int32_t sum_dy = 0;
- 970              		.loc 1 238 5 view .LVU285
- 239:Core/Src/ui_lvgl_task.c ****     while (xQueueReceive(g_q_input_evt, &evt, 0) == pdPASS)
- 971              		.loc 1 239 5 view .LVU286
- 240:Core/Src/ui_lvgl_task.c ****     {
- 972              		.loc 1 240 5 view .LVU287
- 239:Core/Src/ui_lvgl_task.c ****     while (xQueueReceive(g_q_input_evt, &evt, 0) == pdPASS)
- 973              		.loc 1 239 13 is_stmt 0 view .LVU288
- 974 0104 0024     		movs	r4, #0
- 238:Core/Src/ui_lvgl_task.c ****     int32_t sum_dy = 0;
- 975              		.loc 1 238 13 view .LVU289
- 976 0106 2546     		mov	r5, r4
- 240:Core/Src/ui_lvgl_task.c ****     {
- 977              		.loc 1 240 11 view .LVU290
- 978 0108 BCE7     		b	.L52
- 979              	.LVL104:
- 980              	.L72:
- 257:Core/Src/ui_lvgl_task.c ****       if (fix.valid)
- 981              		.loc 1 257 7 is_stmt 1 view .LVU291
- 257:Core/Src/ui_lvgl_task.c ****       if (fix.valid)
- 982              		.loc 1 257 17 is_stmt 0 view .LVU292
- 983 010a 324C     		ldr	r4, .L76+28
- 984              	.LVL105:
- 257:Core/Src/ui_lvgl_task.c ****       if (fix.valid)
- 985              		.loc 1 257 17 view .LVU293
- 986 010c 09AD     		add	r5, sp, #36
- 987              	.LVL106:
- 257:Core/Src/ui_lvgl_task.c ****       if (fix.valid)
- 988              		.loc 1 257 17 view .LVU294
- 989 010e 0FCD     		ldmia	r5!, {r0, r1, r2, r3}
- 990 0110 0FC4     		stmia	r4!, {r0, r1, r2, r3}
- 991 0112 95E80700 		ldm	r5, {r0, r1, r2}
- 992 0116 84E80700 		stm	r4, {r0, r1, r2}
- 258:Core/Src/ui_lvgl_task.c ****       {
- 993              		.loc 1 258 7 is_stmt 1 view .LVU295
- 258:Core/Src/ui_lvgl_task.c ****       {
- 994              		.loc 1 258 14 is_stmt 0 view .LVU296
- 995 011a 9DF83C40 		ldrb	r4, [sp, #60]	@ zero_extendqisi2
- 258:Core/Src/ui_lvgl_task.c ****       {
- 996              		.loc 1 258 10 view .LVU297
- 997 011e A4B1     		cbz	r4, .L67
- 260:Core/Src/ui_lvgl_task.c ****         if (!had_first_fix)
- 998              		.loc 1 260 9 is_stmt 1 view .LVU298
- 260:Core/Src/ui_lvgl_task.c ****         if (!had_first_fix)
- 999              		.loc 1 260 19 is_stmt 0 view .LVU299
- 1000 0120 2F4B     		ldr	r3, .L76+40
- 1001 0122 09AA     		add	r2, sp, #36
- 1002 0124 92E80300 		ldm	r2, {r0, r1}
- 1003 0128 83E80300 		stm	r3, {r0, r1}
- 261:Core/Src/ui_lvgl_task.c ****         {
- 1004              		.loc 1 261 9 is_stmt 1 view .LVU300
- 261:Core/Src/ui_lvgl_task.c ****         {
- 1005              		.loc 1 261 12 is_stmt 0 view .LVU301
- 1006 012c 0FB1     		cbz	r7, .L74
- 268:Core/Src/ui_lvgl_task.c ****     }
-ARM GAS  /tmp/ccuGYnyw.s 			page 28
+ 1014              		.loc 1 235 3 view .LVU285
+ 236:Core/Src/ui_lvgl_task.c **** 
+ 237:Core/Src/ui_lvgl_task.c ****   for (int32_t i = 0; i < g_visible_tiles.count; i++)
+ 1015              		.loc 1 237 3 view .LVU286
+ 1016              	.LBB31:
+ 1017              		.loc 1 237 8 view .LVU287
+ 1018              		.loc 1 237 16 is_stmt 0 view .LVU288
+ 1019 0012 0025     		movs	r5, #0
+ 1020              	.LBE31:
+ 235:Core/Src/ui_lvgl_task.c **** 
+ 1021              		.loc 1 235 12 view .LVU289
+ 1022 0014 2E46     		mov	r6, r5
+ 1023              	.LBB48:
+ 1024              		.loc 1 237 3 view .LVU290
+ 1025 0016 38E0     		b	.L87
+ 1026              	.LVL90:
+ 1027              	.L92:
+ 1028              	.LBB32:
+ 1029              	.LBB33:
+ 1030              	.LBB34:
+ 1031              	.LBB35:
+ 1032              	.LBB36:
+ 238:Core/Src/ui_lvgl_task.c ****   {
+ 239:Core/Src/ui_lvgl_task.c ****     const VisibleTile *vt     = &g_visible_tiles.tiles[i];
+ 240:Core/Src/ui_lvgl_task.c ****     const TileCacheSlot *slot = Request_Or_Get_Tile_Async(vt->tile.x, vt->tile.y);
+ 241:Core/Src/ui_lvgl_task.c **** 
+ 242:Core/Src/ui_lvgl_task.c ****     int32_t dst_x0 = vt->screen_x;
+ 243:Core/Src/ui_lvgl_task.c ****     int32_t dst_y0 = vt->screen_y;
+ 244:Core/Src/ui_lvgl_task.c ****     int32_t dst_x1 = dst_x0 + TILE_PX_SIZE;
+ 245:Core/Src/ui_lvgl_task.c ****     int32_t dst_y1 = dst_y0 + TILE_PX_SIZE;
+ 246:Core/Src/ui_lvgl_task.c **** 
+ 247:Core/Src/ui_lvgl_task.c ****     int32_t clip_x0 = (dst_x0 < 0) ? 0 : dst_x0;
+ 248:Core/Src/ui_lvgl_task.c ****     int32_t clip_y0 = (dst_y0 < 0) ? 0 : dst_y0;
+ 249:Core/Src/ui_lvgl_task.c ****     int32_t clip_x1 = (dst_x1 > MY_DISP_HOR_RES) ? MY_DISP_HOR_RES : dst_x1;
+ 250:Core/Src/ui_lvgl_task.c ****     int32_t clip_y1 = (dst_y1 > MY_DISP_VER_RES) ? MY_DISP_VER_RES : dst_y1;
+ 251:Core/Src/ui_lvgl_task.c **** 
+ 252:Core/Src/ui_lvgl_task.c ****     if (slot != NULL && slot->state == TILE_SLOT_READY)
+ 253:Core/Src/ui_lvgl_task.c ****     {
+ 254:Core/Src/ui_lvgl_task.c ****       if (slot->has_data)
+ 255:Core/Src/ui_lvgl_task.c ****       {
+ 256:Core/Src/ui_lvgl_task.c ****         ready_count++;
+ 257:Core/Src/ui_lvgl_task.c ****       }
+ 258:Core/Src/ui_lvgl_task.c **** 
+ 259:Core/Src/ui_lvgl_task.c ****       for (int32_t sy = clip_y0; sy < clip_y1; sy++)
+ 260:Core/Src/ui_lvgl_task.c ****       {
+ 261:Core/Src/ui_lvgl_task.c ****         int32_t ty             = sy - dst_y0;
+ 262:Core/Src/ui_lvgl_task.c ****         const uint8_t *src_row = &slot->pixels[ty * TILE_PX_SIZE];
+ 263:Core/Src/ui_lvgl_task.c ****         uint16_t *dst_row      = &s_map_fb[sy * MY_DISP_HOR_RES];
+ 264:Core/Src/ui_lvgl_task.c **** 
+ 265:Core/Src/ui_lvgl_task.c ****         for (int32_t sx = clip_x0; sx < clip_x1; sx++)
+ 266:Core/Src/ui_lvgl_task.c ****         {
+ 267:Core/Src/ui_lvgl_task.c ****           int32_t tx = sx - dst_x0;
+ 1033              		.loc 1 267 11 is_stmt 1 view .LVU291
+ 1034              		.loc 1 267 19 is_stmt 0 view .LVU292
+ 1035 0018 181B     		subs	r0, r3, r4
+ 1036              	.LVL91:
+ 268:Core/Src/ui_lvgl_task.c ****           dst_row[sx] = g_palette_rgb565[src_row[tx]];
+ARM GAS  /tmp/cccULq5X.s 			page 27
 
 
- 1007              		.loc 1 268 19 view .LVU302
- 1008 012e 3C46     		mov	r4, r7
- 1009 0130 C6E7     		b	.L56
- 1010              	.L74:
- 263:Core/Src/ui_lvgl_task.c ****           map_camera_set_center(&g_camera, g_gps_pos);
- 1011              		.loc 1 263 11 is_stmt 1 view .LVU303
- 1012              	.LVL107:
- 264:Core/Src/ui_lvgl_task.c ****           map_camera_get_visible_tiles(&g_camera, &g_visible_tiles);
- 1013              		.loc 1 264 11 view .LVU304
- 1014 0132 294D     		ldr	r5, .L76+32
- 1015 0134 D2E90012 		ldrd	r1, r2, [r2]
- 1016 0138 2846     		mov	r0, r5
- 1017 013a FFF7FEFF 		bl	map_camera_set_center
- 1018              	.LVL108:
- 265:Core/Src/ui_lvgl_task.c ****         }
- 1019              		.loc 1 265 11 view .LVU305
- 1020 013e 2249     		ldr	r1, .L76+16
- 1021 0140 2846     		mov	r0, r5
- 1022 0142 FFF7FEFF 		bl	map_camera_get_visible_tiles
- 1023              	.LVL109:
- 263:Core/Src/ui_lvgl_task.c ****           map_camera_set_center(&g_camera, g_gps_pos);
- 1024              		.loc 1 263 25 is_stmt 0 view .LVU306
- 1025 0146 2746     		mov	r7, r4
- 1026 0148 BAE7     		b	.L56
- 1027              	.LVL110:
- 1028              	.L67:
- 268:Core/Src/ui_lvgl_task.c ****     }
- 1029              		.loc 1 268 19 view .LVU307
- 1030 014a 0124     		movs	r4, #1
- 1031 014c B8E7     		b	.L56
- 1032              	.LVL111:
- 1033              	.L73:
+ 1037              		.loc 1 268 11 is_stmt 1 view .LVU293
+ 1038              		.loc 1 268 49 is_stmt 0 view .LVU294
+ 1039 001a 12F800B0 		ldrb	fp, [r2, r0]	@ zero_extendqisi2
+ 1040              		.loc 1 268 41 view .LVU295
+ 1041 001e 3C48     		ldr	r0, .L105+4
+ 1042              	.LVL92:
+ 1043              		.loc 1 268 41 view .LVU296
+ 1044 0020 30F81B00 		ldrh	r0, [r0, fp, lsl #1]
+ 1045              		.loc 1 268 23 view .LVU297
+ 1046 0024 29F81300 		strh	r0, [r9, r3, lsl #1]	@ movhi
+ 1047              	.LBE36:
+ 265:Core/Src/ui_lvgl_task.c ****         {
+ 1048              		.loc 1 265 52 is_stmt 1 discriminator 1 view .LVU298
+ 1049 0028 0133     		adds	r3, r3, #1
+ 1050              	.LVL93:
+ 1051              	.L91:
+ 265:Core/Src/ui_lvgl_task.c ****         {
+ 1052              		.loc 1 265 39 discriminator 2 view .LVU299
+ 1053 002a 8B42     		cmp	r3, r1
+ 1054 002c F4DB     		blt	.L92
+ 265:Core/Src/ui_lvgl_task.c ****         {
+ 1055              		.loc 1 265 39 is_stmt 0 discriminator 2 view .LVU300
+ 1056              	.LBE35:
+ 1057              	.LBE34:
+ 259:Core/Src/ui_lvgl_task.c ****       {
+ 1058              		.loc 1 259 50 is_stmt 1 discriminator 1 view .LVU301
+ 1059 002e 0CF1010C 		add	ip, ip, #1
+ 1060              	.LVL94:
+ 1061              	.L90:
+ 259:Core/Src/ui_lvgl_task.c ****       {
+ 1062              		.loc 1 259 37 discriminator 2 view .LVU302
+ 1063 0032 F445     		cmp	ip, lr
+ 1064 0034 28DA     		bge	.L94
+ 1065              	.LBB38:
+ 261:Core/Src/ui_lvgl_task.c ****         const uint8_t *src_row = &slot->pixels[ty * TILE_PX_SIZE];
+ 1066              		.loc 1 261 9 view .LVU303
+ 261:Core/Src/ui_lvgl_task.c ****         const uint8_t *src_row = &slot->pixels[ty * TILE_PX_SIZE];
+ 1067              		.loc 1 261 17 is_stmt 0 view .LVU304
+ 1068 0036 ACEB0702 		sub	r2, ip, r7
+ 1069              	.LVL95:
+ 262:Core/Src/ui_lvgl_task.c ****         uint16_t *dst_row      = &s_map_fb[sy * MY_DISP_HOR_RES];
+ 1070              		.loc 1 262 9 is_stmt 1 view .LVU305
+ 262:Core/Src/ui_lvgl_task.c ****         uint16_t *dst_row      = &s_map_fb[sy * MY_DISP_HOR_RES];
+ 1071              		.loc 1 262 51 is_stmt 0 view .LVU306
+ 1072 003a 1202     		lsls	r2, r2, #8
+ 1073              	.LVL96:
+ 262:Core/Src/ui_lvgl_task.c ****         uint16_t *dst_row      = &s_map_fb[sy * MY_DISP_HOR_RES];
+ 1074              		.loc 1 262 24 view .LVU307
+ 1075 003c 0832     		adds	r2, r2, #8
+ 1076 003e 5244     		add	r2, r2, r10
+ 1077 0040 0632     		adds	r2, r2, #6
+ 1078              	.LVL97:
+ 263:Core/Src/ui_lvgl_task.c **** 
+ 1079              		.loc 1 263 9 is_stmt 1 view .LVU308
+ 263:Core/Src/ui_lvgl_task.c **** 
+ 1080              		.loc 1 263 47 is_stmt 0 view .LVU309
+ 1081 0042 CCEB0C13 		rsb	r3, ip, ip, lsl #4
+ARM GAS  /tmp/cccULq5X.s 			page 28
+
+
+ 263:Core/Src/ui_lvgl_task.c **** 
+ 1082              		.loc 1 263 19 view .LVU310
+ 1083 0046 3148     		ldr	r0, .L105
+ 1084 0048 00EB4319 		add	r9, r0, r3, lsl #5
+ 1085              	.LVL98:
+ 265:Core/Src/ui_lvgl_task.c ****         {
+ 1086              		.loc 1 265 9 is_stmt 1 view .LVU311
+ 1087              	.LBB37:
+ 265:Core/Src/ui_lvgl_task.c ****         {
+ 1088              		.loc 1 265 14 view .LVU312
+ 265:Core/Src/ui_lvgl_task.c ****         {
+ 1089              		.loc 1 265 22 is_stmt 0 view .LVU313
+ 1090 004c 4346     		mov	r3, r8
+ 265:Core/Src/ui_lvgl_task.c ****         {
+ 1091              		.loc 1 265 9 view .LVU314
+ 1092 004e ECE7     		b	.L91
+ 1093              	.LVL99:
+ 1094              	.L96:
+ 265:Core/Src/ui_lvgl_task.c ****         {
+ 1095              		.loc 1 265 9 view .LVU315
+ 1096              	.LBE37:
+ 1097              	.LBE38:
+ 1098              	.LBE33:
+ 1099              	.LBB39:
+ 1100              	.LBB40:
+ 1101              	.LBB41:
+ 1102              	.LBB42:
+ 269:Core/Src/ui_lvgl_task.c ****         }
+ 270:Core/Src/ui_lvgl_task.c ****       }
+ 271:Core/Src/ui_lvgl_task.c ****     }
+ 272:Core/Src/ui_lvgl_task.c ****     else
+ 273:Core/Src/ui_lvgl_task.c ****     {
+ 274:Core/Src/ui_lvgl_task.c ****       /* Tile is streaming in the background -> draw subtle grid border */
+ 275:Core/Src/ui_lvgl_task.c ****       for (int32_t sy = clip_y0; sy < clip_y1; sy++)
  276:Core/Src/ui_lvgl_task.c ****       {
- 1034              		.loc 1 276 7 is_stmt 1 view .LVU308
- 276:Core/Src/ui_lvgl_task.c ****       {
- 1035              		.loc 1 276 10 is_stmt 0 view .LVU309
- 1036 014e 049B     		ldr	r3, [sp, #16]
- 1037 0150 13F0020F 		tst	r3, #2
- 1038 0154 04D1     		bne	.L75
- 1039              	.L58:
- 281:Core/Src/ui_lvgl_task.c ****       {
- 1040              		.loc 1 281 7 is_stmt 1 view .LVU310
- 281:Core/Src/ui_lvgl_task.c ****       {
- 1041              		.loc 1 281 10 is_stmt 0 view .LVU311
- 1042 0156 049B     		ldr	r3, [sp, #16]
- 1043 0158 13F00D0F 		tst	r3, #13
- 1044 015c BBD1     		bne	.L59
- 1045 015e B9E7     		b	.L57
- 1046              	.L75:
- 278:Core/Src/ui_lvgl_task.c ****       }
- 1047              		.loc 1 278 9 is_stmt 1 view .LVU312
- 1048 0160 2049     		ldr	r1, .L76+44
- 1049 0162 3046     		mov	r0, r6
- 1050 0164 FFF7FEFF 		bl	lv_label_set_text
- 1051              	.LVL112:
- 1052 0168 F5E7     		b	.L58
- 1053              	.LVL113:
-ARM GAS  /tmp/ccuGYnyw.s 			page 29
+ 277:Core/Src/ui_lvgl_task.c ****         int32_t ty        = sy - dst_y0;
+ 278:Core/Src/ui_lvgl_task.c ****         uint16_t *dst_row = &s_map_fb[sy * MY_DISP_HOR_RES];
+ 279:Core/Src/ui_lvgl_task.c ****         for (int32_t sx = clip_x0; sx < clip_x1; sx++)
+ 280:Core/Src/ui_lvgl_task.c ****         {
+ 281:Core/Src/ui_lvgl_task.c ****           int32_t tx = sx - dst_x0;
+ 282:Core/Src/ui_lvgl_task.c ****           if ((tx & 31) == 0 || (ty & 31) == 0)
+ 283:Core/Src/ui_lvgl_task.c ****           {
+ 284:Core/Src/ui_lvgl_task.c ****             dst_row[sx] = 0xCE59U;
+ 1103              		.loc 1 284 13 is_stmt 1 view .LVU316
+ 1104              		.loc 1 284 25 is_stmt 0 view .LVU317
+ 1105 0050 4CF65962 		movw	r2, #52825
+ 1106              	.LVL100:
+ 1107              		.loc 1 284 25 view .LVU318
+ 1108 0054 20F81320 		strh	r2, [r0, r3, lsl #1]	@ movhi
+ 1109              	.L97:
+ 1110              		.loc 1 284 25 view .LVU319
+ 1111              	.LBE42:
+ 279:Core/Src/ui_lvgl_task.c ****         {
+ 1112              		.loc 1 279 52 is_stmt 1 discriminator 1 view .LVU320
+ 1113 0058 0133     		adds	r3, r3, #1
+ 1114              	.LVL101:
+ 1115              	.L95:
+ARM GAS  /tmp/cccULq5X.s 			page 29
 
 
- 1054              	.L61:
- 299:Core/Src/ui_lvgl_task.c ****       {
- 1055              		.loc 1 299 12 view .LVU313
- 299:Core/Src/ui_lvgl_task.c ****       {
- 1056              		.loc 1 299 25 is_stmt 0 view .LVU314
- 1057 016a 1A4B     		ldr	r3, .L76+28
- 1058 016c DB7D     		ldrb	r3, [r3, #23]	@ zero_extendqisi2
- 299:Core/Src/ui_lvgl_task.c ****       {
- 1059              		.loc 1 299 15 view .LVU315
- 1060 016e A3B1     		cbz	r3, .L62
- 301:Core/Src/ui_lvgl_task.c ****                               (unsigned)g_gps_fix.utc_hour,
- 1061              		.loc 1 301 9 is_stmt 1 view .LVU316
- 302:Core/Src/ui_lvgl_task.c ****                               (unsigned)g_gps_fix.utc_min,
- 1062              		.loc 1 302 50 is_stmt 0 view .LVU317
- 1063 0170 1849     		ldr	r1, .L76+28
- 1064 0172 0A7B     		ldrb	r2, [r1, #12]	@ zero_extendqisi2
- 303:Core/Src/ui_lvgl_task.c ****                               (unsigned)g_gps_fix.utc_sec,
- 1065              		.loc 1 303 50 view .LVU318
- 1066 0174 4B7B     		ldrb	r3, [r1, #13]	@ zero_extendqisi2
- 304:Core/Src/ui_lvgl_task.c ****                               g_gps_fix.valid ? "Fix" : "NoFix",
- 1067              		.loc 1 304 50 view .LVU319
- 1068 0176 887B     		ldrb	r0, [r1, #14]	@ zero_extendqisi2
- 305:Core/Src/ui_lvgl_task.c ****                               (unsigned)g_gps_fix.satellites,
- 1069              		.loc 1 305 40 view .LVU320
- 1070 0178 097E     		ldrb	r1, [r1, #24]	@ zero_extendqisi2
- 301:Core/Src/ui_lvgl_task.c ****                               (unsigned)g_gps_fix.utc_hour,
- 1071              		.loc 1 301 9 view .LVU321
- 1072 017a 61B1     		cbz	r1, .L69
- 301:Core/Src/ui_lvgl_task.c ****                               (unsigned)g_gps_fix.utc_hour,
- 1073              		.loc 1 301 9 discriminator 1 view .LVU322
- 1074 017c 1A4C     		ldr	r4, .L76+48
- 1075              	.L63:
- 306:Core/Src/ui_lvgl_task.c ****                               (unsigned)g_gps_fix.sats_in_view);
- 1076              		.loc 1 306 50 view .LVU323
- 1077 017e 1549     		ldr	r1, .L76+28
- 1078 0180 0D7D     		ldrb	r5, [r1, #20]	@ zero_extendqisi2
- 307:Core/Src/ui_lvgl_task.c ****       }
- 1079              		.loc 1 307 50 view .LVU324
- 1080 0182 497D     		ldrb	r1, [r1, #21]	@ zero_extendqisi2
- 301:Core/Src/ui_lvgl_task.c ****                               (unsigned)g_gps_fix.utc_hour,
- 1081              		.loc 1 301 9 discriminator 3 view .LVU325
- 1082 0184 0391     		str	r1, [sp, #12]
- 1083 0186 0295     		str	r5, [sp, #8]
- 1084 0188 0194     		str	r4, [sp, #4]
- 1085 018a 0090     		str	r0, [sp]
- 1086 018c 1749     		ldr	r1, .L76+52
- 1087 018e 3046     		mov	r0, r6
- 1088 0190 FFF7FEFF 		bl	lv_label_set_text_fmt
- 1089              	.LVL114:
- 1090 0194 B1E7     		b	.L60
- 1091              	.L69:
- 301:Core/Src/ui_lvgl_task.c ****                               (unsigned)g_gps_fix.utc_hour,
- 1092              		.loc 1 301 9 discriminator 2 view .LVU326
- 1093 0196 164C     		ldr	r4, .L76+56
- 1094 0198 F1E7     		b	.L63
- 1095              	.L62:
- 311:Core/Src/ui_lvgl_task.c ****                               g_gps_fix.valid ? "Fix" : "NoFix",
-ARM GAS  /tmp/ccuGYnyw.s 			page 30
+ 279:Core/Src/ui_lvgl_task.c ****         {
+ 1116              		.loc 1 279 39 discriminator 2 view .LVU321
+ 1117 005a 8B42     		cmp	r3, r1
+ 1118 005c 07DA     		bge	.L103
+ 1119              	.LBB43:
+ 281:Core/Src/ui_lvgl_task.c ****           if ((tx & 31) == 0 || (ty & 31) == 0)
+ 1120              		.loc 1 281 11 view .LVU322
+ 281:Core/Src/ui_lvgl_task.c ****           if ((tx & 31) == 0 || (ty & 31) == 0)
+ 1121              		.loc 1 281 19 is_stmt 0 view .LVU323
+ 1122 005e 1A1B     		subs	r2, r3, r4
+ 1123              	.LVL102:
+ 282:Core/Src/ui_lvgl_task.c ****           {
+ 1124              		.loc 1 282 11 is_stmt 1 view .LVU324
+ 282:Core/Src/ui_lvgl_task.c ****           {
+ 1125              		.loc 1 282 14 is_stmt 0 view .LVU325
+ 1126 0060 12F01F0F 		tst	r2, #31
+ 1127 0064 F4D0     		beq	.L96
+ 282:Core/Src/ui_lvgl_task.c ****           {
+ 1128              		.loc 1 282 30 discriminator 1 view .LVU326
+ 1129 0066 19F01F0F 		tst	r9, #31
+ 1130 006a F5D1     		bne	.L97
+ 282:Core/Src/ui_lvgl_task.c ****           {
+ 1131              		.loc 1 282 30 discriminator 1 view .LVU327
+ 1132 006c F0E7     		b	.L96
+ 1133              	.LVL103:
+ 1134              	.L103:
+ 282:Core/Src/ui_lvgl_task.c ****           {
+ 1135              		.loc 1 282 30 discriminator 1 view .LVU328
+ 1136              	.LBE43:
+ 1137              	.LBE41:
+ 1138              	.LBE40:
+ 275:Core/Src/ui_lvgl_task.c ****       {
+ 1139              		.loc 1 275 50 is_stmt 1 discriminator 1 view .LVU329
+ 1140 006e 0CF1010C 		add	ip, ip, #1
+ 1141              	.LVL104:
+ 1142              	.L99:
+ 275:Core/Src/ui_lvgl_task.c ****       {
+ 1143              		.loc 1 275 37 discriminator 2 view .LVU330
+ 1144 0072 F445     		cmp	ip, lr
+ 1145 0074 08DA     		bge	.L94
+ 1146              	.LBB45:
+ 277:Core/Src/ui_lvgl_task.c ****         uint16_t *dst_row = &s_map_fb[sy * MY_DISP_HOR_RES];
+ 1147              		.loc 1 277 9 view .LVU331
+ 277:Core/Src/ui_lvgl_task.c ****         uint16_t *dst_row = &s_map_fb[sy * MY_DISP_HOR_RES];
+ 1148              		.loc 1 277 17 is_stmt 0 view .LVU332
+ 1149 0076 ACEB0709 		sub	r9, ip, r7
+ 1150              	.LVL105:
+ 278:Core/Src/ui_lvgl_task.c ****         for (int32_t sx = clip_x0; sx < clip_x1; sx++)
+ 1151              		.loc 1 278 9 is_stmt 1 view .LVU333
+ 278:Core/Src/ui_lvgl_task.c ****         for (int32_t sx = clip_x0; sx < clip_x1; sx++)
+ 1152              		.loc 1 278 42 is_stmt 0 view .LVU334
+ 1153 007a CCEB0C13 		rsb	r3, ip, ip, lsl #4
+ 278:Core/Src/ui_lvgl_task.c ****         for (int32_t sx = clip_x0; sx < clip_x1; sx++)
+ 1154              		.loc 1 278 19 view .LVU335
+ 1155 007e 2348     		ldr	r0, .L105
+ 1156 0080 00EB4310 		add	r0, r0, r3, lsl #5
+ 1157              	.LVL106:
+ARM GAS  /tmp/cccULq5X.s 			page 30
 
 
- 1096              		.loc 1 311 9 is_stmt 1 view .LVU327
- 312:Core/Src/ui_lvgl_task.c ****                               (unsigned)g_gps_fix.satellites,
- 1097              		.loc 1 312 40 is_stmt 0 view .LVU328
- 1098 019a 0E4B     		ldr	r3, .L76+28
- 1099 019c 1B7E     		ldrb	r3, [r3, #24]	@ zero_extendqisi2
- 311:Core/Src/ui_lvgl_task.c ****                               g_gps_fix.valid ? "Fix" : "NoFix",
- 1100              		.loc 1 311 9 view .LVU329
- 1101 019e 4BB1     		cbz	r3, .L70
- 311:Core/Src/ui_lvgl_task.c ****                               g_gps_fix.valid ? "Fix" : "NoFix",
- 1102              		.loc 1 311 9 discriminator 1 view .LVU330
- 1103 01a0 114A     		ldr	r2, .L76+48
- 1104              	.L64:
- 313:Core/Src/ui_lvgl_task.c ****                               (unsigned)g_gps_fix.sats_in_view);
- 1105              		.loc 1 313 50 view .LVU331
- 1106 01a2 0C4B     		ldr	r3, .L76+28
- 314:Core/Src/ui_lvgl_task.c ****       }
- 1107              		.loc 1 314 50 view .LVU332
- 1108 01a4 597D     		ldrb	r1, [r3, #21]	@ zero_extendqisi2
- 311:Core/Src/ui_lvgl_task.c ****                               g_gps_fix.valid ? "Fix" : "NoFix",
- 1109              		.loc 1 311 9 discriminator 3 view .LVU333
- 1110 01a6 0091     		str	r1, [sp]
- 1111 01a8 1B7D     		ldrb	r3, [r3, #20]	@ zero_extendqisi2
- 1112 01aa 1249     		ldr	r1, .L76+60
- 1113 01ac 3046     		mov	r0, r6
- 1114 01ae FFF7FEFF 		bl	lv_label_set_text_fmt
- 1115              	.LVL115:
- 1116 01b2 A2E7     		b	.L60
- 1117              	.L70:
- 311:Core/Src/ui_lvgl_task.c ****                               g_gps_fix.valid ? "Fix" : "NoFix",
- 1118              		.loc 1 311 9 discriminator 2 view .LVU334
- 1119 01b4 0E4A     		ldr	r2, .L76+56
- 1120 01b6 F4E7     		b	.L64
- 1121              	.L77:
- 1122              		.align	2
- 1123              	.L76:
- 1124 01b8 00000000 		.word	s_map_fb
- 1125 01bc 00000000 		.word	s_map_img_dsc
- 1126 01c0 0C000000 		.word	.LC2
- 1127 01c4 00000000 		.word	g_q_input_evt
- 1128 01c8 00000000 		.word	g_visible_tiles
- 1129 01cc 00000000 		.word	g_q_gps_fix
- 1130 01d0 00000000 		.word	g_pak_ready
- 1131 01d4 00000000 		.word	g_gps_fix
- 1132 01d8 00000000 		.word	g_camera
- 1133 01dc 3C000000 		.word	.LC4
- 1134 01e0 00000000 		.word	g_gps_pos
- 1135 01e4 24000000 		.word	.LC3
- 1136 01e8 00000000 		.word	.LC0
- 1137 01ec 50000000 		.word	.LC5
- 1138 01f0 04000000 		.word	.LC1
- 1139 01f4 70000000 		.word	.LC6
- 1140              	.LBE31:
- 1141              		.cfi_endproc
- 1142              	.LFE164:
- 1144              		.section	.rodata.s_map_img_dsc,"a"
- 1145              		.align	2
- 1148              	s_map_img_dsc:
-ARM GAS  /tmp/ccuGYnyw.s 			page 31
+ 279:Core/Src/ui_lvgl_task.c ****         {
+ 1158              		.loc 1 279 9 is_stmt 1 view .LVU336
+ 1159              	.LBB44:
+ 279:Core/Src/ui_lvgl_task.c ****         {
+ 1160              		.loc 1 279 14 view .LVU337
+ 279:Core/Src/ui_lvgl_task.c ****         {
+ 1161              		.loc 1 279 22 is_stmt 0 view .LVU338
+ 1162 0084 4346     		mov	r3, r8
+ 279:Core/Src/ui_lvgl_task.c ****         {
+ 1163              		.loc 1 279 9 view .LVU339
+ 1164 0086 E8E7     		b	.L95
+ 1165              	.LVL107:
+ 1166              	.L94:
+ 279:Core/Src/ui_lvgl_task.c ****         {
+ 1167              		.loc 1 279 9 view .LVU340
+ 1168              	.LBE44:
+ 1169              	.LBE45:
+ 1170              	.LBE39:
+ 1171              	.LBE32:
+ 237:Core/Src/ui_lvgl_task.c ****   {
+ 1172              		.loc 1 237 51 is_stmt 1 discriminator 1 view .LVU341
+ 1173 0088 0135     		adds	r5, r5, #1
+ 1174              	.LVL108:
+ 1175              	.L87:
+ 237:Core/Src/ui_lvgl_task.c ****   {
+ 1176              		.loc 1 237 25 discriminator 2 view .LVU342
+ 237:Core/Src/ui_lvgl_task.c ****   {
+ 1177              		.loc 1 237 42 is_stmt 0 discriminator 2 view .LVU343
+ 1178 008a 224B     		ldr	r3, .L105+8
+ 1179 008c D3F8003C 		ldr	r3, [r3, #3072]
+ 237:Core/Src/ui_lvgl_task.c ****   {
+ 1180              		.loc 1 237 25 discriminator 2 view .LVU344
+ 1181 0090 AB42     		cmp	r3, r5
+ 1182 0092 26DD     		ble	.L104
+ 1183              	.LBB47:
+ 239:Core/Src/ui_lvgl_task.c ****     const TileCacheSlot *slot = Request_Or_Get_Tile_Async(vt->tile.x, vt->tile.y);
+ 1184              		.loc 1 239 5 is_stmt 1 view .LVU345
+ 1185              	.LVL109:
+ 240:Core/Src/ui_lvgl_task.c **** 
+ 1186              		.loc 1 240 5 view .LVU346
+ 240:Core/Src/ui_lvgl_task.c **** 
+ 1187              		.loc 1 240 67 is_stmt 0 view .LVU347
+ 1188 0094 204B     		ldr	r3, .L105+12
+ 1189 0096 C5EBC502 		rsb	r2, r5, r5, lsl #3
+ 1190 009a 03EB8207 		add	r7, r3, r2, lsl #2
+ 240:Core/Src/ui_lvgl_task.c **** 
+ 1191              		.loc 1 240 33 view .LVU348
+ 1192 009e 7968     		ldr	r1, [r7, #4]
+ 1193 00a0 53F82200 		ldr	r0, [r3, r2, lsl #2]
+ 1194 00a4 FFF7FEFF 		bl	Request_Or_Get_Tile_Async
+ 1195              	.LVL110:
+ 242:Core/Src/ui_lvgl_task.c ****     int32_t dst_y0 = vt->screen_y;
+ 1196              		.loc 1 242 5 is_stmt 1 view .LVU349
+ 242:Core/Src/ui_lvgl_task.c ****     int32_t dst_y0 = vt->screen_y;
+ 1197              		.loc 1 242 13 is_stmt 0 view .LVU350
+ 1198 00a8 FC68     		ldr	r4, [r7, #12]
+ 1199              	.LVL111:
+ARM GAS  /tmp/cccULq5X.s 			page 31
 
 
- 1149 0000 19       		.byte	25
- 1150 0001 12       		.byte	18
- 1151 0002 0000     		.short	0
- 1152 0004 F000     		.short	240
- 1153 0006 4001     		.short	320
- 1154 0008 E001     		.short	480
- 1155 000a 0000     		.space	2
- 1156 000c 00580200 		.word	153600
- 1157 0010 00000000 		.word	s_map_fb
- 1158 0014 00000000 		.space	8
- 1158      00000000 
- 1159              		.section	.sdram,"aw"
- 1160              		.align	2
- 1163              	s_map_fb:
- 1164 0000 00000000 		.space	153600
- 1164      00000000 
- 1164      00000000 
- 1164      00000000 
- 1164      00000000 
- 1165              		.text
- 1166              	.Letext0:
- 1167              		.file 2 "/usr/arm-none-eabi/include/machine/_default_types.h"
- 1168              		.file 3 "/usr/arm-none-eabi/include/sys/_stdint.h"
- 1169              		.file 4 "Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F/portmacro.h"
- 1170              		.file 5 "Middlewares/Third_Party/FreeRTOS/Source/include/queue.h"
- 1171              		.file 6 "Drivers/lvgl/include/lvgl/core/../lv_types.h"
- 1172              		.file 7 "Drivers/lvgl/include/lvgl/core/lv_area.h"
- 1173              		.file 8 "Drivers/lvgl/include/lvgl/core/../font/../draw/lv_color.h"
- 1174              		.file 9 "Drivers/lvgl/include/lvgl/core/../font/../draw/lv_image_dsc.h"
- 1175              		.file 10 "Drivers/lvgl/include/lvgl/core/lv_obj_style.h"
- 1176              		.file 11 "Drivers/lvgl/include/lvgl/core/../indev/lv_indev.h"
- 1177              		.file 12 "Drivers/lvgl/include/lvgl/widgets/lv_bar.h"
- 1178              		.file 13 "Core/Inc/geo_math.h"
- 1179              		.file 14 "Core/Inc/map_camera.h"
- 1180              		.file 15 "Core/Inc/app.h"
- 1181              		.file 16 "Middlewares/Third_Party/FreeRTOS/Source/include/task.h"
- 1182              		.file 17 "Drivers/lvgl/include/lvgl/widgets/lv_label.h"
- 1183              		.file 18 "Drivers/lvgl/include/lvgl/core/lv_obj_pos.h"
- 1184              		.file 19 "Drivers/lvgl/include/lvgl/core/lv_obj_style_gen.h"
- 1185              		.file 20 "Drivers/lvgl/include/lvgl/core/lv_obj.h"
- 1186              		.file 21 "Drivers/lvgl/include/lvgl/widgets/lv_image.h"
- 1187              		.file 22 "Drivers/lvgl/include/lvgl/core/../display/../core/lv_timer.h"
- 1188              		.file 23 "Drivers/lvgl/include/lvgl/core/../display/lv_display.h"
- 1189              		.file 24 "/usr/arm-none-eabi/include/string.h"
-ARM GAS  /tmp/ccuGYnyw.s 			page 32
+ 243:Core/Src/ui_lvgl_task.c ****     int32_t dst_x1 = dst_x0 + TILE_PX_SIZE;
+ 1200              		.loc 1 243 5 is_stmt 1 view .LVU351
+ 243:Core/Src/ui_lvgl_task.c ****     int32_t dst_x1 = dst_x0 + TILE_PX_SIZE;
+ 1201              		.loc 1 243 13 is_stmt 0 view .LVU352
+ 1202 00aa 3F69     		ldr	r7, [r7, #16]
+ 1203              	.LVL112:
+ 244:Core/Src/ui_lvgl_task.c ****     int32_t dst_y1 = dst_y0 + TILE_PX_SIZE;
+ 1204              		.loc 1 244 5 is_stmt 1 view .LVU353
+ 244:Core/Src/ui_lvgl_task.c ****     int32_t dst_y1 = dst_y0 + TILE_PX_SIZE;
+ 1205              		.loc 1 244 13 is_stmt 0 view .LVU354
+ 1206 00ac 04F58071 		add	r1, r4, #256
+ 1207              	.LVL113:
+ 245:Core/Src/ui_lvgl_task.c **** 
+ 1208              		.loc 1 245 5 is_stmt 1 view .LVU355
+ 245:Core/Src/ui_lvgl_task.c **** 
+ 1209              		.loc 1 245 13 is_stmt 0 view .LVU356
+ 1210 00b0 07F5807E 		add	lr, r7, #256
+ 1211              	.LVL114:
+ 247:Core/Src/ui_lvgl_task.c ****     int32_t clip_y0 = (dst_y0 < 0) ? 0 : dst_y0;
+ 1212              		.loc 1 247 5 is_stmt 1 view .LVU357
+ 247:Core/Src/ui_lvgl_task.c ****     int32_t clip_y0 = (dst_y0 < 0) ? 0 : dst_y0;
+ 1213              		.loc 1 247 13 is_stmt 0 view .LVU358
+ 1214 00b4 24EAE478 		bic	r8, r4, r4, asr #31
+ 1215              	.LVL115:
+ 248:Core/Src/ui_lvgl_task.c ****     int32_t clip_x1 = (dst_x1 > MY_DISP_HOR_RES) ? MY_DISP_HOR_RES : dst_x1;
+ 1216              		.loc 1 248 5 is_stmt 1 view .LVU359
+ 248:Core/Src/ui_lvgl_task.c ****     int32_t clip_x1 = (dst_x1 > MY_DISP_HOR_RES) ? MY_DISP_HOR_RES : dst_x1;
+ 1217              		.loc 1 248 13 is_stmt 0 view .LVU360
+ 1218 00b8 27EAE77C 		bic	ip, r7, r7, asr #31
+ 1219              	.LVL116:
+ 249:Core/Src/ui_lvgl_task.c ****     int32_t clip_y1 = (dst_y1 > MY_DISP_VER_RES) ? MY_DISP_VER_RES : dst_y1;
+ 1220              		.loc 1 249 5 is_stmt 1 view .LVU361
+ 249:Core/Src/ui_lvgl_task.c ****     int32_t clip_y1 = (dst_y1 > MY_DISP_VER_RES) ? MY_DISP_VER_RES : dst_y1;
+ 1221              		.loc 1 249 13 is_stmt 0 view .LVU362
+ 1222 00bc F029     		cmp	r1, #240
+ 1223 00be A8BF     		it	ge
+ 1224 00c0 F021     		movge	r1, #240
+ 1225              	.LVL117:
+ 250:Core/Src/ui_lvgl_task.c **** 
+ 1226              		.loc 1 250 5 is_stmt 1 view .LVU363
+ 250:Core/Src/ui_lvgl_task.c **** 
+ 1227              		.loc 1 250 13 is_stmt 0 view .LVU364
+ 1228 00c2 BEF5A07F 		cmp	lr, #320
+ 1229 00c6 A8BF     		it	ge
+ 1230 00c8 4FF4A07E 		movge	lr, #320
+ 1231              	.LVL118:
+ 252:Core/Src/ui_lvgl_task.c ****     {
+ 1232              		.loc 1 252 5 is_stmt 1 view .LVU365
+ 252:Core/Src/ui_lvgl_task.c ****     {
+ 1233              		.loc 1 252 8 is_stmt 0 view .LVU366
+ 1234 00cc 8246     		mov	r10, r0
+ 1235 00ce 0028     		cmp	r0, #0
+ 1236 00d0 CFD0     		beq	.L99
+ 252:Core/Src/ui_lvgl_task.c ****     {
+ 1237              		.loc 1 252 29 discriminator 1 view .LVU367
+ 1238 00d2 037B     		ldrb	r3, [r0, #12]	@ zero_extendqisi2
+ 252:Core/Src/ui_lvgl_task.c ****     {
+ARM GAS  /tmp/cccULq5X.s 			page 32
+
+
+ 1239              		.loc 1 252 22 discriminator 1 view .LVU368
+ 1240 00d4 022B     		cmp	r3, #2
+ 1241 00d6 CCD1     		bne	.L99
+ 254:Core/Src/ui_lvgl_task.c ****       {
+ 1242              		.loc 1 254 7 is_stmt 1 view .LVU369
+ 254:Core/Src/ui_lvgl_task.c ****       {
+ 1243              		.loc 1 254 15 is_stmt 0 view .LVU370
+ 1244 00d8 437B     		ldrb	r3, [r0, #13]	@ zero_extendqisi2
+ 254:Core/Src/ui_lvgl_task.c ****       {
+ 1245              		.loc 1 254 10 view .LVU371
+ 1246 00da 002B     		cmp	r3, #0
+ 1247 00dc A9D0     		beq	.L90
+ 256:Core/Src/ui_lvgl_task.c ****       }
+ 1248              		.loc 1 256 9 is_stmt 1 view .LVU372
+ 256:Core/Src/ui_lvgl_task.c ****       }
+ 1249              		.loc 1 256 20 is_stmt 0 view .LVU373
+ 1250 00de 0136     		adds	r6, r6, #1
+ 1251              	.LVL119:
+ 259:Core/Src/ui_lvgl_task.c ****       {
+ 1252              		.loc 1 259 7 is_stmt 1 view .LVU374
+ 1253              	.LBB46:
+ 259:Core/Src/ui_lvgl_task.c ****       {
+ 1254              		.loc 1 259 12 view .LVU375
+ 259:Core/Src/ui_lvgl_task.c ****       {
+ 1255              		.loc 1 259 7 is_stmt 0 view .LVU376
+ 1256 00e0 A7E7     		b	.L90
+ 1257              	.LVL120:
+ 1258              	.L104:
+ 259:Core/Src/ui_lvgl_task.c ****       {
+ 1259              		.loc 1 259 7 view .LVU377
+ 1260              	.LBE46:
+ 1261              	.LBE47:
+ 1262              	.LBE48:
+ 285:Core/Src/ui_lvgl_task.c ****           }
+ 286:Core/Src/ui_lvgl_task.c ****         }
+ 287:Core/Src/ui_lvgl_task.c ****       }
+ 288:Core/Src/ui_lvgl_task.c ****     }
+ 289:Core/Src/ui_lvgl_task.c ****   }
+ 290:Core/Src/ui_lvgl_task.c **** 
+ 291:Core/Src/ui_lvgl_task.c ****   /* Draw active route polyline and start/goal pins if a route is loaded */
+ 292:Core/Src/ui_lvgl_task.c ****   Draw_Route_On_MapFB();
+ 1263              		.loc 1 292 3 is_stmt 1 view .LVU378
+ 1264 00e2 FFF7FEFF 		bl	Draw_Route_On_MapFB
+ 1265              	.LVL121:
+ 293:Core/Src/ui_lvgl_task.c **** 
+ 294:Core/Src/ui_lvgl_task.c ****   /* Project GPS position onto the camera viewport */
+ 295:Core/Src/ui_lvgl_task.c ****   int32_t gps_sx = 0, gps_sy = 0;
+ 1266              		.loc 1 295 3 view .LVU379
+ 1267              		.loc 1 295 11 is_stmt 0 view .LVU380
+ 1268 00e6 0023     		movs	r3, #0
+ 1269 00e8 0393     		str	r3, [sp, #12]
+ 1270              		.loc 1 295 23 view .LVU381
+ 1271 00ea 0293     		str	r3, [sp, #8]
+ 296:Core/Src/ui_lvgl_task.c ****   map_camera_latlon_to_screen(&g_camera, g_gps_pos, &gps_sx, &gps_sy);
+ 1272              		.loc 1 296 3 is_stmt 1 view .LVU382
+ 1273 00ec 0B4A     		ldr	r2, .L105+16
+ 1274 00ee 02AB     		add	r3, sp, #8
+ARM GAS  /tmp/cccULq5X.s 			page 33
+
+
+ 1275 00f0 0093     		str	r3, [sp]
+ 1276 00f2 03AB     		add	r3, sp, #12
+ 1277 00f4 06CA     		ldm	r2, {r1, r2}
+ 1278 00f6 0A48     		ldr	r0, .L105+20
+ 1279 00f8 FFF7FEFF 		bl	map_camera_latlon_to_screen
+ 1280              	.LVL122:
+ 297:Core/Src/ui_lvgl_task.c ****   Draw_GPS_Marker(gps_sx, gps_sy);
+ 1281              		.loc 1 297 3 view .LVU383
+ 1282 00fc 0299     		ldr	r1, [sp, #8]
+ 1283 00fe 0398     		ldr	r0, [sp, #12]
+ 1284 0100 FFF7FEFF 		bl	Draw_GPS_Marker
+ 1285              	.LVL123:
+ 298:Core/Src/ui_lvgl_task.c **** 
+ 299:Core/Src/ui_lvgl_task.c ****   return ready_count;
+ 1286              		.loc 1 299 3 view .LVU384
+ 300:Core/Src/ui_lvgl_task.c **** }
+ 1287              		.loc 1 300 1 is_stmt 0 view .LVU385
+ 1288 0104 3046     		mov	r0, r6
+ 1289 0106 05B0     		add	sp, sp, #20
+ 1290              	.LCFI14:
+ 1291              		.cfi_def_cfa_offset 36
+ 1292              		@ sp needed
+ 1293 0108 BDE8F08F 		pop	{r4, r5, r6, r7, r8, r9, r10, fp, pc}
+ 1294              	.LVL124:
+ 1295              	.L106:
+ 1296              		.loc 1 300 1 view .LVU386
+ 1297              		.align	2
+ 1298              	.L105:
+ 1299 010c 00000000 		.word	s_map_fb
+ 1300 0110 00000000 		.word	g_palette_rgb565
+ 1301 0114 00100000 		.word	g_visible_tiles+4096
+ 1302 0118 00000000 		.word	g_visible_tiles
+ 1303 011c 00000000 		.word	g_gps_pos
+ 1304 0120 00000000 		.word	g_camera
+ 1305              		.cfi_endproc
+ 1306              	.LFE166:
+ 1308              		.section	.rodata.UI_LVGL_Task.str1.4,"aMS",%progbits,1
+ 1309              		.align	2
+ 1310              	.LC0:
+ 1311 0000 46697800 		.ascii	"Fix\000"
+ 1312              		.align	2
+ 1313              	.LC1:
+ 1314 0004 4E6F4669 		.ascii	"NoFix\000"
+ 1314      7800
+ 1315 000a 0000     		.align	2
+ 1316              	.LC2:
+ 1317 000c 52544F53 		.ascii	"RTOS: Mounting SD...\000"
+ 1317      3A204D6F 
+ 1317      756E7469 
+ 1317      6E672053 
+ 1317      442E2E2E 
+ 1318 0021 000000   		.align	2
+ 1319              	.LC3:
+ 1320 0024 53442045 		.ascii	"SD Err (Retrying...)\000"
+ 1320      72722028 
+ 1320      52657472 
+ 1320      79696E67 
+ARM GAS  /tmp/cccULq5X.s 			page 34
+
+
+ 1320      2E2E2E29 
+ 1321 0039 000000   		.align	2
+ 1322              	.LC4:
+ 1323 003c 4750533A 		.ascii	"GPS: No UART | z%ld\000"
+ 1323      204E6F20 
+ 1323      55415254 
+ 1323      207C207A 
+ 1323      256C6400 
+ 1324              		.align	2
+ 1325              	.LC5:
+ 1326 0050 25303275 		.ascii	"%02u:%02u:%02u | %s (%u/%usat)\000"
+ 1326      3A253032 
+ 1326      753A2530 
+ 1326      3275207C 
+ 1326      20257320 
+ 1327 006f 00       		.align	2
+ 1328              	.LC6:
+ 1329 0070 2D2D3A2D 		.ascii	"--:--:-- | %s (%u/%usat)\000"
+ 1329      2D3A2D2D 
+ 1329      207C2025 
+ 1329      73202825 
+ 1329      752F2575 
+ 1330              		.section	.text.UI_LVGL_Task,"ax",%progbits
+ 1331              		.align	1
+ 1332              		.global	UI_LVGL_Task
+ 1333              		.syntax unified
+ 1334              		.thumb
+ 1335              		.thumb_func
+ 1337              	UI_LVGL_Task:
+ 1338              	.LVL125:
+ 1339              	.LFB167:
+ 301:Core/Src/ui_lvgl_task.c **** 
+ 302:Core/Src/ui_lvgl_task.c **** /*============================================================================
+ 303:Core/Src/ui_lvgl_task.c ****  * 3. UI_LVGL_Task Entry Point
+ 304:Core/Src/ui_lvgl_task.c ****  *============================================================================*/
+ 305:Core/Src/ui_lvgl_task.c **** void UI_LVGL_Task(void *argument)
+ 306:Core/Src/ui_lvgl_task.c **** {
+ 1340              		.loc 1 306 1 is_stmt 1 view -0
+ 1341              		.cfi_startproc
+ 1342              		@ args = 0, pretend = 0, frame = 64
+ 1343              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1344              		.loc 1 306 1 is_stmt 0 view .LVU388
+ 1345 0000 2DE9F043 		push	{r4, r5, r6, r7, r8, r9, lr}
+ 1346              	.LCFI15:
+ 1347              		.cfi_def_cfa_offset 28
+ 1348              		.cfi_offset 4, -28
+ 1349              		.cfi_offset 5, -24
+ 1350              		.cfi_offset 6, -20
+ 1351              		.cfi_offset 7, -16
+ 1352              		.cfi_offset 8, -12
+ 1353              		.cfi_offset 9, -8
+ 1354              		.cfi_offset 14, -4
+ 1355 0004 95B0     		sub	sp, sp, #84
+ 1356              	.LCFI16:
+ 1357              		.cfi_def_cfa_offset 112
+ 307:Core/Src/ui_lvgl_task.c ****   (void)argument;
+ 1358              		.loc 1 307 3 is_stmt 1 view .LVU389
+ARM GAS  /tmp/cccULq5X.s 			page 35
+
+
+ 308:Core/Src/ui_lvgl_task.c **** 
+ 309:Core/Src/ui_lvgl_task.c ****   memset(s_map_fb, 0x21, sizeof(s_map_fb));
+ 1359              		.loc 1 309 3 view .LVU390
+ 1360 0006 4FF41632 		mov	r2, #153600
+ 1361 000a 2121     		movs	r1, #33
+ 1362 000c 7648     		ldr	r0, .L134
+ 1363              	.LVL126:
+ 1364              		.loc 1 309 3 is_stmt 0 view .LVU391
+ 1365 000e FFF7FEFF 		bl	memset
+ 1366              	.LVL127:
+ 310:Core/Src/ui_lvgl_task.c **** 
+ 311:Core/Src/ui_lvgl_task.c ****   lv_obj_t * scr = lv_screen_active();
+ 1367              		.loc 1 311 3 is_stmt 1 view .LVU392
+ 1368              		.loc 1 311 20 is_stmt 0 view .LVU393
+ 1369 0012 FFF7FEFF 		bl	lv_screen_active
+ 1370              	.LVL128:
+ 1371 0016 0446     		mov	r4, r0
+ 1372              	.LVL129:
+ 312:Core/Src/ui_lvgl_task.c **** 
+ 313:Core/Src/ui_lvgl_task.c ****   /* Full-screen LVGL image widget displaying s_map_fb */
+ 314:Core/Src/ui_lvgl_task.c ****   lv_obj_t * map_img = lv_image_create(scr);
+ 1373              		.loc 1 314 3 is_stmt 1 view .LVU394
+ 1374              		.loc 1 314 24 is_stmt 0 view .LVU395
+ 1375 0018 FFF7FEFF 		bl	lv_image_create
+ 1376              	.LVL130:
+ 1377              		.loc 1 314 24 view .LVU396
+ 1378 001c 8046     		mov	r8, r0
+ 1379              	.LVL131:
+ 315:Core/Src/ui_lvgl_task.c ****   lv_image_set_src(map_img, &s_map_img_dsc);
+ 1380              		.loc 1 315 3 is_stmt 1 view .LVU397
+ 1381 001e 7349     		ldr	r1, .L134+4
+ 1382 0020 FFF7FEFF 		bl	lv_image_set_src
+ 1383              	.LVL132:
+ 316:Core/Src/ui_lvgl_task.c ****   lv_obj_align(map_img, LV_ALIGN_TOP_LEFT, 0, 0);
+ 1384              		.loc 1 316 3 view .LVU398
+ 1385 0024 0023     		movs	r3, #0
+ 1386 0026 1A46     		mov	r2, r3
+ 1387 0028 0121     		movs	r1, #1
+ 1388 002a 4046     		mov	r0, r8
+ 1389 002c FFF7FEFF 		bl	lv_obj_align
+ 1390              	.LVL133:
+ 317:Core/Src/ui_lvgl_task.c **** 
+ 318:Core/Src/ui_lvgl_task.c **** #if APP_DEBUG_ENABLE
+ 319:Core/Src/ui_lvgl_task.c ****   /* Compact top debug HUD overlay bar (only created when APP_DEBUG_ENABLE == 1) */
+ 320:Core/Src/ui_lvgl_task.c ****   lv_obj_t * hud_bar = lv_obj_create(scr);
+ 1391              		.loc 1 320 3 view .LVU399
+ 1392              		.loc 1 320 24 is_stmt 0 view .LVU400
+ 1393 0030 2046     		mov	r0, r4
+ 1394 0032 FFF7FEFF 		bl	lv_obj_create
+ 1395              	.LVL134:
+ 1396 0036 0446     		mov	r4, r0
+ 1397              	.LVL135:
+ 321:Core/Src/ui_lvgl_task.c ****   lv_obj_set_size(hud_bar, 232, 28);
+ 1398              		.loc 1 321 3 is_stmt 1 view .LVU401
+ 1399 0038 1C22     		movs	r2, #28
+ 1400 003a E821     		movs	r1, #232
+ 1401 003c FFF7FEFF 		bl	lv_obj_set_size
+ARM GAS  /tmp/cccULq5X.s 			page 36
+
+
+ 1402              	.LVL136:
+ 322:Core/Src/ui_lvgl_task.c ****   lv_obj_align(hud_bar, LV_ALIGN_TOP_MID, 0, 4);
+ 1403              		.loc 1 322 3 view .LVU402
+ 1404 0040 0423     		movs	r3, #4
+ 1405 0042 0022     		movs	r2, #0
+ 1406 0044 0221     		movs	r1, #2
+ 1407 0046 2046     		mov	r0, r4
+ 1408 0048 FFF7FEFF 		bl	lv_obj_align
+ 1409              	.LVL137:
+ 323:Core/Src/ui_lvgl_task.c ****   lv_obj_set_style_pad_all(hud_bar, 2, 0);
+ 1410              		.loc 1 323 3 view .LVU403
+ 1411 004c 0022     		movs	r2, #0
+ 1412 004e 0221     		movs	r1, #2
+ 1413 0050 2046     		mov	r0, r4
+ 1414 0052 FFF7FEFF 		bl	lv_obj_set_style_pad_all
+ 1415              	.LVL138:
+ 324:Core/Src/ui_lvgl_task.c ****   lv_obj_set_style_bg_opa(hud_bar, LV_OPA_80, 0);
+ 1416              		.loc 1 324 3 view .LVU404
+ 1417 0056 0022     		movs	r2, #0
+ 1418 0058 CC21     		movs	r1, #204
+ 1419 005a 2046     		mov	r0, r4
+ 1420 005c FFF7FEFF 		bl	lv_obj_set_style_bg_opa
+ 1421              	.LVL139:
+ 325:Core/Src/ui_lvgl_task.c **** 
+ 326:Core/Src/ui_lvgl_task.c ****   lv_obj_t * status_lbl = lv_label_create(hud_bar);
+ 1422              		.loc 1 326 3 view .LVU405
+ 1423              		.loc 1 326 27 is_stmt 0 view .LVU406
+ 1424 0060 2046     		mov	r0, r4
+ 1425 0062 FFF7FEFF 		bl	lv_label_create
+ 1426              	.LVL140:
+ 1427 0066 0646     		mov	r6, r0
+ 1428              	.LVL141:
+ 327:Core/Src/ui_lvgl_task.c ****   lv_label_set_text(status_lbl, "RTOS: Mounting SD...");
+ 1429              		.loc 1 327 3 is_stmt 1 view .LVU407
+ 1430 0068 6149     		ldr	r1, .L134+8
+ 1431 006a FFF7FEFF 		bl	lv_label_set_text
+ 1432              	.LVL142:
+ 328:Core/Src/ui_lvgl_task.c ****   lv_obj_center(status_lbl);
+ 1433              		.loc 1 328 3 view .LVU408
+ 1434 006e 3046     		mov	r0, r6
+ 1435 0070 FFF7FEFF 		bl	lv_obj_center
+ 1436              	.LVL143:
+ 329:Core/Src/ui_lvgl_task.c **** #endif
+ 330:Core/Src/ui_lvgl_task.c **** 
+ 331:Core/Src/ui_lvgl_task.c ****   bool had_first_fix = false;
+ 1437              		.loc 1 331 3 view .LVU409
+ 1438              		.loc 1 331 8 is_stmt 0 view .LVU410
+ 1439 0074 0027     		movs	r7, #0
+ 1440 0076 45E0     		b	.L122
+ 1441              	.LVL144:
+ 1442              	.L109:
+ 1443              	.LBB49:
+ 332:Core/Src/ui_lvgl_task.c **** 
+ 333:Core/Src/ui_lvgl_task.c ****   for (;;)
+ 334:Core/Src/ui_lvgl_task.c ****   {
+ 335:Core/Src/ui_lvgl_task.c ****     bool need_redraw = false;
+ 336:Core/Src/ui_lvgl_task.c **** 
+ARM GAS  /tmp/cccULq5X.s 			page 37
+
+
+ 337:Core/Src/ui_lvgl_task.c ****     /* 1. Drain all pending touch/sensor drag events and accumulate delta */
+ 338:Core/Src/ui_lvgl_task.c ****     InputEvent_t evt;
+ 339:Core/Src/ui_lvgl_task.c ****     int32_t sum_dx = 0;
+ 340:Core/Src/ui_lvgl_task.c ****     int32_t sum_dy = 0;
+ 341:Core/Src/ui_lvgl_task.c ****     while (xQueueReceive(g_q_input_evt, &evt, 0) == pdPASS)
+ 342:Core/Src/ui_lvgl_task.c ****     {
+ 343:Core/Src/ui_lvgl_task.c ****       sum_dx += evt.dx;
+ 1444              		.loc 1 343 7 is_stmt 1 view .LVU411
+ 1445              		.loc 1 343 20 is_stmt 0 view .LVU412
+ 1446 0078 BDF91430 		ldrsh	r3, [sp, #20]
+ 1447              		.loc 1 343 14 view .LVU413
+ 1448 007c 1D44     		add	r5, r5, r3
+ 1449              	.LVL145:
+ 344:Core/Src/ui_lvgl_task.c ****       sum_dy += evt.dy;
+ 1450              		.loc 1 344 7 is_stmt 1 view .LVU414
+ 1451              		.loc 1 344 20 is_stmt 0 view .LVU415
+ 1452 007e BDF91630 		ldrsh	r3, [sp, #22]
+ 1453              		.loc 1 344 14 view .LVU416
+ 1454 0082 1C44     		add	r4, r4, r3
+ 1455              	.LVL146:
+ 1456              	.L108:
+ 341:Core/Src/ui_lvgl_task.c ****     {
+ 1457              		.loc 1 341 50 is_stmt 1 discriminator 1 view .LVU417
+ 341:Core/Src/ui_lvgl_task.c ****     {
+ 1458              		.loc 1 341 12 is_stmt 0 discriminator 1 view .LVU418
+ 1459 0084 0022     		movs	r2, #0
+ 1460 0086 05A9     		add	r1, sp, #20
+ 1461 0088 5A4B     		ldr	r3, .L134+12
+ 1462 008a 1868     		ldr	r0, [r3]
+ 1463 008c FFF7FEFF 		bl	xQueueReceive
+ 1464              	.LVL147:
+ 341:Core/Src/ui_lvgl_task.c ****     {
+ 1465              		.loc 1 341 50 discriminator 2 view .LVU419
+ 1466 0090 0128     		cmp	r0, #1
+ 1467 0092 F1D0     		beq	.L109
+ 345:Core/Src/ui_lvgl_task.c ****     }
+ 346:Core/Src/ui_lvgl_task.c **** 
+ 347:Core/Src/ui_lvgl_task.c ****     if (sum_dx != 0 || sum_dy != 0)
+ 1468              		.loc 1 347 5 is_stmt 1 view .LVU420
+ 1469              		.loc 1 347 8 is_stmt 0 view .LVU421
+ 1470 0094 05B9     		cbnz	r5, .L110
+ 1471              		.loc 1 347 21 discriminator 1 view .LVU422
+ 1472 0096 5CB1     		cbz	r4, .L111
+ 1473              	.L110:
+ 348:Core/Src/ui_lvgl_task.c ****     {
+ 349:Core/Src/ui_lvgl_task.c ****       map_camera_pan_pixels(&g_camera, -sum_dx, -sum_dy);
+ 1474              		.loc 1 349 7 is_stmt 1 view .LVU423
+ 1475 0098 DFF86C91 		ldr	r9, .L134+32
+ 1476 009c 6242     		rsbs	r2, r4, #0
+ 1477 009e 6942     		rsbs	r1, r5, #0
+ 1478 00a0 4846     		mov	r0, r9
+ 1479 00a2 FFF7FEFF 		bl	map_camera_pan_pixels
+ 1480              	.LVL148:
+ 350:Core/Src/ui_lvgl_task.c ****       map_camera_get_visible_tiles(&g_camera, &g_visible_tiles);
+ 1481              		.loc 1 350 7 view .LVU424
+ 1482 00a6 5449     		ldr	r1, .L134+16
+ 1483 00a8 4846     		mov	r0, r9
+ARM GAS  /tmp/cccULq5X.s 			page 38
+
+
+ 1484 00aa FFF7FEFF 		bl	map_camera_get_visible_tiles
+ 1485              	.LVL149:
+ 351:Core/Src/ui_lvgl_task.c ****       need_redraw = true;
+ 1486              		.loc 1 351 7 view .LVU425
+ 1487              		.loc 1 351 19 is_stmt 0 view .LVU426
+ 1488 00ae 0124     		movs	r4, #1
+ 1489              	.LVL150:
+ 1490              	.L111:
+ 352:Core/Src/ui_lvgl_task.c ****     }
+ 353:Core/Src/ui_lvgl_task.c **** 
+ 354:Core/Src/ui_lvgl_task.c ****     /* 2. Check for new GPS fix / UTC time from GPS_UART_Task */
+ 355:Core/Src/ui_lvgl_task.c ****     GpsFix_t fix;
+ 1491              		.loc 1 355 5 is_stmt 1 view .LVU427
+ 356:Core/Src/ui_lvgl_task.c ****     if (xQueueReceive(g_q_gps_fix, &fix, 0) == pdPASS)
+ 1492              		.loc 1 356 5 view .LVU428
+ 1493              		.loc 1 356 9 is_stmt 0 view .LVU429
+ 1494 00b0 0022     		movs	r2, #0
+ 1495 00b2 0DA9     		add	r1, sp, #52
+ 1496 00b4 514B     		ldr	r3, .L134+20
+ 1497 00b6 1868     		ldr	r0, [r3]
+ 1498 00b8 FFF7FEFF 		bl	xQueueReceive
+ 1499              	.LVL151:
+ 1500              		.loc 1 356 8 discriminator 1 view .LVU430
+ 1501 00bc 0128     		cmp	r0, #1
+ 1502 00be 24D0     		beq	.L129
+ 1503              	.LVL152:
+ 1504              	.L112:
+ 357:Core/Src/ui_lvgl_task.c ****     {
+ 358:Core/Src/ui_lvgl_task.c ****       g_gps_fix = fix;
+ 359:Core/Src/ui_lvgl_task.c ****       if (fix.valid)
+ 360:Core/Src/ui_lvgl_task.c ****       {
+ 361:Core/Src/ui_lvgl_task.c ****         g_gps_pos = fix.pos;
+ 362:Core/Src/ui_lvgl_task.c ****         if (!had_first_fix)
+ 363:Core/Src/ui_lvgl_task.c ****         {
+ 364:Core/Src/ui_lvgl_task.c ****           had_first_fix = true;
+ 365:Core/Src/ui_lvgl_task.c ****           map_camera_set_center(&g_camera, g_gps_pos);
+ 366:Core/Src/ui_lvgl_task.c ****           map_camera_get_visible_tiles(&g_camera, &g_visible_tiles);
+ 367:Core/Src/ui_lvgl_task.c ****         }
+ 368:Core/Src/ui_lvgl_task.c ****       }
+ 369:Core/Src/ui_lvgl_task.c ****       need_redraw = true;
+ 370:Core/Src/ui_lvgl_task.c ****     }
+ 371:Core/Src/ui_lvgl_task.c **** 
+ 372:Core/Src/ui_lvgl_task.c ****     /* 3. Check async notifications from Tile_Loader_Task & Pathfinder_Task */
+ 373:Core/Src/ui_lvgl_task.c ****     uint32_t notify_bits = 0;
+ 1505              		.loc 1 373 5 is_stmt 1 view .LVU431
+ 1506              		.loc 1 373 14 is_stmt 0 view .LVU432
+ 1507 00c0 0020     		movs	r0, #0
+ 1508 00c2 0490     		str	r0, [sp, #16]
+ 374:Core/Src/ui_lvgl_task.c ****     if (xTaskNotifyWait(0, 0xFFFFFFFFUL, &notify_bits, 0) == pdPASS)
+ 1509              		.loc 1 374 5 is_stmt 1 view .LVU433
+ 1510              		.loc 1 374 9 is_stmt 0 view .LVU434
+ 1511 00c4 0346     		mov	r3, r0
+ 1512 00c6 04AA     		add	r2, sp, #16
+ 1513 00c8 4FF0FF31 		mov	r1, #-1
+ 1514 00cc FFF7FEFF 		bl	xTaskNotifyWait
+ 1515              	.LVL153:
+ 1516              		.loc 1 374 8 discriminator 1 view .LVU435
+ARM GAS  /tmp/cccULq5X.s 			page 39
+
+
+ 1517 00d0 0128     		cmp	r0, #1
+ 1518 00d2 3CD0     		beq	.L130
+ 1519              	.L113:
+ 375:Core/Src/ui_lvgl_task.c ****     {
+ 376:Core/Src/ui_lvgl_task.c **** #if APP_DEBUG_ENABLE
+ 377:Core/Src/ui_lvgl_task.c ****       if (notify_bits & NOTIFY_SD_ERROR)
+ 378:Core/Src/ui_lvgl_task.c ****       {
+ 379:Core/Src/ui_lvgl_task.c ****         lv_label_set_text(status_lbl, "SD Err (Retrying...)");
+ 380:Core/Src/ui_lvgl_task.c ****       }
+ 381:Core/Src/ui_lvgl_task.c **** #endif
+ 382:Core/Src/ui_lvgl_task.c ****       if (notify_bits & NOTIFY_SD_MOUNTED)
+ 383:Core/Src/ui_lvgl_task.c ****       {
+ 384:Core/Src/ui_lvgl_task.c ****         /* Request test route: Liège-Guillemins (50.6242°N, 5.5666°E) -> Liège-Carré (50.6428�
+ 385:Core/Src/ui_lvgl_task.c ****         RouteRequest_t test_req = {
+ 386:Core/Src/ui_lvgl_task.c ****           .start = geo_coord_make(506242000L, 55666000L),
+ 387:Core/Src/ui_lvgl_task.c ****           .goal  = geo_coord_make(506428000L, 55702000L),
+ 388:Core/Src/ui_lvgl_task.c ****         };
+ 389:Core/Src/ui_lvgl_task.c ****         xQueueOverwrite(g_q_route_req, &test_req);
+ 390:Core/Src/ui_lvgl_task.c ****       }
+ 391:Core/Src/ui_lvgl_task.c **** 
+ 392:Core/Src/ui_lvgl_task.c ****       if (notify_bits & (NOTIFY_SD_MOUNTED | NOTIFY_TILE_LOADED | NOTIFY_ROUTE_READY))
+ 393:Core/Src/ui_lvgl_task.c ****       {
+ 394:Core/Src/ui_lvgl_task.c ****         need_redraw = true;
+ 395:Core/Src/ui_lvgl_task.c ****       }
+ 396:Core/Src/ui_lvgl_task.c ****     }
+ 397:Core/Src/ui_lvgl_task.c **** 
+ 398:Core/Src/ui_lvgl_task.c ****     /* 4. Re-blit visible tiles from SDRAM cache if camera moved or tile arrived */
+ 399:Core/Src/ui_lvgl_task.c ****     if (need_redraw && g_pak_ready)
+ 1520              		.loc 1 399 5 is_stmt 1 view .LVU436
+ 1521              		.loc 1 399 8 is_stmt 0 view .LVU437
+ 1522 00d4 8CB1     		cbz	r4, .L117
+ 1523              	.L116:
+ 1524              	.LVL154:
+ 1525              		.loc 1 399 21 discriminator 1 view .LVU438
+ 1526 00d6 4A4B     		ldr	r3, .L134+24
+ 1527 00d8 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 1528 00da 73B1     		cbz	r3, .L117
+ 400:Core/Src/ui_lvgl_task.c ****     {
+ 401:Core/Src/ui_lvgl_task.c ****       (void)Render_Visible_Tiles_To_MapFB();
+ 1529              		.loc 1 401 7 is_stmt 1 view .LVU439
+ 1530              		.loc 1 401 13 is_stmt 0 view .LVU440
+ 1531 00dc FFF7FEFF 		bl	Render_Visible_Tiles_To_MapFB
+ 1532              	.LVL155:
+ 402:Core/Src/ui_lvgl_task.c ****       lv_obj_invalidate(map_img);
+ 1533              		.loc 1 402 7 is_stmt 1 view .LVU441
+ 1534 00e0 4046     		mov	r0, r8
+ 1535 00e2 FFF7FEFF 		bl	lv_obj_invalidate
+ 1536              	.LVL156:
+ 403:Core/Src/ui_lvgl_task.c **** 
+ 404:Core/Src/ui_lvgl_task.c **** #if APP_DEBUG_ENABLE
+ 405:Core/Src/ui_lvgl_task.c ****       if (!g_gps_fix.uart_ok)
+ 1537              		.loc 1 405 7 view .LVU442
+ 1538              		.loc 1 405 21 is_stmt 0 view .LVU443
+ 1539 00e6 474B     		ldr	r3, .L134+28
+ 1540 00e8 9B7D     		ldrb	r3, [r3, #22]	@ zero_extendqisi2
+ 1541              		.loc 1 405 10 view .LVU444
+ 1542 00ea 002B     		cmp	r3, #0
+ARM GAS  /tmp/cccULq5X.s 			page 40
+
+
+ 1543 00ec 54D1     		bne	.L118
+ 406:Core/Src/ui_lvgl_task.c ****       {
+ 407:Core/Src/ui_lvgl_task.c ****         lv_label_set_text_fmt(status_lbl, "GPS: No UART | z%ld",
+ 1544              		.loc 1 407 9 is_stmt 1 view .LVU445
+ 1545 00ee 464B     		ldr	r3, .L134+32
+ 1546 00f0 1A69     		ldr	r2, [r3, #16]
+ 1547 00f2 4649     		ldr	r1, .L134+36
+ 1548 00f4 3046     		mov	r0, r6
+ 1549 00f6 FFF7FEFF 		bl	lv_label_set_text_fmt
+ 1550              	.LVL157:
+ 1551              	.L117:
+ 408:Core/Src/ui_lvgl_task.c ****                               (long)g_camera.zoom);
+ 409:Core/Src/ui_lvgl_task.c ****       }
+ 410:Core/Src/ui_lvgl_task.c ****       else if (g_gps_fix.time_valid)
+ 411:Core/Src/ui_lvgl_task.c ****       {
+ 412:Core/Src/ui_lvgl_task.c ****         lv_label_set_text_fmt(status_lbl, "%02u:%02u:%02u | %s (%u/%usat)",
+ 413:Core/Src/ui_lvgl_task.c ****                               (unsigned)g_gps_fix.utc_hour,
+ 414:Core/Src/ui_lvgl_task.c ****                               (unsigned)g_gps_fix.utc_min,
+ 415:Core/Src/ui_lvgl_task.c ****                               (unsigned)g_gps_fix.utc_sec,
+ 416:Core/Src/ui_lvgl_task.c ****                               g_gps_fix.valid ? "Fix" : "NoFix",
+ 417:Core/Src/ui_lvgl_task.c ****                               (unsigned)g_gps_fix.satellites,
+ 418:Core/Src/ui_lvgl_task.c ****                               (unsigned)g_gps_fix.sats_in_view);
+ 419:Core/Src/ui_lvgl_task.c ****       }
+ 420:Core/Src/ui_lvgl_task.c ****       else
+ 421:Core/Src/ui_lvgl_task.c ****       {
+ 422:Core/Src/ui_lvgl_task.c ****         lv_label_set_text_fmt(status_lbl, "--:--:-- | %s (%u/%usat)",
+ 423:Core/Src/ui_lvgl_task.c ****                               g_gps_fix.valid ? "Fix" : "NoFix",
+ 424:Core/Src/ui_lvgl_task.c ****                               (unsigned)g_gps_fix.satellites,
+ 425:Core/Src/ui_lvgl_task.c ****                               (unsigned)g_gps_fix.sats_in_view);
+ 426:Core/Src/ui_lvgl_task.c ****       }
+ 427:Core/Src/ui_lvgl_task.c **** #endif
+ 428:Core/Src/ui_lvgl_task.c ****     }
+ 429:Core/Src/ui_lvgl_task.c **** 
+ 430:Core/Src/ui_lvgl_task.c ****     lv_timer_handler();
+ 1552              		.loc 1 430 5 view .LVU446
+ 1553 00fa FFF7FEFF 		bl	lv_timer_handler
+ 1554              	.LVL158:
+ 431:Core/Src/ui_lvgl_task.c ****     vTaskDelay(pdMS_TO_TICKS(10));
+ 1555              		.loc 1 431 5 view .LVU447
+ 1556 00fe 0A20     		movs	r0, #10
+ 1557 0100 FFF7FEFF 		bl	vTaskDelay
+ 1558              	.LVL159:
+ 1559              	.LBE49:
+ 333:Core/Src/ui_lvgl_task.c ****   {
+ 1560              		.loc 1 333 3 discriminator 1 view .LVU448
+ 1561              	.L122:
+ 333:Core/Src/ui_lvgl_task.c ****   {
+ 1562              		.loc 1 333 3 view .LVU449
+ 1563              	.LBB51:
+ 335:Core/Src/ui_lvgl_task.c **** 
+ 1564              		.loc 1 335 5 view .LVU450
+ 338:Core/Src/ui_lvgl_task.c ****     int32_t sum_dx = 0;
+ 1565              		.loc 1 338 5 view .LVU451
+ 339:Core/Src/ui_lvgl_task.c ****     int32_t sum_dy = 0;
+ 1566              		.loc 1 339 5 view .LVU452
+ 340:Core/Src/ui_lvgl_task.c ****     while (xQueueReceive(g_q_input_evt, &evt, 0) == pdPASS)
+ 1567              		.loc 1 340 5 view .LVU453
+ARM GAS  /tmp/cccULq5X.s 			page 41
+
+
+ 341:Core/Src/ui_lvgl_task.c ****     {
+ 1568              		.loc 1 341 5 view .LVU454
+ 340:Core/Src/ui_lvgl_task.c ****     while (xQueueReceive(g_q_input_evt, &evt, 0) == pdPASS)
+ 1569              		.loc 1 340 13 is_stmt 0 view .LVU455
+ 1570 0104 0024     		movs	r4, #0
+ 339:Core/Src/ui_lvgl_task.c ****     int32_t sum_dy = 0;
+ 1571              		.loc 1 339 13 view .LVU456
+ 1572 0106 2546     		mov	r5, r4
+ 341:Core/Src/ui_lvgl_task.c ****     {
+ 1573              		.loc 1 341 11 view .LVU457
+ 1574 0108 BCE7     		b	.L108
+ 1575              	.LVL160:
+ 1576              	.L129:
+ 358:Core/Src/ui_lvgl_task.c ****       if (fix.valid)
+ 1577              		.loc 1 358 7 is_stmt 1 view .LVU458
+ 358:Core/Src/ui_lvgl_task.c ****       if (fix.valid)
+ 1578              		.loc 1 358 17 is_stmt 0 view .LVU459
+ 1579 010a 3E4C     		ldr	r4, .L134+28
+ 1580              	.LVL161:
+ 358:Core/Src/ui_lvgl_task.c ****       if (fix.valid)
+ 1581              		.loc 1 358 17 view .LVU460
+ 1582 010c 0DAD     		add	r5, sp, #52
+ 1583              	.LVL162:
+ 358:Core/Src/ui_lvgl_task.c ****       if (fix.valid)
+ 1584              		.loc 1 358 17 view .LVU461
+ 1585 010e 0FCD     		ldmia	r5!, {r0, r1, r2, r3}
+ 1586 0110 0FC4     		stmia	r4!, {r0, r1, r2, r3}
+ 1587 0112 95E80700 		ldm	r5, {r0, r1, r2}
+ 1588 0116 84E80700 		stm	r4, {r0, r1, r2}
+ 359:Core/Src/ui_lvgl_task.c ****       {
+ 1589              		.loc 1 359 7 is_stmt 1 view .LVU462
+ 359:Core/Src/ui_lvgl_task.c ****       {
+ 1590              		.loc 1 359 14 is_stmt 0 view .LVU463
+ 1591 011a 9DF84C40 		ldrb	r4, [sp, #76]	@ zero_extendqisi2
+ 359:Core/Src/ui_lvgl_task.c ****       {
+ 1592              		.loc 1 359 10 view .LVU464
+ 1593 011e A4B1     		cbz	r4, .L124
+ 361:Core/Src/ui_lvgl_task.c ****         if (!had_first_fix)
+ 1594              		.loc 1 361 9 is_stmt 1 view .LVU465
+ 361:Core/Src/ui_lvgl_task.c ****         if (!had_first_fix)
+ 1595              		.loc 1 361 19 is_stmt 0 view .LVU466
+ 1596 0120 3B4B     		ldr	r3, .L134+40
+ 1597 0122 0DAA     		add	r2, sp, #52
+ 1598 0124 92E80300 		ldm	r2, {r0, r1}
+ 1599 0128 83E80300 		stm	r3, {r0, r1}
+ 362:Core/Src/ui_lvgl_task.c ****         {
+ 1600              		.loc 1 362 9 is_stmt 1 view .LVU467
+ 362:Core/Src/ui_lvgl_task.c ****         {
+ 1601              		.loc 1 362 12 is_stmt 0 view .LVU468
+ 1602 012c 0FB1     		cbz	r7, .L131
+ 369:Core/Src/ui_lvgl_task.c ****     }
+ 1603              		.loc 1 369 19 view .LVU469
+ 1604 012e 3C46     		mov	r4, r7
+ 1605 0130 C6E7     		b	.L112
+ 1606              	.L131:
+ 364:Core/Src/ui_lvgl_task.c ****           map_camera_set_center(&g_camera, g_gps_pos);
+ 1607              		.loc 1 364 11 is_stmt 1 view .LVU470
+ARM GAS  /tmp/cccULq5X.s 			page 42
+
+
+ 1608              	.LVL163:
+ 365:Core/Src/ui_lvgl_task.c ****           map_camera_get_visible_tiles(&g_camera, &g_visible_tiles);
+ 1609              		.loc 1 365 11 view .LVU471
+ 1610 0132 354D     		ldr	r5, .L134+32
+ 1611 0134 D2E90012 		ldrd	r1, r2, [r2]
+ 1612 0138 2846     		mov	r0, r5
+ 1613 013a FFF7FEFF 		bl	map_camera_set_center
+ 1614              	.LVL164:
+ 366:Core/Src/ui_lvgl_task.c ****         }
+ 1615              		.loc 1 366 11 view .LVU472
+ 1616 013e 2E49     		ldr	r1, .L134+16
+ 1617 0140 2846     		mov	r0, r5
+ 1618 0142 FFF7FEFF 		bl	map_camera_get_visible_tiles
+ 1619              	.LVL165:
+ 364:Core/Src/ui_lvgl_task.c ****           map_camera_set_center(&g_camera, g_gps_pos);
+ 1620              		.loc 1 364 25 is_stmt 0 view .LVU473
+ 1621 0146 2746     		mov	r7, r4
+ 1622 0148 BAE7     		b	.L112
+ 1623              	.LVL166:
+ 1624              	.L124:
+ 369:Core/Src/ui_lvgl_task.c ****     }
+ 1625              		.loc 1 369 19 view .LVU474
+ 1626 014a 0124     		movs	r4, #1
+ 1627 014c B8E7     		b	.L112
+ 1628              	.LVL167:
+ 1629              	.L130:
+ 377:Core/Src/ui_lvgl_task.c ****       {
+ 1630              		.loc 1 377 7 is_stmt 1 view .LVU475
+ 377:Core/Src/ui_lvgl_task.c ****       {
+ 1631              		.loc 1 377 10 is_stmt 0 view .LVU476
+ 1632 014e 049B     		ldr	r3, [sp, #16]
+ 1633 0150 13F0020F 		tst	r3, #2
+ 1634 0154 08D1     		bne	.L132
+ 1635              	.L114:
+ 382:Core/Src/ui_lvgl_task.c ****       {
+ 1636              		.loc 1 382 7 is_stmt 1 view .LVU477
+ 382:Core/Src/ui_lvgl_task.c ****       {
+ 1637              		.loc 1 382 10 is_stmt 0 view .LVU478
+ 1638 0156 049B     		ldr	r3, [sp, #16]
+ 1639 0158 13F0010F 		tst	r3, #1
+ 1640 015c 09D1     		bne	.L133
+ 1641              	.L115:
+ 392:Core/Src/ui_lvgl_task.c ****       {
+ 1642              		.loc 1 392 7 is_stmt 1 view .LVU479
+ 392:Core/Src/ui_lvgl_task.c ****       {
+ 1643              		.loc 1 392 10 is_stmt 0 view .LVU480
+ 1644 015e 049B     		ldr	r3, [sp, #16]
+ 1645 0160 13F00D0F 		tst	r3, #13
+ 1646 0164 B7D1     		bne	.L116
+ 1647 0166 B5E7     		b	.L113
+ 1648              	.L132:
+ 379:Core/Src/ui_lvgl_task.c ****       }
+ 1649              		.loc 1 379 9 is_stmt 1 view .LVU481
+ 1650 0168 2A49     		ldr	r1, .L134+44
+ 1651 016a 3046     		mov	r0, r6
+ 1652 016c FFF7FEFF 		bl	lv_label_set_text
+ 1653              	.LVL168:
+ARM GAS  /tmp/cccULq5X.s 			page 43
+
+
+ 1654 0170 F1E7     		b	.L114
+ 1655              	.L133:
+ 1656              	.LBB50:
+ 385:Core/Src/ui_lvgl_task.c ****           .start = geo_coord_make(506242000L, 55666000L),
+ 1657              		.loc 1 385 9 view .LVU482
+ 386:Core/Src/ui_lvgl_task.c ****           .goal  = geo_coord_make(506428000L, 55702000L),
+ 1658              		.loc 1 386 20 is_stmt 0 view .LVU483
+ 1659 0172 09AD     		add	r5, sp, #36
+ 1660 0174 284A     		ldr	r2, .L134+48
+ 1661 0176 2949     		ldr	r1, .L134+52
+ 1662 0178 2846     		mov	r0, r5
+ 1663 017a FFF7FEFF 		bl	geo_coord_make
+ 1664              	.LVL169:
+ 387:Core/Src/ui_lvgl_task.c ****         };
+ 1665              		.loc 1 387 20 view .LVU484
+ 1666 017e 284A     		ldr	r2, .L134+56
+ 1667 0180 2849     		ldr	r1, .L134+60
+ 1668 0182 0BA8     		add	r0, sp, #44
+ 1669 0184 FFF7FEFF 		bl	geo_coord_make
+ 1670              	.LVL170:
+ 389:Core/Src/ui_lvgl_task.c ****       }
+ 1671              		.loc 1 389 9 is_stmt 1 view .LVU485
+ 1672 0188 0223     		movs	r3, #2
+ 1673 018a 0022     		movs	r2, #0
+ 1674 018c 2946     		mov	r1, r5
+ 1675 018e 2648     		ldr	r0, .L134+64
+ 1676 0190 0068     		ldr	r0, [r0]
+ 1677 0192 FFF7FEFF 		bl	xQueueGenericSend
+ 1678              	.LVL171:
+ 1679 0196 E2E7     		b	.L115
+ 1680              	.LVL172:
+ 1681              	.L118:
+ 389:Core/Src/ui_lvgl_task.c ****       }
+ 1682              		.loc 1 389 9 is_stmt 0 view .LVU486
+ 1683              	.LBE50:
+ 410:Core/Src/ui_lvgl_task.c ****       {
+ 1684              		.loc 1 410 12 is_stmt 1 view .LVU487
+ 410:Core/Src/ui_lvgl_task.c ****       {
+ 1685              		.loc 1 410 25 is_stmt 0 view .LVU488
+ 1686 0198 1A4B     		ldr	r3, .L134+28
+ 1687 019a DB7D     		ldrb	r3, [r3, #23]	@ zero_extendqisi2
+ 410:Core/Src/ui_lvgl_task.c ****       {
+ 1688              		.loc 1 410 15 view .LVU489
+ 1689 019c A3B1     		cbz	r3, .L119
+ 412:Core/Src/ui_lvgl_task.c ****                               (unsigned)g_gps_fix.utc_hour,
+ 1690              		.loc 1 412 9 is_stmt 1 view .LVU490
+ 413:Core/Src/ui_lvgl_task.c ****                               (unsigned)g_gps_fix.utc_min,
+ 1691              		.loc 1 413 50 is_stmt 0 view .LVU491
+ 1692 019e 1949     		ldr	r1, .L134+28
+ 1693 01a0 0A7B     		ldrb	r2, [r1, #12]	@ zero_extendqisi2
+ 414:Core/Src/ui_lvgl_task.c ****                               (unsigned)g_gps_fix.utc_sec,
+ 1694              		.loc 1 414 50 view .LVU492
+ 1695 01a2 4B7B     		ldrb	r3, [r1, #13]	@ zero_extendqisi2
+ 415:Core/Src/ui_lvgl_task.c ****                               g_gps_fix.valid ? "Fix" : "NoFix",
+ 1696              		.loc 1 415 50 view .LVU493
+ 1697 01a4 887B     		ldrb	r0, [r1, #14]	@ zero_extendqisi2
+ 416:Core/Src/ui_lvgl_task.c ****                               (unsigned)g_gps_fix.satellites,
+ARM GAS  /tmp/cccULq5X.s 			page 44
+
+
+ 1698              		.loc 1 416 40 view .LVU494
+ 1699 01a6 097E     		ldrb	r1, [r1, #24]	@ zero_extendqisi2
+ 412:Core/Src/ui_lvgl_task.c ****                               (unsigned)g_gps_fix.utc_hour,
+ 1700              		.loc 1 412 9 view .LVU495
+ 1701 01a8 61B1     		cbz	r1, .L126
+ 412:Core/Src/ui_lvgl_task.c ****                               (unsigned)g_gps_fix.utc_hour,
+ 1702              		.loc 1 412 9 discriminator 1 view .LVU496
+ 1703 01aa 204C     		ldr	r4, .L134+68
+ 1704              	.L120:
+ 417:Core/Src/ui_lvgl_task.c ****                               (unsigned)g_gps_fix.sats_in_view);
+ 1705              		.loc 1 417 50 view .LVU497
+ 1706 01ac 1549     		ldr	r1, .L134+28
+ 1707 01ae 0D7D     		ldrb	r5, [r1, #20]	@ zero_extendqisi2
+ 418:Core/Src/ui_lvgl_task.c ****       }
+ 1708              		.loc 1 418 50 view .LVU498
+ 1709 01b0 497D     		ldrb	r1, [r1, #21]	@ zero_extendqisi2
+ 412:Core/Src/ui_lvgl_task.c ****                               (unsigned)g_gps_fix.utc_hour,
+ 1710              		.loc 1 412 9 discriminator 3 view .LVU499
+ 1711 01b2 0391     		str	r1, [sp, #12]
+ 1712 01b4 0295     		str	r5, [sp, #8]
+ 1713 01b6 0194     		str	r4, [sp, #4]
+ 1714 01b8 0090     		str	r0, [sp]
+ 1715 01ba 1D49     		ldr	r1, .L134+72
+ 1716 01bc 3046     		mov	r0, r6
+ 1717 01be FFF7FEFF 		bl	lv_label_set_text_fmt
+ 1718              	.LVL173:
+ 1719 01c2 9AE7     		b	.L117
+ 1720              	.L126:
+ 412:Core/Src/ui_lvgl_task.c ****                               (unsigned)g_gps_fix.utc_hour,
+ 1721              		.loc 1 412 9 discriminator 2 view .LVU500
+ 1722 01c4 1B4C     		ldr	r4, .L134+76
+ 1723 01c6 F1E7     		b	.L120
+ 1724              	.L119:
+ 422:Core/Src/ui_lvgl_task.c ****                               g_gps_fix.valid ? "Fix" : "NoFix",
+ 1725              		.loc 1 422 9 is_stmt 1 view .LVU501
+ 423:Core/Src/ui_lvgl_task.c ****                               (unsigned)g_gps_fix.satellites,
+ 1726              		.loc 1 423 40 is_stmt 0 view .LVU502
+ 1727 01c8 0E4B     		ldr	r3, .L134+28
+ 1728 01ca 1B7E     		ldrb	r3, [r3, #24]	@ zero_extendqisi2
+ 422:Core/Src/ui_lvgl_task.c ****                               g_gps_fix.valid ? "Fix" : "NoFix",
+ 1729              		.loc 1 422 9 view .LVU503
+ 1730 01cc 4BB1     		cbz	r3, .L127
+ 422:Core/Src/ui_lvgl_task.c ****                               g_gps_fix.valid ? "Fix" : "NoFix",
+ 1731              		.loc 1 422 9 discriminator 1 view .LVU504
+ 1732 01ce 174A     		ldr	r2, .L134+68
+ 1733              	.L121:
+ 424:Core/Src/ui_lvgl_task.c ****                               (unsigned)g_gps_fix.sats_in_view);
+ 1734              		.loc 1 424 50 view .LVU505
+ 1735 01d0 0C4B     		ldr	r3, .L134+28
+ 425:Core/Src/ui_lvgl_task.c ****       }
+ 1736              		.loc 1 425 50 view .LVU506
+ 1737 01d2 597D     		ldrb	r1, [r3, #21]	@ zero_extendqisi2
+ 422:Core/Src/ui_lvgl_task.c ****                               g_gps_fix.valid ? "Fix" : "NoFix",
+ 1738              		.loc 1 422 9 discriminator 3 view .LVU507
+ 1739 01d4 0091     		str	r1, [sp]
+ 1740 01d6 1B7D     		ldrb	r3, [r3, #20]	@ zero_extendqisi2
+ 1741 01d8 1749     		ldr	r1, .L134+80
+ARM GAS  /tmp/cccULq5X.s 			page 45
+
+
+ 1742 01da 3046     		mov	r0, r6
+ 1743 01dc FFF7FEFF 		bl	lv_label_set_text_fmt
+ 1744              	.LVL174:
+ 1745 01e0 8BE7     		b	.L117
+ 1746              	.L127:
+ 422:Core/Src/ui_lvgl_task.c ****                               g_gps_fix.valid ? "Fix" : "NoFix",
+ 1747              		.loc 1 422 9 discriminator 2 view .LVU508
+ 1748 01e2 144A     		ldr	r2, .L134+76
+ 1749 01e4 F4E7     		b	.L121
+ 1750              	.L135:
+ 1751 01e6 00BF     		.align	2
+ 1752              	.L134:
+ 1753 01e8 00000000 		.word	s_map_fb
+ 1754 01ec 00000000 		.word	s_map_img_dsc
+ 1755 01f0 0C000000 		.word	.LC2
+ 1756 01f4 00000000 		.word	g_q_input_evt
+ 1757 01f8 00000000 		.word	g_visible_tiles
+ 1758 01fc 00000000 		.word	g_q_gps_fix
+ 1759 0200 00000000 		.word	g_pak_ready
+ 1760 0204 00000000 		.word	g_gps_fix
+ 1761 0208 00000000 		.word	g_camera
+ 1762 020c 3C000000 		.word	.LC4
+ 1763 0210 00000000 		.word	g_gps_pos
+ 1764 0214 24000000 		.word	.LC3
+ 1765 0218 50655103 		.word	55666000
+ 1766 021c D0A32C1E 		.word	506242000
+ 1767 0220 F0F15103 		.word	55702000
+ 1768 0224 607A2F1E 		.word	506428000
+ 1769 0228 00000000 		.word	g_q_route_req
+ 1770 022c 00000000 		.word	.LC0
+ 1771 0230 50000000 		.word	.LC5
+ 1772 0234 04000000 		.word	.LC1
+ 1773 0238 70000000 		.word	.LC6
+ 1774              	.LBE51:
+ 1775              		.cfi_endproc
+ 1776              	.LFE167:
+ 1778              		.section	.rodata.s_map_img_dsc,"a"
+ 1779              		.align	2
+ 1782              	s_map_img_dsc:
+ 1783 0000 19       		.byte	25
+ 1784 0001 12       		.byte	18
+ 1785 0002 0000     		.short	0
+ 1786 0004 F000     		.short	240
+ 1787 0006 4001     		.short	320
+ 1788 0008 E001     		.short	480
+ 1789 000a 0000     		.space	2
+ 1790 000c 00580200 		.word	153600
+ 1791 0010 00000000 		.word	s_map_fb
+ 1792 0014 00000000 		.space	8
+ 1792      00000000 
+ 1793              		.section	.sdram,"aw"
+ 1794              		.align	2
+ 1797              	s_map_fb:
+ 1798 0000 00000000 		.space	153600
+ 1798      00000000 
+ 1798      00000000 
+ 1798      00000000 
+ARM GAS  /tmp/cccULq5X.s 			page 46
+
+
+ 1798      00000000 
+ 1799              		.text
+ 1800              	.Letext0:
+ 1801              		.file 2 "/usr/arm-none-eabi/include/machine/_default_types.h"
+ 1802              		.file 3 "/usr/arm-none-eabi/include/sys/_stdint.h"
+ 1803              		.file 4 "Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F/portmacro.h"
+ 1804              		.file 5 "Middlewares/Third_Party/FreeRTOS/Source/include/queue.h"
+ 1805              		.file 6 "Drivers/lvgl/include/lvgl/core/../lv_types.h"
+ 1806              		.file 7 "Drivers/lvgl/include/lvgl/core/lv_area.h"
+ 1807              		.file 8 "Drivers/lvgl/include/lvgl/core/../font/../draw/lv_color.h"
+ 1808              		.file 9 "Drivers/lvgl/include/lvgl/core/../font/../draw/lv_image_dsc.h"
+ 1809              		.file 10 "Drivers/lvgl/include/lvgl/core/lv_obj_style.h"
+ 1810              		.file 11 "Drivers/lvgl/include/lvgl/core/../indev/lv_indev.h"
+ 1811              		.file 12 "Drivers/lvgl/include/lvgl/widgets/lv_bar.h"
+ 1812              		.file 13 "Core/Inc/geo_math.h"
+ 1813              		.file 14 "Core/Inc/map_camera.h"
+ 1814              		.file 15 "Core/Inc/map_binary_formats.h"
+ 1815              		.file 16 "Core/Inc/tile_graph_cache.h"
+ 1816              		.file 17 "Core/Inc/pathfinder.h"
+ 1817              		.file 18 "Core/Inc/app.h"
+ 1818              		.file 19 "Middlewares/Third_Party/FreeRTOS/Source/include/task.h"
+ 1819              		.file 20 "Drivers/lvgl/include/lvgl/widgets/lv_label.h"
+ 1820              		.file 21 "Drivers/lvgl/include/lvgl/core/lv_obj_pos.h"
+ 1821              		.file 22 "Drivers/lvgl/include/lvgl/core/lv_obj_style_gen.h"
+ 1822              		.file 23 "Drivers/lvgl/include/lvgl/core/lv_obj.h"
+ 1823              		.file 24 "Drivers/lvgl/include/lvgl/widgets/lv_image.h"
+ 1824              		.file 25 "Drivers/lvgl/include/lvgl/core/../display/../core/lv_timer.h"
+ 1825              		.file 26 "Drivers/lvgl/include/lvgl/core/../display/lv_display.h"
+ 1826              		.file 27 "/usr/arm-none-eabi/include/string.h"
+ARM GAS  /tmp/cccULq5X.s 			page 47
 
 
 DEFINED SYMBOLS
                             *ABS*:00000000 ui_lvgl_task.c
-     /tmp/ccuGYnyw.s:21     .text.Draw_GPS_Marker:00000000 $t
-     /tmp/ccuGYnyw.s:26     .text.Draw_GPS_Marker:00000000 Draw_GPS_Marker
-     /tmp/ccuGYnyw.s:156    .text.Draw_GPS_Marker:0000006c $d
-     /tmp/ccuGYnyw.s:1163   .sdram:00000000 s_map_fb
-     /tmp/ccuGYnyw.s:161    .text.Request_Or_Get_Tile_Async:00000000 $t
-     /tmp/ccuGYnyw.s:166    .text.Request_Or_Get_Tile_Async:00000000 Request_Or_Get_Tile_Async
-     /tmp/ccuGYnyw.s:381    .text.Request_Or_Get_Tile_Async:000000dc $d
-     /tmp/ccuGYnyw.s:389    .text.Render_Visible_Tiles_To_MapFB:00000000 $t
-     /tmp/ccuGYnyw.s:394    .text.Render_Visible_Tiles_To_MapFB:00000000 Render_Visible_Tiles_To_MapFB
-     /tmp/ccuGYnyw.s:703    .text.Render_Visible_Tiles_To_MapFB:00000108 $d
-     /tmp/ccuGYnyw.s:713    .rodata.UI_LVGL_Task.str1.4:00000000 $d
-     /tmp/ccuGYnyw.s:735    .text.UI_LVGL_Task:00000000 $t
-     /tmp/ccuGYnyw.s:741    .text.UI_LVGL_Task:00000000 UI_LVGL_Task
-     /tmp/ccuGYnyw.s:1124   .text.UI_LVGL_Task:000001b8 $d
-     /tmp/ccuGYnyw.s:1148   .rodata.s_map_img_dsc:00000000 s_map_img_dsc
-     /tmp/ccuGYnyw.s:1145   .rodata.s_map_img_dsc:00000000 $d
-     /tmp/ccuGYnyw.s:1160   .sdram:00000000 $d
+     /tmp/cccULq5X.s:21     .text.Draw_Thick_Line_Clipped:00000000 $t
+     /tmp/cccULq5X.s:26     .text.Draw_Thick_Line_Clipped:00000000 Draw_Thick_Line_Clipped
+     /tmp/cccULq5X.s:274    .text.Draw_Thick_Line_Clipped:000000d8 $d
+     /tmp/cccULq5X.s:1797   .sdram:00000000 s_map_fb
+     /tmp/cccULq5X.s:279    .text.Draw_Pin_Marker:00000000 $t
+     /tmp/cccULq5X.s:284    .text.Draw_Pin_Marker:00000000 Draw_Pin_Marker
+     /tmp/cccULq5X.s:413    .text.Draw_Pin_Marker:00000068 $d
+     /tmp/cccULq5X.s:418    .text.Draw_GPS_Marker:00000000 $t
+     /tmp/cccULq5X.s:423    .text.Draw_GPS_Marker:00000000 Draw_GPS_Marker
+     /tmp/cccULq5X.s:553    .text.Draw_GPS_Marker:0000006c $d
+     /tmp/cccULq5X.s:558    .text.Request_Or_Get_Tile_Async:00000000 $t
+     /tmp/cccULq5X.s:563    .text.Request_Or_Get_Tile_Async:00000000 Request_Or_Get_Tile_Async
+     /tmp/cccULq5X.s:778    .text.Request_Or_Get_Tile_Async:000000dc $d
+     /tmp/cccULq5X.s:786    .text.Draw_Route_On_MapFB:00000000 $t
+     /tmp/cccULq5X.s:791    .text.Draw_Route_On_MapFB:00000000 Draw_Route_On_MapFB
+     /tmp/cccULq5X.s:974    .text.Draw_Route_On_MapFB:000000d0 $d
+     /tmp/cccULq5X.s:982    .text.Render_Visible_Tiles_To_MapFB:00000000 $t
+     /tmp/cccULq5X.s:987    .text.Render_Visible_Tiles_To_MapFB:00000000 Render_Visible_Tiles_To_MapFB
+     /tmp/cccULq5X.s:1299   .text.Render_Visible_Tiles_To_MapFB:0000010c $d
+     /tmp/cccULq5X.s:1309   .rodata.UI_LVGL_Task.str1.4:00000000 $d
+     /tmp/cccULq5X.s:1331   .text.UI_LVGL_Task:00000000 $t
+     /tmp/cccULq5X.s:1337   .text.UI_LVGL_Task:00000000 UI_LVGL_Task
+     /tmp/cccULq5X.s:1753   .text.UI_LVGL_Task:000001e8 $d
+     /tmp/cccULq5X.s:1782   .rodata.s_map_img_dsc:00000000 s_map_img_dsc
+     /tmp/cccULq5X.s:1779   .rodata.s_map_img_dsc:00000000 $d
+     /tmp/cccULq5X.s:1794   .sdram:00000000 $d
 
 UNDEFINED SYMBOLS
 xQueueGenericSend
@@ -1874,12 +2768,14 @@ g_pak_ready
 g_cache_clock
 g_tile_cache
 g_q_tile_req
-memset
+geo_coord_make
 map_camera_latlon_to_screen
+g_current_route
+g_camera
+memset
 g_palette_rgb565
 g_visible_tiles
 g_gps_pos
-g_camera
 lv_screen_active
 lv_image_create
 lv_image_set_src
@@ -1894,6 +2790,9 @@ lv_obj_center
 xQueueReceive
 map_camera_pan_pixels
 map_camera_get_visible_tiles
+ARM GAS  /tmp/cccULq5X.s 			page 48
+
+
 xTaskNotifyWait
 lv_obj_invalidate
 lv_label_set_text_fmt
@@ -1903,3 +2802,4 @@ map_camera_set_center
 g_q_input_evt
 g_q_gps_fix
 g_gps_fix
+g_q_route_req
