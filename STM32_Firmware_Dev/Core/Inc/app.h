@@ -153,7 +153,7 @@ void Pathfinder_Task(void *argument);
 void UI_LVGL_Task(void *argument);
 
 void Tile_Cache_Reset(void);
-void Tile_Palette_Hide_Pedestrian_Paths(void);
+void Tile_Palette_Hide_Pedestrian_Paths(uint8_t restore);
 
 #ifdef __cplusplus
 }

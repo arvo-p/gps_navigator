@@ -109,9 +109,27 @@ void Tile_Cache_Reset(void)
   }
 }
 
-void Tile_Palette_Hide_Pedestrian_Paths(void)
+void Tile_Palette_Hide_Pedestrian_Paths(uint8_t restore)
 {
+  static uint16_t saved_greenway = 0x9E73U; /* RGB(155, 205, 155) */
+  static uint16_t saved_footway  = 0xD617U; /* RGB(210, 195, 190) */
+
   uint16_t bg_col = g_palette_rgb565[PAL_IDX_BACKGROUND];
+
+  if (restore)
+  {
+	g_palette_rgb565[PAL_IDX_GREENWAY_TRACK] = saved_greenway;
+	g_palette_rgb565[PAL_IDX_FOOTWAY]        = saved_footway;
+	return;
+  }
+
+  /* Save original colors from tiles_z14.pak before overwriting */
+  if (g_palette_rgb565[PAL_IDX_GREENWAY_TRACK] != bg_col)
+  {
+	saved_greenway = g_palette_rgb565[PAL_IDX_GREENWAY_TRACK];
+	saved_footway  = g_palette_rgb565[PAL_IDX_FOOTWAY];
+  }
+
   g_palette_rgb565[PAL_IDX_GREENWAY_TRACK] = bg_col;
   g_palette_rgb565[PAL_IDX_FOOTWAY]        = bg_col;
 }
@@ -132,7 +150,19 @@ static void GPS_Library_Init(void)
   memset(&g_current_route, 0, sizeof(RouteResult));
 
   Tile_Cache_Reset();
-  Tile_Palette_Hide_Pedestrian_Paths();
+}
+
+volatile RoutingProfile g_user_profile = PROFILE_STROLLER; 
+void App_Set_User_Profile(RoutingProfile profile){
+	if(g_user_profile == profile) return;
+
+	g_user_profile = profile;
+    pathfinder_set_profile(&g_pathfinder, profile);
+
+    if (profile == PROFILE_CAR) 
+		Tile_Palette_Hide_Pedestrian_Paths((uint8_t)0);
+	else
+		Tile_Palette_Hide_Pedestrian_Paths((uint8_t)1);
 }
 
 /*============================================================================
