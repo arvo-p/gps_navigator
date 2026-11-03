@@ -19,10 +19,6 @@ void Pathfinder_Task(void *argument)
     {
       xSemaphoreTake(g_mutex_sd, portMAX_DELAY);
       pathfinder_find_route(&g_pathfinder, req.start, req.goal, &g_current_route);
-      if (g_current_route.found)
-      {
-        pathfinder_load_geometry(&g_pathfinder, &g_current_route);
-      }
       xSemaphoreGive(g_mutex_sd);
 
       xTaskNotify(g_ui_task_hdl, NOTIFY_ROUTE_READY, eSetBits);

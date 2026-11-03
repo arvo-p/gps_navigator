@@ -110,6 +110,7 @@ void Tile_Loader_Task(void *argument)
       if (Init_Tile_Pak_Locked(PATH_TILES_Z14, &s_pak_z14, &s_hdr_z14,
                                g_palette_rgb565, s_clmt_z14, 64U))
       {
+        Tile_Palette_Hide_Pedestrian_Paths();
         g_pak_ready = true;
       }
     }

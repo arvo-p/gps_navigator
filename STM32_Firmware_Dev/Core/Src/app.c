@@ -109,6 +109,13 @@ void Tile_Cache_Reset(void)
   }
 }
 
+void Tile_Palette_Hide_Pedestrian_Paths(void)
+{
+  uint16_t bg_col = g_palette_rgb565[PAL_IDX_BACKGROUND];
+  g_palette_rgb565[PAL_IDX_GREENWAY_TRACK] = bg_col;
+  g_palette_rgb565[PAL_IDX_FOOTWAY]        = bg_col;
+}
+
 static void GPS_Library_Init(void)
 {
   /* Step A: Starting Coordinate (Liège center: 50.6242000° N, 5.5666000° E) */
@@ -125,6 +132,7 @@ static void GPS_Library_Init(void)
   memset(&g_current_route, 0, sizeof(RouteResult));
 
   Tile_Cache_Reset();
+  Tile_Palette_Hide_Pedestrian_Paths();
 }
 
 /*============================================================================

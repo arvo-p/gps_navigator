@@ -341,7 +341,8 @@ static bool run_local_astar(Pathfinder *pf, GeoCoord start, GeoCoord goal,
         seg->street_id = edge->street_id;
         seg->geom_offset = edge->geom_offset;
         seg->geom_count = edge->geom_count;
-        seg->geom_path = p_graph->geom_path;
+        seg->grid_lat = (int16_t)p_graph->grid_lat;
+        seg->grid_lon = (int16_t)p_graph->grid_lon;
 
         curr_key = p_key;
     }
@@ -445,7 +446,8 @@ static bool run_backbone_astar(Pathfinder *pf, int32_t start_bb_node, int32_t go
         seg->street_id = edge->street_id;
         seg->geom_offset = edge->geom_offset;
         seg->geom_count = edge->geom_count;
-        seg->geom_path = bb->geom_path;
+        seg->grid_lat = -1;
+        seg->grid_lon = -1;
 
         curr = p;
     }
@@ -612,14 +614,15 @@ bool pathfinder_find_route(Pathfinder *pf, GeoCoord start, GeoCoord goal, RouteR
 }
 
 bool pathfinder_load_geometry(Pathfinder *pf, RouteResult *out_route) {
-    (void)pf;
-    if (!out_route || out_route->segment_count == 0) return false;
+    if (!pf || !pf->cache || !out_route || out_route->segment_count == 0) return false;
 
     out_route->geom_point_count = 0;
 
     static FIL f_geom;
     bool file_open = false;
-    const char *current_open_path = NULL;
+    int16_t open_glat = -32768;
+    int16_t open_glon = -32768;
+    char geom_path[TILE_GRAPH_PATH_MAX];
 
     for (int32_t i = 0; i < out_route->segment_count; ++i) {
         const RouteSegment *seg = &out_route->segments[i];
@@ -633,18 +636,38 @@ bool pathfinder_load_geometry(Pathfinder *pf, RouteResult *out_route) {
         }
 
         /* Read intermediate curves from *_geom.bin via FatFs */
-        if (seg->geom_count > 0 && seg->geom_path && seg->geom_path[0] != '\0') {
-            if (!current_open_path || strcmp(current_open_path, seg->geom_path) != 0) {
+        if (seg->geom_count > 0) {
+            if (!file_open || seg->grid_lat != open_glat || seg->grid_lon != open_glon) {
                 if (file_open) {
                     f_close(&f_geom);
                     file_open = false;
                 }
-                if (f_open(&f_geom, seg->geom_path, FA_READ) == FR_OK) {
-                    file_open = true;
-                    current_open_path = seg->geom_path;
+                if (seg->grid_lat < 0 || seg->grid_lon < 0) {
+                    if (out_route->routing_profile == (int)PROFILE_STROLLER) {
+                        snprintf(geom_path, sizeof(geom_path), "%s/stroller_backbone_geom.bin", pf->cache->base_dir);
+                        if (f_open(&f_geom, geom_path, FA_READ) == FR_OK) {
+                            file_open = true;
+                        } else {
+                            snprintf(geom_path, sizeof(geom_path), "%s/backbone_geom.bin", pf->cache->base_dir);
+                            if (f_open(&f_geom, geom_path, FA_READ) == FR_OK) {
+                                file_open = true;
+                            }
+                        }
+                    } else {
+                        snprintf(geom_path, sizeof(geom_path), "%s/backbone_geom.bin", pf->cache->base_dir);
+                        if (f_open(&f_geom, geom_path, FA_READ) == FR_OK) {
+                            file_open = true;
+                        }
+                    }
                 } else {
-                    current_open_path = NULL;
+                    snprintf(geom_path, sizeof(geom_path), "%s/local_%03d_%03d_geom.bin",
+                             pf->cache->base_dir, (int)seg->grid_lat, (int)seg->grid_lon);
+                    if (f_open(&f_geom, geom_path, FA_READ) == FR_OK) {
+                        file_open = true;
+                    }
                 }
+                open_glat = seg->grid_lat;
+                open_glon = seg->grid_lon;
             }
 
             if (file_open) {

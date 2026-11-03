@@ -25,7 +25,8 @@ typedef struct {
     uint32_t street_id;
     uint32_t geom_offset;
     uint16_t geom_count;
-    const char *geom_path;
+    int16_t grid_lat;          /**< Local tile grid_lat, or -1 for backbone */
+    int16_t grid_lon;          /**< Local tile grid_lon, or -1 for backbone */
 } RouteSegment;
 
 typedef struct {

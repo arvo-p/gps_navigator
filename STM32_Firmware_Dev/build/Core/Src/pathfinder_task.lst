@@ -1,4 +1,4 @@
-ARM GAS  /tmp/ccZ889bV.s 			page 1
+ARM GAS  /tmp/ccm9bHNO.s 			page 1
 
 
    1              		.cpu cortex-m4
@@ -54,145 +54,113 @@ ARM GAS  /tmp/ccZ889bV.s 			page 1
   40 0002 87B0     		sub	sp, sp, #28
   41              	.LCFI1:
   42              		.cfi_def_cfa_offset 32
-  43 0004 0DE0     		b	.L2
-  44              	.LVL1:
-  45              	.L3:
+  43              	.LVL1:
+  44              	.L2:
   13:Core/Src/pathfinder_task.c ****   (void)argument;
-ARM GAS  /tmp/ccZ889bV.s 			page 2
+  45              		.loc 1 13 3 is_stmt 1 view .LVU2
+ARM GAS  /tmp/ccm9bHNO.s 			page 2
 
 
   14:Core/Src/pathfinder_task.c ****   RouteRequest_t req;
+  46              		.loc 1 14 3 view .LVU3
   15:Core/Src/pathfinder_task.c **** 
   16:Core/Src/pathfinder_task.c ****   for (;;)
+  47              		.loc 1 16 3 view .LVU4
   17:Core/Src/pathfinder_task.c ****   {
   18:Core/Src/pathfinder_task.c ****     if (xQueueReceive(g_q_route_req, &req, portMAX_DELAY) == pdPASS)
+  48              		.loc 1 18 5 view .LVU5
+  49              		.loc 1 18 9 is_stmt 0 view .LVU6
+  50 0004 4FF0FF32 		mov	r2, #-1
+  51 0008 02A9     		add	r1, sp, #8
+  52 000a 124B     		ldr	r3, .L5
+  53 000c 1868     		ldr	r0, [r3]
+  54 000e FFF7FEFF 		bl	xQueueReceive
+  55              	.LVL2:
+  56              		.loc 1 18 8 discriminator 1 view .LVU7
+  57 0012 0128     		cmp	r0, #1
+  58 0014 F6D1     		bne	.L2
   19:Core/Src/pathfinder_task.c ****     {
   20:Core/Src/pathfinder_task.c ****       xSemaphoreTake(g_mutex_sd, portMAX_DELAY);
+  59              		.loc 1 20 7 is_stmt 1 view .LVU8
+  60 0016 104C     		ldr	r4, .L5+4
+  61 0018 4FF0FF31 		mov	r1, #-1
+  62 001c 2068     		ldr	r0, [r4]
+  63 001e FFF7FEFF 		bl	xQueueSemaphoreTake
+  64              	.LVL3:
   21:Core/Src/pathfinder_task.c ****       pathfinder_find_route(&g_pathfinder, req.start, req.goal, &g_current_route);
-  22:Core/Src/pathfinder_task.c ****       if (g_current_route.found)
-  23:Core/Src/pathfinder_task.c ****       {
-  24:Core/Src/pathfinder_task.c ****         pathfinder_load_geometry(&g_pathfinder, &g_current_route);
-  25:Core/Src/pathfinder_task.c ****       }
-  26:Core/Src/pathfinder_task.c ****       xSemaphoreGive(g_mutex_sd);
-  46              		.loc 1 26 7 is_stmt 1 view .LVU2
-  47 0006 0023     		movs	r3, #0
-  48 0008 1A46     		mov	r2, r3
-  49 000a 1946     		mov	r1, r3
-  50 000c 1748     		ldr	r0, .L6
-  51 000e 0068     		ldr	r0, [r0]
-  52 0010 FFF7FEFF 		bl	xQueueGenericSend
-  53              	.LVL2:
-  27:Core/Src/pathfinder_task.c **** 
-  28:Core/Src/pathfinder_task.c ****       xTaskNotify(g_ui_task_hdl, NOTIFY_ROUTE_READY, eSetBits);
-  54              		.loc 1 28 7 view .LVU3
-  55 0014 0023     		movs	r3, #0
-  56 0016 0122     		movs	r2, #1
-  57 0018 0821     		movs	r1, #8
-  58 001a 1548     		ldr	r0, .L6+4
-  59 001c 0068     		ldr	r0, [r0]
-  60 001e FFF7FEFF 		bl	xTaskGenericNotify
-  61              	.LVL3:
-  62              	.L2:
-  13:Core/Src/pathfinder_task.c ****   (void)argument;
-  63              		.loc 1 13 3 view .LVU4
-  14:Core/Src/pathfinder_task.c **** 
-  64              		.loc 1 14 3 view .LVU5
-  16:Core/Src/pathfinder_task.c ****   {
-  65              		.loc 1 16 3 view .LVU6
-  18:Core/Src/pathfinder_task.c ****     {
-  66              		.loc 1 18 5 view .LVU7
-  18:Core/Src/pathfinder_task.c ****     {
-  67              		.loc 1 18 9 is_stmt 0 view .LVU8
-  68 0022 4FF0FF32 		mov	r2, #-1
-  69 0026 02A9     		add	r1, sp, #8
-  70 0028 124B     		ldr	r3, .L6+8
-  71 002a 1868     		ldr	r0, [r3]
-  72 002c FFF7FEFF 		bl	xQueueReceive
-  73              	.LVL4:
-  18:Core/Src/pathfinder_task.c ****     {
-  74              		.loc 1 18 8 discriminator 1 view .LVU9
-  75 0030 0128     		cmp	r0, #1
-  76 0032 F6D1     		bne	.L2
-  20:Core/Src/pathfinder_task.c ****       pathfinder_find_route(&g_pathfinder, req.start, req.goal, &g_current_route);
-  77              		.loc 1 20 7 is_stmt 1 view .LVU10
-  78 0034 4FF0FF31 		mov	r1, #-1
-  79 0038 0C4B     		ldr	r3, .L6
-  80 003a 1868     		ldr	r0, [r3]
-ARM GAS  /tmp/ccZ889bV.s 			page 3
-
-
-  81 003c FFF7FEFF 		bl	xQueueSemaphoreTake
+  65              		.loc 1 21 7 view .LVU9
+  66 0022 0E4B     		ldr	r3, .L5+8
+  67 0024 0193     		str	r3, [sp, #4]
+  68 0026 059B     		ldr	r3, [sp, #20]
+  69 0028 0093     		str	r3, [sp]
+  70 002a 049B     		ldr	r3, [sp, #16]
+  71 002c 02AA     		add	r2, sp, #8
+  72 002e 06CA     		ldm	r2, {r1, r2}
+  73 0030 0B48     		ldr	r0, .L5+12
+  74 0032 FFF7FEFF 		bl	pathfinder_find_route
+  75              	.LVL4:
+  22:Core/Src/pathfinder_task.c ****       xSemaphoreGive(g_mutex_sd);
+  76              		.loc 1 22 7 view .LVU10
+  77 0036 0023     		movs	r3, #0
+  78 0038 1A46     		mov	r2, r3
+  79 003a 1946     		mov	r1, r3
+  80 003c 2068     		ldr	r0, [r4]
+  81 003e FFF7FEFF 		bl	xQueueGenericSend
   82              	.LVL5:
-  21:Core/Src/pathfinder_task.c ****       if (g_current_route.found)
-  83              		.loc 1 21 7 view .LVU11
-  84 0040 0D4C     		ldr	r4, .L6+12
-  85 0042 0194     		str	r4, [sp, #4]
-  86 0044 059B     		ldr	r3, [sp, #20]
-  87 0046 0093     		str	r3, [sp]
-  88 0048 049B     		ldr	r3, [sp, #16]
-  89 004a 02AA     		add	r2, sp, #8
-  90 004c 06CA     		ldm	r2, {r1, r2}
-  91 004e 0B48     		ldr	r0, .L6+16
-  92 0050 FFF7FEFF 		bl	pathfinder_find_route
-  93              	.LVL6:
-  22:Core/Src/pathfinder_task.c ****       {
-  94              		.loc 1 22 7 view .LVU12
-  22:Core/Src/pathfinder_task.c ****       {
-  95              		.loc 1 22 26 is_stmt 0 view .LVU13
-  96 0054 04F5C834 		add	r4, r4, #102400
-  97 0058 237C     		ldrb	r3, [r4, #16]	@ zero_extendqisi2
-  22:Core/Src/pathfinder_task.c ****       {
-  98              		.loc 1 22 10 view .LVU14
-  99 005a 002B     		cmp	r3, #0
- 100 005c D3D0     		beq	.L3
-  24:Core/Src/pathfinder_task.c ****       }
- 101              		.loc 1 24 9 is_stmt 1 view .LVU15
- 102 005e A4F5C831 		sub	r1, r4, #102400
- 103 0062 0648     		ldr	r0, .L6+16
- 104 0064 FFF7FEFF 		bl	pathfinder_load_geometry
- 105              	.LVL7:
- 106 0068 CDE7     		b	.L3
- 107              	.L7:
- 108 006a 00BF     		.align	2
- 109              	.L6:
- 110 006c 00000000 		.word	g_mutex_sd
- 111 0070 00000000 		.word	g_ui_task_hdl
- 112 0074 00000000 		.word	g_q_route_req
- 113 0078 00000000 		.word	g_current_route
- 114 007c 00000000 		.word	g_pathfinder
- 115              		.cfi_endproc
- 116              	.LFE161:
- 118              		.text
- 119              	.Letext0:
- 120              		.file 2 "/usr/arm-none-eabi/include/machine/_default_types.h"
- 121              		.file 3 "/usr/arm-none-eabi/include/sys/_stdint.h"
- 122              		.file 4 "Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F/portmacro.h"
- 123              		.file 5 "Middlewares/Third_Party/FreeRTOS/Source/include/task.h"
- 124              		.file 6 "Middlewares/Third_Party/FreeRTOS/Source/include/queue.h"
- 125              		.file 7 "Middlewares/Third_Party/FreeRTOS/Source/include/semphr.h"
- 126              		.file 8 "Core/Inc/geo_math.h"
- 127              		.file 9 "Core/Inc/map_binary_formats.h"
- 128              		.file 10 "Core/Inc/tile_graph_cache.h"
- 129              		.file 11 "Core/Inc/pathfinder.h"
- 130              		.file 12 "Core/Inc/app.h"
-ARM GAS  /tmp/ccZ889bV.s 			page 4
+  23:Core/Src/pathfinder_task.c **** 
+  24:Core/Src/pathfinder_task.c ****       xTaskNotify(g_ui_task_hdl, NOTIFY_ROUTE_READY, eSetBits);
+  83              		.loc 1 24 7 view .LVU11
+  84 0042 0023     		movs	r3, #0
+  85 0044 0122     		movs	r2, #1
+  86 0046 0821     		movs	r1, #8
+  87 0048 0648     		ldr	r0, .L5+16
+  88 004a 0068     		ldr	r0, [r0]
+  89 004c FFF7FEFF 		bl	xTaskGenericNotify
+  90              	.LVL6:
+  91 0050 D8E7     		b	.L2
+ARM GAS  /tmp/ccm9bHNO.s 			page 3
+
+
+  92              	.L6:
+  93 0052 00BF     		.align	2
+  94              	.L5:
+  95 0054 00000000 		.word	g_q_route_req
+  96 0058 00000000 		.word	g_mutex_sd
+  97 005c 00000000 		.word	g_current_route
+  98 0060 00000000 		.word	g_pathfinder
+  99 0064 00000000 		.word	g_ui_task_hdl
+ 100              		.cfi_endproc
+ 101              	.LFE161:
+ 103              		.text
+ 104              	.Letext0:
+ 105              		.file 2 "/usr/arm-none-eabi/include/machine/_default_types.h"
+ 106              		.file 3 "/usr/arm-none-eabi/include/sys/_stdint.h"
+ 107              		.file 4 "Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F/portmacro.h"
+ 108              		.file 5 "Middlewares/Third_Party/FreeRTOS/Source/include/task.h"
+ 109              		.file 6 "Middlewares/Third_Party/FreeRTOS/Source/include/queue.h"
+ 110              		.file 7 "Middlewares/Third_Party/FreeRTOS/Source/include/semphr.h"
+ 111              		.file 8 "Core/Inc/geo_math.h"
+ 112              		.file 9 "Core/Inc/map_binary_formats.h"
+ 113              		.file 10 "Core/Inc/tile_graph_cache.h"
+ 114              		.file 11 "Core/Inc/pathfinder.h"
+ 115              		.file 12 "Core/Inc/app.h"
+ARM GAS  /tmp/ccm9bHNO.s 			page 4
 
 
 DEFINED SYMBOLS
                             *ABS*:00000000 pathfinder_task.c
-     /tmp/ccZ889bV.s:21     .text.Pathfinder_Task:00000000 $t
-     /tmp/ccZ889bV.s:27     .text.Pathfinder_Task:00000000 Pathfinder_Task
-     /tmp/ccZ889bV.s:110    .text.Pathfinder_Task:0000006c $d
+     /tmp/ccm9bHNO.s:21     .text.Pathfinder_Task:00000000 $t
+     /tmp/ccm9bHNO.s:27     .text.Pathfinder_Task:00000000 Pathfinder_Task
+     /tmp/ccm9bHNO.s:95     .text.Pathfinder_Task:00000054 $d
 
 UNDEFINED SYMBOLS
-xQueueGenericSend
-xTaskGenericNotify
 xQueueReceive
 xQueueSemaphoreTake
 pathfinder_find_route
-pathfinder_load_geometry
-g_mutex_sd
-g_ui_task_hdl
+xQueueGenericSend
+xTaskGenericNotify
 g_q_route_req
+g_mutex_sd
 g_current_route
 g_pathfinder
+g_ui_task_hdl

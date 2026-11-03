@@ -41,6 +41,17 @@ extern "C" {
 #define PATH_TILES_Z14        "tiles/tiles_z14.pak"
 #define PATH_TILES_Z16        "tiles/tiles_z16.pak"
 
+/* 8-bit Indexed Tile Palette Indices (matching PALETTE_16_DARK) */
+#define PAL_IDX_BACKGROUND      0U
+#define PAL_IDX_WATER           1U
+#define PAL_IDX_MINOR_ROAD      2U
+#define PAL_IDX_SECONDARY_ROAD  3U
+#define PAL_IDX_PRIMARY_ROAD    4U
+#define PAL_IDX_MOTORWAY        5U
+#define PAL_IDX_FOREST          10U
+#define PAL_IDX_GREENWAY_TRACK  11U
+#define PAL_IDX_FOOTWAY         12U
+
 /* Task Priorities */
 #define PRIO_PATHFINDER       (tskIDLE_PRIORITY + 0)
 #define PRIO_TILE_LOADER      (tskIDLE_PRIORITY + 1)
@@ -142,6 +153,7 @@ void Pathfinder_Task(void *argument);
 void UI_LVGL_Task(void *argument);
 
 void Tile_Cache_Reset(void);
+void Tile_Palette_Hide_Pedestrian_Paths(void);
 
 #ifdef __cplusplus
 }
