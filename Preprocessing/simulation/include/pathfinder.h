@@ -71,6 +71,14 @@ void pathfinder_set_profile(Pathfinder *pf, RoutingProfile profile);
 bool pathfinder_find_route(Pathfinder *pf, GeoCoord start, GeoCoord goal, RouteResult *out_route);
 
 /**
+ * @brief Reroute from an off-track GPS position back onto an existing route by
+ *        selecting nearby candidate nodes from the existing route and taking the
+ *        path to the candidate closest in road distance.
+ */
+bool pathfinder_reroute_to_existing(Pathfinder *pf, GeoCoord current_pos,
+                                    int32_t current_seg_idx, RouteResult *io_route);
+
+/**
  * @brief Load intermediate curve geometry points from *_geom.bin for the route.
  */
 bool pathfinder_load_geometry(Pathfinder *pf, RouteResult *out_route);

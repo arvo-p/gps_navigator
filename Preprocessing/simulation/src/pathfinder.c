@@ -736,6 +736,316 @@ bool pathfinder_find_route(Pathfinder *pf, GeoCoord start, GeoCoord goal, RouteR
     return false;
 }
 
+typedef struct {
+    int32_t lat_e7;
+    int32_t lon_e7;
+    int32_t rejoin_seg_idx;
+} RerouteCandidate;
+
+#define MAX_REROUTE_CANDIDATES 72
+
+bool pathfinder_reroute_to_existing(Pathfinder *pf, GeoCoord current_pos,
+                                    int32_t current_seg_idx, RouteResult *io_route) {
+    if (!pf || !io_route || !io_route->found || io_route->segment_count <= 0) {
+        return false;
+    }
+
+    if (current_seg_idx < 0) current_seg_idx = 0;
+    if (current_seg_idx >= io_route->segment_count) {
+        current_seg_idx = io_route->segment_count - 1;
+    }
+
+    /* Final destination in case full fallback reroute is needed */
+    const RouteSegment *last_seg = &io_route->segments[io_route->segment_count - 1];
+    GeoCoord final_goal = geo_coord_make(last_seg->end_lat_e7, last_seg->end_lon_e7);
+
+    /* 1. Collect candidate rejoin nodes from a segment window around current_seg_idx */
+    int32_t s_start = (current_seg_idx > 2) ? (current_seg_idx - 2) : 0;
+    int32_t s_end   = current_seg_idx + 30;
+    if (s_end >= io_route->segment_count) {
+        s_end = io_route->segment_count - 1;
+    }
+
+    RerouteCandidate candidates[MAX_REROUTE_CANDIDATES];
+    int32_t cand_count = 0;
+
+    for (int32_t s = s_start; s <= s_end && cand_count < MAX_REROUTE_CANDIDATES; ++s) {
+        const RouteSegment *seg = &io_route->segments[s];
+
+        /* Add segment start node (splicing before segment s) */
+        bool dup_start = false;
+        for (int32_t c = 0; c < cand_count; ++c) {
+            if (candidates[c].lat_e7 == seg->start_lat_e7 &&
+                candidates[c].lon_e7 == seg->start_lon_e7) {
+                dup_start = true;
+                break;
+            }
+        }
+        if (!dup_start && cand_count < MAX_REROUTE_CANDIDATES) {
+            candidates[cand_count].lat_e7 = seg->start_lat_e7;
+            candidates[cand_count].lon_e7 = seg->start_lon_e7;
+            candidates[cand_count].rejoin_seg_idx = s;
+            cand_count++;
+        }
+
+        /* Add segment end node (splicing before segment s + 1) */
+        bool dup_end = false;
+        for (int32_t c = 0; c < cand_count; ++c) {
+            if (candidates[c].lat_e7 == seg->end_lat_e7 &&
+                candidates[c].lon_e7 == seg->end_lon_e7) {
+                dup_end = true;
+                break;
+            }
+        }
+        if (!dup_end && cand_count < MAX_REROUTE_CANDIDATES) {
+            candidates[cand_count].lat_e7 = seg->end_lat_e7;
+            candidates[cand_count].lon_e7 = seg->end_lon_e7;
+            candidates[cand_count].rejoin_seg_idx = s + 1;
+            cand_count++;
+        }
+    }
+
+    if (cand_count == 0) {
+        return pathfinder_find_route(pf, current_pos, final_goal, io_route);
+    }
+
+    /* 2. Snap current_pos to local tile graph */
+    int32_t start_glat, start_glon;
+    geo_coord_to_grid(current_pos.lat_e7, current_pos.lon_e7, &start_glat, &start_glon);
+
+    TileGraph *start_graph = tile_graph_cache_get_tile(pf->cache, start_glat, start_glon);
+    if (!start_graph || start_graph->node_count == 0) {
+        return pathfinder_find_route(pf, current_pos, final_goal, io_route);
+    }
+
+    int32_t start_node_idx = -1;
+    uint32_t dist_snap = 0xFFFFFFFFU;
+    if (!tile_graph_snap_node_for_profile(start_graph, current_pos.lat_e7, current_pos.lon_e7,
+                                          1, pf->profile, &start_node_idx, &dist_snap)) {
+        return pathfinder_find_route(pf, current_pos, final_goal, io_route);
+    }
+
+    /* 3. Multi-tile local Dijkstra ordered by road distance (length_m) */
+    SessionTile session[MAX_SESSION_TILES];
+    int32_t session_count = 0;
+
+    tile_graph_pin(start_graph);
+    session[0].graph = start_graph;
+    session[0].grid_lat = start_glat;
+    session[0].grid_lon = start_glon;
+    session[0].g_scores = s_local_g_scores[0];
+    session[0].came_from_keys = s_local_came_from_keys[0];
+    session[0].came_from_edges = s_local_came_from_edges[0];
+    memset(session[0].g_scores, 0xFF, (size_t)start_graph->node_count * sizeof(uint32_t));
+    session_count = 1;
+
+    uint32_t start_key = make_node_key(0, (uint32_t)start_node_idx);
+    session[0].g_scores[start_node_idx] = 0;
+
+    astar_heap_init(&s_astar_heap);
+    astar_heap_push(&s_astar_heap, start_key, 0, 0);
+
+    bool candidate_reached = false;
+    uint32_t winning_key = 0;
+    int32_t rejoin_seg_idx = -1;
+
+    /* Cap local rejoin search at 10 km road distance */
+    const uint32_t max_rejoin_road_m = 10000U;
+
+    while (!astar_heap_is_empty(&s_astar_heap)) {
+        HeapEntry top;
+        astar_heap_pop(&s_astar_heap, &top);
+
+        int32_t u_slot = key_to_slot(top.node_key);
+        uint32_t u_idx = key_to_idx(top.node_key);
+
+        if (top.g_cost > session[u_slot].g_scores[u_idx]) {
+            continue;
+        }
+        if (top.g_cost > max_rejoin_road_m) {
+            break;
+        }
+
+        const TileGraph *u_graph = session[u_slot].graph;
+        const NodeRecord *u_node = &u_graph->nodes[u_idx];
+
+        /* Check if popped node matches any candidate (require >= 1 detour edge if start_key itself was a route node) */
+        if (top.node_key != start_key) {
+            for (int32_t c = 0; c < cand_count; ++c) {
+                if (u_node->lat_scaled == candidates[c].lat_e7 &&
+                    u_node->lon_scaled == candidates[c].lon_e7) {
+                    candidate_reached = true;
+                    winning_key = top.node_key;
+                    rejoin_seg_idx = candidates[c].rejoin_seg_idx;
+                    break;
+                }
+            }
+            if (candidate_reached) {
+                break;
+            }
+        }
+
+        for (uint16_t e = 0; e < u_node->edge_count; ++e) {
+            uint32_t edge_idx = u_node->first_edge + e;
+            if (edge_idx >= u_graph->edge_count) continue;
+            const EdgeRecord *edge = &u_graph->edges[edge_idx];
+            if (!edge_allowed_for_profile(edge, pf->profile)) continue;
+
+            uint32_t v_idx = edge->target_idx;
+            if (v_idx >= u_graph->node_count) continue;
+
+            const NodeRecord *v_node = &u_graph->nodes[v_idx];
+            int32_t v_slot = u_slot;
+            uint32_t v_local_idx = v_idx;
+
+            int32_t v_glat, v_glon;
+            geo_coord_to_grid(v_node->lat_scaled, v_node->lon_scaled, &v_glat, &v_glon);
+
+            if (v_glat != session[u_slot].grid_lat || v_glon != session[u_slot].grid_lon) {
+                int32_t found_slot = -1;
+                for (int32_t s = 0; s < session_count; ++s) {
+                    if (session[s].grid_lat == v_glat && session[s].grid_lon == v_glon) {
+                        found_slot = s;
+                        break;
+                    }
+                }
+
+                if (found_slot < 0 && session_count < MAX_SESSION_TILES) {
+                    TileGraph *neighbor_graph = tile_graph_cache_get_tile(pf->cache, v_glat, v_glon);
+                    if (neighbor_graph && neighbor_graph->node_count > 0) {
+                        tile_graph_pin(neighbor_graph);
+                        found_slot = session_count++;
+                        session[found_slot].graph = neighbor_graph;
+                        session[found_slot].grid_lat = v_glat;
+                        session[found_slot].grid_lon = v_glon;
+                        session[found_slot].g_scores = s_local_g_scores[found_slot];
+                        session[found_slot].came_from_keys = s_local_came_from_keys[found_slot];
+                        session[found_slot].came_from_edges = s_local_came_from_edges[found_slot];
+                        memset(session[found_slot].g_scores, 0xFF, (size_t)neighbor_graph->node_count * sizeof(uint32_t));
+                    }
+                }
+
+                if (found_slot >= 0) {
+                    int32_t matched_idx = -1;
+                    if (tile_graph_find_matching_node(session[found_slot].graph,
+                                                      v_node->lat_scaled, v_node->lon_scaled,
+                                                      &matched_idx)) {
+                        v_slot = found_slot;
+                        v_local_idx = (uint32_t)matched_idx;
+                    }
+                }
+            }
+
+            /* Road distance in meters as the step cost */
+            uint32_t step_dist_m = (edge->length_m > 0) ? (uint32_t)edge->length_m : 1U;
+            uint32_t tentative_g = top.g_cost + step_dist_m;
+            if (tentative_g < session[v_slot].g_scores[v_local_idx]) {
+                session[v_slot].g_scores[v_local_idx] = tentative_g;
+                session[v_slot].came_from_keys[v_local_idx] = top.node_key;
+                session[v_slot].came_from_edges[v_local_idx] = edge_idx;
+
+                uint32_t v_key = make_node_key(v_slot, v_local_idx);
+                astar_heap_push(&s_astar_heap, v_key, tentative_g, tentative_g);
+            }
+        }
+    }
+
+    if (!candidate_reached || rejoin_seg_idx < 0) {
+        for (int k = 0; k < session_count; ++k) {
+            tile_graph_unpin(session[k].graph);
+        }
+        return pathfinder_find_route(pf, current_pos, final_goal, io_route);
+    }
+
+    /* 4. Reconstruct detour segments into s_temp_segs (in reverse order) */
+    int32_t detour_count = 0;
+    uint32_t curr_key = winning_key;
+
+    while (curr_key != start_key && detour_count < ROUTE_MAX_SEGMENTS) {
+        int32_t c_slot = key_to_slot(curr_key);
+        uint32_t c_idx = key_to_idx(curr_key);
+
+        uint32_t p_key = session[c_slot].came_from_keys[c_idx];
+        uint32_t e_idx = session[c_slot].came_from_edges[c_idx];
+
+        int32_t p_slot = key_to_slot(p_key);
+        uint32_t p_idx = key_to_idx(p_key);
+
+        const TileGraph *p_graph = session[p_slot].graph;
+        const NodeRecord *p_node = &p_graph->nodes[p_idx];
+        const EdgeRecord *edge = &p_graph->edges[e_idx];
+        const NodeRecord *end_node = &p_graph->nodes[edge->target_idx];
+
+        RouteSegment *seg = &s_temp_segs[detour_count++];
+        seg->start_lat_e7 = p_node->lat_scaled;
+        seg->start_lon_e7 = p_node->lon_scaled;
+        seg->end_lat_e7 = end_node->lat_scaled;
+        seg->end_lon_e7 = end_node->lon_scaled;
+        seg->length_m = edge->length_m;
+        seg->cost_sec = edge_travel_time_sec(edge, pf->profile);
+        seg->street_id = edge->street_id;
+        seg->geom_offset = edge->geom_offset;
+        seg->geom_count = edge->geom_count;
+        seg->start_node_flags = p_node->flags;
+        seg->end_node_flags = end_node->flags;
+        seg->geom_start_idx = 0;
+        seg->geom_end_idx = 0;
+        seg->out_degree = count_forward_branches(p_graph, p_idx, edge->target_idx, pf->profile);
+        if (detour_count >= 2) {
+            seg->fork_dir = detect_fork_direction(p_graph, p_idx, edge->target_idx,
+                                                  s_temp_segs[detour_count - 2].end_lat_e7,
+                                                  s_temp_segs[detour_count - 2].end_lon_e7,
+                                                  pf->profile);
+        } else if (rejoin_seg_idx < io_route->segment_count) {
+            seg->fork_dir = detect_fork_direction(p_graph, p_idx, edge->target_idx,
+                                                  io_route->segments[rejoin_seg_idx].end_lat_e7,
+                                                  io_route->segments[rejoin_seg_idx].end_lon_e7,
+                                                  pf->profile);
+        } else {
+            seg->fork_dir = 0;
+        }
+        seg->geom_path = p_graph->geom_path;
+
+        curr_key = p_key;
+    }
+
+    for (int k = 0; k < session_count; ++k) {
+        tile_graph_unpin(session[k].graph);
+    }
+
+    /* 5. Splice detour_segs[0 .. detour_count - 1] before io_route->segments[rejoin_seg_idx ..] */
+    int32_t tail_count = (rejoin_seg_idx < io_route->segment_count)
+                         ? (io_route->segment_count - rejoin_seg_idx)
+                         : 0;
+    if (detour_count + tail_count > ROUTE_MAX_SEGMENTS) {
+        tail_count = ROUTE_MAX_SEGMENTS - detour_count;
+        if (tail_count < 0) tail_count = 0;
+    }
+
+    if (tail_count > 0 && detour_count != rejoin_seg_idx) {
+        memmove(&io_route->segments[detour_count],
+                &io_route->segments[rejoin_seg_idx],
+                (size_t)tail_count * sizeof(RouteSegment));
+    }
+
+    for (int32_t i = 0; i < detour_count; ++i) {
+        io_route->segments[i] = s_temp_segs[detour_count - 1 - i];
+    }
+
+    io_route->segment_count = detour_count + tail_count;
+    io_route->total_distance_m = 0;
+    io_route->total_time_sec = 0;
+    for (int32_t i = 0; i < io_route->segment_count; ++i) {
+        io_route->total_distance_m += io_route->segments[i].length_m;
+        io_route->total_time_sec   += io_route->segments[i].cost_sec;
+    }
+
+    io_route->found = (io_route->segment_count > 0);
+    io_route->routing_profile = (int)pf->profile;
+    pathfinder_load_geometry(pf, io_route);
+    return io_route->found;
+}
+
 bool pathfinder_load_geometry(Pathfinder *pf, RouteResult *out_route) {
     (void)pf;
     if (!out_route || out_route->segment_count == 0) return false;

@@ -8,6 +8,22 @@
 #include <string.h>
 #include <math.h>
 
+/* UI Theme Colors */
+#define UI_COLOR_BG            CLITERAL(Color){ 20, 24, 30, 235 }
+#define UI_COLOR_PANEL_HEADER CLITERAL(Color){ 30, 36, 46, 255 }
+#define UI_COLOR_BORDER       CLITERAL(Color){ 55, 65, 81, 255 }
+#define UI_COLOR_TEXT_MAIN    CLITERAL(Color){ 240, 243, 246, 255 }
+#define UI_COLOR_TEXT_MUTED   CLITERAL(Color){ 145, 158, 171, 255 }
+#define UI_COLOR_PRIMARY      CLITERAL(Color){ 37, 99, 235, 255 }
+#define UI_COLOR_PRIMARY_HOVER CLITERAL(Color){ 59, 130, 246, 255 }
+#define UI_COLOR_ACCENT       CLITERAL(Color){ 245, 158, 11, 255 }
+#define UI_COLOR_SUCCESS      CLITERAL(Color){ 16, 185, 129, 255 }
+#define UI_COLOR_ERROR        CLITERAL(Color){ 239, 68, 68, 255 }
+#define UI_COLOR_INPUT_BG     CLITERAL(Color){ 13, 17, 23, 255 }
+#define UI_COLOR_INPUT_ACTIVE CLITERAL(Color){ 30, 41, 59, 255 }
+
+static void ui_set_status(UIState *ui, const char *msg, Color color);
+
 static float calc_geom_dist_m(GeoCoord a, GeoCoord b) {
     float dy = (float)(b.lat_e7 - a.lat_e7) * (111320.0f / 10000000.0f);
     float dx = (float)(b.lon_e7 - a.lon_e7) * (70500.0f  / 10000000.0f);
@@ -50,9 +66,20 @@ static void start_route_simulation(UIState *ui, MapCamera *cam, const RouteResul
     }
 }
 
-static void step_route_simulation(UIState *ui, MapCamera *cam, const RouteResult *route, float dt) {
+static void step_route_simulation(UIState *ui, MapCamera *cam, Pathfinder *pf, RouteResult *route, float dt) {
     if (!ui || !ui->sim_active || !route || !route->found || route->geom_point_count < 2) {
         return;
+    }
+
+    /* Check if user went off-track (e.g. via GPS jump / teleport) before advancing along geometry */
+    if (ui->nav_state.off_track && pf) {
+        if (pathfinder_reroute_to_existing(pf, ui->sim_pos, ui->nav_state.current_seg_idx, route)) {
+            ui->route_start = geo_coord_make(route->segments[0].start_lat_e7,
+                                             route->segments[0].start_lon_e7);
+            start_route_simulation(ui, cam, route);
+            ui_set_status(ui, "Off-track! Rerouted to closest node on route.", UI_COLOR_ACCENT);
+            return;
+        }
     }
 
     if (!ui->sim_paused) {
@@ -105,6 +132,16 @@ static void step_route_simulation(UIState *ui, MapCamera *cam, const RouteResult
 
     int32_t prev_seg = ui->nav_state.current_seg_idx;
     if (nav_update(&ui->nav_state, route, ui->geocoder, ui->sim_pos)) {
+        if (ui->nav_state.off_track && pf) {
+            if (pathfinder_reroute_to_existing(pf, ui->sim_pos, ui->nav_state.current_seg_idx, route)) {
+                ui->route_start = geo_coord_make(route->segments[0].start_lat_e7,
+                                                 route->segments[0].start_lon_e7);
+                start_route_simulation(ui, cam, route);
+                ui_set_status(ui, "Off-track! Rerouted to closest node on route.", UI_COLOR_ACCENT);
+                return;
+            }
+        }
+
         nav_format_instruction(&ui->nav_state.next_step, ui->nav_state.cached_street_name,
                                ui->nav_instruction, sizeof(ui->nav_instruction));
 
@@ -120,20 +157,6 @@ static void step_route_simulation(UIState *ui, MapCamera *cam, const RouteResult
         }
     }
 }
-
-/* UI Theme Colors */
-#define UI_COLOR_BG            CLITERAL(Color){ 20, 24, 30, 235 }
-#define UI_COLOR_PANEL_HEADER CLITERAL(Color){ 30, 36, 46, 255 }
-#define UI_COLOR_BORDER       CLITERAL(Color){ 55, 65, 81, 255 }
-#define UI_COLOR_TEXT_MAIN    CLITERAL(Color){ 240, 243, 246, 255 }
-#define UI_COLOR_TEXT_MUTED   CLITERAL(Color){ 145, 158, 171, 255 }
-#define UI_COLOR_PRIMARY      CLITERAL(Color){ 37, 99, 235, 255 }
-#define UI_COLOR_PRIMARY_HOVER CLITERAL(Color){ 59, 130, 246, 255 }
-#define UI_COLOR_ACCENT       CLITERAL(Color){ 245, 158, 11, 255 }
-#define UI_COLOR_SUCCESS      CLITERAL(Color){ 16, 185, 129, 255 }
-#define UI_COLOR_ERROR        CLITERAL(Color){ 239, 68, 68, 255 }
-#define UI_COLOR_INPUT_BG     CLITERAL(Color){ 13, 17, 23, 255 }
-#define UI_COLOR_INPUT_ACTIVE CLITERAL(Color){ 30, 41, 59, 255 }
 
 /* Preset Locations within Belgian tile area (in 10^-7 degrees) */
 typedef struct {
@@ -464,6 +487,13 @@ void ui_update(UIState *ui, MapCamera *cam, TileCache *cache, Pathfinder *pf, Ro
                 ui->recompute_route = true;
             }
         }
+        /* Middle Click or T + Left Click while simulation active: Teleport user (test off-track reroute) */
+        else if (ui->sim_active &&
+                 (IsMouseButtonPressed(MOUSE_BUTTON_MIDDLE) ||
+                  (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && IsKeyDown(KEY_T)))) {
+            map_camera_screen_to_latlon(cam, (int32_t)mouse.x, (int32_t)mouse.y, &ui->sim_pos);
+            nav_update(&ui->nav_state, route, ui->geocoder, ui->sim_pos);
+        }
         /* Normal Left Click: Map dragging */
         else if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
             ui->mouse_dragging = true;
@@ -497,7 +527,7 @@ void ui_update(UIState *ui, MapCamera *cam, TileCache *cache, Pathfinder *pf, Ro
     }
 
     /* Advance person along route and update live turn-by-turn directions */
-    step_route_simulation(ui, cam, route, dt);
+    step_route_simulation(ui, cam, pf, route, dt);
 
     if (ui->mouse_dragging) {
         if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
@@ -931,7 +961,7 @@ void ui_draw(UIState *ui, const MapCamera *cam, const TileCache *cache, const Ro
     /* ============================================================== */
     Rectangle bar = { 10, (float)screen_h - 30, (float)screen_w - 20, 22 };
     DrawRectangleRounded(bar, 0.2f, 4, CLITERAL(Color){ 15, 20, 25, 210 });
-    DrawText("[M] Car/Ped  |  [Shift+Click] Start  |  [Ctrl/R-Click] Goal  |  [Space] Pause  |  [R] Restart  |  [F] Follow",
+    DrawText("[M] Car/Ped | [Shift+Click] Start | [Ctrl/R-Click] Goal | [T+Click/M-Click] Teleport Off-Track | [Space] Pause | [R] Restart | [F] Follow",
              20, screen_h - 25, 12, UI_COLOR_TEXT_MUTED);
 
     /* ============================================================== */

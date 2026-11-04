@@ -120,6 +120,31 @@ int main(void) {
         }
     }
 
+    /* 8. Off-Track Detection & Local Rejoin Rerouting */
+    nav_init(&nav);
+    int32_t mid_seg = s_test_route.segment_count / 3;
+    GeoCoord on_track_pos = geo_coord_make(s_test_route.segments[mid_seg].start_lat_e7,
+                                           s_test_route.segments[mid_seg].start_lon_e7);
+    assert(nav_update(&nav, &s_test_route, &geo, on_track_pos));
+    assert(!nav.off_track);
+
+    /* Move ~180m east off the route */
+    GeoCoord off_track_pos = geo_coord_make(on_track_pos.lat_e7, on_track_pos.lon_e7 + 25000);
+    assert(nav_update(&nav, &s_test_route, &geo, off_track_pos));
+    assert(nav.off_track);
+    printf("[8] Off-Track Detected at %u m from route (seg %d). Rerouting to closest candidate node...\n",
+           nav.dist_from_route_m, nav.current_seg_idx);
+
+    int32_t orig_end_lat = s_test_route.segments[s_test_route.segment_count - 1].end_lat_e7;
+    int32_t orig_end_lon = s_test_route.segments[s_test_route.segment_count - 1].end_lon_e7;
+
+    bool rerouted = pathfinder_reroute_to_existing(&pf, off_track_pos, nav.current_seg_idx, &s_test_route);
+    assert(rerouted && s_test_route.found && s_test_route.segment_count > 0);
+    assert(s_test_route.segments[s_test_route.segment_count - 1].end_lat_e7 == orig_end_lat);
+    assert(s_test_route.segments[s_test_route.segment_count - 1].end_lon_e7 == orig_end_lon);
+    printf("    -> Rerouted successfully! New route has %d segments (%u m, %d geom pts)\n",
+           s_test_route.segment_count, s_test_route.total_distance_m, s_test_route.geom_point_count);
+
     tile_graph_cache_destroy(&cache);
     printf("\n[PASS] All Geocoder & Navigation tests passed!\n");
     return 0;

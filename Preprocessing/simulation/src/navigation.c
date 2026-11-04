@@ -309,6 +309,57 @@ NavAction nav_classify_transition(const RouteResult *route, int32_t seg_idx,
     return NAV_NONE;
 }
 
+/**
+ * @brief Shortest perpendicular distance from gps_pos to a RouteSegment (following its
+ *        curve geometry in route->geom_points[] if loaded so curved roads never cause
+ *        false-positive off-track triggers), plus remaining distance along the curve to seg->end.
+ */
+static uint32_t point_to_route_seg_dist_and_rem_m(const RouteResult *route, int32_t seg_idx,
+                                                  GeoCoord gps_pos, uint32_t *out_rem_m) {
+    const RouteSegment *seg = &route->segments[seg_idx];
+
+    if (route->geom_point_count > 0 && seg->geom_end_idx > seg->geom_start_idx &&
+        seg->geom_end_idx < (uint16_t)route->geom_point_count) {
+        uint32_t best_d     = 0xFFFFFFFFU;
+        uint32_t best_sub_r = 0;
+        int32_t  best_k     = (int32_t)seg->geom_start_idx;
+
+        for (int32_t k = (int32_t)seg->geom_start_idx; k < (int32_t)seg->geom_end_idx; ++k) {
+            uint32_t sub_rem = 0;
+            uint32_t d = point_to_segment_dist_and_rem_m(
+                gps_pos.lat_e7, gps_pos.lon_e7,
+                route->geom_points[k].lat_scaled, route->geom_points[k].lon_scaled,
+                route->geom_points[k + 1].lat_scaled, route->geom_points[k + 1].lon_scaled,
+                &sub_rem
+            );
+            if (d < best_d || (d == best_d && best_sub_r == 0 && sub_rem > 0)) {
+                best_d     = d;
+                best_sub_r = sub_rem;
+                best_k     = k;
+            }
+        }
+
+        if (out_rem_m) {
+            uint32_t total_rem = best_sub_r;
+            for (int32_t k = best_k + 1; k < (int32_t)seg->geom_end_idx; ++k) {
+                total_rem += calc_dist_m(
+                    route->geom_points[k].lat_scaled, route->geom_points[k].lon_scaled,
+                    route->geom_points[k + 1].lat_scaled, route->geom_points[k + 1].lon_scaled
+                );
+            }
+            *out_rem_m = total_rem;
+        }
+        return best_d;
+    }
+
+    return point_to_segment_dist_and_rem_m(
+        gps_pos.lat_e7, gps_pos.lon_e7,
+        seg->start_lat_e7, seg->start_lon_e7,
+        seg->end_lat_e7, seg->end_lon_e7,
+        out_rem_m
+    );
+}
+
 bool nav_update(NavState *nav, const RouteResult *route, const Geocoder *geo, GeoCoord gps_pos) {
     if (!nav || !route || !route->found || route->segment_count <= 0) {
         return false;
@@ -318,21 +369,16 @@ bool nav_update(NavState *nav, const RouteResult *route, const Geocoder *geo, Ge
         nav->current_seg_idx = 0;
     }
 
-    /* 1. Find closest segment to gps_pos (preferring forward progress from current_seg_idx) */
+    /* 1. Find closest segment to gps_pos (using curve geometry points so long curved roads
+     *    never cause false-positive off-track detections) */
     uint32_t best_dist_m = 0xFFFFFFFFU;
     uint32_t best_rem_m  = 0;
     int32_t  best_seg    = nav->current_seg_idx;
 
     int32_t search_start = (nav->current_seg_idx > 2) ? (nav->current_seg_idx - 2) : 0;
     for (int32_t i = search_start; i < route->segment_count; ++i) {
-        const RouteSegment *seg = &route->segments[i];
         uint32_t rem_m = 0;
-        uint32_t d = point_to_segment_dist_and_rem_m(
-            gps_pos.lat_e7, gps_pos.lon_e7,
-            seg->start_lat_e7, seg->start_lon_e7,
-            seg->end_lat_e7, seg->end_lon_e7,
-            &rem_m
-        );
+        uint32_t d = point_to_route_seg_dist_and_rem_m(route, i, gps_pos, &rem_m);
         if (d < best_dist_m || (d == best_dist_m && best_rem_m == 0 && rem_m > 0)) {
             best_dist_m = d;
             best_rem_m  = rem_m;
@@ -344,7 +390,12 @@ bool nav_update(NavState *nav, const RouteResult *route, const Geocoder *geo, Ge
         }
     }
 
-    nav->current_seg_idx = best_seg;
+    nav->current_seg_idx   = best_seg;
+    nav->dist_from_route_m = best_dist_m;
+    uint32_t off_thresh_m  = (route->routing_profile == PROFILE_STROLLER)
+                             ? NAV_OFF_TRACK_PED_M
+                             : NAV_OFF_TRACK_CAR_M;
+    nav->off_track         = (best_dist_m > off_thresh_m);
 
     /* 2. Scan forward from best_seg accumulating distance until the next real maneuver */
     uint32_t accum_dist_m = best_rem_m;

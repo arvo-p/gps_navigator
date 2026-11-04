@@ -26,6 +26,8 @@ extern "C" {
 #endif
 
 #define NAV_STREET_CACHE_MAX 64
+#define NAV_OFF_TRACK_CAR_M  35U
+#define NAV_OFF_TRACK_PED_M  25U
 
 /**
  * @brief Turn-by-turn maneuver classification.
@@ -60,6 +62,8 @@ typedef struct {
  */
 typedef struct {
     int32_t     current_seg_idx;                       /**< Active segment index along route */
+    uint32_t    dist_from_route_m;                     /**< Perpendicular distance from GPS to active route (m) */
+    bool        off_track;                             /**< True if dist_from_route_m exceeds off-track threshold */
     uint32_t    cached_street_id;                      /**< Street ID currently cached in RAM */
     char        cached_street_name[NAV_STREET_CACHE_MAX]; /**< Cached UTF-8 street name */
     NavNextStep next_step;                             /**< Upcoming maneuver descriptor */
