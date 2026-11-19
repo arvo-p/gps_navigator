@@ -19,6 +19,8 @@ Core/Src/tile_loader_task.c \
 Core/Src/pathfinder_task.c \
 Core/Src/ui_lvgl_task.c \
 Core/Src/sd_spi.c \
+Core/Src/geocoder.c \
+Core/Src/navigation.c \
 Core/Src/astar_heap.c \
 Core/Src/geo_math.c \
 Core/Src/map_camera.c \

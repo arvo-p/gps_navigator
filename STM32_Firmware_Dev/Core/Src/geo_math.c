@@ -239,6 +239,10 @@ void geo_tile_to_bbox(TileCoord tile, GeoBBox *out_bbox) {
     out_bbox->max_lon_e7 = bottom_right.lon_e7;
 }
 
+/* TODO (STM32U5 Migration): Replace GEO_COS_LUT_Q15[] and geo_isqrt64() with the native
+ * STM32U5 CORDIC hardware peripheral (LL_CORDIC_FUNCTION_COSINE for cos(mean_lat) and
+ * LL_CORDIC_FUNCTION_PHASE modulus / LL_CORDIC_FUNCTION_SQUARE_ROOT for Euclidean distance).
+ * Kept as LUT + integer math here for STM32F4 compatibility. */
 uint32_t geo_distance_m(GeoCoord a, GeoCoord b) {
     int64_t dlat = (int64_t)(b.lat_e7 - a.lat_e7);
     int64_t dlon = (int64_t)(b.lon_e7 - a.lon_e7);
@@ -258,6 +262,9 @@ uint32_t geo_distance_m(GeoCoord a, GeoCoord b) {
     return (uint32_t)(((uint64_t)dist_e7 * 111139ULL) / 10000000ULL);
 }
 
+/* TODO (STM32U5 Migration): Replace GEO_COS_LUT_Q15[] and GEO_ATAN_TENTHS_LUT[] with the
+ * native STM32U5 CORDIC hardware peripheral (LL_CORDIC_FUNCTION_COSINE and
+ * LL_CORDIC_FUNCTION_PHASE for atan2(dy, dx)). Kept as LUT trig here for STM32F4. */
 int32_t geo_bearing_deg(GeoCoord from, GeoCoord to) {
     int64_t dlat = (int64_t)(to.lat_e7 - from.lat_e7);
     int64_t dlon = (int64_t)(to.lon_e7 - from.lon_e7);

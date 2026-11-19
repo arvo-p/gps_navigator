@@ -1,0 +1,372 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[margin=2.2cm]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{hyperref}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue!70!black,
+    urlcolor=blue!70!black,
+    pdftitle={STM32 GPS Navigation & Rerouting Architecture Report},
+    pdfauthor={Embedded Navigation Documentation}
+}
+
+\definecolor{codebg}{RGB}{246,248,250}
+\definecolor{codeframe}{RGB}{210,215,220}
+\definecolor{keywordcol}{RGB}{0,92,197}
+\definecolor{commentcol}{RGB}{106,115,125}
+\definecolor{stringcol}{RGB}{3,47,98}
+
+\lstdefinestyle{cstyle}{
+    language=C,
+    backgroundcolor=\color{codebg},
+    frame=single,
+    rulecolor=\color{codeframe},
+    basicstyle=\ttfamily\footnotesize,
+    keywordstyle=\color{keywordcol}\bfseries,
+    commentstyle=\color{commentcol}\itshape,
+    stringstyle=\color{stringcol},
+    numbers=left,
+    numberstyle=\tiny\color{commentcol},
+    numbersep=6pt,
+    breaklines=true,
+    showstringspaces=false,
+    tabsize=4,
+    captionpos=b
+}
+
+\lstset{style=cstyle}
+
+\title{\textbf{STM32 GPS Navigation, Off-Track Detection, and Local Rejoin Rerouting}\\
+\large Technical Architecture \& Guide to Non-Intuitive Mechanisms}
+\author{Project Documentation --- \texttt{STM32\_Firmware\_Dev/Core/Src}}
+\date{\today}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\newpage
+
+%==============================================================================
+\section{Introduction: Why Desktop Code Cannot Be Directly Copied to STM32}
+%==============================================================================
+
+While the desktop simulator (\texttt{Preprocessing/simulation}) and the STM32 firmware (\texttt{STM32\_Firmware\_Dev}) share the same binary map formats and core algorithms, the embedded target (\textbf{STM32F429I-Discovery}, migrating later to \textbf{STM32U5}) enforces five strict hardware and RTOS constraints that break naive ports:
+
+\begin{enumerate}
+    \item \textbf{Tightly Partitioned Memory (Zero \texttt{malloc}):}
+    \begin{itemize}
+        \item \textbf{CCMRAM (64 KB at \texttt{0x10000000}):} Holds the FreeRTOS heap (\texttt{ucHeap}, task stacks, and RTOS queues) plus the A* binary min-heap (\texttt{s\_astar\_heap}).
+        \item \textbf{Internal SRAM (192 KB at \texttt{0x20000000}):} Holds fast state structures (\texttt{g\_nav\_state}, \texttt{g\_geocoder}, \texttt{s\_temp\_segs}, static FatFs \texttt{FIL} descriptors) and the LVGL partial draw buffer.
+        \item \textbf{External SDRAM (8 MB at \texttt{0xD0000000}):} Holds the LCD framebuffer, the 16-slot raster tile cache (\texttt{g\_tile\_cache}), the active route (\texttt{g\_current\_route}), A* parent/cost tables, and the \textbf{shared road-graph union} (\texttt{s\_graph\_pool}).
+    \end{itemize}
+    \item \textbf{Shared SDRAM Graph Union (\texttt{s\_graph\_pool}):} On the PC simulator, 8 local tiles and the entire Belgium backbone graph coexist in RAM. On STM32, only \textbf{2 local tile slots} exist, and they share the exact same 5.52 MB SDRAM region with the backbone graph via a C \texttt{union}. Loading the backbone immediately invalidates all local tiles, and loading a local tile immediately invalidates the backbone.
+    \item \textbf{No POSIX File I/O (\texttt{-lnosys}):} Standard C \texttt{fopen()}, \texttt{fseek()}, and \texttt{fread()} compile without warnings because of \texttt{newlib-nano}, but \texttt{\_open()} is a stub that always returns \texttt{-1} (\texttt{NULL}). Every SD card access must use \textbf{FatFs} (\texttt{f\_open}, \texttt{f\_lseek}, \texttt{f\_read}, \texttt{f\_close}).
+    \item \textbf{Small FreeRTOS Task Stacks:} \texttt{Pathfinder\_Task} and \texttt{Tile\_Loader\_Task} have 1024-word (4 KB) stacks. Placing a FatFs \texttt{FIL} struct ($\approx 560$ bytes) or a candidate array ($\approx 768$ bytes) on the stack risks silent stack overflow and hard faults.
+    \item \textbf{Single SPI Bus Shared Across Tasks:} Both \texttt{Tile\_Loader\_Task} (raster \texttt{.pak} tiles) and \texttt{Pathfinder\_Task} (road graph \texttt{.bin} files and \texttt{names.idx}/\texttt{names.str}) access the SD card. All FatFs calls must be serialized by \texttt{g\_mutex\_sd}, and \texttt{UI\_LVGL\_Task} must \textbf{never} perform SD card I/O.
+\end{enumerate}
+
+%==============================================================================
+\section{Non-Intuitive Mechanism \#1: The Shared SDRAM Graph Cache \& Pinning}
+%==============================================================================
+
+\subsection{The \texttt{s\_graph\_pool} Union Trap (\texttt{tile\_graph\_cache.c})}
+
+In \texttt{Core/Src/tile\_graph\_cache.c}, the road network arrays are allocated inside a single union in external SDRAM:
+
+\begin{lstlisting}[caption={Shared SDRAM union in \texttt{tile\_graph\_cache.c}}]
+static union {
+    struct {
+        NodeRecord nodes[TILE_GRAPH_CACHE_MAX_LOCAL][TILE_MAX_LOCAL_NODES];
+        EdgeRecord edges[TILE_GRAPH_CACHE_MAX_LOCAL][TILE_MAX_LOCAL_EDGES];
+    } local;
+    struct {
+        NodeRecord nodes[TILE_MAX_BACKBONE_NODES];
+        EdgeRecord edges[TILE_MAX_BACKBONE_EDGES];
+    } bb;
+} s_graph_pool EXT_RAM_BSS;
+\end{lstlisting}
+
+\textbf{Why this matters when writing or modifying routing code:}
+\begin{itemize}
+    \item Calling \texttt{tile\_graph\_cache\_get\_backbone\_for\_profile()} calls \texttt{free\_graph()} on all \texttt{local\_slots[i]} and overwrites \texttt{s\_graph\_pool} with the backbone graph.
+    \item Conversely, calling \texttt{tile\_graph\_cache\_get\_tile()} invalidates \texttt{cache->backbone} if it was loaded.
+    \item \textbf{The Bug That Happened in \texttt{run\_hierarchical\_astar()}:} If you load \texttt{start\_tile} and \texttt{goal\_tile} first, and then call \texttt{tile\_graph\_cache\_get\_backbone\_for\_profile()} \emph{before} extracting the gateway coordinates from \texttt{start\_tile} and \texttt{goal\_tile}, the pointers \texttt{start\_tile->nodes} and \texttt{goal\_tile->nodes} now point into backbone memory!
+    \item \textbf{Correct Pattern:} Always extract the coordinates (\texttt{gw\_start\_coord}, \texttt{gw\_goal\_coord}) while each tile is loaded:
+    \begin{enumerate}
+        \item Load \texttt{start\_tile}, snap start node, find start gateway node, and copy \texttt{gw\_start\_coord} by value.
+        \item Load \texttt{goal\_tile}, snap goal node, find goal gateway node, and copy \texttt{gw\_goal\_coord} by value.
+        \item Run Phase 1 Local A* (\texttt{start} $\to$ \texttt{gw\_start\_coord}) using local tiles.
+        \item Load the backbone graph and run Phase 2 Backbone A* (\texttt{gw\_start\_coord} $\to$ \texttt{gw\_goal\_coord}).
+        \item Run Phase 3 Local A* (\texttt{gw\_goal\_coord} $\to$ \texttt{goal}) using local tiles.
+    \end{enumerate}
+\end{itemize}
+
+\subsection{Why \texttt{RouteSegment} Uses \texttt{grid\_lat}/\texttt{grid\_lon} Instead of \texttt{geom\_path}}
+
+On the desktop simulator, \texttt{RouteSegment} stores \texttt{const char *geom\_path}, which points directly to \texttt{slot->geom\_path} inside \texttt{TileGraphCache}. On STM32, that is a classic dangling-pointer bug:
+\begin{enumerate}
+    \item During a hierarchical route (Mode B), Phase 1 loads local tile $(506, 55)$ into \texttt{slot[0]}, Phase 2 loads the backbone, and Phase 3 loads local tile $(508, 43)$ into \texttt{slot[0]}.
+    \item By the time \texttt{pathfinder\_load\_geometry()} runs at the end of routing, \texttt{slot[0]->geom\_path} no longer contains \texttt{"binaries/local\_506\_055\_geom.bin"}---it was overwritten!
+\end{enumerate}
+
+Therefore, on STM32, \texttt{RouteSegment} stores \textbf{value tags} instead of a pointer:
+\begin{lstlisting}[caption={Value-based geometry source tagging in \texttt{RouteSegment}}]
+int16_t grid_lat; /**< Local tile grid_lat (e.g. 506), or -1 for backbone */
+int16_t grid_lon; /**< Local tile grid_lon (e.g.  55), or -1 for backbone */
+\end{lstlisting}
+When \texttt{pathfinder\_load\_geometry()} reconstructs the curve points, it checks \texttt{seg->grid\_lat < 0} to choose \texttt{backbone\_geom.bin} (or \texttt{stroller\_backbone\_geom.bin}), or formats \texttt{local\_\%03d\_\%03d\_geom.bin} on the fly from \texttt{(seg->grid\_lat, seg->grid\_lon)}. It also keeps the FatFs \texttt{FIL} handle open across consecutive segments belonging to the same tile (\texttt{open\_lat == seg->grid\_lat \&\& open\_lon == seg->grid\_lon}) so it only calls \texttt{f\_open()} once per tile along the route.
+
+\subsection{Tile Pinning (\texttt{tile\_graph\_pin} / \texttt{tile\_graph\_unpin})}
+
+When local A* or Dijkstra explores across a $0.1^\circ \times 0.1^\circ$ tile boundary, it needs both the current tile and the neighbor tile in RAM simultaneously. Calling \texttt{tile\_graph\_pin(graph)} increments \texttt{graph->pin\_count}. The LRU allocator in \texttt{tile\_graph\_cache\_get\_tile()} refuses to evict any slot where \texttt{pin\_count > 0}. Every function that pins a tile into its local \texttt{SessionTile session[MAX\_SESSION\_TILES]} array \textbf{must} unpin all session tiles before returning.
+
+%==============================================================================
+\section{Non-Intuitive Mechanism \#2: Multi-Tile Node Keys \& Boundary Crossing}
+%==============================================================================
+
+\subsection{Packed 32-Bit \texttt{node\_key}}
+
+Each local tile file (\texttt{local\_XXX\_YYY\_nodes.bin}) numbers its nodes from \texttt{0} to \texttt{node\_count - 1}. To run A* or Dijkstra across multiple tiles without global 64-bit IDs, \texttt{pathfinder.c} packs the \textbf{session slot index} (which tile in \texttt{session[0..1]}) and the \textbf{local node index} into a single 32-bit unsigned integer:
+
+\begin{lstlisting}[caption={32-bit packed node key in \texttt{pathfinder.c}}]
+static inline uint32_t make_node_key(int32_t slot, uint32_t idx) {
+    return ((uint32_t)slot << 30) | (idx & 0x3FFFFFFFU);
+}
+static inline int32_t key_to_slot(uint32_t key) {
+    return (int32_t)(key >> 30);
+}
+static inline uint32_t key_to_idx(uint32_t key) {
+    return key & 0x3FFFFFFFU;
+}
+\end{lstlisting}
+\begin{itemize}
+    \item Bits \texttt{[31:30]} (top 2 bits) identify the \texttt{SessionTile} slot (\texttt{0..1} on STM32, \texttt{0..3} on PC).
+    \item Bits \texttt{[29:0]} (bottom 30 bits) identify the node index inside \texttt{session[slot].graph->nodes[]}.
+    \item Because \texttt{came\_from\_keys[slot][idx]} also stores a packed \texttt{uint32\_t} key, backtracking from the goal node to the start node seamlessly walks backward across tile boundaries until \texttt{curr\_key == start\_key}.
+\end{itemize}
+
+\subsection{How \texttt{FLAG\_TILE\_BORDER} Triggers Cross-Tile Hops}
+
+Road edges inside a tile only point to nodes within the same tile. How does the search cross into an adjacent tile?
+\begin{enumerate}
+    \item During preprocessing (\texttt{map\_binaries\_gen.py}), any road node that lies near a $0.1^\circ$ grid boundary or connects to an edge crossing a boundary is tagged with \texttt{FLAG\_TILE\_BORDER} (\texttt{0x04}), and an identical twin node with the \textbf{exact same \texttt{(lat\_scaled, lon\_scaled)}} is written into the adjacent tile.
+    \item When A* or Dijkstra pops a node \texttt{u\_node} with \texttt{(u\_node->flags \& FLAG\_TILE\_BORDER)}, it computes which $0.1^\circ$ grid cell \texttt{u\_node} lies in (or within $0.002^\circ \approx 220\text{ m}$ of the cell border).
+    \item It calls \texttt{find\_or\_load\_session\_tile()} to load the neighboring tile into a free \texttt{SessionTile} slot, and then calls \texttt{tile\_graph\_find\_matching\_node()} to find the twin node in the neighbor tile at \texttt{(u\_node->lat\_scaled, u\_node->lon\_scaled)}.
+    \item It pushes a zero-cost transition (\texttt{tentative\_g = current\_g}, \texttt{came\_from\_edges = 0xFFFFFFFFU}) into the min-heap for the twin node. During path reconstruction, \texttt{edge\_idx == 0xFFFFFFFFU} is recognized as a pure tile-handoff step and produces no \texttt{RouteSegment}.
+\end{enumerate}
+
+%==============================================================================
+\section{Non-Intuitive Mechanism \#3: Single-Pass Local Rejoin Rerouting}
+%==============================================================================
+
+When the user goes off-track, recomputing a full route from scratch to a distant destination (especially in Mode B, which loads the 5.5 MB backbone graph from SD card) takes several seconds. Instead, \texttt{pathfinder\_reroute\_to\_existing()} rejoins the existing route locally using a single-pass Dijkstra search.
+
+\subsection{Step 1: Why Candidate Collection Uses a Segment Window Without a Distance Cutoff}
+
+\begin{lstlisting}[caption={Candidate collection window in \texttt{pathfinder\_reroute\_to\_existing()}}]
+int32_t s_start = (current_seg_idx > 2) ? (current_seg_idx - 2) : 0;
+int32_t s_end   = current_seg_idx + 30;
+if (s_end >= io_route->segment_count) {
+    s_end = io_route->segment_count - 1;
+}
+\end{lstlisting}
+
+For each segment $s \in [s_{\text{start}}, s_{\text{end}}]$, both the segment start node (with \texttt{rejoin\_seg\_idx = s}) and segment end node (with \texttt{rejoin\_seg\_idx = s + 1}) are added to \texttt{s\_reroute\_candidates[]} (up to 64 unique nodes).
+
+\textbf{Why is there no Euclidean distance cutoff when collecting candidates?}
+If the user is driving on a long rural road or highway where the next intersection node is $3\text{ km}$ ahead, a Euclidean filter (e.g., $1.5\text{ km}$) would reject that node and leave zero candidates ahead of the user. By collecting by \textbf{segment index window} (\texttt{-2} to \texttt{+30} segments around \texttt{current\_seg\_idx}), long road segments are always included.
+
+\subsection{Step 2: Why Dijkstra Is Run Only Once (Not Once Per Candidate)}
+
+A common misconception is that finding the closest candidate in road distance requires running A* 64 times. Instead, \texttt{pathfinder\_reroute\_to\_existing()} runs \textbf{one single-source Dijkstra expansion} starting at the user's snapped off-track node:
+\begin{itemize}
+    \item The priority queue is ordered purely by accumulated road distance in meters:
+    \[
+        g(\text{v}) = g(\text{u}) + \texttt{edge->length\_m}, \qquad f(\text{v}) = g(\text{v}) \quad (h = 0).
+    \]
+    \item Because all edge lengths are non-negative, Dijkstra's algorithm pops nodes from the min-heap in \textbf{strictly non-decreasing order of true road distance} from the user's position.
+    \item Whenever a node \texttt{u\_node} is popped from the heap, we check if its coordinates match any entry in \texttt{s\_reroute\_candidates[]}:
+    \begin{lstlisting}[caption={Checking popped nodes against the candidate list}]
+for (int32_t c = 0; c < cand_count; ++c) {
+    if (u_node->lat_scaled == s_reroute_candidates[c].lat_e7 &&
+        u_node->lon_scaled == s_reroute_candidates[c].lon_e7) {
+        if (top.node_key == start_key) {
+            /* User snapped directly onto an existing route node */
+            start_candidate_seg_idx = s_reroute_candidates[c].rejoin_seg_idx;
+            break;
+        }
+        candidate_reached = true;
+        winning_key = top.node_key;
+        rejoin_seg_idx = s_reroute_candidates[c].rejoin_seg_idx;
+        break;
+    }
+}
+    \end{lstlisting}
+    \item The \textbf{very first candidate popped} (with \texttt{top.node\_key != start\_key}) is mathematically guaranteed to be the candidate with the shortest road distance from the user. The search immediately terminates!
+    \item \textbf{Special Edge Case (\texttt{top.node\_key == start\_key}):} What if the user wandered $35\text{ m}$ off the road (triggering \texttt{off\_track}), but the nearest graph node in the tile happens to be a node already on the route? If we immediately stopped at \texttt{g = 0} with zero detour segments, the route would just trim to \texttt{start\_candidate\_seg\_idx} and the user at $35\text{ m}$ would remain off-track forever in an infinite reroute loop. Recording \texttt{start\_candidate\_seg\_idx} lets Dijkstra first try to find an actual connecting edge; if the user truly just needs to trim the route to \texttt{start\_candidate\_seg\_idx}, it falls back to that cleanly.
+\end{itemize}
+
+\subsection{Step 3: Splicing the Detour into \texttt{io\_route}}
+
+Once \texttt{winning\_key} is found with \texttt{rejoin\_seg\_idx}:
+\begin{enumerate}
+    \item The detour edges are backtracked from \texttt{winning\_key} to \texttt{start\_key} and reversed into \texttt{s\_temp\_segs[0 .. detour\_count - 1]}.
+    \item Every detour segment's \texttt{grid\_lat} and \texttt{grid\_lon} are set to \texttt{session[slot].grid\_lat} and \texttt{session[slot].grid\_lon}.
+    \item The remaining suffix of the existing route (\texttt{io\_route->segments[rejoin\_seg\_idx .. old\_total - 1]}) is appended into \texttt{s\_temp\_segs[detour\_count .. new\_total - 1]}.
+    \item \texttt{s\_temp\_segs} is copied back into \texttt{io\_route->segments}, total distance and time are recomputed, and \texttt{pathfinder\_load\_geometry(pf, io\_route)} reloads the flattened polyline \texttt{io\_route->geom\_points[]} and updates every segment's \texttt{geom\_start\_idx} and \texttt{geom\_end\_idx}.
+\end{enumerate}
+
+%==============================================================================
+\section{Non-Intuitive Mechanism \#4: Curve-Aware Off-Track Detection \& Turn Angles}
+%==============================================================================
+
+\subsection{Why Curve Geometry Must Be Used for Off-Track Distance (\texttt{navigation.c})}
+
+A single \texttt{RouteSegment} represents a road edge between two intersection nodes $A$ and $B$. On winding roads or motorways, a single edge between two intersections can be $500\text{ m}$ to $2\text{ km}$ long and curve significantly away from the straight line chord $\overline{AB}$, while its true shape is stored in \texttt{route->geom\_points[seg->geom\_start\_idx .. seg->geom\_end\_idx]}.
+
+If off-track detection measured distance to the straight chord $\overline{AB}$, a driver following a curved road would appear $>30\text{ m}$ away from the chord and trigger false-positive reroutes!
+
+Therefore, \texttt{point\_to\_route\_seg\_dist\_and\_rem\_m()} iterates over every sub-segment $k \in [\texttt{geom\_start\_idx}, \texttt{geom\_end\_idx} - 1]$ of the curve polyline:
+\begin{enumerate}
+    \item For each polyline sub-segment $P_k \to P_{k+1}$, \texttt{point\_to\_segment\_dist\_and\_rem\_m()} converts coordinates relative to $P_k$ into \textbf{millimeters} (\texttt{px\_mm}, \texttt{py\_mm}, \texttt{bx\_mm}, \texttt{by\_mm}) to preserve sub-meter precision without floating-point math.
+    \item It projects the GPS point onto $P_k \to P_{k+1}$ using a 10-bit fixed-point projection factor:
+    \[
+        t_{Q10} = \frac{(P - P_k) \cdot (P_{k+1} - P_k)}{\|P_{k+1} - P_k\|^2} \times 1024 \in [0, 1024].
+    \]
+    \item It finds the sub-segment $k^*$ with the minimum perpendicular distance $d_{\min}$, and computes the exact remaining curve distance to the end of the \texttt{RouteSegment} by summing the remaining length on sub-segment $k^*$ plus the lengths of all subsequent sub-segments $k^* + 1 \dots \texttt{geom\_end\_idx} - 1$.
+\end{enumerate}
+
+\subsection{Why Turn Angle Tangents Walk $\ge 8\text{ m}$ Away from the Junction}
+
+In OpenStreetMap data, the very first or last $2\text{--}5\text{ m}$ of a road edge at an intersection often contains a tiny flared curb or node-snapping artifact. Computing the turn angle from the final $2\text{ m}$ sub-segment would produce erratic angles.
+
+In \texttt{get\_incoming\_vector\_mm()} and \texttt{get\_outgoing\_vector\_mm()} (\texttt{navigation.c}):
+\begin{itemize}
+    \item \texttt{get\_incoming\_vector\_mm()} starts at \texttt{seg->geom\_end\_idx - 1} and walks backward along \texttt{geom\_points[]} until it finds a point at least \textbf{$8\text{ m}$} away from the junction node.
+    \item \texttt{get\_outgoing\_vector\_mm()} starts at \texttt{seg->geom\_start\_idx + 1} and walks forward until it finds a point at least \textbf{$8\text{ m}$} past the junction node.
+    \item The signed turn angle between $\vec{v}_{\text{in}}$ and $\vec{v}_{\text{out}}$ is then computed via the 2D cross and dot products:
+    \[
+        \theta = \operatorname{atan2}\!\left(v_{\text{in},x} v_{\text{out},y} - v_{\text{in},y} v_{\text{out},x},\; v_{\text{in},x} v_{\text{out},x} + v_{\text{in},y} v_{\text{out},y}\right) \in [-180^\circ, +180^\circ],
+    \]
+    where $\theta > 0$ is a \textbf{Left} turn and $\theta < 0$ is a \textbf{Right} turn.
+\end{itemize}
+
+\subsection{Why \texttt{nav\_update()} Takes an Optional \texttt{const Geocoder *geo} Pointer}
+
+Look at the two places where \texttt{nav\_update()} is called in the STM32 firmware:
+\begin{enumerate}
+    \item \textbf{Inside \texttt{Pathfinder\_Task} (\texttt{pathfinder\_task.c}):}
+    \begin{lstlisting}
+nav_init(&g_nav_state);
+nav_update(&g_nav_state, &g_current_route, &g_geocoder, req.start);
+    \end{lstlisting}
+    Here, \texttt{Pathfinder\_Task} already holds \texttt{g\_mutex\_sd}. Passing \texttt{\&g\_geocoder} allows \texttt{nav\_update()} to look up the upcoming maneuver's street name from \texttt{binaries/names.idx} and \texttt{binaries/names.str} on the SD card and store it in the 1-entry cache (\texttt{g\_nav\_state.cached\_street\_id}, \texttt{g\_nav\_state.cached\_street\_name}).
+    \item \textbf{Inside \texttt{UI\_LVGL\_Task} (\texttt{ui\_lvgl\_task.c}):}
+    \begin{lstlisting}
+nav_update(&g_nav_state, &g_current_route, NULL, g_gps_pos);
+    \end{lstlisting}
+    When a GPS fix arrives in \texttt{UI\_LVGL\_Task}, we pass \texttt{NULL} for \texttt{geo}. \texttt{nav\_update()} still updates \texttt{current\_seg\_idx}, \texttt{dist\_from\_route\_m}, \texttt{off\_track}, and the 5m-quantized distance to the next turn in pure RAM, without touching the SD card or blocking the 10 ms LVGL UI loop! If the user advances past a turn onto a new maneuver whose \texttt{target\_street\_id} differs from \texttt{cached\_street\_id}, \texttt{nav\_update()} can also be called with \texttt{\&g\_geocoder} under \texttt{g\_mutex\_sd} if street names are displayed on the HUD.
+\end{enumerate}
+
+%==============================================================================
+\section{Non-Intuitive Mechanism \#5: RTOS Task Synchronization for Rerouting}
+%==============================================================================
+
+In \texttt{ui\_lvgl\_task.c} and \texttt{pathfinder\_task.c}, route requests are sent over a length-1 queue (\texttt{g\_q\_route\_req}) using \texttt{xQueueOverwrite()}, and completion is signaled back via task notification bit \texttt{NOTIFY\_ROUTE\_READY}.
+
+\textbf{Why \texttt{route\_req\_pending} Is Essential in \texttt{UI\_LVGL\_Task}:}
+\begin{enumerate}
+    \item At boot, \texttt{Tile\_Loader\_Task} mounts the SD card and sends \texttt{NOTIFY\_SD\_MOUNTED} to \texttt{UI\_LVGL\_Task}, which queues \texttt{ROUTE\_CMD\_NEW} and sets \texttt{route\_req\_pending = true}.
+    \item While \texttt{Pathfinder\_Task} is busy computing that initial route (which can take $200\text{--}800\text{ ms}$), \texttt{GPS\_UART\_Task} may deliver new NMEA GPS fixes every second.
+    \item Without \texttt{route\_req\_pending}, \texttt{UI\_LVGL\_Task} would see the GPS fix, try to queue \texttt{ROUTE\_CMD\_REROUTE} via \texttt{xQueueOverwrite(g\_q\_route\_req, ...)}, and either clobber an unstarted \texttt{ROUTE\_CMD\_NEW} or queue redundant reroutes while \texttt{Pathfinder\_Task} is already running.
+    \item With \texttt{route\_req\_pending}:
+    \begin{itemize}
+        \item \texttt{UI\_LVGL\_Task} only checks \texttt{g\_nav\_state.off\_track} and queues \texttt{ROUTE\_CMD\_REROUTE} when \texttt{g\_current\_route.found \&\& !route\_req\_pending}.
+        \item \texttt{Pathfinder\_Task} always sends \texttt{NOTIFY\_ROUTE\_READY} upon finishing any command, which clears \texttt{route\_req\_pending = false} in \texttt{UI\_LVGL\_Task} and immediately re-evaluates \texttt{nav\_update()} against the latest \texttt{g\_gps\_pos}.
+    \end{itemize}
+\end{enumerate}
+
+%==============================================================================
+\section{STM32U5 Hardware CORDIC Migration Guide}
+%==============================================================================
+
+On \textbf{STM32F429}, there is no hardware trigonometric/CORDIC peripheral, and we avoid software floating-point \texttt{libm} calls (\texttt{atan2f}, \texttt{sqrtf}, \texttt{cosf}) by using pure integer approximations marked with \texttt{TODO(STM32U5-CORDIC)} comments across the codebase.
+
+When migrating to \textbf{STM32U5}, enable the hardware CORDIC coprocessor (\texttt{\_\_HAL\_RCC\_CORDIC\_CLK\_ENABLE()}) and replace the tagged functions as summarized in Table~\ref{tab:cordic}.
+
+\begin{table}[h!]
+\centering
+\small
+\begin{tabular}{@{}llll@{}}
+\toprule
+\textbf{File} & \textbf{Current STM32F4 Function} & \textbf{STM32U5 CORDIC Function} & \textbf{CORDIC Mode / Notes} \\
+\midrule
+\texttt{geo\_math.c} & \texttt{geo\_distance\_m()} & \texttt{LL\_CORDIC\_FUNC\_COSINE} & Compute $\cos(\text{lat})$ for $\Delta\text{lon}$ scaling \\
+ & & + \texttt{LL\_CORDIC\_FUNC\_MODULUS} & Compute $\sqrt{\Delta x^2 + \Delta y^2}$ in 1 op \\
+\addlinespace
+\texttt{geo\_math.c} & \texttt{geo\_bearing\_deg()} & \texttt{LL\_CORDIC\_FUNC\_PHASE} & Input $(\Delta y, \Delta x)$ in Q1.31; \\
+ & & & output phase in $[-\pi, \pi]$ Q1.31 \\
+\addlinespace
+\texttt{pathfinder.c} & \texttt{pf\_atan2\_deg()} & \texttt{LL\_CORDIC\_FUNC\_PHASE} & Convert Q1.31 piradians to degrees \\
+\texttt{pathfinder.c} & \texttt{pf\_turn\_angle\_deg()} & \texttt{LL\_CORDIC\_FUNC\_PHASE} & Input $(\text{dot}, \text{cross})$ directly \\
+\addlinespace
+\texttt{navigation.c} & \texttt{isqrt\_u64()} & \texttt{LL\_CORDIC\_FUNC\_SQRT} & Or \texttt{LL\_CORDIC\_FUNC\_MODULUS} \\
+\texttt{navigation.c} & \texttt{calc\_dist\_m()} & \texttt{LL\_CORDIC\_FUNC\_MODULUS} & Direct 2D vector hypot $(\Delta x, \Delta y)$ \\
+\texttt{navigation.c} & \texttt{atan2\_deg\_int()} & \texttt{LL\_CORDIC\_FUNC\_PHASE} & 6-cycle hardware $\operatorname{atan2}(\text{cross}, \text{dot})$ \\
+\addlinespace
+\texttt{geocoder.c} & \texttt{isqrt\_u64()} & \texttt{LL\_CORDIC\_FUNC\_SQRT} & Hardware square root \\
+\texttt{geocoder.c} & \texttt{calc\_dist\_m()} & \texttt{LL\_CORDIC\_FUNC\_MODULUS} & Direct 2D vector hypot $(\Delta x, \Delta y)$ \\
+\bottomrule
+\end{tabular}
+\caption{Mapping of STM32F4 integer trigonometric helpers to STM32U5 hardware CORDIC operations.}
+\label{tab:cordic}
+\end{table}
+
+\subsection{Example STM32U5 CORDIC Replacement for \texttt{atan2\_deg\_int(y, x)}}
+
+On STM32U5, \texttt{LL\_CORDIC\_FUNC\_PHASE} takes two signed Q1.31 numbers $(x, y)$ (normalized so $\max(|x|, |y|)$ fits in 31 bits without overflow) and returns the angle in Q1.31 piradians ($[-1.0, +1.0) \leftrightarrow [-180^\circ, +180^\circ)$):
+
+\begin{lstlisting}[caption={Drop-in STM32U5 CORDIC replacement for \texttt{atan2\_deg\_int()}}]
+static int16_t atan2_deg_cordic_u5(int64_t y, int64_t x) {
+    if (x == 0 && y == 0) return 0;
+
+    /* Normalize (x, y) into signed 32-bit range [-2^30 .. 2^30] for Q1.31 CORDIC input */
+    int64_t ax = (x < 0) ? -x : x;
+    int64_t ay = (y < 0) ? -y : y;
+    int64_t max_v = (ax > ay) ? ax : ay;
+    while (max_v > 0x3FFFFFFFLL) {
+        x >>= 1;
+        y >>= 1;
+        max_v >>= 1;
+    }
+    /* Scale up small vectors so CORDIC has full 31-bit precision */
+    while (max_v > 0 && max_v < 0x10000000LL) {
+        x <<= 1;
+        y <<= 1;
+        max_v <<= 1;
+    }
+
+    LL_CORDIC_Config(CORDIC, LL_CORDIC_FUNCTION_PHASE,
+                     LL_CORDIC_PRECISION_6CYCLES, LL_CORDIC_SCALE_0,
+                     LL_CORDIC_NBWRITE_2, LL_CORDIC_NBREAD_1,
+                     LL_CORDIC_INSIZE_32BITS, LL_CORDIC_OUTSIZE_32BITS);
+
+    LL_CORDIC_WriteData(CORDIC, (uint32_t)(int32_t)x);
+    LL_CORDIC_WriteData(CORDIC, (uint32_t)(int32_t)y);
+    int32_t phase_q31 = (int32_t)LL_CORDIC_ReadData(CORDIC);
+
+    /* Convert Q1.31 piradians [-2^31 .. +2^31 - 1] to degrees [-180 .. +180] */
+    return (int16_t)(((int64_t)phase_q31 * 180LL) >> 31);
+}
+\end{lstlisting}
+
+\end{document}

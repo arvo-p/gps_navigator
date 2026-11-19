@@ -27,6 +27,12 @@ typedef struct {
     uint16_t geom_count;
     int16_t grid_lat;          /**< Local tile grid_lat, or -1 for backbone */
     int16_t grid_lon;          /**< Local tile grid_lon, or -1 for backbone */
+    uint16_t start_node_flags;
+    uint16_t end_node_flags;
+    uint16_t geom_start_idx;
+    uint16_t geom_end_idx;
+    uint8_t  out_degree;
+    int8_t   fork_dir;       /* +1 = Keep Left at fork, -1 = Keep Right at fork, 0 = not a fork */
 } RouteSegment;
 
 typedef struct {
@@ -64,6 +70,14 @@ void pathfinder_set_profile(Pathfinder *pf, RoutingProfile profile);
  * @brief Find optimal route between two GPS coordinates using the hybrid strategy.
  */
 bool pathfinder_find_route(Pathfinder *pf, GeoCoord start, GeoCoord goal, RouteResult *out_route);
+
+/**
+ * @brief Reroute from an off-track GPS position back onto an existing route by
+ *        selecting nearby candidate nodes from the existing route and taking the
+ *        path to the candidate closest in road distance.
+ */
+bool pathfinder_reroute_to_existing(Pathfinder *pf, GeoCoord current_pos,
+                                    int32_t current_seg_idx, RouteResult *io_route);
 
 /**
  * @brief Load intermediate curve geometry points from *_geom.bin for the route.

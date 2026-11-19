@@ -328,7 +328,8 @@ void UI_LVGL_Task(void *argument)
   lv_obj_center(status_lbl);
 #endif
 
-  bool had_first_fix = false;
+  bool had_first_fix     = false;
+  bool route_req_pending = false;
 
   for (;;)
   {
@@ -365,6 +366,21 @@ void UI_LVGL_Task(void *argument)
           map_camera_set_center(&g_camera, g_gps_pos);
           map_camera_get_visible_tiles(&g_camera, &g_visible_tiles);
         }
+
+        /* Update turn-by-turn navigation & check for off-track (> 30m from active route) */
+        if (g_current_route.found && g_current_route.segment_count > 0 && !route_req_pending)
+        {
+          nav_update(&g_nav_state, &g_current_route, NULL, g_gps_pos);
+          if (g_nav_state.off_track)
+          {
+            RouteRequest_t reroute_req = {
+              .cmd   = ROUTE_CMD_REROUTE,
+              .start = g_gps_pos,
+            };
+            xQueueOverwrite(g_q_route_req, &reroute_req);
+            route_req_pending = true;
+          }
+        }
       }
       need_redraw = true;
     }
@@ -381,12 +397,34 @@ void UI_LVGL_Task(void *argument)
 #endif
       if (notify_bits & NOTIFY_SD_MOUNTED)
       {
-        /* Request test route: Liège-Guillemins (50.6242°N, 5.5666°E) -> Liège-Carré (50.6428°N, 5.5702°E) */
+        /* Request initial route: Liège-Guillemins (50.6242°N, 5.5666°E) -> Liège-Carré (50.6428°N, 5.5702°E) */
         RouteRequest_t test_req = {
-          .start = geo_coord_make(506242000L, 55666000L),
+          .cmd   = ROUTE_CMD_NEW,
+          .start = had_first_fix ? g_gps_pos : geo_coord_make(506242000L, 55666000L),
           .goal  = geo_coord_make(506428000L, 55702000L),
         };
         xQueueOverwrite(g_q_route_req, &test_req);
+        route_req_pending = true;
+      }
+
+      if (notify_bits & NOTIFY_ROUTE_READY)
+      {
+        route_req_pending = false;
+
+        /* Re-evaluate navigation state against latest GPS fix if one arrived while routing */
+        if (had_first_fix && g_current_route.found && g_current_route.segment_count > 0)
+        {
+          nav_update(&g_nav_state, &g_current_route, NULL, g_gps_pos);
+          if (g_nav_state.off_track)
+          {
+            RouteRequest_t reroute_req = {
+              .cmd   = ROUTE_CMD_REROUTE,
+              .start = g_gps_pos,
+            };
+            xQueueOverwrite(g_q_route_req, &reroute_req);
+            route_req_pending = true;
+          }
+        }
       }
 
       if (notify_bits & (NOTIFY_SD_MOUNTED | NOTIFY_TILE_LOADED | NOTIFY_ROUTE_READY))

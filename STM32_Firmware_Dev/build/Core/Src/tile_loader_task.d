@@ -466,7 +466,8 @@ build/Core/Src/tile_loader_task.o: Core/Src/tile_loader_task.c \
  Middlewares/Third_Party/FatFs/src/integer.h Core/Inc/ffconf.h \
  Core/Inc/sd_spi.h Middlewares/Third_Party/FatFs/src/diskio.h \
  Core/Inc/geo_math.h Core/Inc/map_camera.h Core/Inc/tile_graph_cache.h \
- Core/Inc/map_binary_formats.h Core/Inc/pathfinder.h
+ Core/Inc/map_binary_formats.h Core/Inc/pathfinder.h \
+ Core/Inc/navigation.h Core/Inc/geocoder.h
 Core/Inc/app.h:
 Core/Inc/main.h:
 Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery.h:
@@ -945,3 +946,5 @@ Core/Inc/map_camera.h:
 Core/Inc/tile_graph_cache.h:
 Core/Inc/map_binary_formats.h:
 Core/Inc/pathfinder.h:
+Core/Inc/navigation.h:
+Core/Inc/geocoder.h:

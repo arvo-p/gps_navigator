@@ -13,6 +13,7 @@
 #include <string.h>
 #include "app.h"
 #include "stm32f429i_discovery_ts.h"
+#include <stdbool.h>
 
 /*----------------------------------------------------------------------------
  * FreeRTOS Heap in 64 KB Zero-Wait-State CCMRAM (0x10000000)
@@ -42,6 +43,10 @@ VisibleTileList   g_visible_tiles;
 TileGraphCache    g_graph_cache;
 Pathfinder        g_pathfinder;
 RouteResult       g_current_route __attribute__((section(".sdram")));
+/* Keep g_nav_state (96 B) and g_geocoder (524 B) in fast internal SRAM (.bss)
+ * since they are compact and frequently accessed by UI_LVGL_Task and Pathfinder_Task. */
+NavState          g_nav_state;
+Geocoder          g_geocoder;
 
 uint16_t          g_palette_rgb565[256];
 volatile bool     g_pak_ready       = false;
@@ -147,6 +152,11 @@ static void GPS_Library_Init(void)
   /* Step C: Initialize Road Graph Cache & Hybrid A* Pathfinder */
   tile_graph_cache_init(&g_graph_cache, "binaries", TILE_GRAPH_CACHE_MAX_LOCAL);
   pathfinder_init(&g_pathfinder, &g_graph_cache);
+
+  /* Initialize forward/reverse Geocoder for street names */
+  geocoder_init(&g_geocoder, &g_graph_cache, "binaries");
+  nav_init(&g_nav_state);
+
   memset(&g_current_route, 0, sizeof(RouteResult));
 
   Tile_Cache_Reset();

@@ -27,6 +27,8 @@ extern "C" {
 #include "map_camera.h"
 #include "tile_graph_cache.h"
 #include "pathfinder.h"
+#include "navigation.h"
+#include "geocoder.h"
 
 /*----------------------------------------------------------------------------
  * Constants & Configuration
@@ -98,9 +100,15 @@ typedef struct {
   int32_t ty;
 } TileRequest_t;
 
+typedef enum {
+    ROUTE_CMD_NEW,
+    ROUTE_CMD_REROUTE,
+} RouteCommand_t;
+
 typedef struct {
-  GeoCoord start;
-  GeoCoord goal;
+    RouteCommand_t cmd;   
+    GeoCoord start;      
+	GeoCoord goal;
 } RouteRequest_t;
 
 typedef enum {
@@ -136,6 +144,8 @@ extern VisibleTileList   g_visible_tiles;
 extern TileGraphCache    g_graph_cache;
 extern Pathfinder        g_pathfinder;
 extern RouteResult       g_current_route;
+extern NavState          g_nav_state;
+extern Geocoder          g_geocoder;
 
 extern uint16_t          g_palette_rgb565[256];
 extern volatile bool     g_pak_ready;

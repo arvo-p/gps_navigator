@@ -467,6 +467,7 @@ build/Core/Src/sensor_input_task.o: Core/Src/sensor_input_task.c \
  Core/Inc/sd_spi.h Middlewares/Third_Party/FatFs/src/diskio.h \
  Core/Inc/geo_math.h Core/Inc/map_camera.h Core/Inc/tile_graph_cache.h \
  Core/Inc/map_binary_formats.h Core/Inc/pathfinder.h \
+ Core/Inc/navigation.h Core/Inc/geocoder.h \
  Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.h \
  Drivers/BSP/STM32F429I-Discovery/../Components/stmpe811/stmpe811.h \
  Drivers/BSP/STM32F429I-Discovery/../Components/stmpe811/../Common/ts.h \
@@ -949,6 +950,8 @@ Core/Inc/map_camera.h:
 Core/Inc/tile_graph_cache.h:
 Core/Inc/map_binary_formats.h:
 Core/Inc/pathfinder.h:
+Core/Inc/navigation.h:
+Core/Inc/geocoder.h:
 Drivers/BSP/STM32F429I-Discovery/stm32f429i_discovery_ts.h:
 Drivers/BSP/STM32F429I-Discovery/../Components/stmpe811/stmpe811.h:
 Drivers/BSP/STM32F429I-Discovery/../Components/stmpe811/../Common/ts.h:
